@@ -1,0 +1,67 @@
+<view class="container">
+  <!-- 1. 用户信息卡片 -->
+  <view class="glass-card user-info-card flex align-center">
+    <image class="avatar" src="{{avatarUrl}}" mode="aspectFill" />
+    <view class="user-meta flex-col flex">
+      <text class="nickname">{{nickname}}</text>
+      <text class="user-id">食刻ID: {{userId}}</text>
+    </view>
+  </view>
+
+  <!-- 2. 健康档案编辑 -->
+  <view class="glass-card profile-form-card">
+    <view class="card-title">身体健康数据 (用于计算TDEE)</view>
+    
+    <view class="form-item flex justify-between align-center">
+      <text class="label">年龄 (岁)</text>
+      <input class="input" type="number" value="{{age}}" bindinput="onAgeInput" />
+    </view>
+    
+    <view class="form-item flex justify-between align-center">
+      <text class="label">身高 (cm)</text>
+      <input class="input" type="digit" value="{{height}}" bindinput="onHeightInput" />
+    </view>
+    
+    <view class="form-item flex justify-between align-center">
+      <text class="label">当前体重 (kg)</text>
+      <input class="input" type="digit" value="{{weight}}" bindinput="onWeightInput" />
+    </view>
+
+    <view class="form-item flex justify-between align-center">
+      <text class="label">日常活动系数</text>
+      <picker bindchange="onActivityChange" value="{{activityIndex}}" range="{{activityOptions}}" range-key="label">
+        <view class="picker-val">{{activityOptions[activityIndex].label}} ▾</view>
+      </picker>
+    </view>
+
+    <view class="form-item flex justify-between align-center">
+      <text class="label">减脂/增肌目标</text>
+      <picker bindchange="onGoalChange" value="{{goalIndex}}" range="{{goalOptions}}" range-key="label">
+        <view class="picker-val">{{goalOptions[goalIndex].label}} ▾</view>
+      </picker>
+    </view>
+  </view>
+
+  <!-- 3. 自动计算出的代谢指标 -->
+  <view class="glass-card result-card">
+    <view class="card-title">系统计算代谢看板</view>
+    <view class="result-grid flex">
+      <view class="grid-item flex-col align-center flex">
+        <text class="val">{{bmr}}</text>
+        <text class="lbl">BMR 基础代谢 (kcal)</text>
+      </view>
+      <view class="grid-item flex-col align-center flex">
+        <text class="val">{{tdee}}</text>
+        <text class="lbl">TDEE 总消耗 (kcal)</text>
+      </view>
+    </view>
+    <view class="target-box flex-col align-center flex">
+      <text class="target-lbl">建议每日摄入预算</text>
+      <text class="target-val">{{targetCal}} 千卡/天</text>
+      <text class="formula-info">采用 Mifflin-St Jeor 公式精确推算</text>
+    </view>
+  </view>
+
+  <!-- 保存按钮 -->
+  <button class="btn-primary" catchtap="onSaveProfile">保存并更新档案</button>
+</view>

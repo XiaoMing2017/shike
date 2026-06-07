@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  shike-mysql:
+    image: mysql:8.0
+    container_name: shike-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "123456"
+      MYSQL_DATABASE: "db_shike"
+    volumes:
+      - shike-mysql-data:/var/lib/mysql
+      - ./shike-backend/src/main/resources/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    restart: unless-stopped
+    networks:
+      - shike-network
+
+  shike-redis:
+    image: redis:7.0-alpine
+    container_name: shike-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - shike-redis-data:/data
+    restart: unless-stopped
+    networks:
+      - shike-network
+
+volumes:
+  shike-mysql-data:
+  shike-redis-data:
+
+networks:
+  shike-network:
+    driver: bridge

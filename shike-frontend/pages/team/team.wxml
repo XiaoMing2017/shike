@@ -1,0 +1,95 @@
+<view class="container">
+  <block wx:if="{{hasTeam}}">
+    <!-- 1. 团队挑战概要卡片 -->
+    <view class="glass-card team-status-card">
+      <view class="flex justify-between align-center">
+        <view class="team-meta">
+          <view class="team-title">{{teamName}}</view>
+          <view class="team-desc">对赌挑战进行中 (第{{currentDay}}/{{targetDays}}天)</view>
+        </view>
+        <view class="pot-badge flex-col align-center flex">
+          <text class="pot-val">{{points}}</text>
+          <text class="pot-lbl">积分池</text>
+        </view>
+      </view>
+      <view class="invite-section flex justify-between align-center">
+        <text class="invite-code-lbl">小队邀请码: <text class="code" catchtap="onCopyInviteCode">{{inviteCode}}</text></text>
+        <button class="btn-share" open-type="share" size="mini">邀请微信好友</button>
+      </view>
+    </view>
+
+    <!-- 2. 小队打卡排行榜 -->
+    <view class="leaderboard-section">
+      <view class="section-title">小队打卡榜</view>
+      <view class="glass-card member-card flex align-center justify-between" wx:for="{{members}}" wx:key="id">
+        <view class="member-left flex align-center">
+          <view class="rank-num {{index === 0 ? 'top-rank' : ''}}">
+            <text wx:if="{{index === 0}}">👑</text>
+            <text wx:else>{{index + 1}}</text>
+          </view>
+          <image class="avatar" src="{{item.avatar}}" mode="aspectFill" />
+          <view class="member-meta flex-col flex">
+            <text class="member-name">{{item.name}}</text>
+            <view class="progress-ticks flex">
+              <view class="tick {{tick.checked ? 'checked' : ''}}" wx:for="{{item.ticks}}" wx:for-item="tick" wx:key="day">
+                {{tick.checked ? '✓' : ''}}
+              </view>
+            </view>
+          </view>
+        </view>
+        <view class="member-right flex-col align-end flex">
+          <text class="status-text {{item.todayChecked ? 'checked-in' : 'pending'}}">
+            {{item.todayChecked ? '今日已达标' : '今日未达标'}}
+          </text>
+          <text class="success-days">已连续达标 {{item.successCount}} 天</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 3. 生成海报与分享 -->
+    <view class="footer-actions flex justify-between">
+      <button class="btn-action btn-secondary flex-1" catchtap="onGeneratePoster">生成打卡海报</button>
+      <button class="btn-action btn-quit flex-1" catchtap="onQuitTeam">退出当前队伍</button>
+    </view>
+
+    <!-- Off-screen Canvas for Poster Generation -->
+    <canvas type="2d" id="posterCanvas" style="width: 375px; height: 500px; position: fixed; left: -9999px; top: -9999px;" width="750" height="1000"></canvas>
+  </block>
+
+  <block wx:else>
+    <!-- 无小队时的欢迎与指引 -->
+    <view class="welcome-header flex-col align-center">
+      <text class="emoji-logo">🏆</text>
+      <text class="welcome-title">食刻·5人对赌挑战</text>
+      <text class="welcome-subtitle">自律太难？拉上好友建立契约，每日卡路里打卡挑战，输者罚分，赢者分池！</text>
+    </view>
+
+    <!-- 加入队伍卡片 -->
+    <view class="glass-card action-card">
+      <view class="card-title">🔑 输入邀请码加入队伍</view>
+      <view class="input-group flex">
+        <input class="invite-input" placeholder="输入6位邀请码" value="{{inputInviteCode}}" bindinput="onInviteCodeInput" maxlength="6" />
+        <button class="btn-join" catchtap="onJoinTeamByCode">立即加入</button>
+      </view>
+    </view>
+
+    <!-- 创建队伍卡片 -->
+    <view class="glass-card action-card">
+      <view class="card-title">🆕 创建我的打卡队伍</view>
+      <view class="form-item">
+        <text class="form-label">队伍名称</text>
+        <input class="form-input" placeholder="例如：7天减脂冲刺组" value="{{createTeamName}}" bindinput="onTeamNameInput" maxlength="15" />
+      </view>
+      <view class="form-item">
+        <text class="form-label">挑战周期</text>
+        <picker bindchange="onTargetDaysChange" value="{{targetDaysIndex}}" range="{{targetDaysOptions}}">
+          <view class="picker-value flex justify-between align-center">
+            <text>{{targetDaysOptions[targetDaysIndex]}} 天挑战</text>
+            <text class="arrow">▼</text>
+          </view>
+        </picker>
+      </view>
+      <button class="btn-create" catchtap="onCreateNewTeam">创建新队伍</button>
+    </view>
+  </block>
+</view>

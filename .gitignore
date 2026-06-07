@@ -1,0 +1,15 @@
+# Maven
+shike-backend/target/
+
+# IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp/Lock files
+~$*.docx

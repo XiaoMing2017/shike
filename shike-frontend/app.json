@@ -1,0 +1,35 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/team/team",
+    "pages/profile/profile"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#10B981",
+    "navigationBarTitleText": "食刻",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#F8FAFC"
+  },
+  "tabBar": {
+    "color": "#94A3B8",
+    "selectedColor": "#10B981",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页看板"
+      },
+      {
+        "pagePath": "pages/team/team",
+        "text": "减脂对赌"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "个人档案"
+      }
+    ]
+  },
+  "sitemapLocation": "sitemap.json"
+}

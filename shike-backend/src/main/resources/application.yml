@@ -1,0 +1,51 @@
+server:
+  port: 8081
+  servlet:
+    context-path: /api/v1
+
+spring:
+  application:
+    name: shike-backend
+
+  # Database Connection
+  datasource:
+    url: jdbc:mysql://localhost:3306/db_shike?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: 123456  # Default local password, user can change it later
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # JPA & Hibernate Settings
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  # Redis Configuration
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+      timeout: 5000
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+logging:
+  level:
+    root: INFO
+    com.shike: DEBUG
+
+ai:
+  provider: OPENAI # MOCK, OPENAI (works for Zhipu GLM-4V, Qwen-VL, etc.), GEMINI
+  model: gpt-4o-mini
+  endpoint: https://api.openai.com/v1/chat/completions
+  api-key: MOCK_KEY
+  timeout-ms: 15000
+
