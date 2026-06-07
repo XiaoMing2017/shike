@@ -18,7 +18,7 @@ public class UserController {
 
     @PostMapping("/login")
     public ResultDTO<User> login(@RequestBody @Valid UserLoginDTO loginDTO) {
-        User user = userService.loginOrRegister(loginDTO.getOpenid());
+        User user = userService.loginOrRegister(loginDTO);
         return ResultDTO.success(user);
     }
 

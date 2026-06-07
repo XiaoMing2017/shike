@@ -5,6 +5,7 @@ Page({
     nickname: '微信用户',
     userId: null,
     avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100',
+    points: 0,
     age: 25,
     height: 175.5,
     weight: 70.0,
@@ -33,53 +34,33 @@ Page({
   loginAndFetchProfile() {
     wx.showLoading({ title: '正在同步档案...' });
     
-    // For MVP/Local testing, we use a mock OpenID to login.
-    // In production, you would call wx.login to get a code and swap it for an openid.
-    const mockOpenid = 'mock_user_openid_123';
-    
-    wx.request({
-      url: `${app.globalData.baseUrl}/user/login`,
-      method: 'POST',
-      data: { openid: mockOpenid },
-      success: (res) => {
-        if (res.data && res.data.code === 200) {
-          const user = res.data.data;
-          app.globalData.userInfo = user;
-          
-          this.setData({
-            userId: user.id,
-            nickname: user.nickname || '微信用户',
-            avatarUrl: user.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'
-          });
+    app.login((user) => {
+      wx.hideLoading();
+      this.setData({
+        userId: user.id,
+        nickname: user.nickname || '微信用户',
+        avatarUrl: user.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100',
+        points: user.points || 0
+      });
 
-          // If user already has profile stats, load them
-          if (user.age) {
-            const activityIdx = this.data.activityOptions.findIndex(o => o.key === user.activityLevel);
-            const goalIdx = this.data.goalOptions.findIndex(o => o.key === user.goal);
-            
-            this.setData({
-              age: user.age,
-              height: user.height,
-              weight: user.weight,
-              activityIndex: activityIdx !== -1 ? activityIdx : 0,
-              goalIndex: goalIdx !== -1 ? goalIdx : 1,
-              bmr: user.bmr || 0,
-              tdee: user.tdee || 0,
-              targetCal: user.targetCalories || 0
-            });
-          } else {
-            // First time calculate
-            this.recalculateMetabolism();
-          }
-        } else {
-          wx.showToast({ title: '登录同步失败', icon: 'error' });
-        }
-      },
-      fail: () => {
-        wx.showToast({ title: '网络连接失败', icon: 'error' });
-      },
-      complete: () => {
-        wx.hideLoading();
+      // If user already has profile stats, load them
+      if (user.age) {
+        const activityIdx = this.data.activityOptions.findIndex(o => o.key === user.activityLevel);
+        const goalIdx = this.data.goalOptions.findIndex(o => o.key === user.goal);
+        
+        this.setData({
+          age: user.age,
+          height: user.height,
+          weight: user.weight,
+          activityIndex: activityIdx !== -1 ? activityIdx : 0,
+          goalIndex: goalIdx !== -1 ? goalIdx : 1,
+          bmr: user.bmr || 0,
+          tdee: user.tdee || 0,
+          targetCal: user.targetCalories || 0
+        });
+      } else {
+        // First time calculate
+        this.recalculateMetabolism();
       }
     });
   },

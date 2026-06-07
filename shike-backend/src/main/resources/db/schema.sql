@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS `tb_user` (
   `bmr` DECIMAL(6,1) DEFAULT NULL COMMENT '基础代谢率(kcal)',
   `tdee` DECIMAL(6,1) DEFAULT NULL COMMENT '每日总能消耗(kcal)',
   `target_calories` DECIMAL(6,1) DEFAULT NULL COMMENT '每日目标摄入热量(kcal)',
+  `points` INT DEFAULT 1000 COMMENT '用户当前持有契约积分',
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   INDEX `idx_openid` (`openid`)
@@ -46,6 +47,7 @@ CREATE TABLE IF NOT EXISTS `tb_team` (
   `creator_id` BIGINT NOT NULL COMMENT '创建者ID',
   `invite_code` VARCHAR(10) NOT NULL UNIQUE COMMENT '加入邀请码',
   `target_days` INT DEFAULT 7 COMMENT '打卡目标天数',
+  `deposit_points` INT DEFAULT 100 COMMENT '小队契约金/筹码',
   `status` VARCHAR(20) DEFAULT 'ACTIVE' COMMENT '状态: ACTIVE(进行中), SUCCESS(完成), FAILED(失败)',
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'

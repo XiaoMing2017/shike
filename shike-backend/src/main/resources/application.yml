@@ -49,3 +49,8 @@ ai:
   api-key: MOCK_KEY
   timeout-ms: 15000
 
+wx:
+  mock: true
+  appid: wx_mock_appid_123
+  secret: wx_mock_secret_456
+

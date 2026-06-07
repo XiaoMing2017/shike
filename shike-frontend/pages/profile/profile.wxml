@@ -5,6 +5,7 @@
     <view class="user-meta flex-col flex">
       <text class="nickname">{{nickname}}</text>
       <text class="user-id">食刻ID: {{userId}}</text>
+      <text class="user-id" style="margin-top: 5rpx; color: #10B981; font-weight: 600;">契约积分: {{points}} pts</text>
     </view>
   </view>
 

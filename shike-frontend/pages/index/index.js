@@ -54,25 +54,9 @@ Page({
   },
 
   checkUserAndLoadData() {
-    // Check if user is logged in via globalData
-    if (app.globalData.userInfo) {
-      this.loadUserData(app.globalData.userInfo);
-    } else {
-      // Fetch user profile (which triggers mock login automatically)
-      const mockOpenid = 'mock_user_openid_123';
-      wx.request({
-        url: `${app.globalData.baseUrl}/user/login`,
-        method: 'POST',
-        data: { openid: mockOpenid },
-        success: (res) => {
-          if (res.data && res.data.code === 200) {
-            const user = res.data.data;
-            app.globalData.userInfo = user;
-            this.loadUserData(user);
-          }
-        }
-      });
-    }
+    app.login((user) => {
+      this.loadUserData(user);
+    });
   },
 
   loadUserData(user) {

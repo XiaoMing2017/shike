@@ -34,6 +34,10 @@ public class Team {
     @Column(name = "target_days", nullable = false)
     private Integer targetDays;
 
+    @Column(name = "deposit_points", nullable = false)
+    @Builder.Default
+    private Integer depositPoints = 100;
+
     @Column(nullable = false, length = 20)
     private String status; // ACTIVE, SUCCESS, FAILED
 

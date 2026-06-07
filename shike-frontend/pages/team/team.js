@@ -23,23 +23,9 @@ Page({
   },
 
   checkUserAndLoadData() {
-    if (app.globalData.userInfo) {
-      this.fetchTeamData(app.globalData.userInfo.id);
-    } else {
-      const mockOpenid = 'mock_user_openid_123';
-      wx.request({
-        url: `${app.globalData.baseUrl}/user/login`,
-        method: 'POST',
-        data: { openid: mockOpenid },
-        success: (res) => {
-          if (res.data && res.data.code === 200) {
-            const user = res.data.data;
-            app.globalData.userInfo = user;
-            this.fetchTeamData(user.id);
-          }
-        }
-      });
-    }
+    app.login((user) => {
+      this.fetchTeamData(user.id);
+    });
   },
 
   fetchTeamData(userId) {

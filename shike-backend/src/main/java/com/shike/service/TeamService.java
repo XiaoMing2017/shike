@@ -9,7 +9,7 @@ import java.util.List;
 import com.shike.model.dto.TeamDetailDTO;
 
 public interface TeamService {
-    Team createTeam(Long creatorId, String teamName, Integer targetDays);
+    Team createTeam(Long creatorId, String teamName, Integer targetDays, Integer depositPoints);
     Team joinTeam(Long userId, String inviteCode);
     void checkin(Long userId, Long teamId, LocalDate date, boolean isSuccess);
     List<TeamMember> getTeamMembers(Long teamId);

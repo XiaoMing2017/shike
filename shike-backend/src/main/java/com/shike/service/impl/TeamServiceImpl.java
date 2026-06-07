@@ -36,9 +36,21 @@ public class TeamServiceImpl implements TeamService {
 
     @Override
     @Transactional
-    public Team createTeam(Long creatorId, String teamName, Integer targetDays) {
-        log.info("Creating team: {} by creator: {}", teamName, creatorId);
-        
+    public Team createTeam(Long creatorId, String teamName, Integer targetDays, Integer depositPoints) {
+        log.info("Creating team: {} by creator: {} with points: {}", teamName, creatorId, depositPoints);
+
+        User creator = userRepository.findById(creatorId)
+                .orElseThrow(() -> new BizException(404, "Creator not found"));
+
+        int depPoints = depositPoints != null ? depositPoints : 100;
+        int currentPoints = creator.getPoints() != null ? creator.getPoints() : 0;
+        if (currentPoints < depPoints) {
+            throw new BizException(400, "积分余额不足以支付创建团队契约金(需 " + depPoints + " 积分，当前仅有 " + currentPoints + " 积分)");
+        }
+
+        creator.setPoints(currentPoints - depPoints);
+        userRepository.save(creator);
+
         // Generate a simple unique invite code (first 6 chars of a UUID)
         String inviteCode = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
 
@@ -47,6 +59,7 @@ public class TeamServiceImpl implements TeamService {
                 .creatorId(creatorId)
                 .inviteCode(inviteCode)
                 .targetDays(targetDays != null ? targetDays : 7)
+                .depositPoints(depPoints)
                 .status("ACTIVE")
                 .build();
         
@@ -87,6 +100,18 @@ public class TeamServiceImpl implements TeamService {
         if (currentMembers.size() >= 5) {
             throw new BizException(400, "Team is full (maximum 5 members)");
         }
+
+        // 扣除积分逻辑
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BizException(404, "User not found"));
+        int depPoints = team.getDepositPoints() != null ? team.getDepositPoints() : 100;
+        int currentPoints = user.getPoints() != null ? user.getPoints() : 0;
+        if (currentPoints < depPoints) {
+            throw new BizException(400, "积分余额不足以支付加入团队契约金(需 " + depPoints + " 积分，当前仅有 " + currentPoints + " 积分)");
+        }
+
+        user.setPoints(currentPoints - depPoints);
+        userRepository.save(user);
 
         TeamMember member = TeamMember.builder()
                 .teamId(team.getId())
@@ -216,12 +241,14 @@ public class TeamServiceImpl implements TeamService {
                     .build());
         }
 
+        int totalPoolPoints = teamMembers.size() * (activeTeam.getDepositPoints() != null ? activeTeam.getDepositPoints() : 100);
+
         return TeamDetailDTO.builder()
                 .teamId(activeTeam.getId())
                 .teamName(activeTeam.getTeamName())
                 .inviteCode(activeTeam.getInviteCode())
                 .targetDays(activeTeam.getTargetDays())
-                .points(500)
+                .points(totalPoolPoints)
                 .currentDay(currentDay)
                 .status(activeTeam.getStatus())
                 .members(memberDetails)

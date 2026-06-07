@@ -57,6 +57,8 @@ public class User {
     @Column(name = "target_calories", precision = 6, scale = 1)
     private BigDecimal targetCalories;
 
+    private Integer points;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

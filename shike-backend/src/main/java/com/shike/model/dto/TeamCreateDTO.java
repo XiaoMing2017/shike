@@ -14,4 +14,6 @@ public class TeamCreateDTO {
     private String teamName;
 
     private Integer targetDays; // default 7
+
+    private Integer depositPoints; // default 100
 }

@@ -24,7 +24,8 @@ public class TeamController {
         Team team = teamService.createTeam(
                 createDTO.getCreatorId(),
                 createDTO.getTeamName(),
-                createDTO.getTargetDays()
+                createDTO.getTargetDays(),
+                createDTO.getDepositPoints()
         );
         return ResultDTO.success(team);
     }

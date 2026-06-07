@@ -1,16 +1,25 @@
 package com.shike.service.impl;
 
 import com.shike.common.BizException;
+import com.shike.model.dto.UserLoginDTO;
 import com.shike.model.entity.User;
 import com.shike.repository.UserRepository;
 import com.shike.service.UserService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.Optional;
 
 @Service
@@ -20,12 +29,38 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
+    @Value("${wx.mock}")
+    private boolean wxMock;
+
+    @Value("${wx.appid}")
+    private String wxAppid;
+
+    @Value("${wx.secret}")
+    private String wxSecret;
+
     @Override
     @Transactional
-    public User loginOrRegister(String openid) {
+    public User loginOrRegister(UserLoginDTO loginDTO) {
+        String openid = null;
+        String code = loginDTO.getCode();
+
+        if (code != null && !code.trim().isEmpty()) {
+            openid = getOpenIdFromWx(code);
+        } else {
+            if (wxMock) {
+                openid = loginDTO.getOpenid();
+                if (openid == null || openid.trim().isEmpty()) {
+                    openid = "mock_user_openid_123";
+                }
+            } else {
+                throw new BizException(400, "code must be provided for login");
+            }
+        }
+
         if (openid == null || openid.trim().isEmpty()) {
             throw new BizException(400, "openid cannot be empty");
         }
+
         Optional<User> userOpt = userRepository.findByOpenid(openid);
         if (userOpt.isPresent()) {
             log.info("User login success, openid: {}", openid);
@@ -36,10 +71,43 @@ public class UserServiceImpl implements UserService {
                     .openid(openid)
                     .nickname("微信用户_" + openid.substring(Math.max(0, openid.length() - 6)))
                     .gender(0)
+                    .points(1000) // 初始契约分 1000
                     .activityLevel("SEDENTARY")
                     .goal("MAINTAIN")
                     .build();
             return userRepository.save(newUser);
+        }
+    }
+
+    private String getOpenIdFromWx(String code) {
+        String url = String.format("https://api.weixin.qq.com/sns/jscode2session?appid=%s&secret=%s&js_code=%s&grant_type=authorization_code",
+                wxAppid, wxSecret, code);
+        try {
+            HttpClient client = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .GET()
+                    .timeout(Duration.ofMillis(5000))
+                    .build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            String body = response.body();
+            log.info("Wx login response: {}", body);
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode node = mapper.readTree(body);
+            if (node.has("errcode") && node.get("errcode").asInt() != 0) {
+                throw new BizException(500, "Wx login error: " + node.get("errmsg").asText());
+            }
+            if (node.has("openid")) {
+                return node.get("openid").asText();
+            } else {
+                throw new BizException(500, "Wx response does not contain openid");
+            }
+        } catch (BizException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to call wx api", e);
+            throw new BizException(500, "Failed to call WeChat auth server: " + e.getMessage());
         }
     }
 
