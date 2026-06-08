@@ -175,6 +175,10 @@ Page({
         const canvas = res[0].node;
         const ctx = canvas.getContext('2d');
         
+        // 必须在 JS 中显式设置 canvas 2D 实例的宽高，否则会默认为宽 300，高 150，导致文字和画面被截断
+        canvas.width = 750;
+        canvas.height = 1000;
+        
         // 1. Clear Canvas
         ctx.clearRect(0, 0, 750, 1000);
         

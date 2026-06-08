@@ -1,5 +1,5 @@
 /* Global resets and typography */
-page {
+page, view, text, button, input, textarea {
   font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica,
     Segoe UI, Arial, Roboto, 'PingFang SC', 'miui', 'Hiragino Sans GB', 'Microsoft Yahei',
     sans-serif;

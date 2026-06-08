@@ -45,7 +45,19 @@ public class UserServiceImpl implements UserService {
         String code = loginDTO.getCode();
 
         if (code != null && !code.trim().isEmpty()) {
-            openid = getOpenIdFromWx(code);
+            try {
+                openid = getOpenIdFromWx(code);
+            } catch (Exception e) {
+                if (wxMock) {
+                    log.warn("Wx login via code failed (probably due to mock appid/secret), falling back to mock openid. Error: {}", e.getMessage());
+                    openid = loginDTO.getOpenid();
+                    if (openid == null || openid.trim().isEmpty()) {
+                        openid = "mock_user_openid_123";
+                    }
+                } else {
+                    throw e;
+                }
+            }
         } else {
             if (wxMock) {
                 openid = loginDTO.getOpenid();

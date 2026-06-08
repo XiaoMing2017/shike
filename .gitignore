@@ -13,3 +13,8 @@ Thumbs.db
 
 # Temp/Lock files
 ~$*.docx
+
+# WeChat DevTools private configurations
+*.private.config.json
+project.private.config.json
+

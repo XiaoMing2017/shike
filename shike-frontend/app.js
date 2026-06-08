@@ -5,7 +5,7 @@ App({
   },
   globalData: {
     userInfo: null,
-    baseUrl: 'http://localhost:8081/api/v1'
+    baseUrl: 'http://172.19.3.66:8081/api/v1'
   },
   login(callback) {
     if (this.globalData.userInfo) {

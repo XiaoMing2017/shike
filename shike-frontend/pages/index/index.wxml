@@ -1,70 +1,79 @@
 <view class="container">
+  <!-- 0. 顶部导航/状态栏 -->
+  <view class="app-header flex justify-between align-center">
+    <view class="header-icon-btn">📅</view>
+    <view class="header-title-wrapper flex flex-col align-center">
+      <text class="header-title">食刻</text>
+      <text class="header-date">{{currentDateStr}}</text>
+    </view>
+    <view class="header-avatar-btn">
+      <image class="header-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120" mode="aspectFill" />
+      <view class="avatar-dot"></view>
+    </view>
+  </view>
+
   <!-- 1. 今日热量大环形看板 -->
-  <view class="glass-card calorie-board align-center flex-col flex">
-    <view class="calorie-ring flex justify-center align-center">
-      <view class="ring-content flex-col align-center flex">
-        <text class="ring-label">剩余摄入</text>
-        <text class="ring-value">{{remainingCal}}</text>
-        <text class="ring-unit">千卡 (kcal)</text>
+  <view class="calorie-board-container align-center flex-col flex">
+    <view class="calorie-ring-wrapper">
+      <canvas type="2d" id="calorieCanvas" class="calorie-canvas" style="width: 170px; height: 170px;"></canvas>
+      <view class="ring-content flex-col align-center flex" style="position: absolute; z-index: 10;">
+        <text class="ring-label {{isOverLimit ? 'over-limit-lbl' : ''}}">{{ringLabel}}</text>
+        <text class="ring-value {{isOverLimit ? 'over-limit-val' : ''}}">{{remainingCal}}</text>
+        <text class="ring-unit">千卡</text>
       </view>
     </view>
-    <view class="calorie-summary flex justify-between">
-      <view class="summary-item flex-col align-center flex">
-        <text class="summary-val">{{targetCal}}</text>
-        <text class="summary-lbl">目标热量</text>
-      </view>
-      <view class="divider"></view>
-      <view class="summary-item flex-col align-center flex">
-        <text class="summary-val">{{consumedCal}}</text>
-        <text class="summary-lbl">已摄入</text>
-      </view>
+    <view class="calorie-detail-text">
+      已摄入：<text class="bold-text">{{consumedCal}}</text> / 目标：<text class="bold-text">{{targetCal}}</text>
     </view>
   </view>
 
-  <!-- 2. 三大营养素进度条 -->
+  <!-- 2. 三大营养素并列占比条 -->
   <view class="glass-card nutrients-card">
-    <view class="card-title">宏量营养素 (g)</view>
-    <view class="nutrient-item">
-      <view class="nutrient-info flex justify-between">
-        <text class="nutrient-name">碳水化合物</text>
-        <text class="nutrient-val">{{nutrients.carbs}} / {{nutrients.targetCarbs}}g</text>
-      </view>
-      <progress percent="{{(nutrients.carbs/nutrients.targetCarbs)*100}}" stroke-width="6" active-color="#10B981" background-color="#E2E8F0" border-radius="3" />
+    <view class="macronutrient-bar">
+      <view class="bar-segment carbs" style="width: {{nutrients.carbsPercent}}%;"></view>
+      <view class="bar-segment protein" style="width: {{nutrients.proteinPercent}}%;"></view>
+      <view class="bar-segment fat" style="width: {{nutrients.fatPercent}}%;"></view>
     </view>
-    <view class="nutrient-item">
-      <view class="nutrient-info flex justify-between">
-        <text class="nutrient-name">蛋白质</text>
-        <text class="nutrient-val">{{nutrients.protein}} / {{nutrients.targetProtein}}g</text>
-      </view>
-      <progress percent="{{(nutrients.protein/nutrients.targetProtein)*100}}" stroke-width="6" active-color="#6366F1" background-color="#E2E8F0" border-radius="3" />
-    </view>
-    <view class="nutrient-item">
-      <view class="nutrient-info flex justify-between">
-        <text class="nutrient-name">脂肪</text>
-        <text class="nutrient-val">{{nutrients.fat}} / {{nutrients.targetFat}}g</text>
-      </view>
-      <progress percent="{{(nutrients.fat/nutrients.targetFat)*100}}" stroke-width="6" active-color="#F59E0B" background-color="#E2E8F0" border-radius="3" />
-    </view>
-  </view>
-
-  <!-- 3. 三餐打卡记录卡片 -->
-  <view class="meal-section">
-    <view class="section-title">今日三餐记录</view>
-    <view class="glass-card meal-card flex align-center justify-between" wx:for="{{meals}}" wx:key="type">
-      <view class="meal-left flex align-center">
-        <view class="meal-icon-wrapper">{{item.icon}}</view>
-        <view class="meal-info-text flex-col flex">
-          <text class="meal-name">{{item.name}}</text>
-          <text class="meal-desc" wx:if="{{item.recorded}}">{{item.desc}}</text>
-          <text class="meal-desc empty" wx:else>暂无记录，随手拍一张吧</text>
+    
+    <view class="macronutrient-labels flex justify-between">
+      <view class="label-item flex align-center">
+        <view class="bullet carbs"></view>
+        <view class="label-text flex-col flex">
+          <text class="lbl-title">碳水化合物</text>
+          <text class="lbl-val">{{nutrients.carbs}}g <text class="lbl-pct">({{nutrients.carbsPercent}}%)</text></text>
         </view>
       </view>
-      <view class="meal-right flex align-center">
-        <text class="meal-cal" wx:if="{{item.recorded}}">+{{item.calories}} kcal</text>
-        <button class="btn-scan" size="mini" catchtap="onScanMeal" data-type="{{item.type}}">
-          <text class="scan-text">{{item.recorded ? '修改' : '记录'}}</text>
-        </button>
+      <view class="label-item flex align-center">
+        <view class="bullet protein"></view>
+        <view class="label-text flex-col flex">
+          <text class="lbl-title">蛋白质</text>
+          <text class="lbl-val">{{nutrients.protein}}g <text class="lbl-pct">({{nutrients.proteinPercent}}%)</text></text>
+        </view>
+      </view>
+      <view class="label-item flex align-center">
+        <view class="bullet fat"></view>
+        <view class="label-text flex-col flex">
+          <text class="lbl-title">脂肪</text>
+          <text class="lbl-val">{{nutrients.fat}}g <text class="lbl-pct">({{nutrients.fatPercent}}%)</text></text>
+        </view>
       </view>
     </view>
+  </view>
+
+  <!-- 3. 横向滑动三餐打卡记录卡片 -->
+  <view class="meal-section">
+    <view class="section-header flex justify-between align-center">
+      <text class="section-title">今日三餐记录</text>
+    </view>
+    <scroll-view class="meal-scroll-row" scroll-x="true" enable-flex="true">
+      <view class="meal-card-item" wx:for="{{meals}}" wx:key="type" catchtap="onScanMeal" data-type="{{item.type}}">
+        <view class="meal-img-wrapper">
+          <image class="meal-card-img" src="{{item.image}}" mode="aspectFill" />
+        </view>
+        <text class="meal-card-name">{{item.name}}</text>
+        <text class="meal-card-time">{{item.time}}</text>
+        <text class="meal-card-cal {{item.recorded ? 'recorded' : ''}}">{{item.recorded ? item.calories + '千卡' : '点击记录'}}</text>
+      </view>
+    </scroll-view>
   </view>
 </view>

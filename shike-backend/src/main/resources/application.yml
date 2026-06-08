@@ -43,11 +43,11 @@ logging:
     com.shike: DEBUG
 
 ai:
-  provider: OPENAI # MOCK, OPENAI (works for Zhipu GLM-4V, Qwen-VL, etc.), GEMINI
-  model: gpt-4o-mini
-  endpoint: https://api.openai.com/v1/chat/completions
-  api-key: MOCK_KEY
-  timeout-ms: 15000
+  provider: OPENAI
+  model: mimo-v2-omni
+  endpoint: https://api.xiaomimimo.com/v1/chat/completions
+  api-key: sk-cz4l6x44t4mrbwdlg7yj7k4n5j9cld7nf35r30hhgtdvr9if
+  timeout-ms: 60000
 
 wx:
   mock: true
