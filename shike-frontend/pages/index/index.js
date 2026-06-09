@@ -245,9 +245,10 @@ Page({
 
         const canvas = res[0].node;
         const ctx = canvas.getContext('2d');
-        const dpr = wx.getSystemInfoSync().pixelRatio;
+        const systemInfo = wx.getSystemInfoSync ? wx.getSystemInfoSync() : null;
+        const dpr = (systemInfo && systemInfo.pixelRatio) || 1;
 
-        const size = res[0].width || 170;
+        const size = res[0].width || 196;
         canvas.width = size * dpr;
         canvas.height = size * dpr;
         ctx.scale(dpr, dpr);
@@ -255,60 +256,65 @@ Page({
         ctx.clearRect(0, 0, size, size);
 
         const center = size / 2;
-        const radius = size / 2 - 16; // 留出外发光阴影余量，防止底部投影被边缘切角
-        const lineWidth = 9;
-
-        const startAngle = 0.75 * Math.PI; // 起点在左下角 225 度
-        const totalAngle = 1.5 * Math.PI;  // 长度为 270 度
+        const radius = size / 2 - 30;
+        const lineWidth = 15;
+        const startAngle = -0.54 * Math.PI;
+        const totalAngle = 1.62 * Math.PI;
         const endAngle = startAngle + totalAngle;
 
-        // 1. 绘制拟物高亮背景底圈 (牛奶白磨砂效果)
-        ctx.shadowColor = 'rgba(148, 163, 184, 0.1)';
-        ctx.shadowBlur = 8;
+        ctx.shadowColor = 'rgba(255, 255, 255, 0.9)';
+        ctx.shadowBlur = 18;
         ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 5;
-
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
-        ctx.lineWidth = lineWidth + 5; // 稍粗一点做底座
+        ctx.shadowOffsetY = 0;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.72)';
+        ctx.lineWidth = lineWidth + 14;
         ctx.lineCap = 'round';
         ctx.beginPath();
         ctx.arc(center, center, radius, startAngle, endAngle);
         ctx.stroke();
 
-        // 重置阴影
+        ctx.shadowColor = 'rgba(148, 163, 184, 0.16)';
+        ctx.shadowBlur = 12;
+        ctx.shadowOffsetY = 8;
+        ctx.strokeStyle = 'rgba(231, 238, 243, 0.55)';
+        ctx.lineWidth = lineWidth + 4;
+        ctx.beginPath();
+        ctx.arc(center, center, radius, startAngle, endAngle);
+        ctx.stroke();
+
         ctx.shadowBlur = 0;
         ctx.shadowOffsetY = 0;
 
-        // 2. 绘制灰色底线轨道 (未填充部分)
-        ctx.strokeStyle = '#EBF1F5';
+        const trackGradient = ctx.createLinearGradient(0, 0, size, size);
+        trackGradient.addColorStop(0, 'rgba(255, 255, 255, 0.86)');
+        trackGradient.addColorStop(0.52, 'rgba(226, 238, 244, 0.82)');
+        trackGradient.addColorStop(1, 'rgba(255, 255, 255, 0.7)');
+        ctx.strokeStyle = trackGradient;
         ctx.lineWidth = lineWidth;
         ctx.lineCap = 'round';
         ctx.beginPath();
         ctx.arc(center, center, radius, startAngle, endAngle);
         ctx.stroke();
 
-        // 3. 绘制动态进度渐变弧线 (带圆角和外发光)
         if (progressPercent > 0) {
-          const progressEndAngle = startAngle + (progressPercent / 100) * totalAngle;
-
-          // 对角渐变线
+          const safeProgress = Math.max(0, Math.min(progressPercent, 100));
+          const progressEndAngle = startAngle + (safeProgress / 100) * totalAngle;
           const gradient = ctx.createLinearGradient(0, size, size, 0);
+
           if (isOverLimit) {
-            // 超额警告色渐变 (珊瑚红 -> 亮红)
             gradient.addColorStop(0, '#F87171');
+            gradient.addColorStop(0.58, '#FB7185');
             gradient.addColorStop(1, '#EF4444');
-            ctx.shadowColor = 'rgba(239, 68, 68, 0.35)'; // 红色发光
           } else {
-            // 正常色渐变 (蒂芙尼蓝 -> 主题绿)
-            gradient.addColorStop(0, '#2DD4BF');
-            gradient.addColorStop(1, '#10B981');
-            ctx.shadowColor = 'rgba(16, 185, 129, 0.32)'; // 绿色发光
+            gradient.addColorStop(0, '#2BB7C6');
+            gradient.addColorStop(0.58, '#54D8A6');
+            gradient.addColorStop(1, '#A8E86A');
           }
 
-          ctx.shadowBlur = 8;
+          ctx.shadowColor = isOverLimit ? 'rgba(239, 68, 68, 0.28)' : 'rgba(45, 212, 191, 0.34)';
+          ctx.shadowBlur = 14;
           ctx.shadowOffsetX = 0;
-          ctx.shadowOffsetY = 3;
-
+          ctx.shadowOffsetY = 5;
           ctx.strokeStyle = gradient;
           ctx.lineWidth = lineWidth;
           ctx.lineCap = 'round';
@@ -316,9 +322,17 @@ Page({
           ctx.arc(center, center, radius, startAngle, progressEndAngle);
           ctx.stroke();
 
-          // 重置阴影
           ctx.shadowBlur = 0;
+          ctx.shadowOffsetY = 0;
+          ctx.globalAlpha = 0.42;
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(center, center, radius - lineWidth / 2 + 2, startAngle + 0.02, progressEndAngle - 0.02);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
         }
+
       });
   },
 
