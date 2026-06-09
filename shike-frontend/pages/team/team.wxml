@@ -48,8 +48,8 @@
 
     <!-- 3. 生成海报与分享 -->
     <view class="footer-actions flex justify-between">
-      <button class="btn-action btn-secondary flex-1" catchtap="onGeneratePoster">生成打卡海报</button>
-      <button class="btn-action btn-quit flex-1" catchtap="onQuitTeam">退出当前队伍</button>
+      <view class="btn-action btn-secondary flex-1" catchtap="onGeneratePoster">生成打卡海报</view>
+      <view class="btn-action btn-quit flex-1" catchtap="onQuitTeam">退出当前队伍</view>
     </view>
 
     <!-- Off-screen Canvas for Poster Generation -->
