@@ -1,7 +1,10 @@
 .container {
-  padding: 30rpx;
+  padding: 30rpx 40rpx 60rpx 40rpx;
   display: flex;
   flex-direction: column;
+  background: linear-gradient(135deg, #F3F6F8 0%, #EBF4F6 100%);
+  min-height: 100vh;
+  box-sizing: border-box;
 }
 
 /* 1. 团队挑战概要卡片 */
@@ -86,7 +89,7 @@
 }
 
 .member-card {
-  background-color: #FFFFFF;
+  /* Inherits glass-card, removed solid white background override */
 }
 
 .rank-num {
