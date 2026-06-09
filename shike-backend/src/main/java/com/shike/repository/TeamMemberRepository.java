@@ -10,4 +10,6 @@ import java.util.List;
 public interface TeamMemberRepository extends JpaRepository<TeamMember, Long> {
     List<TeamMember> findByTeamId(Long teamId);
     List<TeamMember> findByUserId(Long userId);
+    java.util.Optional<TeamMember> findByTeamIdAndUserId(Long teamId, Long userId);
+    void deleteByTeamIdAndUserId(Long teamId, Long userId);
 }

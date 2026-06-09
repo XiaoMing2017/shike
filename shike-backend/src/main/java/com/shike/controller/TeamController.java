@@ -36,6 +36,12 @@ public class TeamController {
         return ResultDTO.success(team);
     }
 
+    @PostMapping("/{teamId}/leave")
+    public ResultDTO<Void> leaveTeam(@PathVariable Long teamId, @RequestParam Long userId) {
+        teamService.leaveTeam(userId, teamId);
+        return ResultDTO.success();
+    }
+
     @GetMapping("/{id}/members")
     public ResultDTO<List<TeamMember>> getTeamMembers(@PathVariable Long id) {
         List<TeamMember> members = teamService.getTeamMembers(id);

@@ -14,4 +14,5 @@ public interface TeamService {
     void checkin(Long userId, Long teamId, LocalDate date, boolean isSuccess);
     List<TeamMember> getTeamMembers(Long teamId);
     TeamDetailDTO getActiveTeamDetails(Long userId);
+    void leaveTeam(Long userId, Long teamId);
 }

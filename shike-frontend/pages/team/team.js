@@ -396,6 +396,9 @@ Page({
   },
 
   onQuitTeam() {
+    const user = app.globalData.userInfo;
+    if (!user) return;
+
     wx.showModal({
       title: '退出小队对赌',
       content: '中途退出对赌小队将直接扣除100个信用分。确定要放弃承诺退出挑战吗？',
@@ -403,12 +406,30 @@ Page({
       confirmText: '坚守承诺',
       success: (res) => {
         if (res.cancel) {
-          wx.showToast({ title: '已退出挑战，扣除分值。', icon: 'none' });
-          // In real production, this would make an API call to soft-delete membership
-          // For MVP, we simply show the action and refresh
-          setTimeout(() => {
-            this.fetchTeamData(app.globalData.userInfo.id);
-          }, 1500);
+          wx.showLoading({ title: '正在退出...' });
+          wx.request({
+            url: `${app.globalData.baseUrl}/team/${this.data.teamId}/leave?userId=${user.id}`,
+            method: 'POST',
+            success: (leaveRes) => {
+              wx.hideLoading();
+              if (leaveRes.data && leaveRes.data.code === 200) {
+                wx.showToast({ title: '已退出小队，扣分100', icon: 'none' });
+                // Update local userInfo points
+                user.points = Math.max(0, (user.points || 1000) - 100);
+                app.globalData.userInfo = user;
+                
+                setTimeout(() => {
+                  this.fetchTeamData(user.id);
+                }, 1500);
+              } else {
+                wx.showToast({ title: leaveRes.data.message || '退出失败', icon: 'none' });
+              }
+            },
+            fail: () => {
+              wx.hideLoading();
+              wx.showToast({ title: '网络连接失败', icon: 'none' });
+            }
+          });
         }
       }
     });
