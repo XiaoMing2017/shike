@@ -30,4 +30,7 @@ public class UserProfileDTO {
 
     @NotBlank(message = "goal cannot be blank")
     private String goal; // LOSE_WEIGHT, MAINTAIN, GAIN_MUSCLE
+
+    private String nickname;
+    private String avatarUrl;
 }

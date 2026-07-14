@@ -1,45 +1,72 @@
 <view class="container">
   <!-- 1. 用户信息卡片 -->
-  <view class="glass-card user-info-card flex align-center">
-    <image class="avatar" src="{{avatarUrl}}" mode="aspectFill" />
-    <view class="user-meta flex-col flex">
-      <text class="nickname">{{nickname}}</text>
-      <text class="user-id">食刻ID: {{userId}}</text>
-      <text class="user-id" style="margin-top: 5rpx; color: #10B981; font-weight: 600;">契约积分: {{points}} pts</text>
+  <view class="glass-card user-info-card">
+    <view style="display: flex; align-items: center;">
+      <button class="avatar-wrapper" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+        <image class="avatar" src="{{avatarUrl}}" mode="aspectFill" />
+      </button>
+      <view class="user-meta">
+        <view class="nickname-row flex align-center">
+          <input class="nickname-input" type="nickname" placeholder="点击输入昵称" value="{{nickname}}" bindblur="onNicknameBlur" bindinput="onNicknameInput" />
+          <text class="edit-icon">✏️</text>
+        </view>
+        <text class="user-id">食刻ID: {{userId}}</text>
+        <text class="user-id" style="margin-top: 5rpx; color: #10B981; font-weight: 600; text-decoration: underline;" catchtap="showPointsBill">契约积分: {{points}} pts 📋</text>
+      </view>
     </view>
+    <view class="signin-btn-container">
+      <button class="btn-signin" catchtap="onSignIn" disabled="{{alreadySignedIn}}">
+        {{alreadySignedIn ? '已签到' : '签到 +20'}}
+      </button>
+    </view>
+  </view>
+
+  <!-- 历史饮食日历入口 -->
+  <view class="glass-card flex justify-between align-center" style="margin-bottom: 24rpx; padding: 24rpx 30rpx; cursor: pointer;" catchtap="onTapHistory">
+    <view class="flex align-center" style="gap: 15rpx; align-items: center; display: flex;">
+      <text style="font-size: 34rpx;">📅</text>
+      <text style="font-weight: 700; color: #1E293B; font-size: 28rpx;">我的饮食日记与卡路里日历</text>
+    </view>
+    <text style="color: #94A3B8; font-weight: bold; font-size: 26rpx;">></text>
   </view>
 
   <!-- 2. 健康档案编辑 -->
   <view class="glass-card profile-form-card">
-    <view class="card-title">身体健康数据 (用于计算TDEE)</view>
-    
-    <view class="form-item flex justify-between align-center">
-      <text class="label">年龄 (岁)</text>
-      <input class="input" type="number" value="{{age}}" bindinput="onAgeInput" />
+    <view class="card-title flex justify-between align-center" catchtap="toggleFormCollapse" style="cursor: pointer;">
+      <text>身体健康数据 (用于计算TDEE)</text>
+      <text style="color: #10B981; font-size: 24rpx; font-weight: bold;">{{isFormCollapsed ? '展开 ▾' : '收起 ▴'}}</text>
     </view>
     
-    <view class="form-item flex justify-between align-center">
-      <text class="label">身高 (cm)</text>
-      <input class="input" type="digit" value="{{height}}" bindinput="onHeightInput" />
-    </view>
-    
-    <view class="form-item flex justify-between align-center">
-      <text class="label">当前体重 (kg)</text>
-      <input class="input" type="digit" value="{{weight}}" bindinput="onWeightInput" />
-    </view>
-
-    <view class="form-item flex justify-between align-center">
-      <text class="label">日常活动系数</text>
-      <picker bindchange="onActivityChange" value="{{activityIndex}}" range="{{activityOptions}}" range-key="label">
+    <view wx:if="{{!isFormCollapsed}}" class="form-content-wrap" style="margin-top: 20rpx;">
+      <view class="form-item flex justify-between align-center">
+        <text class="label">年龄 (岁)</text>
+        <input class="input" type="number" value="{{age}}" bindinput="onAgeInput" bindblur="onFieldBlur" />
+      </view>
+      
+      <view class="form-item flex justify-between align-center" catchtap="showGenderModal">
+        <text class="label">性别</text>
+        <view class="picker-val">{{genderOptions[genderIndex].label}} ▾</view>
+      </view>
+      
+      <view class="form-item flex justify-between align-center">
+        <text class="label">身高 (cm)</text>
+        <input class="input" type="digit" value="{{height}}" bindinput="onHeightInput" bindblur="onFieldBlur" />
+      </view>
+      
+      <view class="form-item flex justify-between align-center">
+        <text class="label">当前体重 (kg)</text>
+        <input class="input" type="digit" value="{{weight}}" bindinput="onWeightInput" bindblur="onFieldBlur" />
+      </view>
+ 
+      <view class="form-item flex justify-between align-center" catchtap="showActivityModal">
+        <text class="label">日常活动系数</text>
         <view class="picker-val">{{activityOptions[activityIndex].label}} ▾</view>
-      </picker>
-    </view>
-
-    <view class="form-item flex justify-between align-center">
-      <text class="label">减脂/增肌目标</text>
-      <picker bindchange="onGoalChange" value="{{goalIndex}}" range="{{goalOptions}}" range-key="label">
+      </view>
+ 
+      <view class="form-item flex justify-between align-center" catchtap="showGoalModal">
+        <text class="label">减脂/增肌目标</text>
         <view class="picker-val">{{goalOptions[goalIndex].label}} ▾</view>
-      </picker>
+      </view>
     </view>
   </view>
 
@@ -61,8 +88,106 @@
       <text class="target-val">{{targetCal}} 千卡/天</text>
       <text class="formula-info">采用 Mifflin-St Jeor 公式精确推算</text>
     </view>
+
+    <!-- 推荐营养素指标 -->
+    <view class="nutrients-target-row flex justify-between">
+      <view class="nutrient-target-item flex-col align-center flex">
+        <text class="nutrient-lbl">推荐蛋白质</text>
+        <text class="nutrient-val protein">{{targetProtein}} g</text>
+      </view>
+      <view class="nutrient-target-item flex-col align-center flex middle-item">
+        <text class="nutrient-lbl">推荐碳水</text>
+        <text class="nutrient-val carbs">{{targetCarbs}} g</text>
+      </view>
+      <view class="nutrient-target-item flex-col align-center flex">
+        <text class="nutrient-lbl">推荐脂肪</text>
+        <text class="nutrient-val fat">{{targetFat}} g</text>
+      </view>
+    </view>
   </view>
 
-  <!-- 保存按钮 -->
-  <button class="btn-primary" catchtap="onSaveProfile">保存并更新档案</button>
+  <!-- 提示信息：身体数据修改自动保存 -->
+  <view style="text-align: center; color: #94A3B8; font-size: 22rpx; margin-top: 10rpx; margin-bottom: 30rpx;">
+    💡 身体数据修改后将自动保存并更新看板
+  </view>
+
+  <!-- 日常活动系数居中弹窗 -->
+  <view class="modal-backdrop {{showActivitySheet ? 'active' : ''}}" catchtap="hideActivityModal" catchtouchmove="preventBubble">
+    <view class="modal-dialog" catchtap="preventBubble">
+      <view class="modal-header">
+        <text class="modal-title">选择日常活动系数</text>
+        <text class="modal-close" catchtap="hideActivityModal">✕</text>
+      </view>
+      <scroll-view class="modal-content" scroll-y>
+        <view class="modal-option {{activityIndex === index ? 'active' : ''}}" 
+              wx:for="{{activityOptions}}" wx:key="key" 
+              catchtap="selectActivity" data-index="{{index}}">
+          <text class="modal-option-label">{{item.label}}</text>
+          <icon type="success_no_circle" size="14" color="#10B981" wx:if="{{activityIndex === index}}" />
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <!-- 减脂/增肌目标居中弹窗 -->
+  <view class="modal-backdrop {{showGoalSheet ? 'active' : ''}}" catchtap="hideGoalModal" catchtouchmove="preventBubble">
+    <view class="modal-dialog" catchtap="preventBubble">
+      <view class="modal-header">
+        <text class="modal-title">选择减脂/增肌目标</text>
+        <text class="modal-close" catchtap="hideGoalModal">✕</text>
+      </view>
+      <scroll-view class="modal-content" scroll-y>
+        <view class="modal-option {{goalIndex === index ? 'active' : ''}}" 
+              wx:for="{{goalOptions}}" wx:key="key" 
+              catchtap="selectGoal" data-index="{{index}}">
+          <text class="modal-option-label">{{item.label}}</text>
+          <icon type="success_no_circle" size="14" color="#10B981" wx:if="{{goalIndex === index}}" />
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <!-- 积分账单明细弹窗 -->
+  <view class="modal-backdrop {{showPointsBillModal ? 'active' : ''}}" catchtap="hidePointsBill" catchtouchmove="preventBubble">
+    <view class="modal-dialog" catchtap="preventBubble" style="max-height: 70%; display: flex; flex-direction: column;">
+      <view class="modal-header">
+        <text class="modal-title">📋 积分收支明细</text>
+        <text class="modal-close" catchtap="hidePointsBill">✕</text>
+      </view>
+      <scroll-view class="modal-content" scroll-y style="flex: 1; padding: 20rpx 0;">
+        <view wx:if="{{pointsRecords.length === 0}}" style="text-align: center; color: #94A3B8; padding: 40rpx; font-size: 26rpx;">
+          暂无积分收支明细记录
+        </view>
+        <view wx:else>
+          <view class="points-record-item" wx:for="{{pointsRecords}}" wx:key="id" style="display: flex; justify-content: space-between; align-items: center; padding: 20rpx 30rpx; border-bottom: 1rpx solid #F1F5F9;">
+            <view style="display: flex; flex-direction: column; flex: 1;">
+              <text style="font-size: 26rpx; color: #1E293B; font-weight: 500;">{{item.remark || (item.amount > 0 ? '积分增加' : '积分扣除')}}</text>
+              <text style="font-size: 22rpx; color: #94A3B8; margin-top: 6rpx;">{{item.formattedDate}}</text>
+            </view>
+            <text style="font-size: 28rpx; font-weight: 700; color: {{item.amount > 0 ? '#10B981' : '#EF4444'}};">
+              {{item.amount > 0 ? '+' : ''}}{{item.amount}}
+            </text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <!-- 性别选择居中弹窗 -->
+  <view class="modal-backdrop {{showGenderSheet ? 'active' : ''}}" catchtap="hideGenderModal" catchtouchmove="preventBubble">
+    <view class="modal-dialog" catchtap="preventBubble">
+      <view class="modal-header">
+        <text class="modal-title">选择性别</text>
+        <text class="modal-close" catchtap="hideGenderModal">✕</text>
+      </view>
+      <scroll-view class="modal-content" scroll-y>
+        <view class="modal-option {{genderIndex === index ? 'active' : ''}}" 
+              wx:for="{{genderOptions}}" wx:key="key" 
+              catchtap="selectGender" data-index="{{index}}">
+          <text class="modal-option-label">{{item.label}}</text>
+          <icon type="success_no_circle" size="14" color="#10B981" wx:if="{{genderIndex === index}}" />
+        </view>
+      </scroll-view>
+    </view>
+  </view>
 </view>

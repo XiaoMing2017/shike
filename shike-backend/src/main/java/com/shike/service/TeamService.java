@@ -15,4 +15,5 @@ public interface TeamService {
     List<TeamMember> getTeamMembers(Long teamId);
     TeamDetailDTO getActiveTeamDetails(Long userId);
     void leaveTeam(Long userId, Long teamId);
+    byte[] getTeamQrCode(String inviteCode);
 }

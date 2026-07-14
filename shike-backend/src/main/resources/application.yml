@@ -13,6 +13,12 @@ spring:
     username: root
     password: 123456  # Default local password, user can change it later
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 25
+      minimum-idle: 5
+      idle-timeout: 30000
+      connection-timeout: 20000
+      max-lifetime: 1800000
 
   # JPA & Hibernate Settings
   jpa:
@@ -44,13 +50,18 @@ logging:
 
 ai:
   provider: OPENAI
-  model: mimo-v2-omni
-  endpoint: https://api.xiaomimimo.com/v1/chat/completions
-  api-key: sk-cz4l6x44t4mrbwdlg7yj7k4n5j9cld7nf35r30hhgtdvr9if
+  model: glm-4v-flash
+  endpoint: https://open.bigmodel.cn/api/paas/v4/chat/completions
+  api-key: 3ba6d2913b34455face1735113e4fcdb.oW6qiRCbdAU0hSfH
   timeout-ms: 60000
 
+baidu:
+  app-id: 7544108
+  api-key: sQunOkSArZbRwVCks3pXfwGK
+  secret-key: xcRFoyqDTCwwKVKEZDCJc0iav67YhVw0
+
 wx:
-  mock: true
-  appid: wx_mock_appid_123
-  secret: wx_mock_secret_456
+  mock: false
+  appid: wx826fd59633a30041
+  secret: 8194daf0bfc77af46c26710d4a2b5acc
 

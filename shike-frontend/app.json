@@ -2,13 +2,14 @@
   "pages": [
     "pages/index/index",
     "pages/team/team",
-    "pages/profile/profile"
+    "pages/profile/profile",
+    "pages/history/history"
   ],
   "window": {
     "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#10B981",
+    "navigationBarBackgroundColor": "#F3F6F8",
     "navigationBarTitleText": "食刻",
-    "navigationBarTextStyle": "white",
+    "navigationBarTextStyle": "black",
     "backgroundColor": "#F8FAFC"
   },
   "tabBar": {

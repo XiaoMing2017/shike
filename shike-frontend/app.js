@@ -5,7 +5,7 @@ App({
   },
   globalData: {
     userInfo: null,
-    baseUrl: 'http://172.19.3.66:8081/api/v1'
+    baseUrl: 'https://shike.store/api/v1'
   },
   login(callback) {
     if (this.globalData.userInfo) {
@@ -57,8 +57,34 @@ App({
           const user = res.data.data;
           this.globalData.userInfo = user;
           if (callback) callback(user);
+        } else {
+          this.useLocalMockUser(callback);
         }
+      },
+      fail: () => {
+        this.useLocalMockUser(callback);
       }
     });
+  },
+  useLocalMockUser(callback) {
+    console.warn("Using local mock user fallback because backend is offline.");
+    const mockUser = {
+      id: 1,
+      openid: 'mock_user_openid_123',
+      nickname: '自律挑战者',
+      avatarUrl: '/images/profile.png',
+      gender: 1,
+      age: 25,
+      height: 175.0,
+      weight: 70.0,
+      activityLevel: 'SEDENTARY',
+      goal: 'MAINTAIN',
+      bmr: 1625.0,
+      tdee: 1950.0,
+      targetCalories: 1950.0,
+      points: 850
+    };
+    this.globalData.userInfo = mockUser;
+    if (callback) callback(mockUser);
   }
 })

@@ -1,0 +1,431 @@
+.container {
+  padding: 30rpx;
+  background-color: #F8FAFC;
+  min-height: 100vh;
+  padding-bottom: 60rpx;
+}
+
+/* 1. 月份选择器 */
+.month-selector {
+  margin-bottom: 30rpx;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1rpx solid rgba(255, 255, 255, 0.5);
+  border-radius: 20rpx;
+  padding: 20rpx 40rpx;
+  box-shadow: 0 4rpx 20rpx rgba(148, 163, 184, 0.05);
+}
+
+.arrow-btn {
+  font-size: 32rpx;
+  color: #64748B;
+  padding: 10rpx 20rpx;
+  font-weight: bold;
+}
+
+.arrow-btn:active {
+  opacity: 0.6;
+}
+
+.month-title {
+  font-size: 34rpx;
+  font-weight: 800;
+  color: #1E293B;
+  letter-spacing: 2rpx;
+}
+
+/* 2. 日历卡片 */
+.calendar-card {
+  padding: 30rpx 20rpx;
+}
+
+.weekday-header {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 20rpx;
+  border-bottom: 1rpx solid #F1F5F9;
+  padding-bottom: 15rpx;
+}
+
+.weekday-item {
+  width: 14.28%;
+  text-align: center;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #94A3B8;
+  text-transform: uppercase;
+}
+
+.days-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.day-cell {
+  width: 14.28%;
+  height: 90rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: 16rpx;
+  margin-bottom: 8rpx;
+  transition: all 0.2s ease;
+}
+
+.empty-cell {
+  pointer-events: none;
+}
+
+.day-cell:not(.empty-cell):active {
+  background-color: rgba(241, 245, 249, 0.9);
+}
+
+.selected-cell {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+  border: 1.5rpx solid #10B981;
+  box-shadow: 0 4rpx 12rpx rgba(16, 185, 129, 0.1);
+}
+
+.day-number {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 4rpx;
+}
+
+.selected-cell .day-number {
+  color: #10B981;
+  font-weight: 800;
+}
+
+/* 状态点指示器 */
+.status-dot-wrapper {
+  height: 8rpx;
+  display: flex;
+  align-items: center;
+}
+
+.status-dot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+}
+
+.status-dot.success {
+  background-color: #10B981;
+  box-shadow: 0 0 6rpx rgba(16, 185, 129, 0.6);
+}
+
+.status-dot.exceeded {
+  background-color: #EF4444;
+  box-shadow: 0 0 6rpx rgba(239, 68, 68, 0.6);
+}
+
+.status-dot.empty {
+  background-color: #CBD5E1;
+}
+
+/* 状态图例 */
+.legend-row {
+  margin-top: 30rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #F1F5F9;
+  gap: 40rpx;
+}
+
+.legend-item {
+  gap: 12rpx;
+}
+
+.legend-dot {
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 50%;
+}
+
+.legend-dot.success {
+  background-color: #10B981;
+}
+
+.legend-dot.exceeded {
+  background-color: #EF4444;
+}
+
+.legend-dot.empty {
+  background-color: #CBD5E1;
+}
+
+.legend-text {
+  font-size: 22rpx;
+  color: #64748B;
+  font-weight: 500;
+}
+
+/* 3. 数据概要卡片 */
+.summary-card {
+  padding: 35rpx 30rpx;
+}
+
+.card-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #1E293B;
+  margin-bottom: 24rpx;
+}
+
+.calorie-progress-wrapper {
+  width: 100%;
+}
+
+.progress-val-row {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 12rpx;
+}
+
+.progress-lbl {
+  font-size: 24rpx;
+  color: #64748B;
+  font-weight: 500;
+  margin-right: auto;
+}
+
+.progress-val {
+  font-size: 36rpx;
+  font-weight: 800;
+  margin-right: 6rpx;
+}
+
+.text-success {
+  color: #10B981;
+}
+
+.text-danger {
+  color: #EF4444;
+}
+
+.progress-unit {
+  font-size: 22rpx;
+  color: #94A3B8;
+  font-weight: 500;
+}
+
+.progress-track {
+  height: 12rpx;
+  background-color: #F1F5F9;
+  border-radius: 100rpx;
+  overflow: hidden;
+  width: 100%;
+}
+
+.progress-bar {
+  height: 100%;
+  border-radius: 100rpx;
+  transition: width 0.3s ease;
+}
+
+.progress-bar.bar-success {
+  background: linear-gradient(90deg, #34D399, #10B981);
+}
+
+.progress-bar.bar-danger {
+  background: linear-gradient(90deg, #F87171, #EF4444);
+}
+
+/* 三大营养素并列占比条 */
+.macronutrient-bar {
+  display: flex;
+  height: 10rpx;
+  background-color: #F1F5F9;
+  border-radius: 100rpx;
+  overflow: hidden;
+  width: 100%;
+}
+
+.bar-segment {
+  height: 100%;
+}
+
+.bar-segment.carbs {
+  background-color: #3B82F6;
+}
+
+.bar-segment.protein {
+  background-color: #10B981;
+}
+
+.bar-segment.fat {
+  background-color: #F59E0B;
+}
+
+.macronutrient-labels {
+  width: 100%;
+}
+
+.label-item {
+  gap: 8rpx;
+}
+
+.bullet {
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+}
+
+.bullet.carbs {
+  background-color: #3B82F6;
+}
+
+.bullet.protein {
+  background-color: #10B981;
+}
+
+.bullet.fat {
+  background-color: #F59E0B;
+}
+
+.lbl-txt {
+  font-size: 22rpx;
+  color: #64748B;
+  font-weight: 500;
+}
+
+/* 4. 当日餐食明细流 */
+.meal-list-section {
+  margin-top: 35rpx;
+}
+
+.section-title-row {
+  margin-bottom: 20rpx;
+  padding-left: 6rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #1E293B;
+}
+
+.empty-meals {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80rpx 40rpx;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1rpx dashed rgba(148, 163, 184, 0.2);
+  border-radius: 24rpx;
+}
+
+.empty-text {
+  font-size: 26rpx;
+  color: #94A3B8;
+  font-weight: 500;
+}
+
+.meal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.meal-item-card {
+  margin-bottom: 0rpx;
+}
+
+.meal-card-top {
+  width: 100%;
+}
+
+.meal-meta {
+  gap: 20rpx;
+}
+
+.meal-image {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 20rpx;
+  background-color: #F1F5F9;
+}
+
+.meal-info {
+  gap: 8rpx;
+}
+
+.meal-type {
+  font-size: 28rpx;
+  font-weight: 800;
+  color: #1E293B;
+}
+
+.meal-time {
+  font-size: 22rpx;
+  color: #94A3B8;
+  font-weight: 500;
+}
+
+.meal-calories {
+  gap: 8rpx;
+}
+
+.cal-val {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #1E293B;
+}
+
+.oil-tag {
+  font-size: 18rpx;
+  font-weight: 700;
+  padding: 4rpx 10rpx;
+  border-radius: 6rpx;
+}
+
+.oil-tag.LIGHT {
+  color: #059669;
+  background-color: #D1FAE5;
+}
+
+.oil-tag.MODERATE {
+  color: #475569;
+  background-color: #F1F5F9;
+}
+
+.oil-tag.HEAVY {
+  color: #DC2626;
+  background-color: #FEE2E2;
+}
+
+/* 食物配料标签 */
+.food-tags {
+  gap: 12rpx;
+}
+
+.food-tag-item {
+  font-size: 22rpx;
+  color: #475569;
+  background-color: rgba(241, 245, 249, 0.7);
+  border: 1rpx solid rgba(203, 213, 225, 0.4);
+  padding: 6rpx 16rpx;
+  border-radius: 12rpx;
+  font-weight: 500;
+}
+
+/* 操作项 */
+.action-btn {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #10B981;
+  background-color: rgba(16, 185, 129, 0.06);
+  border: 1.5rpx solid rgba(16, 185, 129, 0.2);
+  padding: 10rpx 24rpx;
+  border-radius: 14rpx;
+  transition: all 0.2s ease;
+}
+
+.action-btn:active {
+  transform: scale(0.97);
+  background-color: rgba(16, 185, 129, 0.1);
+}

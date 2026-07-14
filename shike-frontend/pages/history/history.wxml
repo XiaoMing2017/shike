@@ -1,0 +1,135 @@
+<view class="container">
+  <!-- 1. 月份选择器 -->
+  <view class="month-selector flex justify-between align-center">
+    <view class="arrow-btn" catchtap="onPrevMonth">◀</view>
+    <view class="month-title">{{currentYear}}年{{currentMonth}}月</view>
+    <view class="arrow-btn" catchtap="onNextMonth">▶</view>
+  </view>
+
+  <!-- 2. 日历网格 -->
+  <view class="glass-card calendar-card">
+    <!-- 星期表头 -->
+    <view class="weekday-header">
+      <view class="weekday-item" wx:for="{{weekdays}}" wx:key="*this">{{item}}</view>
+    </view>
+    
+    <!-- 日期格子 -->
+    <view class="days-grid">
+      <view 
+        class="day-cell {{item.dayNumber ? '' : 'empty-cell'}} {{selectedDate === item.dateString ? 'selected-cell' : ''}}" 
+        wx:for="{{calendarDays}}" 
+        wx:key="index"
+        catchtap="{{item.dayNumber ? 'onSelectDate' : ''}}"
+        data-date="{{item.dateString}}"
+      >
+        <text class="day-number">{{item.dayNumber}}</text>
+        <!-- 状态指示点 -->
+        <view class="status-dot-wrapper" wx:if="{{item.dayNumber}}">
+          <view class="status-dot success" wx:if="{{item.status === 'SUCCESS'}}"></view>
+          <view class="status-dot exceeded" wx:if="{{item.status === 'EXCEEDED'}}"></view>
+          <view class="status-dot empty" wx:if="{{item.status === 'EMPTY'}}"></view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 状态图例 -->
+    <view class="legend-row flex justify-center align-center">
+      <view class="legend-item flex align-center">
+        <view class="legend-dot success"></view>
+        <text class="legend-text">热量达标</text>
+      </view>
+      <view class="legend-item flex align-center">
+        <view class="legend-dot exceeded"></view>
+        <text class="legend-text">摄入超标</text>
+      </view>
+      <view class="legend-item flex align-center">
+        <view class="legend-dot empty"></view>
+        <text class="legend-text">未打卡</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 3. 选中日期数据概要卡片 -->
+  <view class="glass-card summary-card">
+    <view class="card-title">{{selectedDateStr}} 热量汇总</view>
+    
+    <view class="summary-content flex align-center justify-between">
+      <!-- 极简卡路里环形/进度条 -->
+      <view class="calorie-progress-wrapper flex-col">
+        <view class="progress-val-row">
+          <text class="progress-lbl">已摄入 / 目标</text>
+          <text class="progress-val {{dayCalories > dayBudget ? 'text-danger' : 'text-success'}}">{{dayCalories}} / {{dayBudget}}</text>
+          <text class="progress-unit">kcal</text>
+        </view>
+        <view class="progress-track">
+          <view class="progress-bar {{dayCalories > dayBudget ? 'bar-danger' : 'bar-success'}}" style="width: {{caloriesPercent}}%;"></view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 三大营养素并列占比条 -->
+    <view class="macronutrient-bar" style="margin-top: 30rpx;">
+      <view class="bar-segment carbs" style="width: {{nutrients.carbsPercent}}%;"></view>
+      <view class="bar-segment protein" style="width: {{nutrients.proteinPercent}}%;"></view>
+      <view class="bar-segment fat" style="width: {{nutrients.fatPercent}}%;"></view>
+    </view>
+    <view class="macronutrient-labels flex justify-between" style="margin-top: 15rpx;">
+      <view class="label-item flex align-center">
+        <view class="bullet carbs"></view>
+        <text class="lbl-txt">碳水: {{nutrients.carbs}}g/{{nutrients.targetCarbs}}g</text>
+      </view>
+      <view class="label-item flex align-center">
+        <view class="bullet protein"></view>
+        <text class="lbl-txt">蛋白: {{nutrients.protein}}g/{{nutrients.targetProtein}}g</text>
+      </view>
+      <view class="label-item flex align-center">
+        <view class="bullet fat"></view>
+        <text class="lbl-txt">脂肪: {{nutrients.fat}}g/{{nutrients.targetFat}}g</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 4. 选中日期餐食明细流 -->
+  <view class="meal-list-section">
+    <view class="section-title-row">
+      <text class="section-title">当日餐食明细</text>
+    </view>
+
+    <view class="empty-meals" wx:if="{{dayMeals.length === 0}}">
+      <image class="empty-icon" src="/images/empty_box.png" mode="aspectFit" wx:if="{{false}}" />
+      <text class="empty-text">🍃 该日暂无饮食记录</text>
+    </view>
+
+    <view class="meal-list" wx:else>
+      <view class="meal-item-card glass-card" wx:for="{{dayMeals}}" wx:key="id">
+        <view class="meal-card-top flex justify-between align-center">
+          <view class="meal-meta flex align-center">
+            <image class="meal-image" src="{{item.imageUrl || '/images/default_food.png'}}" mode="aspectFill" catchtap="onPreviewImage" data-src="{{item.imageUrl}}" />
+            <view class="meal-info flex flex-col">
+              <text class="meal-type">{{item.mealTypeZh}}</text>
+              <text class="meal-time">{{item.timeStr}}</text>
+            </view>
+          </view>
+          <view class="meal-calories flex-col align-end flex">
+            <text class="cal-val">{{item.totalCalories}} kcal</text>
+            <text class="oil-tag {{item.oilLevel}}">{{item.oilLevelZh}}</text>
+          </view>
+        </view>
+        
+        <!-- 食物配料列表 -->
+        <view class="food-tags flex flex-wrap" style="margin-top: 15rpx;">
+          <view class="food-tag-item" wx:for="{{item.foodList}}" wx:for-item="food" wx:key="name">
+            {{food.name}} ({{food.weight}}g)
+          </view>
+        </view>
+
+        <!-- 海报生成快捷按钮 -->
+        <view class="meal-card-actions flex justify-end" style="margin-top: 20rpx; border-top: 1rpx solid rgba(255,255,255,0.05); padding-top: 15rpx;">
+          <view class="action-btn" catchtap="onGeneratePoster" data-meal="{{item}}">
+            🎨 生成海报 / 详单
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

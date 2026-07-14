@@ -5,6 +5,7 @@ import com.shike.model.entity.Team;
 import com.shike.model.entity.TeamCheckin;
 import com.shike.model.entity.TeamMember;
 import com.shike.model.entity.User;
+import com.shike.model.entity.PointsRecord;
 import com.shike.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ public class TeamSettleScheduler {
     private final UserRepository userRepository;
     private final DietRecordRepository dietRecordRepository;
     private final TeamCheckinRepository teamCheckinRepository;
+    private final PointsRecordRepository pointsRecordRepository;
 
     @Scheduled(cron = "0 5 0 * * ?")
     @Transactional
@@ -83,6 +85,20 @@ public class TeamSettleScheduler {
                     .build();
             teamCheckinRepository.save(checkin);
 
+            if (isSuccess) {
+                int currentPoints = user.getPoints() != null ? user.getPoints() : 0;
+                user.setPoints(currentPoints + 20);
+                userRepository.save(user);
+
+                PointsRecord pRecord = PointsRecord.builder()
+                        .userId(user.getId())
+                        .amount(20)
+                        .type("DAILY_CHECKIN")
+                        .remark("契约小队 [" + team.getTeamName() + "] 每日打卡达标奖励")
+                        .build();
+                pointsRecordRepository.save(pRecord);
+            }
+
             log.info("Member {} checkin result for {}: success={}, total={}/{} kcal", 
                     user.getNickname(), date, isSuccess, totalCalories, budget);
         }
@@ -109,15 +125,36 @@ public class TeamSettleScheduler {
         java.util.List<TeamMember> successMembers = new java.util.ArrayList<>();
         java.util.List<TeamMember> failedMembers = new java.util.ArrayList<>();
 
+        // 统计各成员的成功打卡天数，并找出其中的最大成功天数
+        java.util.Map<Long, Long> memberSuccessCounts = new java.util.HashMap<>();
+        long maxSuccessCount = 0;
         for (TeamMember member : teamMembers) {
             List<TeamCheckin> checkins = teamCheckinRepository.findByTeamIdAndUserId(team.getId(), member.getUserId());
-            // 检查这期间是否有任何一天的 isSuccess 是 false，或者成功的打卡次数是否达到了目标天数
             long successCount = checkins.stream().filter(TeamCheckin::getIsSuccess).count();
-            if (successCount == team.getTargetDays()) {
-                successMembers.add(member);
-            } else {
-                failedMembers.add(member);
+            memberSuccessCounts.put(member.getUserId(), successCount);
+            if (successCount > maxSuccessCount) {
+                maxSuccessCount = successCount;
             }
+        }
+
+        // 计算最少达标天数门槛（对赌天数的 60% 以上，向上取整）
+        int minRequiredDays = (int) Math.ceil(team.getTargetDays() * 0.6);
+        log.info("Team {} (ID: {}) requires at least {} successful checkin days (60% of {} target days) to qualify.", 
+                team.getTeamName(), team.getId(), minRequiredDays, team.getTargetDays());
+
+        // 根据最大成功打卡天数判定赢家和输家，且最大成功天数必须达到 60% 门槛
+        if (maxSuccessCount >= minRequiredDays) {
+            for (TeamMember member : teamMembers) {
+                long successCount = memberSuccessCounts.getOrDefault(member.getUserId(), 0L);
+                if (successCount == maxSuccessCount) {
+                    successMembers.add(member);
+                } else {
+                    failedMembers.add(member);
+                }
+            }
+        } else {
+            // 没有人达到最少打卡天数门槛，则全员失败
+            failedMembers.addAll(teamMembers);
         }
 
         log.info("Settlement stats for team {}: total={}, success={}, failed={}", 
@@ -131,6 +168,14 @@ public class TeamSettleScheduler {
                 if (user != null) {
                     user.setPoints((user.getPoints() != null ? user.getPoints() : 0) + depPoints);
                     userRepository.save(user);
+
+                    PointsRecord pRecord = PointsRecord.builder()
+                            .userId(user.getId())
+                            .amount(depPoints)
+                            .type("TEAM_REWARD")
+                            .remark("对赌挑战小队 [" + team.getTeamName() + "] 成功返还本金")
+                            .build();
+                    pointsRecordRepository.save(pRecord);
                 }
             }
             team.setStatus("SUCCESS");
@@ -146,6 +191,14 @@ public class TeamSettleScheduler {
                 if (user != null) {
                     user.setPoints((user.getPoints() != null ? user.getPoints() : 0) + depPoints + reward);
                     userRepository.save(user);
+
+                    PointsRecord pRecord = PointsRecord.builder()
+                            .userId(user.getId())
+                            .amount(depPoints + reward)
+                            .type("TEAM_REWARD")
+                            .remark("对赌挑战小队 [" + team.getTeamName() + "] 胜利平分积分(返还本金 " + depPoints + " + 奖金 " + reward + ")")
+                            .build();
+                    pointsRecordRepository.save(pRecord);
                 }
             }
             team.setStatus("FAILED");

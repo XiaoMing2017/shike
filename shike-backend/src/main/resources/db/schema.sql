@@ -72,3 +72,39 @@ CREATE TABLE IF NOT EXISTS `tb_team_checkin` (
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '打卡时间',
   UNIQUE KEY `uk_team_user_date` (`team_id`, `user_id`, `checkin_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='每日对赌打卡明细表';
+
+-- 6. 积分收支明细记录表
+CREATE TABLE IF NOT EXISTS `tb_points_record` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
+  `user_id` BIGINT NOT NULL COMMENT '用户ID',
+  `amount` INT NOT NULL COMMENT '积分变更值（加分为正数，扣分为负数）',
+  `type` VARCHAR(30) NOT NULL COMMENT '变更类型: SIGN_IN, AI_RECOGNITION, DAILY_CHECKIN, TEAM_DEPOSIT, TEAM_REWARD',
+  `remark` VARCHAR(255) DEFAULT NULL COMMENT '描述备注',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '发生时间',
+  INDEX `idx_user_points` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='积分流水记录表';
+
+-- 7. 每日饮水记录表
+CREATE TABLE IF NOT EXISTS `tb_water_record` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
+  `user_id` BIGINT NOT NULL COMMENT '用户ID',
+  `record_date` DATE NOT NULL COMMENT '记录日期',
+  `amount` INT NOT NULL DEFAULT 0 COMMENT '今日总饮水量(ml)',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  UNIQUE KEY `uk_user_date` (`user_id`, `record_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='每日饮水记录表';
+
+-- 8. 运动打卡记录表
+CREATE TABLE IF NOT EXISTS `tb_exercise_record` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
+  `user_id` BIGINT NOT NULL COMMENT '用户ID',
+  `record_date` DATE NOT NULL COMMENT '记录日期',
+  `activity_name` VARCHAR(50) NOT NULL COMMENT '运动项目名称',
+  `duration_minutes` INT NOT NULL COMMENT '运动时长(分钟)',
+  `calories_burned` DECIMAL(6,1) NOT NULL COMMENT '消耗热量(kcal)',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  INDEX `idx_user_exercise_date` (`user_id`, `record_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='运动打卡记录表';
+
+

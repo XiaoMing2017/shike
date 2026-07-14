@@ -10,11 +10,19 @@
 
 /* 1. 用户信息卡片 */
 .user-info-card {
-  /* Inherits glass-card styles, removed background-color override */
   margin-top: 10rpx;
   margin-bottom: 30rpx;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  padding: 30rpx 40rpx;
+}
+
+.user-meta {
+  display: flex;
+  flex-direction: column;
+  margin-left: 20rpx;
 }
 
 .user-info-card .avatar {
@@ -178,6 +186,7 @@
   padding: 24rpx 0rpx !important;
   text-align: center !important;
   font-size: 32rpx !important;
+  width: 100% !important;
   box-shadow: 0 10rpx 24rpx rgba(16, 185, 129, 0.25) !important;
   border: 1rpx solid rgba(255, 255, 255, 0.1) !important;
   margin-top: 10rpx !important;
@@ -190,3 +199,127 @@
   transform: scale(0.98) !important;
   box-shadow: 0 6rpx 16rpx rgba(16, 185, 129, 0.2) !important;
 }
+
+/* Avatar button and Nickname input styling */
+.avatar-wrapper {
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  margin: 0 30rpx 0 0 !important;
+  line-height: 1 !important;
+  width: 120rpx !important;
+  height: 120rpx !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+.avatar-wrapper::after {
+  border: none !important;
+}
+
+.avatar-wrapper .avatar {
+  margin-right: 0 !important;
+}
+
+.nickname-row {
+  display: flex;
+  align-items: center;
+}
+
+.nickname-input {
+  font-size: 36rpx;
+  font-weight: 800;
+  color: #1E293B;
+  letter-spacing: 0.5rpx;
+  width: 220rpx;
+  max-width: 220rpx;
+  height: auto;
+  min-height: auto;
+  text-align: left !important;
+}
+
+.edit-icon {
+  font-size: 22rpx;
+  color: #94A3B8;
+  margin-left: 10rpx;
+  opacity: 0.8;
+}
+
+/* Sign in button styling */
+.btn-signin {
+  font-size: 24rpx;
+  font-weight: bold;
+  border-radius: 30rpx;
+  padding: 0 !important;
+  width: 150rpx !important;
+  height: 60rpx !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: none !important;
+  margin: 0;
+  transition: all 0.3s ease;
+  box-shadow: 0 4rpx 12rpx rgba(16, 185, 129, 0.15);
+}
+
+.btn-signin::after {
+  border: none !important;
+}
+
+.btn-signin[disabled] {
+  background: #E2E8F0 !important;
+  color: #94A3B8 !important;
+  box-shadow: none !important;
+}
+
+.btn-signin:not([disabled]) {
+  background: linear-gradient(135deg, #10B981, #059669) !important;
+  color: #FFFFFF !important;
+}
+
+.nutrients-target-row {
+  margin-top: 30rpx;
+  border-top: 1rpx solid rgba(16, 185, 129, 0.1);
+  padding-top: 25rpx;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.nutrient-target-item {
+  width: 33.3%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.nutrient-target-item.middle-item {
+  border-left: 1rpx solid rgba(0, 0, 0, 0.05);
+  border-right: 1rpx solid rgba(0, 0, 0, 0.05);
+}
+
+.nutrient-lbl {
+  font-size: 20rpx;
+  color: #64748B;
+  font-weight: 600;
+  margin-bottom: 6rpx;
+}
+
+.nutrient-val {
+  font-size: 30rpx;
+  font-weight: 800;
+}
+
+.nutrient-val.protein {
+  color: #10B981;
+}
+
+.nutrient-val.carbs {
+  color: #3B82F6;
+}
+
+.nutrient-val.fat {
+  color: #F59E0B;
+}
+

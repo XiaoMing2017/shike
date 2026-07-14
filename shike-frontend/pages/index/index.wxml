@@ -1,13 +1,15 @@
 <view class="container">
   <!-- 0. 顶部导航/状态栏 -->
   <view class="app-header flex justify-between align-center">
-    <view class="header-icon-btn">日</view>
+    <view class="header-icon-btn" catchtap="showViewModeModal">
+      <text>{{viewModeOptions[viewModeIndex]}} ▾</text>
+    </view>
     <view class="header-title-wrapper flex flex-col align-center">
       <text class="header-title">食刻</text>
       <text class="header-date">{{currentDateStr}}</text>
     </view>
-    <view class="header-avatar-btn">
-      <image class="header-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120" mode="aspectFill" />
+    <view class="header-avatar-btn" catchtap="onTapAvatar">
+      <image class="header-avatar" src="{{avatarUrl}}" mode="aspectFill" />
       <view class="avatar-dot"></view>
     </view>
   </view>
@@ -18,7 +20,7 @@
       <view class="ring-outer-glow"></view>
       <view class="ring-glass-disc"></view>
       <view class="ring-inner-disc"></view>
-      <canvas type="2d" id="calorieCanvas" class="calorie-canvas" style="width: 196px; height: 196px;"></canvas>
+      <canvas type="2d" id="calorieCanvas" class="calorie-canvas"></canvas>
       <view class="ring-content flex-col align-center flex">
         <text class="ring-label {{isOverLimit ? 'over-limit-lbl' : ''}}">{{ringLabel}}</text>
         <text class="ring-value {{isOverLimit ? 'over-limit-val' : ''}}">{{remainingCal}}</text>
@@ -26,8 +28,20 @@
       </view>
     </view>
     <view class="calorie-detail-text">
-      已摄入：<text class="bold-text">{{consumedCal}}</text> / 目标：<text class="bold-text">{{targetCal}}</text>
+      已摄入 <text class="bold-text">{{consumedCal}}</text> / 目标 <text class="bold-text">{{targetCal}}</text> <block wx:if="{{exerciseCal > 0}}">/ 运动消耗 <text class="bold-text plus-text">+{{exerciseCal}}</text></block>
     </view>
+  </view>
+
+  <!-- 新人引导完善档案横幅 -->
+  <view class="guide-banner flex justify-between align-center" wx:if="{{showProfileGuide}}" catchtap="goToProfile">
+    <view class="guide-text flex align-center">
+      <text class="guide-emoji">📋</text>
+      <view class="guide-desc flex flex-col">
+        <text class="guide-title">完善个人健康档案</text>
+        <text class="guide-subtitle">定制您专属的每日热量预算与营养素目标</text>
+      </view>
+    </view>
+    <text class="guide-arrow">立即去完善 ></text>
   </view>
 
   <!-- 2. 三大营养素并列占比条 -->
@@ -42,21 +56,21 @@
       <view class="label-item flex align-center">
         <view class="bullet carbs"></view>
         <view class="label-text flex-col flex">
-          <text class="lbl-title">碳水化合物</text>
+          <text class="lbl-title">碳水 (目标{{nutrients.targetCarbs}}g)</text>
           <text class="lbl-val">{{nutrients.carbs}}g <text class="lbl-pct">({{nutrients.carbsPercent}}%)</text></text>
         </view>
       </view>
       <view class="label-item flex align-center">
         <view class="bullet protein"></view>
         <view class="label-text flex-col flex">
-          <text class="lbl-title">蛋白质</text>
+          <text class="lbl-title">蛋白 (目标{{nutrients.targetProtein}}g)</text>
           <text class="lbl-val">{{nutrients.protein}}g <text class="lbl-pct">({{nutrients.proteinPercent}}%)</text></text>
         </view>
       </view>
       <view class="label-item flex align-center">
         <view class="bullet fat"></view>
         <view class="label-text flex-col flex">
-          <text class="lbl-title">脂肪</text>
+          <text class="lbl-title">脂肪 (目标{{nutrients.targetFat}}g)</text>
           <text class="lbl-val">{{nutrients.fat}}g <text class="lbl-pct">({{nutrients.fatPercent}}%)</text></text>
         </view>
       </view>
@@ -67,6 +81,7 @@
   <view class="meal-section">
     <view class="section-header flex justify-between align-center">
       <text class="section-title">今日三餐记录</text>
+      <text class="history-link-btn" catchtap="onTapHistory">历史记录 ></text>
     </view>
     <scroll-view class="meal-scroll-row" scroll-x="true" enable-flex="true">
       <view class="meal-card-item" wx:for="{{meals}}" wx:key="type" catchtap="onScanMeal" data-type="{{item.type}}">
@@ -79,4 +94,291 @@
       </view>
     </scroll-view>
   </view>
+
+  <!-- 4. 今日运动打卡卡片 -->
+  <view class="exercise-section">
+    <view class="section-header flex justify-between align-center">
+      <text class="section-title">今日运动记录</text>
+      <text class="add-exercise-btn" catchtap="openAddExerciseModal">+ 记录运动</text>
+    </view>
+    
+    <view class="glass-card exercise-card">
+      <block wx:if="{{exercises.length > 0}}">
+        <view class="exercise-list">
+          <view class="exercise-item flex justify-between align-center" wx:for="{{exercises}}" wx:key="id">
+            <view class="exercise-info flex align-center">
+              <text class="exercise-icon">🏃</text>
+              <view class="exercise-details flex flex-col">
+                <text class="exercise-name">{{item.activityName}}</text>
+                <text class="exercise-time">{{item.durationMinutes}} 分钟</text>
+              </view>
+            </view>
+            <view class="exercise-right flex align-center">
+              <text class="exercise-cal">-{{item.caloriesBurned}} kcal</text>
+              <view class="exercise-delete-btn" catchtap="onDeleteExercise" data-id="{{item.id}}">✕</view>
+            </view>
+          </view>
+        </view>
+      </block>
+      <block wx:else>
+        <view class="exercise-empty flex flex-col align-center justify-center" catchtap="openAddExerciseModal">
+          <text class="exercise-empty-icon">🏃‍♂️</text>
+          <text class="exercise-empty-text">今天还没有运动，点击记录开始抵扣热量</text>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- 视图模式选择居中弹窗 -->
+  <view class="modal-backdrop {{showViewModeSheet ? 'active' : ''}}" catchtap="hideViewModeModal" catchtouchmove="preventBubble">
+    <view class="modal-dialog" catchtap="preventBubble">
+      <view class="modal-header">
+        <text class="modal-title">选择看板视图</text>
+        <text class="modal-close" catchtap="hideViewModeModal">✕</text>
+      </view>
+      <scroll-view class="modal-content" scroll-y>
+        <view class="modal-option {{viewModeIndex === index ? 'active' : ''}}" 
+              wx:for="{{viewModeOptions}}" wx:key="*this" 
+              catchtap="selectViewMode" data-index="{{index}}">
+          <text class="modal-option-label">{{item}}看板</text>
+          <icon type="success_no_circle" size="14" color="#10B981" wx:if="{{viewModeIndex === index}}" />
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <!-- 添加运动录入居中弹窗 -->
+  <view class="modal-backdrop {{showExerciseModal ? 'active' : ''}}" catchtap="closeAddExerciseModal" catchtouchmove="preventBubble">
+    <view class="modal-dialog" catchtap="preventBubble">
+      <view class="modal-header">
+        <text class="modal-title">记录运动</text>
+        <text class="modal-close" catchtap="closeAddExerciseModal">✕</text>
+      </view>
+      <scroll-view class="modal-content" scroll-y>
+        <view class="form-group" catchtap="openExerciseTypeSheet">
+          <text class="form-label">运动类型</text>
+          <view class="picker-value-box flex justify-between align-center">
+            <text>{{exerciseTypeOptions[exerciseTypeIndex].name}}</text>
+            <text class="picker-arrow">▾</text>
+          </view>
+        </view>
+
+        <view class="form-group">
+          <text class="form-label">运动时长 (分钟)</text>
+          <input class="form-input" type="number" placeholder="输入运动时长" value="{{exerciseDuration}}" bindinput="onExerciseDurationInput" />
+        </view>
+
+        <view class="form-group">
+          <text class="form-label">消耗热量 (kcal)</text>
+          <input class="form-input" type="digit" placeholder="自动根据MET计算或手动微调" value="{{exerciseCalories}}" bindinput="onExerciseCaloriesInput" />
+          <text class="form-tip">💡 基于估算公式，您也可以根据运动手环数据手动修改数值</text>
+        </view>
+
+        <view class="ai-result-actions" style="margin-top: 40rpx; width: 100%;">
+          <button class="ai-result-btn cancel" catchtap="closeAddExerciseModal">取消</button>
+          <button class="ai-result-btn confirm" catchtap="submitExercise">确定</button>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <!-- 选择运动类型弹窗 -->
+  <view class="modal-backdrop {{showExerciseTypeSheet ? 'active' : ''}}" style="z-index: 1100;" catchtap="closeExerciseTypeSheet" catchtouchmove="preventBubble">
+    <view class="modal-dialog" catchtap="preventBubble">
+      <view class="modal-header">
+        <text class="modal-title">选择运动类型</text>
+        <text class="modal-close" catchtap="closeExerciseTypeSheet">✕</text>
+      </view>
+      <scroll-view class="modal-content" scroll-y style="max-height: 480rpx;">
+        <view class="modal-option {{exerciseTypeIndex === index ? 'active' : ''}}" 
+              wx:for="{{exerciseTypeOptions}}" wx:key="name" 
+              catchtap="selectExerciseType" data-index="{{index}}">
+          <text class="modal-option-label">{{item.name}}</text>
+          <icon type="success_no_circle" size="14" color="#10B981" wx:if="{{exerciseTypeIndex === index}}" />
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <!-- 选择记录方式居中弹窗 -->
+  <view class="modal-backdrop {{showMealOptionSheet ? 'active' : ''}}" catchtap="hideMealOptionModal" catchtouchmove="preventBubble">
+    <view class="modal-dialog" catchtap="preventBubble">
+      <view class="modal-header">
+        <text class="modal-title">记录{{currentMealName}}</text>
+        <text class="modal-close" catchtap="hideMealOptionModal">✕</text>
+      </view>
+      <scroll-view class="modal-content" scroll-y>
+        <!-- 提示词引导输入框 -->
+        <view class="modal-hint-box">
+          <input class="modal-hint-input" placeholder="补充说明（可选，如：肉包、少油面条）" value="{{mealHint}}" bindinput="onMealHintInput" placeholder-style="color: #94A3B8;" />
+          <view class="quick-tags-container">
+            <view class="quick-tag {{mealHint === tag ? 'active' : ''}}" 
+                  wx:for="{{quickTags}}" 
+                  wx:key="*this" 
+                  wx:for-item="tag"
+                  catchtap="tapQuickTag" 
+                  data-tag="{{tag}}">
+              {{tag}}
+            </view>
+          </view>
+        </view>
+        <view class="modal-option" catchtap="selectMealOption" data-option="camera">
+          <view style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+            <text class="modal-option-label">📷 拍照识别 (AI)</text>
+            <text style="font-size: 22rpx; color: #EF4444; background: #FEE2E2; padding: 4rpx 12rpx; border-radius: 6rpx; font-weight: 500; margin-right: 20rpx;">-5 积分</text>
+          </view>
+        </view>
+        <view class="modal-option" catchtap="selectMealOption" data-option="album">
+          <view style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+            <text class="modal-option-label">🖼️ 从相册选择 (AI)</text>
+            <text style="font-size: 22rpx; color: #EF4444; background: #FEE2E2; padding: 4rpx 12rpx; border-radius: 6rpx; font-weight: 500; margin-right: 20rpx;">-5 积分</text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <!-- 选择油脂修正居中弹窗 -->
+  <view class="modal-backdrop {{showOilOptionSheet ? 'active' : ''}}" catchtap="hideOilOptionModal" catchtouchmove="preventBubble">
+    <view class="modal-dialog" catchtap="preventBubble">
+      <view class="modal-header">
+        <text class="modal-title">选择油量级别 (热量校准)</text>
+        <text class="modal-close" catchtap="hideOilOptionModal">✕</text>
+      </view>
+      <scroll-view class="modal-content" scroll-y>
+        <view class="modal-option" catchtap="selectOilOption" data-level="LIGHT">
+          <text class="modal-option-label">🍃 清淡少油 (脂肪-15%, 热量-10%)</text>
+        </view>
+        <view class="modal-option" catchtap="selectOilOption" data-level="MODERATE">
+          <text class="modal-option-label">🍲 适中普通 (无修正)</text>
+        </view>
+        <view class="modal-option" catchtap="selectOilOption" data-level="HEAVY">
+          <text class="modal-option-label">🌶️ 重油多盐 (脂肪+20%, 热量+15%)</text>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <!-- AI 识别结果磨砂弹窗 -->
+  <view class="modal-backdrop {{showAiResultModal ? 'active' : ''}}" catchtouchmove="preventBubble">
+    <view class="modal-dialog" catchtap="preventBubble">
+      <view class="modal-header">
+        <text class="modal-title">{{aiResultSuccess ? '🍽️ AI 识别成功' : '⚠️ 识别提示'}}</text>
+        <text class="modal-close" catchtap="hideAiResultModal">✕</text>
+      </view>
+      <view class="ai-result-body">
+        <block wx:if="{{aiResultSuccess}}">
+          <!-- 可编辑食材列表 -->
+          <view class="editable-food-list" style="margin: 12rpx 0; width: 100%;">
+            <view class="editable-food-header">
+              <text class="food-header-col-name">食材名称</text>
+              <text class="food-header-col-weight">重量(g)</text>
+              <text class="food-header-col-cal">热量(kcal)</text>
+              <text class="food-header-col-del"></text>
+            </view>
+            
+            <scroll-view class="food-list-scroll" scroll-y style="height: 220rpx;">
+              <view class="food-item-row" wx:for="{{aiFoodItems}}" wx:key="index">
+                <input class="food-input name" value="{{item.name}}" bindinput="onFoodItemNameInput" data-index="{{index}}" />
+                <input class="food-input weight" type="digit" value="{{item.weight}}" bindinput="onFoodItemWeightInput" data-index="{{index}}" />
+                <input class="food-input calories" type="digit" value="{{item.calories}}" bindinput="onFoodItemCaloriesInput" data-index="{{index}}" />
+                <view class="food-delete-btn" catchtap="deleteFoodItem" data-index="{{index}}">✕</view>
+                
+                <!-- 模糊匹配词典匹配提示 -->
+                <view class="match-suggestion-toast" wx:if="{{item.matched && item.matched.name !== item.name}}" catchtap="applyMatchSuggestion" data-index="{{index}}">
+                  💡 匹配到估量：1{{item.matched.unit}}{{item.matched.name}} ≈ {{item.matched.weight}}g (点击套用)
+                </view>
+              </view>
+            </scroll-view>
+            
+            <!-- 新增食材按钮 -->
+            <view class="add-food-row" catchtap="addNewFoodItem">
+              <text class="add-food-btn">+ 添加食材</text>
+            </view>
+            
+            <!-- 常见食材估重助手小卡片 -->
+            <view class="portion-helper-card">
+              <view class="portion-helper-title">💡 常见食物估量助手</view>
+              <view class="portion-helper-tags">
+                <view class="portion-helper-tag" wx:for="{{helperFoods}}" wx:key="name" catchtap="addHelperFood" data-name="{{item.name}}">
+                  + {{item.name}} (1{{item.unit}})
+                </view>
+              </view>
+            </view>
+
+            <view class="ai-result-cal-row">
+              <text class="ai-result-cal-label">估算总热量</text>
+              <text class="ai-result-cal-value">{{aiResultCalories}} kcal</text>
+            </view>
+            <view class="ai-result-hint">确认后将选择油量级别并保存记录</view>
+          </view>
+        </block>
+          <block wx:else>
+            <view class="ai-result-icon fail">❌</view>
+            <view class="ai-result-fail-msg">{{aiResultMessage}}</view>
+            <view class="ai-result-hint">请拍摄含有食物或饮品的照片</view>
+          </block>
+        </view>
+        <view class="ai-result-actions flex">
+          <view class="ai-result-btn cancel" catchtap="hideAiResultModal">取消</view>
+          <view class="ai-result-btn confirm {{aiResultSuccess ? '' : 'fail'}}" catchtap="onAiResultConfirm">
+            {{aiResultSuccess ? '选择油量' : '知道了'}}
+          </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 悬浮饮水气泡 -->
+  <view class="water-fab {{showWaterSheet ? 'hide' : ''}}" catchtap="openWaterSheet">
+    <view class="water-fab-inner">
+      <view class="water-fab-fill" style="height: {{waterFillHeight}}%;">
+        <view class="fab-wave fab-wave1"></view>
+        <view class="fab-wave fab-wave2"></view>
+      </view>
+      <view class="water-fab-highlight"></view>
+      <view class="water-fab-content">
+        <text class="water-fab-pct">{{waterPercent}}%</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部饮水抽屉 -->
+  <view class="water-sheet-mask {{showWaterSheet ? 'active' : ''}}" catchtap="closeWaterSheet">
+    <view class="water-sheet" catchtap="preventBubble">
+      <view class="water-sheet-handle"></view>
+      <text class="water-sheet-title">💧 今日饮水</text>
+
+      <!-- 动态水杯 -->
+      <view class="water-cup-wrapper">
+        <view class="water-cup">
+          <view class="water-fill" style="height: {{waterFillHeight}}%;">
+            <view class="wave wave1"></view>
+            <view class="wave wave2"></view>
+          </view>
+          <view class="cup-label">
+            <text class="cup-amount">{{waterAmount}}</text>
+            <text class="cup-unit">ml</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="water-stats">
+        <text class="water-stats-text">目标 {{waterTarget}} ml · 已完成 {{waterPercent}}%</text>
+      </view>
+
+      <!-- 快捷操作按钮 -->
+      <view class="water-actions">
+        <view class="water-btn minus" catchtap="onWaterReduce" data-amount="250">
+          <text>- 250ml</text>
+        </view>
+        <view class="water-btn plus" catchtap="onWaterAdd" data-amount="250">
+          <text>+ 250ml 🥛</text>
+        </view>
+        <view class="water-btn plus big" catchtap="onWaterAdd" data-amount="500">
+          <text>+ 500ml 🚀</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
 </view>

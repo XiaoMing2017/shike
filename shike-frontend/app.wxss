@@ -5,8 +5,11 @@ page, view, text, button, input, textarea {
     sans-serif;
   font-size: 28rpx;
   color: #1E293B;
-  background-color: #F8FAFC;
   box-sizing: border-box;
+}
+
+page {
+  background-color: #F8FAFC;
 }
 
 /* Flex layout utility classes */
@@ -51,3 +54,203 @@ page, view, text, button, input, textarea {
   margin-bottom: 24rpx;
   box-shadow: 0 10rpx 30rpx rgba(15, 23, 42, 0.03);
 }
+
+/* Custom Center Dialog Modal Styles */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-dialog {
+  width: 620rpx;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(20px);
+  border: 1rpx solid rgba(255, 255, 255, 0.7);
+  border-radius: 36rpx;
+  padding: 40rpx;
+  box-shadow: 0 20rpx 60rpx rgba(15, 23, 42, 0.15);
+  transform: scale(0.9);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.modal-backdrop.active .modal-dialog {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+  padding-bottom: 20rpx;
+  border-bottom: 1rpx solid rgba(241, 245, 249, 0.8);
+}
+
+.modal-title {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #1E293B;
+}
+
+.modal-close {
+  font-size: 36rpx;
+  color: #94A3B8;
+  padding: 10rpx;
+  line-height: 1;
+}
+
+.modal-close:active {
+  color: #64748B;
+}
+
+.modal-content {
+  max-height: 55vh;
+  overflow-y: auto;
+  margin-bottom: 10rpx;
+}
+
+.modal-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 28rpx 24rpx;
+  margin-bottom: 16rpx;
+  border-radius: 20rpx;
+  background-color: rgba(255, 255, 255, 0.3);
+  border: 1rpx solid rgba(255, 255, 255, 0.4);
+  transition: all 0.2s ease;
+}
+
+.modal-option:last-child {
+  margin-bottom: 0;
+}
+
+.modal-option:active {
+  background-color: rgba(241, 245, 249, 0.9);
+}
+
+.modal-option-label {
+  font-size: 26rpx;
+  color: #475569;
+  font-weight: 600;
+}
+
+/* Selected state - Health Green (Profile page) */
+.modal-option.active {
+  background-color: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.modal-option.active .modal-option-label {
+  color: #059669;
+  font-weight: 700;
+}
+
+/* Selected state - Indigo (Team page) */
+.modal-option.active.theme-indigo {
+  background-color: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.modal-option.active.theme-indigo .modal-option-label {
+  color: #4F46E5;
+  font-weight: 700;
+}
+
+/* Custom prompt hint input styles */
+.modal-hint-box {
+  padding: 10rpx 0 24rpx 0;
+  width: 100%;
+}
+.modal-hint-input {
+  width: 100%;
+  height: 80rpx;
+  background-color: rgba(255, 255, 255, 0.4);
+  border: 1.5rpx solid rgba(16, 185, 129, 0.20);
+  border-radius: 20rpx;
+  padding: 0 24rpx;
+  font-size: 26rpx;
+  color: #1E293B;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+.modal-hint-input:focus {
+  border-color: #10B981;
+  background-color: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 0 10rpx rgba(16, 185, 129, 0.1);
+}
+
+.quick-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 16rpx;
+  justify-content: flex-start;
+}
+.quick-tag {
+  font-size: 22rpx;
+  color: #64748B;
+  background-color: rgba(255, 255, 255, 0.4);
+  border: 1.5rpx solid rgba(203, 213, 225, 0.6);
+  padding: 8rpx 20rpx;
+  border-radius: 100rpx;
+  transition: all 0.2s ease;
+}
+.quick-tag:active {
+  transform: scale(0.95);
+}
+.quick-tag.active {
+  background-color: rgba(16, 185, 129, 0.1);
+  border-color: #10B981;
+  color: #10B981;
+  font-weight: 600;
+}
+
+.ai-drink-warning-box {
+  background-color: rgba(245, 158, 11, 0.06);
+  border: 1.5rpx solid rgba(245, 158, 11, 0.2);
+  padding: 16rpx 20rpx;
+  border-radius: 16rpx;
+  margin: 16rpx 0 24rpx 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.warning-title {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #D97706;
+}
+
+.warning-text {
+  font-size: 21rpx;
+  line-height: 1.5;
+  color: #B45309;
+  margin-top: 8rpx;
+}
+
+
+

@@ -4,6 +4,8 @@ import com.shike.common.BizException;
 import com.shike.model.dto.UserLoginDTO;
 import com.shike.model.entity.User;
 import com.shike.repository.UserRepository;
+import com.shike.repository.PointsRecordRepository;
+import com.shike.model.entity.PointsRecord;
 import com.shike.service.UserService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,6 +22,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -28,6 +33,7 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final PointsRecordRepository pointsRecordRepository;
 
     @Value("${wx.mock}")
     private boolean wxMock;
@@ -101,7 +107,7 @@ public class UserServiceImpl implements UserService {
                     .GET()
                     .timeout(Duration.ofMillis(5000))
                     .build();
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(java.nio.charset.StandardCharsets.UTF_8));
             String body = response.body();
             log.info("Wx login response: {}", body);
 
@@ -125,7 +131,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public User updateProfile(Long userId, Integer age, Integer gender, BigDecimal height, BigDecimal weight, String activityLevel, String goal) {
+    public User updateProfile(Long userId, Integer age, Integer gender, BigDecimal height, BigDecimal weight, String activityLevel, String goal, String nickname, String avatarUrl) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BizException(404, "User not found"));
 
@@ -135,6 +141,13 @@ public class UserServiceImpl implements UserService {
         user.setWeight(weight);
         user.setActivityLevel(activityLevel);
         user.setGoal(goal);
+
+        if (nickname != null && !nickname.trim().isEmpty()) {
+            user.setNickname(nickname);
+        }
+        if (avatarUrl != null && !avatarUrl.trim().isEmpty()) {
+            user.setAvatarUrl(avatarUrl);
+        }
 
         // Perform BMR and TDEE calculations
         calculateMetabolism(user);
@@ -192,5 +205,40 @@ public class UserServiceImpl implements UserService {
         }
         double targetCalVal = tdeeVal + goalOffset;
         user.setTargetCalories(BigDecimal.valueOf(targetCalVal).setScale(1, RoundingMode.HALF_UP));
+    }
+
+    @Override
+    @Transactional
+    public User signIn(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BizException(404, "User not found"));
+        
+        LocalDateTime startOfToday = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
+        boolean alreadySignedIn = pointsRecordRepository.existsByUserIdAndTypeAndCreatedAtAfter(
+                userId, "SIGN_IN", startOfToday);
+        
+        if (alreadySignedIn) {
+            throw new BizException(400, "您今天已经签过到了，明天再来吧！");
+        }
+        
+        int originalPoints = user.getPoints() != null ? user.getPoints() : 0;
+        user.setPoints(originalPoints + 20);
+        userRepository.save(user);
+        
+        PointsRecord record = PointsRecord.builder()
+                .userId(userId)
+                .amount(20)
+                .type("SIGN_IN")
+                .remark("每日签到奖励")
+                .build();
+        pointsRecordRepository.save(record);
+        
+        log.info("User {} signed in successfully and earned 20 points. New balance: {}", userId, user.getPoints());
+        return user;
+    }
+
+    @Override
+    public java.util.List<PointsRecord> getPointsRecords(Long userId) {
+        return pointsRecordRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
 }

@@ -37,7 +37,7 @@
             </view>
           </view>
         </view>
-        <view class="member-right flex-col align-end flex">
+        <view class="member-right flex-col align-center flex">
           <text class="status-text {{item.todayChecked ? 'checked-in' : 'pending'}}">
             {{item.todayChecked ? '今日已达标' : '今日未达标'}}
           </text>
@@ -80,16 +80,57 @@
         <text class="form-label">队伍名称</text>
         <input class="form-input" placeholder="例如：7天减脂冲刺组" value="{{createTeamName}}" bindinput="onTeamNameInput" maxlength="15" />
       </view>
-      <view class="form-item">
+      <view class="form-item" catchtap="showTargetDaysModal">
         <text class="form-label">挑战周期</text>
-        <picker bindchange="onTargetDaysChange" value="{{targetDaysIndex}}" range="{{targetDaysOptions}}">
-          <view class="picker-value flex justify-between align-center">
-            <text>{{targetDaysOptions[targetDaysIndex]}} 天挑战</text>
-            <text class="arrow">▼</text>
-          </view>
-        </picker>
+        <view class="picker-value flex justify-between align-center">
+          <text>{{targetDaysOptions[targetDaysIndex]}} 天挑战</text>
+          <text class="arrow">▼</text>
+        </view>
       </view>
       <button class="btn-create" catchtap="onCreateNewTeam">创建新队伍</button>
     </view>
   </block>
+
+  <!-- 挑战周期居中弹窗 -->
+  <view class="modal-backdrop {{showTargetDaysSheet ? 'active' : ''}}" catchtap="hideTargetDaysModal" catchtouchmove="preventBubble">
+    <view class="modal-dialog" catchtap="preventBubble">
+      <view class="modal-header">
+        <text class="modal-title">选择挑战周期</text>
+        <text class="modal-close" catchtap="hideTargetDaysModal">✕</text>
+      </view>
+      <scroll-view class="modal-content" scroll-y>
+        <view class="modal-option theme-indigo {{targetDaysIndex === index ? 'active' : ''}}" 
+              wx:for="{{targetDaysOptions}}" wx:key="*this" 
+              catchtap="selectTargetDays" data-index="{{index}}">
+          <text class="modal-option-label">{{item}} 天挑战</text>
+          <icon type="success_no_circle" size="14" color="#6366F1" wx:if="{{targetDaysIndex === index}}" />
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <!-- 分享海报弹窗 -->
+  <view class="modal-backdrop {{showSharePosterModal ? 'active' : ''}}" catchtap="hideSharePosterModal" catchtouchmove="preventBubble">
+    <view class="modal-dialog poster-dialog" catchtap="preventBubble">
+      <view class="modal-header">
+        <text class="modal-title">分享打卡海报</text>
+        <text class="modal-close" catchtap="hideSharePosterModal">✕</text>
+      </view>
+      
+      <!-- 海报样式切换 -->
+      <view class="poster-tabs">
+        <view class="poster-tab {{activeTemplate === 'vitality' ? 'active' : ''}}" catchtap="switchTemplate" data-template="vitality">元气活力</view>
+        <view class="poster-tab {{activeTemplate === 'receipt' ? 'active' : ''}}" catchtap="switchTemplate" data-template="receipt">热量账单</view>
+        <view class="poster-tab {{activeTemplate === 'polaroid' ? 'active' : ''}}" catchtap="switchTemplate" data-template="polaroid">拍立得</view>
+      </view>
+
+      <view class="poster-preview-container">
+        <image class="poster-preview-img" src="{{tempPosterPath}}" mode="aspectFit" />
+      </view>
+      <view class="poster-action-buttons">
+        <view class="btn-action-save" catchtap="onSavePosterClick">💾 保存海报到相册</view>
+        <view class="btn-action-share" catchtap="onSharePosterClick">✉️ 微信好友 / 朋友圈</view>
+      </view>
+    </view>
+  </view>
 </view>
