@@ -107,7 +107,7 @@
         <view class="exercise-list">
           <view class="exercise-item flex justify-between align-center" wx:for="{{exercises}}" wx:key="id">
             <view class="exercise-info flex align-center">
-              <text class="exercise-icon">🏃</text>
+              <text class="exercise-icon">{{item.emoji}}</text>
               <view class="exercise-details flex flex-col">
                 <text class="exercise-name">{{item.activityName}}</text>
                 <text class="exercise-time">{{item.durationMinutes}} 分钟</text>
@@ -328,19 +328,23 @@
     </view>
   </view>
 
-  <!-- 悬浮饮水气泡 -->
-  <view class="water-fab {{showWaterSheet ? 'hide' : ''}}" catchtap="openWaterSheet">
-    <view class="water-fab-inner">
-      <view class="water-fab-fill" style="height: {{waterFillHeight}}%;">
-        <view class="fab-wave fab-wave1"></view>
-        <view class="fab-wave fab-wave2"></view>
+  <!-- 悬浮饮水气泡 (支持拖拽移动) -->
+  <movable-area class="fab-movable-area">
+    <movable-view class="fab-movable-view" direction="all" x="{{fabX}}" y="{{fabY}}" out-of-bounds="{{false}}">
+      <view class="water-fab {{showWaterSheet ? 'hide' : ''}}" catchtap="openWaterSheet">
+        <view class="water-fab-inner">
+          <view class="water-fab-fill" style="height: {{waterFillHeight}}%;">
+            <view class="fab-wave fab-wave1"></view>
+            <view class="fab-wave fab-wave2"></view>
+          </view>
+          <view class="water-fab-highlight"></view>
+          <view class="water-fab-content">
+            <text class="water-fab-pct">{{waterPercent}}%</text>
+          </view>
+        </view>
       </view>
-      <view class="water-fab-highlight"></view>
-      <view class="water-fab-content">
-        <text class="water-fab-pct">{{waterPercent}}%</text>
-      </view>
-    </view>
-  </view>
+    </movable-view>
+  </movable-area>
 
   <!-- 底部饮水抽屉 -->
   <view class="water-sheet-mask {{showWaterSheet ? 'active' : ''}}" catchtap="closeWaterSheet">

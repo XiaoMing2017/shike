@@ -1,36 +1,82 @@
 version: '3.8'
 
 services:
+  # ==================== MySQL ====================
   shike-mysql:
     image: mysql:8.0
     container_name: shike-mysql
+    restart: always
     ports:
       - "3306:3306"
+    command: --default-authentication-plugin=mysql_native_password --innodb-buffer-pool-size=512M --max-connections=100
     environment:
-      MYSQL_ROOT_PASSWORD: "123456"
-      MYSQL_DATABASE: "db_shike"
+      - MYSQL_DATABASE=db_shike
+      - MYSQL_ROOT_PASSWORD=Nizouba12138.
+      - TZ=Asia/Shanghai
     volumes:
       - shike-mysql-data:/var/lib/mysql
-      - ./shike-backend/src/main/resources/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
-    restart: unless-stopped
+      - ./shike-backend/src/main/resources/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
     networks:
       - shike-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-u", "root", "-pNizouba12138."]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # ==================== Redis ====================
   shike-redis:
-    image: redis:7.0-alpine
+    image: redis:7.2-alpine
     container_name: shike-redis
+    restart: always
     ports:
       - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     volumes:
       - shike-redis-data:/data
-    restart: unless-stopped
+    networks:
+      - shike-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ==================== Backend App ====================
+  shike-app:
+    build:
+      context: ./shike-backend
+      dockerfile: Dockerfile
+    container_name: shike-app
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:mysql://shike-mysql:3306/db_shike?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_PASSWORD=Nizouba12138.
+      - SPRING_DATA_REDIS_HOST=shike-redis
+      - TZ=Asia/Shanghai
+      - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8 -Djdk.httpclient.allowRestrictedHeaders=connection
+    volumes:
+      # 持久化上传文件到主机中
+      - ./uploads:/app/uploads
+    depends_on:
+      shike-mysql:
+        condition: service_healthy
+      shike-redis:
+        condition: service_healthy
     networks:
       - shike-network
 
 volumes:
   shike-mysql-data:
+    driver: local
   shike-redis-data:
+    driver: local
 
 networks:
   shike-network:
     driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: "1450"

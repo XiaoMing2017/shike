@@ -199,7 +199,8 @@ Page({
 
             let foodList = [];
             try {
-              foodList = JSON.parse(r.foodItems);
+              const rawList = JSON.parse(r.foodItems) || [];
+              foodList = rawList.filter(food => food.name && food.name.trim() !== '');
             } catch (e) {}
 
             const rawDate = r.createdAt || '';

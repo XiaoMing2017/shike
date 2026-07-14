@@ -398,8 +398,9 @@
   background-color: #FEE2E2;
 }
 
-/* 食物配料标签 */
 .food-tags {
+  display: flex;
+  flex-wrap: wrap;
   gap: 12rpx;
 }
 

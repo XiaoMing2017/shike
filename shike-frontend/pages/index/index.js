@@ -106,6 +106,8 @@ Page({
     waterTarget: 2000,
     waterPercent: 0,
     waterFillHeight: 0,
+    fabX: 300,
+    fabY: 500,
     // 个人信息完善引导横幅
     showProfileGuide: false,
     // 运动消耗数据
@@ -132,6 +134,20 @@ Page({
   },
 
   onLoad(options) {
+    // 动态计算悬浮饮水气泡的初始位置 (右边 34rpx，距离底部 186rpx)
+    try {
+      const sys = wx.getSystemInfoSync();
+      const screenWidth = sys.windowWidth;
+      const screenHeight = sys.windowHeight;
+      const fabSize = 46; // 92rpx 对应 46px
+      this.setData({
+        fabX: screenWidth - fabSize - 17, // 右边 17px
+        fabY: screenHeight - fabSize - 100 // 底部 100px (安全避开 TabBar)
+      });
+    } catch (e) {
+      console.error('Failed to calculate FAB position', e);
+    }
+
     if (options && (options.inviteCode || options.scene)) {
       let inviteCode = options.inviteCode;
       if (options.scene) {
@@ -261,7 +277,22 @@ Page({
       },
       success: (exRes) => {
         if (exRes.data && exRes.data.code === 200) {
-          const exercises = exRes.data.data.records || [];
+          const emojiMap = {
+            '跑步': '🏃',
+            '慢跑': '🏃‍♂️',
+            '快走': '🚶‍♂️',
+            '散步': '🚶',
+            '动感单车': '🚲',
+            '游泳': '🏊',
+            '力量训练': '💪',
+            '瑜伽/普拉提': '🧘',
+            'HIIT/有氧操': '⚡',
+            '篮球/足球/球类': '🏀'
+          };
+          const exercises = (exRes.data.data.records || []).map(item => ({
+            ...item,
+            emoji: emojiMap[item.activityName] || '🏃'
+          }));
           const exerciseCal = Math.round(exRes.data.data.totalCalories || 0);
           this.setData({
             exercises,
