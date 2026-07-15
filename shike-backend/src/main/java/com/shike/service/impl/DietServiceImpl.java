@@ -53,7 +53,7 @@ public class DietServiceImpl implements DietService {
     @Value("${ai.model:gpt-4o-mini}")
     private String aiModel;
 
-    @Value("${ai.timeout-ms:15000}")
+    @Value("${ai.timeout-ms:120000}")
     private Integer aiTimeoutMs;
 
     @Value("${baidu.api-key:}")
@@ -782,8 +782,8 @@ public class DietServiceImpl implements DietService {
                     "model", model,
                     "messages", java.util.List.of(userMessage),
                     "temperature", 0.7,
-                    "max_tokens", 1000,
-                    "enable_thinking", false
+                    "max_tokens", 2048,
+                    "enable_thinking", true
             );
         } else {
             payload = java.util.Map.of(
