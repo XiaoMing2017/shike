@@ -367,12 +367,13 @@ public class DietServiceImpl implements DietService {
                 try {
                     responseBody = callOpenAiVision(aiModel, prompt, dataUrl, mimeType);
                 } catch (Exception e) {
-                    if (!"glm-4v-flash".equalsIgnoreCase(aiModel)) {
-                        log.warn("Primary model {} failed: {}. Falling back to stable model glm-4v-flash...", aiModel, e.getMessage());
+                    String fallbackModel = aiModel.contains("qwen") ? "qwen-vl-plus" : "glm-4v-flash";
+                    if (!fallbackModel.equalsIgnoreCase(aiModel)) {
+                        log.warn("Primary model {} failed: {}. Falling back to stable model {}...", aiModel, e.getMessage(), fallbackModel);
                         try {
-                            responseBody = callOpenAiVision("glm-4v-flash", prompt, dataUrl, mimeType);
+                            responseBody = callOpenAiVision(fallbackModel, prompt, dataUrl, mimeType);
                         } catch (Exception ex) {
-                            log.error("Fallback model glm-4v-flash also failed", ex);
+                            log.error("Fallback model " + fallbackModel + " also failed", ex);
                             throw ex;
                         }
                     } else {
@@ -775,6 +776,14 @@ public class DietServiceImpl implements DietService {
                     "temperature", 0.1,
                     "max_tokens", 2048,
                     "thinking", java.util.Map.of("type", "disabled")
+            );
+        } else if (model.contains("qwen")) {
+            payload = java.util.Map.of(
+                    "model", model,
+                    "messages", java.util.List.of(userMessage),
+                    "temperature", 0.7,
+                    "max_tokens", 1000,
+                    "enable_thinking", false
             );
         } else {
             payload = java.util.Map.of(
