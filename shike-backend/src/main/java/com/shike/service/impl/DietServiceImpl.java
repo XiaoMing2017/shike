@@ -782,8 +782,10 @@ public class DietServiceImpl implements DietService {
                     "model", model,
                     "messages", java.util.List.of(userMessage),
                     "temperature", 0.7,
+                    "top_p", 0.8,
                     "max_tokens", 2048,
-                    "enable_thinking", true
+                    "enable_thinking", true,
+                    "thinking_budget", 4000
             );
         } else {
             payload = java.util.Map.of(
