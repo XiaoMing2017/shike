@@ -597,11 +597,12 @@ Page({
       count: 1,
       mediaType: ['image'],
       sourceType: option === 'camera' ? ['camera'] : ['album'],
+      sizeType: ['original'],
       success: (mediaRes) => {
         const tempFilePath = mediaRes.tempFiles[0].tempFilePath;
         wx.showLoading({ title: 'AI 正在识别中...', mask: true });
         
-        // 直接使用选择的文件上传，让大模型看到原图以追求极致精度（如需压缩，用户在微信相册内不勾选“原图”即可）
+        // 直接使用选择的文件上传，让大模型看到原图以追求极致精度
         this.doUploadAndRecognize(tempFilePath);
       }
     });
