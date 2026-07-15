@@ -264,10 +264,13 @@ public class DietServiceImpl implements DietService {
         }
 
         try {
-            // 1. Convert MultipartFile to Base64 (compress/resize image to speed up AI recognition and prevent timeout)
-            byte[] fileBytes = compressImage(file);
+            // 1. Convert MultipartFile to Base64 (use original bytes directly to keep full resolution for text reading)
+            byte[] fileBytes = file.getBytes();
             String base64Data = java.util.Base64.getEncoder().encodeToString(fileBytes);
-            String mimeType = "image/jpeg"; // Output of compression is JPEG
+            String mimeType = file.getContentType();
+            if (mimeType == null || mimeType.isEmpty()) {
+                mimeType = "image/jpeg";
+            }
             String dataUrl = "data:" + mimeType + ";base64," + base64Data;
 
             String prompt = "你是一个顶级的中国膳食营养视觉分析师。请严格按照以下步骤分析用户上传的食物照片。\n" +
@@ -777,7 +780,7 @@ public class DietServiceImpl implements DietService {
             payload = java.util.Map.of(
                     "model", model,
                     "messages", java.util.List.of(userMessage),
-                    "temperature", 0.1,
+                    "temperature", 0.7,
                     "max_tokens", 1000
             );
         }
