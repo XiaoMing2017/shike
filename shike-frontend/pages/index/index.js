@@ -88,6 +88,9 @@ Page({
     aiResultSuccess: true,
     aiResultFoodText: '',
     aiResultCalories: 0,
+    aiResultProtein: 0,
+    aiResultFat: 0,
+    aiResultCarbs: 0,
     aiResultMessage: '',
     mealHint: '',
     quickTags: ['肉包', '馒头', '菜包', '水饺', '面条', '米饭'],
@@ -649,6 +652,9 @@ Page({
               aiResultSuccess: true,
               aiResultFoodText: this.formatFoodItems(parsedRecord.foodItems),
               aiResultCalories: parsedRecord.totalCalories,
+              aiResultProtein: parsedRecord.totalProtein || 0,
+              aiResultFat: parsedRecord.totalFat || 0,
+              aiResultCarbs: parsedRecord.totalCarbs || 0,
               aiResultMessage: ''
             });
           } else {
@@ -673,6 +679,9 @@ Page({
                 aiResultMessage: result.message || 'AI 识别失败',
                 aiResultFoodText: '',
                 aiResultCalories: 0,
+                aiResultProtein: 0,
+                aiResultFat: 0,
+                aiResultCarbs: 0,
                 aiFoodItems: []
               });
             }
@@ -839,13 +848,55 @@ Page({
 
   recalculateTotalCalories() {
     const items = this.data.aiFoodItems || [];
-    let total = 0;
+    let totalCal = 0;
+    let totalProtein = 0;
+    let totalFat = 0;
+    let totalCarbs = 0;
     items.forEach(item => {
-      total += parseFloat(item.calories) || 0;
+      totalCal += parseFloat(item.calories) || 0;
+      totalProtein += parseFloat(item.protein) || 0;
+      totalFat += parseFloat(item.fat) || 0;
+      totalCarbs += parseFloat(item.carbs) || 0;
     });
     this.setData({
-      aiResultCalories: total
+      aiResultCalories: parseFloat(totalCal.toFixed(1)),
+      aiResultProtein: parseFloat(totalProtein.toFixed(1)),
+      aiResultFat: parseFloat(totalFat.toFixed(1)),
+      aiResultCarbs: parseFloat(totalCarbs.toFixed(1))
     });
+  },
+
+  onFoodItemProteinInput(e) {
+    const index = e.currentTarget.dataset.index;
+    const newProtein = parseFloat(e.detail.value) || 0;
+    const items = this.data.aiFoodItems;
+    items[index].protein = newProtein;
+    this.setData({
+      aiFoodItems: items
+    });
+    this.recalculateTotalCalories();
+  },
+
+  onFoodItemFatInput(e) {
+    const index = e.currentTarget.dataset.index;
+    const newFat = parseFloat(e.detail.value) || 0;
+    const items = this.data.aiFoodItems;
+    items[index].fat = newFat;
+    this.setData({
+      aiFoodItems: items
+    });
+    this.recalculateTotalCalories();
+  },
+
+  onFoodItemCarbsInput(e) {
+    const index = e.currentTarget.dataset.index;
+    const newCarbs = parseFloat(e.detail.value) || 0;
+    const items = this.data.aiFoodItems;
+    items[index].carbs = newCarbs;
+    this.setData({
+      aiFoodItems: items
+    });
+    this.recalculateTotalCalories();
   },
 
   hideOilOptionModal() {

@@ -270,20 +270,42 @@
         <block wx:if="{{aiResultSuccess}}">
           <!-- 可编辑食材列表 -->
           <view class="editable-food-list" style="margin: 12rpx 0; width: 100%;">
-            <view class="editable-food-header">
-              <text class="food-header-col-name">食材名称</text>
-              <text class="food-header-col-weight">重量(g)</text>
-              <text class="food-header-col-cal">热量(kcal)</text>
-              <text class="food-header-col-del"></text>
-            </view>
-            
-            <scroll-view class="food-list-scroll" scroll-y style="height: 220rpx;">
-              <view class="food-item-row" wx:for="{{aiFoodItems}}" wx:key="index">
-                <input class="food-input name" value="{{item.name}}" bindinput="onFoodItemNameInput" data-index="{{index}}" />
-                <input class="food-input weight" type="digit" value="{{item.weight}}" bindinput="onFoodItemWeightInput" data-index="{{index}}" />
-                <input class="food-input calories" type="digit" value="{{item.calories}}" bindinput="onFoodItemCaloriesInput" data-index="{{index}}" />
-                <view class="food-delete-btn" catchtap="deleteFoodItem" data-index="{{index}}">✕</view>
+            <scroll-view class="food-list-scroll" scroll-y style="height: 420rpx;">
+              <view class="food-item-card" wx:for="{{aiFoodItems}}" wx:key="index">
+                <view class="food-item-row-top">
+                  <input class="food-input name" value="{{item.name}}" bindinput="onFoodItemNameInput" data-index="{{index}}" placeholder="食材名称" />
+                  <view class="input-unit-container weight">
+                    <input class="food-input weight" type="digit" value="{{item.weight}}" bindinput="onFoodItemWeightInput" data-index="{{index}}" />
+                    <text class="input-unit">g</text>
+                  </view>
+                  <view class="input-unit-container calories">
+                    <input class="food-input calories" type="digit" value="{{item.calories}}" bindinput="onFoodItemCaloriesInput" data-index="{{index}}" />
+                    <text class="input-unit">kcal</text>
+                  </view>
+                  <view class="food-delete-btn" catchtap="deleteFoodItem" data-index="{{index}}">✕</view>
+                </view>
                 
+                <view class="food-item-row-bottom">
+                  <view class="nutrient-input-box protein">
+                    <text class="nutrient-emoji">🥩</text>
+                    <text class="nutrient-label">蛋白</text>
+                    <input class="nutrient-val" type="digit" value="{{item.protein}}" bindinput="onFoodItemProteinInput" data-index="{{index}}" />
+                    <text class="nutrient-unit">g</text>
+                  </view>
+                  <view class="nutrient-input-box fat">
+                    <text class="nutrient-emoji">🥑</text>
+                    <text class="nutrient-label">脂肪</text>
+                    <input class="nutrient-val" type="digit" value="{{item.fat}}" bindinput="onFoodItemFatInput" data-index="{{index}}" />
+                    <text class="nutrient-unit">g</text>
+                  </view>
+                  <view class="nutrient-input-box carbs">
+                    <text class="nutrient-emoji">🍞</text>
+                    <text class="nutrient-label">碳水</text>
+                    <input class="nutrient-val" type="digit" value="{{item.carbs}}" bindinput="onFoodItemCarbsInput" data-index="{{index}}" />
+                    <text class="nutrient-unit">g</text>
+                  </view>
+                </view>
+
                 <!-- 模糊匹配词典匹配提示 -->
                 <view class="match-suggestion-toast" wx:if="{{item.matched && item.matched.name !== item.name}}" catchtap="applyMatchSuggestion" data-index="{{index}}">
                   💡 匹配到估量：1{{item.matched.unit}}{{item.matched.name}} ≈ {{item.matched.weight}}g (点击套用)
@@ -303,6 +325,25 @@
                 <view class="portion-helper-tag" wx:for="{{helperFoods}}" wx:key="name" catchtap="addHelperFood" data-name="{{item.name}}">
                   + {{item.name}} (1{{item.unit}})
                 </view>
+              </view>
+            </view>
+
+            <!-- 三大营养素总量汇总 -->
+            <view class="ai-result-macro-row">
+              <view class="macro-badge protein">
+                <text class="macro-dot">🥩</text>
+                <text class="macro-label">蛋白</text>
+                <text class="macro-value">{{aiResultProtein || 0}}g</text>
+              </view>
+              <view class="macro-badge fat">
+                <text class="macro-dot">🥑</text>
+                <text class="macro-label">脂肪</text>
+                <text class="macro-value">{{aiResultFat || 0}}g</text>
+              </view>
+              <view class="macro-badge carbs">
+                <text class="macro-dot">🍞</text>
+                <text class="macro-label">碳水</text>
+                <text class="macro-value">{{aiResultCarbs || 0}}g</text>
               </view>
             </view>
 
