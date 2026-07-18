@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 import javax.imageio.ImageIO;
 import java.awt.Color;
@@ -40,6 +41,7 @@ public class DietServiceImpl implements DietService {
     private final UserRepository userRepository;
     private final PointsRecordRepository pointsRecordRepository;
     private final ObjectMapper objectMapper;
+    private final StringRedisTemplate stringRedisTemplate;
 
     @Value("${ai.provider:OPENAI}")
     private String aiProvider;
@@ -72,6 +74,7 @@ public class DietServiceImpl implements DietService {
             throw new BizException(400, "Uploaded file cannot be empty");
         }
         
+        checkDailyAiLimit(userId);
         checkPointsBalance(userId);
         
         log.info("Received image for AI recognition: {}, size: {} bytes, hint: {}", file.getOriginalFilename(), file.getSize(), hint);
@@ -231,7 +234,8 @@ public class DietServiceImpl implements DietService {
                         .totalCarbs(carbs)
                         .imageUrl("https://images.example.com/meals/lunch.jpg")
                         .build();
-                deductPointsForAi(userId);
+                incrementDailyAiCount(userId);
+            deductPointsForAi(userId);
                 return resultRecord;
 
             } catch (BizException e) {
@@ -899,5 +903,34 @@ public class DietServiceImpl implements DietService {
 
         com.fasterxml.jackson.databind.JsonNode rootNode = objectMapper.readTree(response.body());
         return rootNode.path("choices").path(0).path("message").path("content").asText();
+    }
+
+    private void checkDailyAiLimit(Long userId) {
+        try {
+            String key = "shike:ai:limit:" + userId + ":" + LocalDate.now();
+            String val = stringRedisTemplate.opsForValue().get(key);
+            if (val != null) {
+                int count = Integer.parseInt(val);
+                if (count >= 10) {
+                    throw new BizException(400, "您今天已达到每日 10 次 AI 识别上限，请明天再来哦～");
+                }
+            }
+        } catch (BizException e) {
+            throw e;
+        } catch (Exception e) {
+            log.warn("Redis is unavailable for checking AI limit. Proceeding without limit check.", e);
+        }
+    }
+
+    private void incrementDailyAiCount(Long userId) {
+        try {
+            String key = "shike:ai:limit:" + userId + ":" + LocalDate.now();
+            Long count = stringRedisTemplate.opsForValue().increment(key);
+            if (count != null && count == 1) {
+                stringRedisTemplate.expire(key, java.time.Duration.ofHours(24));
+            }
+        } catch (Exception e) {
+            log.error("Failed to increment daily AI count in Redis", e);
+        }
     }
 }
