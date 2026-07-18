@@ -15,7 +15,7 @@ Page({
     inputInviteCode: '',
     createTeamName: '',
     targetDaysIndex: 0,
-    targetDaysOptions: [7, 14, 21],
+    targetDaysOptions: [7, 14, 21, 28, 42, 66, 90],
     showTargetDaysSheet: false,
     showSharePosterModal: false,
     tempPosterPath: '',
@@ -618,12 +618,31 @@ Page({
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
 
+    let boxSize = 36;
+    let gapX = 10;
+    let gapY = 12;
+    let cols = 8;
+    let checkFont = 'bold 20px sans-serif';
+    let numFont = '14px sans-serif';
+
+    if (this.data.targetDays > 42) {
+      boxSize = 22;
+      gapX = 5;
+      gapY = 6;
+      cols = 15;
+      checkFont = 'bold 13px sans-serif';
+      numFont = '10px sans-serif';
+    } else if (this.data.targetDays > 21) {
+      boxSize = 28;
+      gapX = 6;
+      gapY = 8;
+      cols = 12;
+      checkFont = 'bold 16px sans-serif';
+      numFont = '12px sans-serif';
+    }
+
     const startX = 90;
     const startY = 715;
-    const boxSize = 36;
-    const gapX = 10;
-    const gapY = 12;
-    const cols = 8;
 
     for (let i = 0; i < this.data.targetDays; i++) {
       const row = Math.floor(i / cols);
@@ -644,11 +663,11 @@ Page({
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       if (isChecked) {
-        ctx.font = 'bold 20px sans-serif';
+        ctx.font = checkFont;
         ctx.fillStyle = '#10B981';
         ctx.fillText('✓', x + boxSize/2, y + boxSize/2);
       } else {
-        ctx.font = '14px sans-serif';
+        ctx.font = numFont;
         ctx.fillStyle = '#94A3B8';
         ctx.fillText((i + 1).toString(), x + boxSize/2, y + boxSize/2);
       }
