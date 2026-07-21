@@ -30,11 +30,13 @@
           <image class="avatar" src="{{item.avatar}}" mode="aspectFill" />
           <view class="member-meta flex-col flex">
             <text class="member-name">{{item.name}}</text>
-            <view class="progress-ticks flex">
-              <view class="tick {{tick.checked ? 'checked' : ''}}" wx:for="{{item.ticks}}" wx:for-item="tick" wx:key="day">
-                {{tick.checked ? '✓' : ''}}
+            <scroll-view class="progress-ticks-scroll" scroll-x enable-flex>
+              <view class="progress-ticks flex">
+                <view class="tick {{tick.checked ? 'checked' : ''}}" wx:for="{{item.ticks}}" wx:for-item="tick" wx:key="day">
+                  {{tick.checked ? '✓' : ''}}
+                </view>
               </view>
-            </view>
+            </scroll-view>
           </view>
         </view>
         <view class="member-right flex-col align-center flex">

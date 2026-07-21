@@ -113,8 +113,17 @@
   margin-right: 20rpx;
 }
 
+.member-left {
+  flex: 1;
+  min-width: 0;
+  margin-right: 16rpx;
+  overflow: hidden;
+}
+
 .member-meta {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .member-name {
@@ -123,22 +132,31 @@
   color: #1E293B;
 }
 
+.progress-ticks-scroll {
+  width: 100%;
+  white-space: nowrap;
+  margin-top: 10rpx;
+}
+
 .progress-ticks {
-  margin-top: 12rpx;
+  display: inline-flex;
+  align-items: center;
 }
 
 .tick {
-  width: 32rpx;
-  height: 32rpx;
+  width: 30rpx;
+  height: 30rpx;
+  flex-shrink: 0;
   border-radius: 6rpx;
   border: 1rpx solid #CBD5E1;
-  margin-right: 8rpx;
-  font-size: 20rpx;
+  margin-right: 6rpx;
+  font-size: 18rpx;
   color: #94A3B8;
-  display: flex;
+  display: inline-flex;
   justify-content: center;
   align-items: center;
   background-color: #F8FAFC;
+  box-sizing: border-box;
 }
 
 .tick.checked {
