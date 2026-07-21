@@ -31,7 +31,7 @@ Page({
       { key: 2, label: '女 ♀️' }
     ],
     showGenderSheet: false,
-    isFormCollapsed: false,
+    isFormCollapsed: true,
     targetProtein: 0,
     targetCarbs: 0,
     targetFat: 0,
