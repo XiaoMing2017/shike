@@ -23,7 +23,9 @@ Page({
     goalOptions: [
       { key: 'LOSE_WEIGHT', label: '科学减脂 (热量赤字)', offset: -500 },
       { key: 'MAINTAIN', label: '保持体重 (热量收支平衡)', offset: 0 },
-      { key: 'GAIN_MUSCLE', label: '增肌塑形 (热量盈余)', offset: 300 }
+      { key: 'GAIN_MUSCLE', label: '增肌塑形 (热量盈余)', offset: 300 },
+      { key: 'PERIOD', label: '定制周期定量计划 (限时体重管理)', offset: 0 },
+      { key: 'ABS', label: '定制极致腹肌计划 (体脂率管理)', offset: 0 }
     ],
     genderIndex: 0,
     genderOptions: [
@@ -39,7 +41,12 @@ Page({
     showGoalSheet: false,
     alreadySignedIn: false,
     showPointsBillModal: false,
-    pointsRecords: []
+    pointsRecords: [],
+    customGoalType: 'PERIOD',
+    customGoalDays: '',
+    customGoalWeight: '',
+    currentBodyFat: '',
+    customGoalWarning: ''
   },
 
   onLoad() {
@@ -75,9 +82,14 @@ Page({
           genderIndex: genderIdx,
           bmr: user.bmr || 0,
           tdee: user.tdee || 0,
-          targetCal: user.targetCalories || 0
+          targetCal: user.targetCalories || 0,
+          customGoalType: user.customGoalType || 'PERIOD',
+          customGoalDays: user.customGoalDays || '',
+          customGoalWeight: user.customGoalWeight || '',
+          currentBodyFat: user.currentBodyFat || ''
         }, () => {
           this.calculateNutrientsTargets();
+          this.recalculateMetabolism();
         });
       } else {
         // First time calculate
@@ -231,6 +243,21 @@ Page({
     this.saveProfileSilent(null, nickname);
   },
 
+  onCustomGoalDaysInput(e) {
+    this.setData({ customGoalDays: parseInt(e.detail.value) || '' });
+    this.recalculateMetabolism();
+  },
+
+  onCustomGoalWeightInput(e) {
+    this.setData({ customGoalWeight: parseFloat(e.detail.value) || '' });
+    this.recalculateMetabolism();
+  },
+
+  onCurrentBodyFatInput(e) {
+    this.setData({ currentBodyFat: parseFloat(e.detail.value) || '' });
+    this.recalculateMetabolism();
+  },
+
   recalculateMetabolism() {
     const { age, height, weight, activityIndex, activityOptions, goalIndex, goalOptions, genderIndex, genderOptions } = this.data;
     if (!age || !height || !weight) return;
@@ -245,13 +272,76 @@ Page({
 
     const activityFactor = activityOptions[activityIndex].value;
     const tdee = Math.round(bmr * activityFactor);
-    const offset = goalOptions[goalIndex].offset;
-    const targetCal = Math.round(tdee + offset);
+    
+    let targetCal = tdee;
+    let warning = '';
+    const goalKey = goalOptions[goalIndex].key;
+
+    if (goalKey === 'PERIOD') {
+      const days = parseInt(this.data.customGoalDays);
+      const weightChange = parseFloat(this.data.customGoalWeight);
+
+      if (days && days > 0 && weightChange) {
+        let calculatedOffset = (weightChange * 3850.0) / days;
+        const ratePerWeek = Math.abs(weightChange) / days * 7.0;
+
+        if (weightChange < 0) { // Loss
+          if (ratePerWeek > 2.0) {
+            calculatedOffset = -1000.0;
+            warning = '⚠️ 提示：您填写的计划速度超出了健康减重建议范围（每周最多减 2 斤）。已自动为您调整为健康安全上限（每日赤字 1000 kcal），以防代谢受损。';
+          }
+        } else { // Gain
+          if (ratePerWeek > 1.0) {
+            calculatedOffset = 500.0;
+            warning = '⚠️ 提示：您填写的计划速度超出了健康增肌建议范围（每周最多增 1 斤）。已自动为您调整为健康安全上限（每日盈余 500 kcal）。';
+          }
+        }
+        targetCal = Math.round(tdee + calculatedOffset);
+      }
+    } else if (goalKey === 'ABS') {
+      const days = parseInt(this.data.customGoalDays);
+      if (days && days > 0) {
+        const currentFatRate = parseFloat(this.data.currentBodyFat) || (gender === 2 ? 26.0 : 20.0);
+        const targetFatRate = gender === 2 ? 18.0 : 12.0;
+
+        const fatMass = weight * (currentFatRate / 100.0);
+        const leanMass = weight - fatMass;
+        const targetWeight = leanMass / (1.0 - (targetFatRate / 100.0));
+        
+        const fatLossNeeded = weight - targetWeight;
+        if (fatLossNeeded > 0) {
+          const fatLossNeededInJin = fatLossNeeded * 2.0;
+          let calculatedOffset = (-fatLossNeededInJin * 3850.0) / days;
+          
+          const ratePerWeek = fatLossNeededInJin / days * 7.0;
+          if (ratePerWeek > 2.0) {
+            calculatedOffset = -1000.0;
+            warning = '⚠️ 提示：为了在 ' + days + ' 天内露出腹肌，需要减掉 ' + fatLossNeededInJin.toFixed(1) + ' 斤脂肪。这超出了健康减重建议范围（每周最多减 2 斤）。已自动调整为健康安全上限（每日赤字 1000 kcal）。';
+          } else {
+            warning = '💡 分析：为了露出清晰腹肌，您需要减少约 ' + fatLossNeededInJin.toFixed(1) + ' 斤纯脂肪，计划每天保持 -' + Math.round(Math.abs(calculatedOffset)) + ' kcal 的热量赤字。';
+          }
+          targetCal = Math.round(tdee + calculatedOffset);
+        }
+      }
+    } else {
+      const offset = goalOptions[goalIndex].offset;
+      targetCal = Math.round(tdee + offset);
+    }
+
+    if (targetCal < bmr) {
+      targetCal = bmr;
+      if (!warning) {
+        warning = '⚠️ 提示：计算出的每日建议摄入热量已低于基础代谢（BMR），已自动锁定在 BMR 底线以保障健康。';
+      } else {
+        warning += ' 此外，建议摄入量已触及基础代谢（BMR）底线，已自动锁定在 BMR。';
+      }
+    }
 
     this.setData({
       bmr,
       tdee,
-      targetCal
+      targetCal,
+      customGoalWarning: warning
     }, () => {
       this.calculateNutrientsTargets();
     });
@@ -287,7 +377,11 @@ Page({
         activityLevel: activityLevel,
         goal: goal,
         nickname: newNickname !== null ? newNickname : this.data.nickname,
-        avatarUrl: newAvatarUrl !== null ? newAvatarUrl : this.data.avatarUrl
+        avatarUrl: newAvatarUrl !== null ? newAvatarUrl : this.data.avatarUrl,
+        customGoalType: goal === 'PERIOD' ? 'PERIOD' : (goal === 'ABS' ? 'ABS' : null),
+        customGoalDays: (goal === 'PERIOD' || goal === 'ABS') ? (parseInt(this.data.customGoalDays) || null) : null,
+        customGoalWeight: goal === 'PERIOD' ? (parseFloat(this.data.customGoalWeight) || null) : null,
+        currentBodyFat: goal === 'ABS' ? (parseFloat(this.data.currentBodyFat) || null) : null
       },
       success: (res) => {
         if (res.data && res.data.code === 200) {
@@ -323,7 +417,11 @@ Page({
         activityLevel: activityLevel,
         goal: goal,
         nickname: this.data.nickname,
-        avatarUrl: this.data.avatarUrl
+        avatarUrl: this.data.avatarUrl,
+        customGoalType: goal === 'PERIOD' ? 'PERIOD' : (goal === 'ABS' ? 'ABS' : null),
+        customGoalDays: (goal === 'PERIOD' || goal === 'ABS') ? (parseInt(this.data.customGoalDays) || null) : null,
+        customGoalWeight: goal === 'PERIOD' ? (parseFloat(this.data.customGoalWeight) || null) : null,
+        currentBodyFat: goal === 'ABS' ? (parseFloat(this.data.currentBodyFat) || null) : null
       },
       success: (res) => {
         if (res.data && res.data.code === 200) {
