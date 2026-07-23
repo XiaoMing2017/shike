@@ -37,7 +37,11 @@ public class UserController {
                 profileDTO.getActivityLevel(),
                 profileDTO.getGoal(),
                 profileDTO.getNickname(),
-                profileDTO.getAvatarUrl()
+                profileDTO.getAvatarUrl(),
+                profileDTO.getCustomGoalType(),
+                profileDTO.getCustomGoalDays(),
+                profileDTO.getCustomGoalWeight(),
+                profileDTO.getCurrentBodyFat()
         );
         return ResultDTO.success(user);
     }

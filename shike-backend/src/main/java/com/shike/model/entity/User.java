@@ -59,6 +59,18 @@ public class User {
 
     private Integer points;
 
+    @Column(name = "custom_goal_type", length = 20)
+    private String customGoalType;
+
+    @Column(name = "custom_goal_days")
+    private Integer customGoalDays;
+
+    @Column(name = "custom_goal_weight", precision = 5, scale = 2)
+    private BigDecimal customGoalWeight;
+
+    @Column(name = "current_body_fat", precision = 4, scale = 1)
+    private BigDecimal currentBodyFat;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

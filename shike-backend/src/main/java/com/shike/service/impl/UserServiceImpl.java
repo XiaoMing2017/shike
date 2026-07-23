@@ -131,7 +131,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public User updateProfile(Long userId, Integer age, Integer gender, BigDecimal height, BigDecimal weight, String activityLevel, String goal, String nickname, String avatarUrl) {
+    public User updateProfile(Long userId, Integer age, Integer gender, BigDecimal height, BigDecimal weight, 
+                               String activityLevel, String goal, String nickname, String avatarUrl,
+                               String customGoalType, Integer customGoalDays, BigDecimal customGoalWeight,
+                               BigDecimal currentBodyFat) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BizException(404, "User not found"));
 
@@ -141,6 +144,10 @@ public class UserServiceImpl implements UserService {
         user.setWeight(weight);
         user.setActivityLevel(activityLevel);
         user.setGoal(goal);
+        user.setCustomGoalType(customGoalType);
+        user.setCustomGoalDays(customGoalDays);
+        user.setCustomGoalWeight(customGoalWeight);
+        user.setCurrentBodyFat(currentBodyFat);
 
         if (nickname != null && !nickname.trim().isEmpty()) {
             user.setNickname(nickname);
@@ -202,8 +209,57 @@ public class UserServiceImpl implements UserService {
             goalOffset = -500.0;
         } else if ("GAIN_MUSCLE".equalsIgnoreCase(user.getGoal())) {
             goalOffset = 300.0;
+        } else if ("PERIOD".equalsIgnoreCase(user.getGoal()) || "CUSTOM".equalsIgnoreCase(user.getGoal())) {
+            // Custom periodic weight goal: 1 jin = 3850 kcal
+            if (user.getCustomGoalDays() != null && user.getCustomGoalWeight() != null && user.getCustomGoalDays() > 0) {
+                double targetDays = user.getCustomGoalDays();
+                double weightChangeInJin = user.getCustomGoalWeight().doubleValue();
+                double calculatedOffset = (weightChangeInJin * 3850.0) / targetDays;
+                
+                // Safety weekly rate cap
+                double ratePerWeek = Math.abs(weightChangeInJin) / targetDays * 7.0;
+                if (weightChangeInJin < 0) { // Loss
+                    if (ratePerWeek > 2.0) { // Max 2 jin per week
+                        calculatedOffset = -1000.0;
+                    }
+                } else { // Gain
+                    if (ratePerWeek > 1.0) { // Max 1 jin per week
+                        calculatedOffset = 500.0;
+                    }
+                }
+                goalOffset = calculatedOffset;
+            }
+        } else if ("ABS".equalsIgnoreCase(user.getGoal())) {
+            // Abs visualization goal based on body fat percentage
+            if (user.getCustomGoalDays() != null && user.getCustomGoalDays() > 0) {
+                double currentFatRate = user.getCurrentBodyFat() != null ? user.getCurrentBodyFat().doubleValue() : (user.getGender() != null && user.getGender() == 2 ? 26.0 : 20.0);
+                double targetFatRate = user.getGender() != null && user.getGender() == 2 ? 18.0 : 12.0;
+                
+                double fatMass = w * (currentFatRate / 100.0);
+                double leanMass = w - fatMass;
+                double targetWeight = leanMass / (1.0 - (targetFatRate / 100.0));
+                
+                double fatLossNeededInKg = w - targetWeight;
+                if (fatLossNeededInKg > 0) {
+                    double fatLossNeededInJin = fatLossNeededInKg * 2.0;
+                    double targetDays = user.getCustomGoalDays();
+                    double calculatedOffset = (-fatLossNeededInJin * 3850.0) / targetDays;
+                    
+                    // Safety weekly rate cap: max 2 jin per week
+                    double ratePerWeek = fatLossNeededInJin / targetDays * 7.0;
+                    if (ratePerWeek > 2.0) {
+                        calculatedOffset = -1000.0;
+                    }
+                    goalOffset = calculatedOffset;
+                }
+            }
         }
+        
         double targetCalVal = tdeeVal + goalOffset;
+        if (targetCalVal < bmrVal) {
+            targetCalVal = bmrVal; // Lock at BMR Floor
+        }
+        
         user.setTargetCalories(BigDecimal.valueOf(targetCalVal).setScale(1, RoundingMode.HALF_UP));
     }
 

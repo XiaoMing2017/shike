@@ -33,4 +33,9 @@ public class UserProfileDTO {
 
     private String nickname;
     private String avatarUrl;
+
+    private String customGoalType;
+    private Integer customGoalDays;
+    private BigDecimal customGoalWeight;
+    private BigDecimal currentBodyFat;
 }
