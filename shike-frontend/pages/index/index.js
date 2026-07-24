@@ -256,16 +256,52 @@ Page({
   },
 
   loadUserData(user) {
-    // 1. Set calorie targets
+    // 1. Set calorie targets and dynamic nutrient distribution
     const targetCal = user.targetCalories || 2000;
+    const userWeight = user.weight || 65;
+    const userGoal = user.goal || 'MAINTAIN';
+
+    // 动态蛋白质推荐系数 (g/kg 体重)
+    let proteinMultiplier = 1.4;
+    if (userGoal === 'GAIN_MUSCLE' || userGoal === 'ABS') {
+      proteinMultiplier = 2.0; // 增肌/腹肌塑形 2.0g/kg
+    } else if (userGoal === 'LOSE_WEIGHT' || userGoal === 'PERIOD' || userGoal === 'CUSTOM') {
+      proteinMultiplier = 1.8; // 减脂赤字保护 1.8g/kg
+    }
+
+    let proteinGrams = userWeight * proteinMultiplier;
+    let proteinCal = proteinGrams * 4;
+
+    const minProteinCal = targetCal * 0.15;
+    const maxProteinCal = targetCal * 0.35;
+    if (proteinCal < minProteinCal) proteinCal = minProteinCal;
+    if (proteinCal > maxProteinCal) proteinCal = maxProteinCal;
+    const targetProtein = Math.round(proteinCal / 4);
+
+    let fatCal = targetCal * 0.25;
+    const minFatCal = userWeight * 0.6 * 9;
+    if (fatCal < minFatCal) fatCal = minFatCal;
+    const targetFat = Math.round(fatCal / 9);
+
+    let carbsCal = targetCal - (targetProtein * 4) - (targetFat * 9);
+    if (carbsCal < targetCal * 0.15) carbsCal = targetCal * 0.15;
+    const targetCarbs = Math.round(carbsCal / 4);
+
+    const carbsPercent = Math.round((targetCarbs * 4 / targetCal) * 100);
+    const proteinPercent = Math.round((targetProtein * 4 / targetCal) * 100);
+    const fatPercent = 100 - carbsPercent - proteinPercent;
+
     const showProfileGuide = !user.age || user.age === 0;
     this.setData({
       targetCal,
       showProfileGuide,
       avatarUrl: user.avatarUrl || '/images/profile.png',
-      'nutrients.targetCarbs': Math.round(targetCal * 0.5 / 4),      // 50% carbs
-      'nutrients.targetProtein': Math.round(targetCal * 0.2 / 4),    // 20% protein
-      'nutrients.targetFat': Math.round(targetCal * 0.3 / 9)         // 30% fat
+      'nutrients.targetCarbs': targetCarbs,
+      'nutrients.targetProtein': targetProtein,
+      'nutrients.targetFat': targetFat,
+      'nutrients.carbsPercent': carbsPercent,
+      'nutrients.proteinPercent': proteinPercent,
+      'nutrients.fatPercent': fatPercent
     });
 
     const todayStr = this.getTodayDateString();
@@ -391,8 +427,8 @@ Page({
     let displayCal = 0;
     let progressPercent = 0;
 
-    // Formula: netCalories = consumed - exercise
-    const netCalories = consumedCalVal - exerciseCalVal;
+    // Formula: netCalories = consumed (exercise is not subtracted per user request)
+    const netCalories = consumedCalVal;
 
     if (netCalories > targetCalVal) {
       isOverLimit = true;

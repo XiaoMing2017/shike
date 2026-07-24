@@ -348,13 +348,45 @@ Page({
   },
 
   calculateNutrientsTargets() {
-    const targetCal = this.data.targetCal;
+    const { targetCal, weight, goalIndex, goalOptions } = this.data;
     if (!targetCal) return;
 
+    const userWeight = weight || 65;
+    const goalKey = (goalOptions && goalOptions[goalIndex]) ? goalOptions[goalIndex].key : 'MAINTAIN';
+
+    // 1. 动态蛋白质推荐系数 (g/kg 体重)
+    let proteinMultiplier = 1.4; // 默认保持/轻度运动基准 1.4g/kg
+    if (goalKey === 'GAIN_MUSCLE' || goalKey === 'ABS') {
+      proteinMultiplier = 2.0; // 增肌/腹肌塑形 2.0g/kg
+    } else if (goalKey === 'LOSE_WEIGHT' || goalKey === 'PERIOD' || goalKey === 'CUSTOM') {
+      proteinMultiplier = 1.8; // 减脂赤字保护 1.8g/kg
+    }
+
+    let proteinGrams = userWeight * proteinMultiplier;
+    let proteinCal = proteinGrams * 4;
+
+    // 安全区间约束 (蛋白质热量占总目标热量 15% <= proteinCal <= 35%)
+    const minProteinCal = targetCal * 0.15;
+    const maxProteinCal = targetCal * 0.35;
+    if (proteinCal < minProteinCal) proteinCal = minProteinCal;
+    if (proteinCal > maxProteinCal) proteinCal = maxProteinCal;
+    const targetProtein = Math.round(proteinCal / 4);
+
+    // 2. 动态脂肪推荐量 (基准占比 25%，保底最低 0.6g/kg 保证内分泌健康)
+    let fatCal = targetCal * 0.25;
+    const minFatCal = userWeight * 0.6 * 9;
+    if (fatCal < minFatCal) fatCal = minFatCal;
+    const targetFat = Math.round(fatCal / 9);
+
+    // 3. 碳水化合物充填剩余热量缺口
+    let carbsCal = targetCal - (targetProtein * 4) - (targetFat * 9);
+    if (carbsCal < targetCal * 0.15) carbsCal = targetCal * 0.15;
+    const targetCarbs = Math.round(carbsCal / 4);
+
     this.setData({
-      targetProtein: Math.round(targetCal * 0.2 / 4),
-      targetCarbs: Math.round(targetCal * 0.5 / 4),
-      targetFat: Math.round(targetCal * 0.3 / 9)
+      targetProtein,
+      targetCarbs,
+      targetFat
     });
   },
 
