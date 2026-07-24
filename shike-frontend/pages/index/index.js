@@ -554,16 +554,26 @@ Page({
           const gradient = ctx.createLinearGradient(0, size, size, 0);
 
           if (isOverLimit) {
-            gradient.addColorStop(0, '#F87171');
+            gradient.addColorStop(0, '#EF4444');
             gradient.addColorStop(0.58, '#FB7185');
+            gradient.addColorStop(1, '#DC2626');
+            ctx.shadowColor = 'rgba(239, 68, 68, 0.35)';
+          } else if (progressPercent <= 15) {
+            gradient.addColorStop(0, '#F97316');
+            gradient.addColorStop(0.58, '#F87171');
             gradient.addColorStop(1, '#EF4444');
+            ctx.shadowColor = 'rgba(239, 68, 68, 0.30)';
+          } else if (progressPercent <= 40) {
+            gradient.addColorStop(0, '#F59E0B');
+            gradient.addColorStop(0.58, '#FBBF24');
+            gradient.addColorStop(1, '#F97316');
+            ctx.shadowColor = 'rgba(245, 158, 11, 0.32)';
           } else {
             gradient.addColorStop(0, '#2BB7C6');
             gradient.addColorStop(0.58, '#54D8A6');
             gradient.addColorStop(1, '#A8E86A');
+            ctx.shadowColor = 'rgba(45, 212, 191, 0.34)';
           }
-
-          ctx.shadowColor = isOverLimit ? 'rgba(239, 68, 68, 0.28)' : 'rgba(45, 212, 191, 0.34)';
           ctx.shadowBlur = 14;
           ctx.shadowOffsetX = 0;
           ctx.shadowOffsetY = 5;

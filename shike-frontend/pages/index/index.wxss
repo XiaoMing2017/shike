@@ -193,6 +193,22 @@
   color: #EF4444 !important;
 }
 
+.danger-lbl {
+  color: #EF4444 !important;
+}
+
+.danger-val {
+  color: #EF4444 !important;
+}
+
+.warning-lbl {
+  color: #D97706 !important;
+}
+
+.warning-val {
+  color: #D97706 !important;
+}
+
 .calorie-detail-text {
   font-size: 26rpx;
   color: #1F2937;

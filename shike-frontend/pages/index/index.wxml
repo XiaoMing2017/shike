@@ -22,8 +22,8 @@
       <view class="ring-inner-disc"></view>
       <canvas type="2d" id="calorieCanvas" class="calorie-canvas"></canvas>
       <view class="ring-content flex-col align-center flex">
-        <text class="ring-label {{isOverLimit ? 'over-limit-lbl' : ''}}">{{ringLabel}}</text>
-        <text class="ring-value {{isOverLimit ? 'over-limit-val' : ''}}">{{remainingCal}}</text>
+        <text class="ring-label {{isOverLimit ? 'over-limit-lbl' : (progressPercent <= 15 ? 'danger-lbl' : (progressPercent <= 40 ? 'warning-lbl' : ''))}}">{{ringLabel}}</text>
+        <text class="ring-value {{isOverLimit ? 'over-limit-val' : (progressPercent <= 15 ? 'danger-val' : (progressPercent <= 40 ? 'warning-val' : ''))}}">{{remainingCal}}</text>
         <text class="ring-unit">千卡</text>
       </view>
     </view>
