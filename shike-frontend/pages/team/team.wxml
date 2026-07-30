@@ -62,7 +62,7 @@
     <!-- 无小队时的欢迎与指引 -->
     <view class="welcome-header flex-col align-center">
       <text class="emoji-logo">🏆</text>
-      <text class="welcome-title">食刻·5人对赌挑战</text>
+      <text class="welcome-title">咔嚓算卡·5人对赌挑战</text>
       <text class="welcome-subtitle">自律太难？拉上好友建立契约，每日卡路里打卡挑战，输者罚分，赢者分池！</text>
     </view>
 

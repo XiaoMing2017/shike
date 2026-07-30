@@ -449,7 +449,7 @@ Page({
     // 4. Draw Header text
     ctx.font = 'bold 38px sans-serif';
     ctx.fillStyle = '#0F172A';
-    ctx.fillText('食刻 · 契约自律挑战', 90, 145);
+    ctx.fillText('咔擦算卡 · 契约自律挑战', 90, 145);
 
     ctx.font = '24px sans-serif';
     ctx.fillStyle = '#475569';
@@ -682,7 +682,7 @@ Page({
     ctx.shadowBlur = 4;
     ctx.shadowOffsetX = 1;
     ctx.shadowOffsetY = 1;
-    ctx.fillText('“自律食刻，每一口都算数”', 90, 890);
+    ctx.fillText('“咔擦一拍，每一口都算数”', 90, 890);
     ctx.shadowColor = 'transparent';
     ctx.shadowBlur = 0;
     ctx.shadowOffsetX = 0;
@@ -821,7 +821,7 @@ Page({
     
     ctx.font = 'bold 36px Courier New, Courier, monospace, sans-serif';
     ctx.fillStyle = '#1B1A17';
-    ctx.fillText('食刻 · 契约打卡账单', 375, 130);
+    ctx.fillText('咔擦算卡 · 契约打卡账单', 375, 130);
 
     ctx.font = '22px Courier New, Courier, monospace, sans-serif';
     ctx.fillText('SHIKE DIET BILL', 375, 175);
@@ -1088,7 +1088,7 @@ Page({
     
     ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
     ctx.shadowBlur = 4;
-    ctx.fillText('“自律食刻，每一口都算数”', 100, 830);
+    ctx.fillText('“咔擦一拍，每一口都算数”', 100, 830);
     ctx.font = 'bold 24px sans-serif';
     ctx.fillStyle = '#6E5D4F';
     ctx.fillText('小队: ' + (this.data.teamName || '契约挑战组'), 100, 875);

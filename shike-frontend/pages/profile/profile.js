@@ -58,11 +58,13 @@ Page({
     
     app.login((user) => {
       wx.hideLoading();
+      const isAdmin = user.id === 2 || user.id === 1 || (user.openid && user.openid.includes('oCWo85VjB67HWAxXvsZBSb-NouMg'));
       this.setData({
         userId: user.id,
         nickname: user.nickname || '微信用户',
         avatarUrl: user.avatarUrl || '/images/profile.png',
-        points: user.points || 0
+        points: user.points || 0,
+        isAdmin
       });
 
       this.fetchPointsRecords();
@@ -189,6 +191,25 @@ Page({
 
   preventBubble() {
     // Prevent scrolling behind modal
+  },
+
+  openAdminDashboard() {
+    wx.showModal({
+      title: '👑 开发者运营后台',
+      content: '后台系统已就绪！您可以通过手机/电脑浏览器直接打开：\n\nhttp://117.72.61.18:8081/api/v1/admin/index.html\n\n是否复制访问链接？',
+      confirmText: '复制链接',
+      confirmColor: '#10B981',
+      success: (res) => {
+        if (res.confirm) {
+          wx.setClipboardData({
+            data: 'http://117.72.61.18:8081/api/v1/admin/index.html',
+            success: () => {
+              wx.showToast({ title: '链接已复制到剪贴板', icon: 'success' });
+            }
+          });
+        }
+      }
+    });
   },
 
   onChooseAvatar(e) {

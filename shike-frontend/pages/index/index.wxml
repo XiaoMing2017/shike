@@ -5,7 +5,7 @@
       <text>{{viewModeOptions[viewModeIndex]}} ▾</text>
     </view>
     <view class="header-title-wrapper flex flex-col align-center">
-      <text class="header-title">食刻</text>
+      <text class="header-title">咔嚓算卡</text>
       <text class="header-date">{{currentDateStr}}</text>
     </view>
     <view class="header-avatar-btn" catchtap="onTapAvatar">

@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>食刻 · 运营数据管理后台</title>
+
+  <!-- Google Fonts & FontAwesome icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F172A 100%);
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --primary: #10B981;
+      --primary-glow: rgba(16, 185, 129, 0.25);
+      --text-main: #F8FAFC;
+      --text-muted: #94A3B8;
+      --accent-blue: #3B82F6;
+      --accent-orange: #F97316;
+      --accent-purple: #8B5CF6;
+      --danger: #EF4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    /* Layout Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 20px 28px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #10B981, #059669);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 4px 14px var(--primary-glow);
+    }
+
+    .brand-text h1 {
+      font-size: 22px;
+      font-weight: 700;
+      background: linear-gradient(to right, #FFFFFF, #94A3B8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-text p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--primary);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--primary);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.2); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* KPI Metrics Cards Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+
+    .metric-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 20px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
+    }
+
+    .metric-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+
+    .metric-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .metric-val {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .icon-green { background: rgba(16, 185, 129, 0.15); color: #10B981; }
+    .icon-blue { background: rgba(59, 130, 246, 0.15); color: #3B82F6; }
+    .icon-purple { background: rgba(139, 92, 246, 0.15); color: #8B5CF6; }
+    .icon-orange { background: rgba(249, 115, 22, 0.15); color: #F97316; }
+
+    /* Users Section & Table */
+    .section-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .search-box {
+      position: relative;
+      width: 300px;
+    }
+
+    .search-box input {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      padding: 10px 16px 10px 40px;
+      border-radius: 10px;
+      color: #FFF;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .search-box input:focus {
+      border-color: var(--primary);
+    }
+
+    .search-box i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+    }
+
+    /* Table Design */
+    .table-responsive {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      background: rgba(15, 23, 42, 0.4);
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--card-border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      vertical-align: middle;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .user-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--card-border);
+    }
+
+    .user-name {
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .user-id-badge {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .badge-ai {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60A5FA;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .badge-ai.limit-reached {
+      background: rgba(239, 68, 68, 0.15);
+      color: #F87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .badge-points {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34D399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-action {
+      background: linear-gradient(135deg, #10B981, #059669);
+      border: none;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 12px;
+      transition: opacity 0.2s ease, transform 0.1s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-action:hover {
+      opacity: 0.9;
+      transform: scale(1.02);
+    }
+
+    /* Modal / Drawer for User Detail */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #1E293B;
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      width: 900px;
+      max-width: 95vw;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.5);
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s ease;
+    }
+
+    .modal-close:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #FFF;
+    }
+
+    .modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .detail-item {
+      background: rgba(15, 23, 42, 0.4);
+      padding: 14px 18px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .detail-item label {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .detail-item span {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .records-tabs {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 12px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px 16px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.active {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--primary);
+    }
+
+    .food-card-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .food-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .food-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .meal-tag {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      background: rgba(59, 130, 246, 0.2);
+      color: #60A5FA;
+    }
+
+    .food-img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin: 8px 0;
+    }
+
+    .empty-tip {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="brand-group">
+      <div class="brand-icon"><i class="fa-solid fa-utensils"></i></div>
+      <div class="brand-text">
+        <h1>食刻 · 运营数据管理后台</h1>
+        <p>Real-time User Analytics & Monitoring Console</p>
+      </div>
+    </div>
+    <div class="header-status">
+      <div class="status-dot"></div>
+      <span id="currentTime">服务运行正常</span>
+    </div>
+  </header>
+
+  <!-- Metrics Grid -->
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-header">
+        <span>注册用户总量</span>
+        <div class="metric-icon icon-green"><i class="fa-solid fa-users"></i></div>
+      </div>
+      <div class="metric-val" id="totalUsers">-</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-header">
+        <span>今日新增注册</span>
+        <div class="metric-icon icon-blue"><i class="fa-solid fa-user-plus"></i></div>
+      </div>
+      <div class="metric-val" id="todayNewUsers">-</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-header">
+        <span>今日 AI 识别总次数</span>
+        <div class="metric-icon icon-purple"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+      </div>
+      <div class="metric-val" id="todayAiRecognitions">-</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-header">
+        <span>今日饮食打卡</span>
+        <div class="metric-icon icon-orange"><i class="fa-solid fa-bowl-food"></i></div>
+      </div>
+      <div class="metric-val" id="todayDietRecords">-</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-header">
+        <span>今日运动消耗记录</span>
+        <div class="metric-icon icon-green"><i class="fa-solid fa-person-running"></i></div>
+      </div>
+      <div class="metric-val" id="todayExerciseRecords">-</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-header">
+        <span>活跃减脂小队</span>
+        <div class="metric-icon icon-blue"><i class="fa-solid fa-trophy"></i></div>
+      </div>
+      <div class="metric-val" id="activeTeams">-</div>
+    </div>
+  </div>
+
+  <!-- Users Table Section -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-title">
+        <i class="fa-solid fa-address-book" style="color: var(--primary);"></i>
+        全量用户管理列表
+      </div>
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="searchInput" placeholder="搜索昵称或ID..." oninput="filterUsers()">
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>用户信息</th>
+            <th>基本生理指标</th>
+            <th>TDEE / 目标卡路里</th>
+            <th>今日 AI 使用次数</th>
+            <th>累计打卡数 (膳食/运动)</th>
+            <th>契约积分</th>
+            <th>注册时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="userTableBody">
+          <tr>
+            <td colspan="8" class="empty-tip">正在加载用户数据...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- User Detail Modal / Drawer -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <img src="" id="modalUserAvatar" style="width: 40px; height: 40px; border-radius: 50%;">
+          <div>
+            <div id="modalUserName" style="font-weight: 700; font-size: 16px;">-</div>
+            <div id="modalUserOpenid" style="font-size: 12px; color: var(--text-muted);">-</div>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="detail-grid">
+          <div class="detail-item">
+            <label>身体指标 (身高/体重)</label>
+            <span id="modalBodyStats">-</span>
+          </div>
+          <div class="detail-item">
+            <label>代谢指标 (BMR / TDEE)</label>
+            <span id="modalMetabolism">-</span>
+          </div>
+          <div class="detail-item">
+            <label>目标类型 / 建议摄入</label>
+            <span id="modalTargetCal">-</span>
+          </div>
+          <div class="detail-item">
+            <label>契约积分总额</label>
+            <span id="modalPoints" style="color: var(--primary);">-</span>
+          </div>
+        </div>
+
+        <div class="records-tabs">
+          <button class="tab-btn active" onclick="switchTab('diet')">🍽️ 饮食记录</button>
+          <button class="tab-btn" onclick="switchTab('exercise')">🏃 运动与水份</button>
+          <button class="tab-btn" onclick="switchTab('team')">🏆 减脂小队打卡</button>
+        </div>
+
+        <!-- Diet Records Content -->
+        <div id="tabDiet" class="tab-content">
+          <div class="food-card-list" id="dietList">
+            <div class="empty-tip">暂无饮食记录</div>
+          </div>
+        </div>
+
+        <!-- Exercise & Water Content -->
+        <div id="tabExercise" class="tab-content" style="display: none;">
+          <div id="exerciseList">
+            <div class="empty-tip">暂无运动及水份记录</div>
+          </div>
+        </div>
+
+        <!-- Team Checkins Content -->
+        <div id="tabTeam" class="tab-content" style="display: none;">
+          <div id="teamCheckinList">
+            <div class="empty-tip">暂无小队打卡记录</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let rawUserData = [];
+    let currentDetailRecords = null;
+
+    // Fetch Dashboard Stats & User List
+    async function loadDashboard() {
+      try {
+        const [statsRes, usersRes] = await Promise.all([
+          fetch('/api/v1/admin/stats').then(res => res.json()),
+          fetch('/api/v1/admin/users').then(res => res.json())
+        ]);
+
+        if (statsRes.code === 200) {
+          const stats = statsRes.data;
+          document.getElementById('totalUsers').innerText = stats.totalUsers || 0;
+          document.getElementById('todayNewUsers').innerText = stats.todayNewUsers || 0;
+          document.getElementById('todayAiRecognitions').innerText = stats.todayAiRecognitions || 0;
+          document.getElementById('todayDietRecords').innerText = stats.todayDietRecords || 0;
+          document.getElementById('todayExerciseRecords').innerText = stats.todayExerciseRecords || 0;
+          document.getElementById('activeTeams').innerText = stats.activeTeams || 0;
+        }
+
+        if (usersRes.code === 200) {
+          rawUserData = usersRes.data || [];
+          renderUserTable(rawUserData);
+        }
+      } catch (err) {
+        console.error('Failed to load admin data:', err);
+      }
+    }
+
+    function renderUserTable(users) {
+      const tbody = document.getElementById('userTableBody');
+      if (!users || users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-tip">暂无匹配的用户数据</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = users.map(item => {
+        const u = item.user;
+        const avatar = u.avatarUrl || 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0';
+        const nickname = u.nickname || '微信用户';
+        const genderStr = u.gender === 2 ? '女 ♀️' : (u.gender === 1 ? '男 ♂️' : '未设置');
+        const statsStr = (u.height && u.weight) ? `${u.height}cm / ${u.weight}kg` : '未录入';
+        const calStr = u.targetCalories ? `${u.targetCalories} kcal` : '未计算';
+        const aiCount = item.todayAiCount || 0;
+        const aiBadgeClass = aiCount >= 10 ? 'badge-ai limit-reached' : 'badge-ai';
+        const createdAt = u.createdAt ? u.createdAt.replace('T', ' ').substring(0, 16) : '-';
+
+        return `
+          <tr>
+            <td>
+              <div class="user-cell">
+                <img src="${avatar}" class="user-avatar" onerror="this.src='/images/profile.png'">
+                <div>
+                  <div class="user-name">${nickname}</div>
+                  <div class="user-id-badge">ID: ${u.id}</div>
+                </div>
+              </div>
+            </td>
+            <td>${genderStr} · ${u.age || '-'}岁<br><span style="font-size:12px; color:var(--text-muted);">${statsStr}</span></td>
+            <td><strong>${calStr}</strong><br><span style="font-size:11px; color:var(--text-muted);">TDEE: ${u.tdee || '-'}</span></td>
+            <td><span class="badge ${aiBadgeClass}">${aiCount} / 10 次</span></td>
+            <td>${item.totalDietCount || 0} 餐 / ${item.totalExerciseCount || 0} 运动</td>
+            <td><span class="badge badge-points">${u.points || 0} pts</span></td>
+            <td><span style="font-size:12px; color:var(--text-muted);">${createdAt}</span></td>
+            <td>
+              <button class="btn-action" onclick="viewUserDetail(${u.id})">
+                <i class="fa-solid fa-chart-line"></i> 使用明细
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterUsers() {
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      if (!q) {
+        renderUserTable(rawUserData);
+        return;
+      }
+      const filtered = rawUserData.filter(item => {
+        const u = item.user;
+        return (u.nickname && u.nickname.toLowerCase().includes(q)) || 
+               String(u.id).includes(q) || 
+               (u.openid && u.openid.toLowerCase().includes(q));
+      });
+      renderUserTable(filtered);
+    }
+
+    async function viewUserDetail(userId) {
+      document.getElementById('detailModal').classList.add('active');
+      document.getElementById('dietList').innerHTML = '<div class="empty-tip">加载明细数据中...</div>';
+      
+      try {
+        const res = await fetch(`/api/v1/admin/users/${userId}/records`).then(r => r.json());
+        if (res.code === 200) {
+          currentDetailRecords = res.data;
+          const u = currentDetailRecords.user;
+          document.getElementById('modalUserAvatar').src = u.avatarUrl || '/images/profile.png';
+          document.getElementById('modalUserName').innerText = u.nickname || '微信用户';
+          document.getElementById('modalUserOpenid').innerText = `OpenID: ${u.openid}`;
+          document.getElementById('modalBodyStats').innerText = `${u.height || '-'} cm / ${u.weight || '-'} kg (${u.age || '-'} 岁)`;
+          document.getElementById('modalMetabolism').innerText = `BMR: ${u.bmr || '-'} | TDEE: ${u.tdee || '-'}`;
+          document.getElementById('modalTargetCal').innerText = `${u.goal || 'MAINTAIN'} (${u.targetCalories || '-'} kcal)`;
+          document.getElementById('modalPoints').innerText = `${u.points || 0} pts`;
+
+          renderDietRecords(currentDetailRecords.dietRecords);
+          renderExerciseRecords(currentDetailRecords.exerciseRecords, currentDetailRecords.waterRecords);
+          renderTeamCheckins(currentDetailRecords.teamCheckins);
+        }
+      } catch (err) {
+        console.error('Failed to load user records:', err);
+      }
+    }
+
+    function renderDietRecords(records) {
+      const list = document.getElementById('dietList');
+      if (!records || records.length === 0) {
+        list.innerHTML = '<div class="empty-tip">该用户暂无饮食打卡记录</div>';
+        return;
+      }
+
+      list.innerHTML = records.map(r => {
+        let foodItemsHtml = '';
+        try {
+          const items = JSON.parse(r.foodItems || '[]');
+          foodItemsHtml = items.map(i => `<span style="font-size:12px; color:var(--primary); font-weight:600;">${i.name} (${i.calories}kcal)</span>`).join('、');
+        } catch(e) {
+          foodItemsHtml = r.foodItems || '-';
+        }
+
+        const dateStr = r.recordDate || '';
+        const imgHtml = r.imageUrl ? `<img src="${r.imageUrl}" class="food-img">` : '';
+
+        return `
+          <div class="food-card">
+            <div class="food-card-header">
+              <span class="meal-tag">${r.mealType}</span>
+              <span style="font-size:12px; color:var(--text-muted);">${dateStr}</span>
+            </div>
+            ${imgHtml}
+            <div style="font-size:13px; font-weight:700; margin: 4px 0;">${r.totalCalories} kcal</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-bottom: 4px;">${foodItemsHtml}</div>
+            <div style="font-size:11px; color:var(--text-muted);">
+              碳水:${r.totalCarbs || 0}g | 蛋白:${r.totalProtein || 0}g | 脂肪:${r.totalFat || 0}g
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderExerciseRecords(exercises, waters) {
+      const container = document.getElementById('exerciseList');
+      let html = '<h4 style="margin-bottom:12px; font-size:14px; color:var(--primary);">🏃 运动记录</h4>';
+      
+      if (!exercises || exercises.length === 0) {
+        html += '<div class="empty-tip" style="padding:20px;">暂无运动记录</div>';
+      } else {
+        html += '<table><thead><tr><th>日期</th><th>运动项目</th><th>消耗热量</th></tr></thead><tbody>';
+        html += exercises.map(e => `
+          <tr>
+            <td>${e.recordDate}</td>
+            <td>${e.activityName || '运动'}</td>
+            <td style="color:#F97316; font-weight:700;">-${e.caloriesBurned} kcal</td>
+          </tr>
+        `).join('');
+        html += '</tbody></table>';
+      }
+
+      html += '<h4 style="margin:20px 0 12px 0; font-size:14px; color:#3B82F6;">💧 饮水记录</h4>';
+      if (!waters || waters.length === 0) {
+        html += '<div class="empty-tip" style="padding:20px;">暂无饮水记录</div>';
+      } else {
+        html += '<table><thead><tr><th>日期</th><th>饮水总量</th></tr></thead><tbody>';
+        html += waters.map(w => `
+          <tr>
+            <td>${w.recordDate}</td>
+            <td style="color:#3B82F6; font-weight:700;">${w.amount} ml</td>
+          </tr>
+        `).join('');
+        html += '</tbody></table>';
+      }
+
+      container.innerHTML = html;
+    }
+
+    function renderTeamCheckins(checkins) {
+      const container = document.getElementById('teamCheckinList');
+      if (!checkins || checkins.length === 0) {
+        container.innerHTML = '<div class="empty-tip">该用户暂无小队打卡记录</div>';
+        return;
+      }
+
+      container.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>小队 ID</th>
+              <th>打卡日期</th>
+              <th>打卡状态</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${checkins.map(c => `
+              <tr>
+                <td>Team #${c.teamId}</td>
+                <td>${c.checkinDate}</td>
+                <td>
+                  <span class="badge ${c.isSuccess === 1 ? 'badge-points' : 'badge-ai limit-reached'}">
+                    ${c.isSuccess === 1 ? '✅ 打卡成功' : '❌ 未打卡/失败'}
+                  </span>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+
+      document.getElementById('tabDiet').style.display = tab === 'diet' ? 'block' : 'none';
+      document.getElementById('tabExercise').style.display = tab === 'exercise' ? 'block' : 'none';
+      document.getElementById('tabTeam').style.display = tab === 'team' ? 'block' : 'none';
+    }
+
+    function closeModal() {
+      document.getElementById('detailModal').classList.remove('active');
+    }
+
+    // Auto-update clock
+    setInterval(() => {
+      const now = new Date();
+      document.getElementById('currentTime').innerText = now.toLocaleString('zh-CN');
+    }, 1000);
+
+    // Initial Load
+    loadDashboard();
+  </script>
+</body>
+</html>

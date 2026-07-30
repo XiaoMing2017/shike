@@ -11,4 +11,7 @@ import java.util.List;
 public interface DietRecordRepository extends JpaRepository<DietRecord, Long> {
     List<DietRecord> findByUserIdAndRecordDate(Long userId, LocalDate date);
     List<DietRecord> findByUserIdAndRecordDateBetween(Long userId, LocalDate startDate, LocalDate endDate);
+    List<DietRecord> findByUserIdOrderByRecordDateDesc(Long userId);
+    Long countByRecordDate(LocalDate date);
+    Long countByUserId(Long userId);
 }
