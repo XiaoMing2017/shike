@@ -469,23 +469,23 @@
     </view>
   </view>
 
-  <!-- 2.2 全景营养诊断仪表盘弹窗 -->
-  <view class="modal-mask" wx:if="{{showNutritionModal}}" catchtap="closeNutritionDetailModal">
-    <view class="modal-box glass-modal nutrition-modal" catchtap="preventBubble">
-      <view class="modal-header flex justify-between align-center">
-        <text class="modal-title">🥗 今日营养全景诊断分析</text>
+  <!-- 2.2 全景营养诊断仪表盘弹窗 (适配整体清新极简磨砂风) -->
+  <view class="modal-backdrop {{showNutritionModal ? 'active' : ''}}" catchtap="closeNutritionDetailModal" catchtouchmove="preventBubble">
+    <view class="modal-dialog nutrition-modal-dialog" catchtap="preventBubble">
+      <view class="modal-header">
+        <text class="modal-title">🥗 今日营养全景诊断</text>
         <text class="modal-close" catchtap="closeNutritionDetailModal">✕</text>
       </view>
-      <scroll-view scroll-y class="modal-body">
+      <scroll-view class="modal-content" scroll-y style="max-height: 60vh;">
         <view class="diag-section">
           <text class="diag-sec-title">📊 摄入与目标比对</text>
           <view class="diag-grid">
             <view class="diag-grid-item">
-              <text class="diag-label">热量</text>
+              <text class="diag-label">热量收支</text>
               <text class="diag-val {{consumedCal > targetCal ? 'text-red' : 'text-green'}}">{{consumedCal}} / {{targetCal}} kcal</text>
             </view>
             <view class="diag-grid-item">
-              <text class="diag-label">碳水</text>
+              <text class="diag-label">碳水化合物</text>
               <text class="diag-val">{{nutrients.carbs}} / {{nutrients.targetCarbs}}g</text>
             </view>
             <view class="diag-grid-item">
@@ -499,8 +499,8 @@
           </view>
         </view>
 
-        <view class="diag-section">
-          <text class="diag-sec-title">💡 专家级膳食调优建议</text>
+        <view class="diag-section" style="margin-top: 24rpx;">
+          <text class="diag-sec-title">💡 AI 膳食调优与补充建议</text>
           <view class="diag-list">
             <view class="diag-card-row" wx:for="{{nutritionInsights}}" wx:key="id">
               <view class="diag-badge-line flex align-center">

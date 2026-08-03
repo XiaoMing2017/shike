@@ -1819,60 +1819,48 @@
 }
 
 .badge-red {
-  background: rgba(239, 68, 68, 0.18);
-  color: #F87171;
-  border: 1rpx solid rgba(239, 68, 68, 0.35);
+  background: #FEE2E2;
+  color: #DC2626;
+  border: 1rpx solid #FCA5A5;
 }
 
 .badge-yellow {
-  background: rgba(245, 158, 11, 0.18);
-  color: #FBBF24;
-  border: 1rpx solid rgba(245, 158, 11, 0.35);
+  background: #FEF3C7;
+  color: #D97706;
+  border: 1rpx solid #FCD34D;
 }
 
 .badge-green {
-  background: rgba(16, 185, 129, 0.18);
-  color: #34D399;
-  border: 1rpx solid rgba(16, 185, 129, 0.35);
+  background: #D1FAE5;
+  color: #059669;
+  border: 1rpx solid #6EE7B7;
 }
 
 .badge-blue {
-  background: rgba(59, 130, 246, 0.18);
-  color: #60A5FA;
-  border: 1rpx solid rgba(59, 130, 246, 0.35);
+  background: #DBEAFE;
+  color: #2563EB;
+  border: 1rpx solid #93C5FD;
 }
 
-.insight-item-title {
-  font-size: 24rpx;
-  font-weight: 700;
-  color: #F1F5F9;
-}
-
-.insight-suggestion {
-  font-size: 22rpx;
-  color: #94A3B8;
-  line-height: 1.4;
-}
-
-/* Modal Styling */
-.nutrition-modal {
-  width: 650rpx;
-  max-height: 80vh;
-  border-radius: 36rpx;
-  background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(30px);
-  border: 1rpx solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 30rpx 60rpx rgba(0, 0, 0, 0.6);
+/* Modal Styling - Clean Light Glass Theme matching App System */
+.nutrition-modal-dialog {
+  width: 640rpx !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(25px) !important;
+  border: 1rpx solid rgba(255, 255, 255, 0.8) !important;
+  border-radius: 36rpx !important;
+  padding: 36rpx 32rpx !important;
+  box-shadow: 0 20rpx 60rpx rgba(15, 23, 42, 0.12) !important;
 }
 
 .diag-section {
-  margin-bottom: 28rpx;
+  margin-bottom: 24rpx;
 }
 
 .diag-sec-title {
   font-size: 26rpx;
-  font-weight: 700;
-  color: #38BDF8;
+  font-weight: 800;
+  color: #0F172A;
   margin-bottom: 16rpx;
   display: block;
 }
@@ -1884,65 +1872,66 @@
 }
 
 .diag-grid-item {
-  background: rgba(30, 41, 59, 0.7);
+  background: #F8FAFC;
   padding: 18rpx 20rpx;
-  border-radius: 18rpx;
-  border: 1rpx solid rgba(255, 255, 255, 0.08);
+  border-radius: 20rpx;
+  border: 1rpx solid #E2E8F0;
   display: flex;
   flex-direction: column;
   gap: 6rpx;
 }
 
 .diag-label {
-  font-size: 20rpx;
-  color: #94A3B8;
+  font-size: 22rpx;
+  color: #64748B;
+  font-weight: 600;
 }
 
 .diag-val {
-  font-size: 24rpx;
+  font-size: 26rpx;
   font-weight: 800;
-  color: #F8FAFC;
+  color: #0F172A;
 }
 
 .text-red {
-  color: #F87171 !important;
+  color: #EF4444 !important;
 }
 
 .text-yellow {
-  color: #FBBF24 !important;
+  color: #D97706 !important;
 }
 
 .text-green {
-  color: #34D399 !important;
+  color: #059669 !important;
 }
 
 .diag-list {
   display: flex;
   flex-direction: column;
-  gap: 18rpx;
+  gap: 16rpx;
 }
 
 .diag-card-row {
-  background: rgba(30, 41, 59, 0.6);
+  background: #F8FAFC;
   border-radius: 20rpx;
-  padding: 20rpx;
-  border: 1rpx solid rgba(255, 255, 255, 0.08);
+  padding: 22rpx;
+  border: 1rpx solid #E2E8F0;
 }
 
 .diag-badge-line {
   gap: 12rpx;
-  margin-bottom: 8rpx;
+  margin-bottom: 10rpx;
 }
 
 .diag-card-title {
-  font-size: 24rpx;
-  font-weight: 700;
-  color: #F8FAFC;
+  font-size: 25rpx;
+  font-weight: 800;
+  color: #1E293B;
 }
 
 .diag-card-desc {
-  font-size: 22rpx;
-  color: #94A3B8;
-  line-height: 1.4;
+  font-size: 23rpx;
+  color: #475569;
+  line-height: 1.45;
   display: block;
 }
