@@ -58,6 +58,9 @@ public class TeamServiceImpl implements TeamService {
     @Value("${wx.secret}")
     private String wxSecret;
 
+    @Value("${wx.env-version:develop}")
+    private String wxEnvVersion;
+
     // 缓存微信 Access Token
     private static String cachedAccessToken = null;
     private static long tokenExpiryTime = 0L;
@@ -367,8 +370,9 @@ public class TeamServiceImpl implements TeamService {
         if (wxMock) {
             log.info("WeChat Mini Program is mocked, generating local QR code via ZXing for inviteCode: {}", inviteCode);
             try {
+                String encodeUrl = "https://mp.weixin.qq.com/a/~~?inviteCode=" + inviteCode;
                 com.google.zxing.qrcode.QRCodeWriter qrCodeWriter = new com.google.zxing.qrcode.QRCodeWriter();
-                com.google.zxing.common.BitMatrix bitMatrix = qrCodeWriter.encode(inviteCode, com.google.zxing.BarcodeFormat.QR_CODE, 280, 280);
+                com.google.zxing.common.BitMatrix bitMatrix = qrCodeWriter.encode(encodeUrl, com.google.zxing.BarcodeFormat.QR_CODE, 430, 430);
                 java.io.ByteArrayOutputStream pngOutputStream = new java.io.ByteArrayOutputStream();
                 com.google.zxing.client.j2se.MatrixToImageWriter.writeToStream(bitMatrix, "PNG", pngOutputStream);
                 byte[] qrBytes = pngOutputStream.toByteArray();
@@ -416,7 +420,9 @@ public class TeamServiceImpl implements TeamService {
 
             // 3. 请求无限制小程序码
             String wxaUrl = "https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token=" + accessToken;
-            String requestBody = String.format("{\"scene\":\"%s\",\"page\":\"pages/index/index\",\"width\":280,\"check_path\":false}", inviteCode);
+            String sceneVal = (inviteCode != null && !inviteCode.trim().isEmpty()) ? inviteCode : "SHIKE";
+            String requestBody = String.format("{\"scene\":\"%s\",\"page\":\"pages/index/index\",\"width\":430,\"check_path\":false,\"env_version\":\"%s\"}",
+                    sceneVal, (wxEnvVersion != null ? wxEnvVersion : "develop"));
             
             HttpClient client = HttpClient.newHttpClient();
             HttpRequest wxaRequest = HttpRequest.newBuilder()

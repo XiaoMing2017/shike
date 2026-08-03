@@ -68,4 +68,5 @@ wx:
   mock: false
   appid: wx826fd59633a30041
   secret: 8194daf0bfc77af46c26710d4a2b5acc
+  env-version: develop
 

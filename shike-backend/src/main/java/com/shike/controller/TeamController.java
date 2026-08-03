@@ -58,7 +58,10 @@ public class TeamController {
     }
 
     @GetMapping("/qrcode")
-    public void getTeamQrCode(@RequestParam("inviteCode") String inviteCode, HttpServletResponse response) {
+    public void getTeamQrCode(@RequestParam(value = "inviteCode", required = false) String inviteCode, HttpServletResponse response) {
+        if (inviteCode == null || inviteCode.trim().isEmpty()) {
+            inviteCode = "SHIKE";
+        }
         try {
             byte[] qrBytes = teamService.getTeamQrCode(inviteCode);
             response.setContentType("image/png");
@@ -67,8 +70,8 @@ public class TeamController {
         } catch (Exception e) {
             log.error("Failed to generate team qrcode, redirecting to fallback public QR code generator", e);
             try {
-                // Fallback: Redirect to a public QR code generator
-                String redirectUrl = "https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=" + inviteCode;
+                String targetUrl = "https://mp.weixin.qq.com/a/~~?inviteCode=" + inviteCode;
+                String redirectUrl = "https://api.qrserver.com/v1/create-qr-code/?size=430x430&data=" + java.net.URLEncoder.encode(targetUrl, "UTF-8");
                 response.sendRedirect(redirectUrl);
             } catch (Exception ex) {
                 log.error("Failed to redirect to fallback QR generator", ex);
