@@ -244,9 +244,36 @@
   margin: 16rpx 24rpx 0 24rpx;
   padding: 16rpx 20rpx;
   background: rgba(239, 246, 255, 0.95);
-  border: 1rpx solid rgba(59, 130, 246, 0.4);
+  border: 1rpx solid rgba(59, 130, 246, 0.35);
   border-radius: 20rpx;
-  box-shadow: 0 4rpx 16rpx rgba(59, 130, 246, 0.15);
+  box-shadow: 0 4rpx 16rpx rgba(59, 130, 246, 0.12);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.water-reminder-left {
+  flex: 1;
+  margin-right: 16rpx;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.water-reminder-text {
+  font-size: 22rpx;
+  color: #1D4ED8;
+  font-weight: 700;
+  line-height: 1.35;
+  word-break: break-all;
+}
+
+.water-reminder-right {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
 }
 
 .btn-quick-water {
