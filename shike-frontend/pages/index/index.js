@@ -117,7 +117,7 @@ Page({
     showNutritionModal: false,
     // 📸 晒餐海报弹窗
     showPosterModal: false,
-    activeTemplate: 'vitality',
+    activeTemplate: 'morandi',
     tempPosterPath: '',
     // 个人信息完善引导横幅
     showProfileGuide: false,
@@ -1692,12 +1692,12 @@ Page({
                   this.loadImage(canvas, finalAvatarPath)
                 ]).then(([bgImg, qrImg, avatarImg]) => {
                   const template = this.data.activeTemplate;
-                  if (template === 'vitality') {
-                    this.drawGourmetVitalityPoster(canvas, ctx, bgImg, qrImg, avatarImg);
-                  } else if (template === 'receipt') {
-                    this.drawCalorieReceiptPoster(canvas, ctx, bgImg, qrImg, avatarImg);
-                  } else if (template === 'polaroid') {
-                    this.drawPolaroidPoster(canvas, ctx, bgImg, qrImg, avatarImg);
+                  if (template === 'morandi') {
+                    this.drawMorandiPoster(canvas, ctx, bgImg, qrImg, avatarImg);
+                  } else if (template === 'vogue') {
+                    this.drawVoguePoster(canvas, ctx, bgImg, qrImg, avatarImg);
+                  } else {
+                    this.drawReceiptPoster(canvas, ctx, bgImg, qrImg, avatarImg);
                   }
 
                   wx.canvasToTempFilePath({
@@ -1785,143 +1785,290 @@ Page({
     ctx.closePath();
   },
 
-  drawGourmetVitalityPoster(canvas, ctx, bgImg, qrImg, avatarImg) {
+  drawMorandiPoster(canvas, ctx, bgImg, qrImg, avatarImg) {
     const user = app.globalData.userInfo;
     const nickname = user && user.nickname ? user.nickname : '自律达人';
     const consumedCal = this.data.consumedCal || 0;
     const targetCal = this.data.targetCal || 2000;
+    const nutrients = this.data.nutrients || {};
 
+    // 1. Sage Green & Soft Cream Gradient Background
     ctx.clearRect(0, 0, 750, 1000);
-    if (bgImg) {
-      ctx.drawImage(bgImg, 0, 0, 750, 1000);
-    } else {
-      const gradient = ctx.createLinearGradient(0, 0, 750, 1000);
-      gradient.addColorStop(0, '#F1F5F9');
-      gradient.addColorStop(1, '#E2E8F0');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, 750, 1000);
-    }
+    const bgGrad = ctx.createLinearGradient(0, 0, 750, 1000);
+    bgGrad.addColorStop(0, '#E8EFE5'); // Soft Morandi Sage Green
+    bgGrad.addColorStop(1, '#D8E2D3');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, 750, 1000);
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
-    ctx.shadowColor = 'rgba(15, 23, 42, 0.12)';
-    ctx.shadowBlur = 30;
+    // 2. High-End Frosted Glass Container Card
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
+    ctx.shadowColor = 'rgba(47, 65, 52, 0.12)';
+    ctx.shadowBlur = 32;
+    ctx.shadowOffsetY = 16;
     ctx.beginPath();
-    this.drawRoundedRect(ctx, 45, 60, 660, 880, 36);
+    this.drawRoundedRect(ctx, 40, 50, 670, 900, 36);
     ctx.fill();
 
     ctx.shadowColor = 'transparent';
     ctx.shadowBlur = 0;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.lineWidth = 2;
     ctx.stroke();
 
+    // 3. Header Text & Minimalist Lifestyle Tag
     ctx.font = 'bold 36px sans-serif';
-    ctx.fillStyle = '#0F172A';
-    ctx.fillText('咔嚓算卡 · 每日卡路里打卡', 90, 145);
+    ctx.fillStyle = '#2D3A31';
+    ctx.fillText('咔嚓算卡 · 极简健康日记', 80, 125);
 
-    ctx.font = '24px sans-serif';
-    ctx.fillStyle = '#475569';
-    ctx.fillText(nickname + ' 的今日健康收支记录', 90, 190);
+    ctx.font = '22px sans-serif';
+    ctx.fillStyle = '#5A6E60';
+    ctx.fillText('HEALTHY LIFESTYLE JOURNAL · ' + (this.data.currentDateStr || ''), 80, 165);
 
+    // 4. Polaroid Photo Frame with food image
+    ctx.fillStyle = '#FFFFFF';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.08)';
+    ctx.shadowBlur = 16;
+    ctx.beginPath();
+    this.drawRoundedRect(ctx, 80, 195, 590, 440, 24);
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+
+    if (bgImg) {
+      ctx.save();
+      ctx.beginPath();
+      this.drawRoundedRect(ctx, 95, 210, 560, 360, 16);
+      ctx.clip();
+      ctx.drawImage(bgImg, 95, 210, 560, 360);
+      ctx.restore();
+    } else {
+      ctx.fillStyle = '#E2E8F0';
+      ctx.beginPath();
+      this.drawRoundedRect(ctx, 95, 210, 560, 360, 16);
+      ctx.fill();
+      ctx.font = '28px sans-serif';
+      ctx.fillStyle = '#94A3B8';
+      ctx.fillText('🥗 记录每一餐的精致美好', 220, 400);
+    }
+
+    // Photo Caption Inside Polaroid
+    ctx.font = 'bold 24px sans-serif';
+    ctx.fillStyle = '#334155';
+    ctx.fillText('今日热量摄入 ' + consumedCal + ' / ' + targetCal + ' kcal', 105, 605);
+
+    // 5. Macro Metrics Pills
+    const proteinG = nutrients.protein || 0;
+    const carbG = nutrients.carbs || 0;
+    const fatG = nutrients.fat || 0;
+    const macroStr = `蛋白 ${proteinG}g · 碳水 ${carbG}g · 脂肪 ${fatG}g`;
+
+    ctx.fillStyle = '#F1F5F0';
+    ctx.beginPath();
+    this.drawRoundedRect(ctx, 80, 660, 590, 54, 16);
+    ctx.fill();
+
+    ctx.font = 'bold 22px sans-serif';
+    ctx.fillStyle = '#3D5243';
+    ctx.fillText('营养结构: ' + macroStr, 105, 695);
+
+    // 6. User Avatar & Profile Bar (Bottom Left)
     if (avatarImg) {
       ctx.save();
       ctx.beginPath();
-      ctx.arc(600, 145, 40, 0, 2 * Math.PI);
+      ctx.arc(120, 785, 36, 0, 2 * Math.PI);
       ctx.clip();
-      ctx.drawImage(avatarImg, 560, 105, 80, 80);
+      ctx.drawImage(avatarImg, 84, 749, 72, 72);
       ctx.restore();
+      
       ctx.strokeStyle = '#FFFFFF';
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.arc(600, 145, 40, 0, 2 * Math.PI);
+      ctx.arc(120, 785, 36, 0, 2 * Math.PI);
       ctx.stroke();
     }
 
-    ctx.strokeStyle = 'rgba(15, 23, 42, 0.08)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(90, 230);
-    ctx.lineTo(660, 230);
-    ctx.stroke();
-
-    ctx.font = 'bold 28px sans-serif';
+    ctx.font = 'bold 26px sans-serif';
     ctx.fillStyle = '#1E293B';
-    ctx.fillText('今日热量: ' + consumedCal + ' / ' + targetCal + ' kcal', 90, 285);
+    ctx.fillText(nickname, 170, 775);
 
+    ctx.font = '20px sans-serif';
+    ctx.fillStyle = '#64748B';
+    ctx.fillText('与 10,000+ 伙伴一起自律打卡', 170, 805);
+
+    // 7. QR Code (Bottom Right)
     if (qrImg) {
-      ctx.drawImage(qrImg, 520, 750, 140, 140);
+      ctx.drawImage(qrImg, 530, 735, 140, 140);
       ctx.font = '18px sans-serif';
       ctx.fillStyle = '#64748B';
-      ctx.fillText('长按识别打卡', 535, 910);
+      ctx.fillText('微信扫码记餐', 550, 895);
     }
   },
 
-  drawCalorieReceiptPoster(canvas, ctx, bgImg, qrImg, avatarImg) {
+  drawVoguePoster(canvas, ctx, bgImg, qrImg, avatarImg) {
     const user = app.globalData.userInfo;
     const nickname = user && user.nickname ? user.nickname : '自律达人';
     const consumedCal = this.data.consumedCal || 0;
     const targetCal = this.data.targetCal || 2000;
+    const nutrients = this.data.nutrients || {};
 
     ctx.clearRect(0, 0, 750, 1000);
-    ctx.fillStyle = '#F8FAFC';
-    ctx.fillRect(0, 0, 750, 1000);
 
+    // 1. Full-bleed background food photo or luxury dark gradient
+    if (bgImg) {
+      ctx.drawImage(bgImg, 0, 0, 750, 1000);
+      // Dark vignette overlay
+      const grad = ctx.createLinearGradient(0, 0, 0, 1000);
+      grad.addColorStop(0, 'rgba(15, 23, 42, 0.7)');
+      grad.addColorStop(0.4, 'rgba(15, 23, 42, 0.3)');
+      grad.addColorStop(1, 'rgba(15, 23, 42, 0.85)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 750, 1000);
+    } else {
+      const grad = ctx.createLinearGradient(0, 0, 750, 1000);
+      grad.addColorStop(0, '#0F172A');
+      grad.addColorStop(1, '#1E293B');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 750, 1000);
+    }
+
+    // 2. High Fashion Vogue Serif Magazine Header
+    ctx.font = 'bold 44px sans-serif';
     ctx.fillStyle = '#FFFFFF';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.08)';
-    ctx.shadowBlur = 20;
+    ctx.fillText('SHIKE HEALTH EDITORIAL', 65, 110);
+
+    ctx.font = 'bold 20px sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.fillText('ISSUE N°' + (this.data.currentDateStr || '2026.08') + ' · DAILY CALORIE COVER', 65, 150);
+
+    // Separator Thin Line
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    this.drawRoundedRect(ctx, 60, 60, 630, 880, 24);
+    ctx.moveTo(65, 175);
+    ctx.lineTo(685, 175);
+    ctx.stroke();
+
+    // 3. Huge Bold Numeric Badge
+    ctx.font = 'bold 100px sans-serif';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText(String(consumedCal), 65, 300);
+
+    ctx.font = 'bold 26px sans-serif';
+    ctx.fillStyle = '#38BDF8';
+    ctx.fillText('KCAL CONSUMED / TARGET ' + targetCal + ' KCAL', 65, 345);
+
+    // 4. Translucent Frosted Glass Card for Nutrition Details
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    this.drawRoundedRect(ctx, 65, 400, 620, 280, 24);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = 'bold 26px sans-serif';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText('NUTRITIONAL BALANCE ANALYTICS', 95, 455);
+
+    const proteinG = nutrients.protein || 0;
+    const carbG = nutrients.carbs || 0;
+    const fatG = nutrients.fat || 0;
+
+    ctx.font = '24px sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.fillText(`• PROTEIN (蛋白质): ${proteinG} g`, 95, 510);
+    ctx.fillText(`• CARBOHYDRATE (碳水): ${carbG} g`, 95, 560);
+    ctx.fillText(`• FAT (优质脂肪): ${fatG} g`, 95, 610);
+
+    // 5. Bottom Author & QR Bar
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+    ctx.beginPath();
+    this.drawRoundedRect(ctx, 65, 730, 620, 200, 24);
     ctx.fill();
 
-    ctx.shadowColor = 'transparent';
-    ctx.font = 'bold 36px monospace';
-    ctx.fillStyle = '#0F172A';
-    ctx.fillText('=== CALORIE RECEIPT ===', 120, 140);
+    if (avatarImg) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(125, 830, 40, 0, 2 * Math.PI);
+      ctx.clip();
+      ctx.drawImage(avatarImg, 85, 790, 80, 80);
+      ctx.restore();
+      ctx.strokeStyle = '#38BDF8';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(125, 830, 40, 0, 2 * Math.PI);
+      ctx.stroke();
+    }
 
-    ctx.font = '24px monospace';
-    ctx.fillStyle = '#475569';
-    ctx.fillText('用户: ' + nickname, 120, 200);
-    ctx.fillText('日期: ' + this.data.currentDateStr, 120, 240);
-    ctx.fillText('-----------------------------------', 120, 280);
+    ctx.font = 'bold 28px sans-serif';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText(nickname, 185, 815);
 
-    ctx.fillText('已摄入总热量: ' + consumedCal + ' kcal', 120, 340);
-    ctx.fillText('每日目标预算: ' + targetCal + ' kcal', 120, 390);
+    ctx.font = '20px sans-serif';
+    ctx.fillStyle = '#94A3B8';
+    ctx.fillText('咔嚓算卡 · AI 智能营养师专属诊断', 185, 855);
 
     if (qrImg) {
-      ctx.drawImage(qrImg, 500, 750, 140, 140);
+      ctx.drawImage(qrImg, 525, 760, 140, 140);
     }
   },
 
-  drawPolaroidPoster(canvas, ctx, bgImg, qrImg, avatarImg) {
+  drawReceiptPoster(canvas, ctx, bgImg, qrImg, avatarImg) {
+    const user = app.globalData.userInfo;
+    const nickname = user && user.nickname ? user.nickname : '自律达人';
+    const consumedCal = this.data.consumedCal || 0;
+    const targetCal = this.data.targetCal || 2000;
+    const nutrients = this.data.nutrients || {};
+
     ctx.clearRect(0, 0, 750, 1000);
     ctx.fillStyle = '#E2E8F0';
     ctx.fillRect(0, 0, 750, 1000);
 
     ctx.fillStyle = '#FFFFFF';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
-    ctx.shadowBlur = 30;
+    ctx.shadowColor = 'rgba(15, 23, 42, 0.12)';
+    ctx.shadowBlur = 24;
     ctx.beginPath();
-    this.drawRoundedRect(ctx, 75, 80, 600, 840, 20);
+    this.drawRoundedRect(ctx, 55, 45, 640, 910, 16);
     ctx.fill();
 
     ctx.shadowColor = 'transparent';
-    if (bgImg) {
-      ctx.drawImage(bgImg, 105, 110, 540, 540);
-    } else {
-      ctx.fillStyle = '#CBD5E1';
-      ctx.fillRect(105, 110, 540, 540);
-    }
-
-    ctx.font = 'bold 32px sans-serif';
+    ctx.font = 'bold 36px monospace';
     ctx.fillStyle = '#0F172A';
-    ctx.fillText('咔嚓算卡 · ' + (this.data.consumedCal || 0) + ' kcal', 110, 710);
+    ctx.fillText('=== CALORIE BILL RECORD ===', 100, 120);
 
-    ctx.font = '22px sans-serif';
-    ctx.fillStyle = '#64748B';
-    ctx.fillText(this.data.currentDateStr, 110, 750);
+    ctx.font = '22px monospace';
+    ctx.fillStyle = '#475569';
+    ctx.fillText('STORE: 咔嚓算卡 HEALTH LAB', 100, 170);
+    ctx.fillText('CUSTOMER: ' + nickname, 100, 205);
+    ctx.fillText('DATE: ' + (this.data.currentDateStr || ''), 100, 240);
+    ctx.fillText('-----------------------------------', 100, 275);
+
+    ctx.font = 'bold 26px monospace';
+    ctx.fillStyle = '#1E293B';
+    ctx.fillText('ITEM               QTY    CALORIES', 100, 320);
+    ctx.font = '22px monospace';
+    ctx.fillStyle = '#475569';
+    ctx.fillText('蛋白质 (PROTEIN)    ' + (nutrients.protein || 0) + 'g    ' + ((nutrients.protein||0)*4) + ' kcal', 100, 365);
+    ctx.fillText('碳水化合物 (CARB)  ' + (nutrients.carbs || 0) + 'g    ' + ((nutrients.carbs||0)*4) + ' kcal', 100, 410);
+    ctx.fillText('优质脂肪 (FAT)      ' + (nutrients.fat || 0) + 'g    ' + ((nutrients.fat||0)*9) + ' kcal', 100, 455);
+    ctx.fillText('-----------------------------------', 100, 505);
+
+    ctx.font = 'bold 30px monospace';
+    ctx.fillStyle = '#0F172A';
+    ctx.fillText('TOTAL CONSUMED: ' + consumedCal + ' KCAL', 100, 555);
+    ctx.fillText('BUDGET TARGET:  ' + targetCal + ' KCAL', 100, 600);
+
+    ctx.font = '22px monospace';
+    ctx.fillStyle = (consumedCal <= targetCal) ? '#059669' : '#DC2626';
+    ctx.fillText('STATUS: ' + ((consumedCal <= targetCal) ? '✓ 赤字达标 HEALTHY' : '⚠ 热量超标 DEFICIT OVER'), 100, 645);
+    ctx.fillText('-----------------------------------', 100, 685);
 
     if (qrImg) {
-      ctx.drawImage(qrImg, 500, 750, 130, 130);
+      ctx.drawImage(qrImg, 490, 720, 160, 160);
     }
+
+    ctx.font = '20px monospace';
+    ctx.fillStyle = '#64748B';
+    ctx.fillText('THANK YOU FOR BEING DISCIPLINED!', 100, 760);
+    ctx.fillText('SCAN QR CODE TO JOIN US', 100, 800);
   }
 })

@@ -128,9 +128,9 @@
       
       <!-- 海报样式切换 -->
       <view class="poster-tabs">
-        <view class="poster-tab {{activeTemplate === 'vitality' ? 'active' : ''}}" catchtap="switchTemplate" data-template="vitality">元气活力</view>
-        <view class="poster-tab {{activeTemplate === 'receipt' ? 'active' : ''}}" catchtap="switchTemplate" data-template="receipt">热量账单</view>
-        <view class="poster-tab {{activeTemplate === 'polaroid' ? 'active' : ''}}" catchtap="switchTemplate" data-template="polaroid">拍立得</view>
+        <view class="poster-tab {{activeTemplate === 'morandi' ? 'active' : ''}}" catchtap="switchTemplate" data-template="morandi">🌿 莫兰迪极简</view>
+        <view class="poster-tab {{activeTemplate === 'vogue' ? 'active' : ''}}" catchtap="switchTemplate" data-template="vogue">📸 杂志封面</view>
+        <view class="poster-tab {{activeTemplate === 'receipt' ? 'active' : ''}}" catchtap="switchTemplate" data-template="receipt">🧾 热量账单</view>
       </view>
 
       <view class="poster-preview-container">

@@ -19,7 +19,7 @@ Page({
     showTargetDaysSheet: false,
     showSharePosterModal: false,
     tempPosterPath: '',
-    activeTemplate: 'polaroid' // Default to polaroid (User preference), can switch to receipt or vitality
+    activeTemplate: 'morandi'
   },
 
   onLoad(options) {
@@ -382,12 +382,12 @@ Page({
                   loadImage(canvas, finalAvatarPath)
                 ]).then(([bgImg, qrImg, avatarImg]) => {
                   const template = this.data.activeTemplate;
-                  if (template === 'vitality') {
-                    this.drawGourmetVitalityPoster(canvas, ctx, bgImg, qrImg, avatarImg);
-                  } else if (template === 'receipt') {
-                    this.drawCalorieReceiptPoster(canvas, ctx, bgImg, qrImg, avatarImg);
-                  } else if (template === 'polaroid') {
-                    this.drawPolaroidPoster(canvas, ctx, bgImg, qrImg, avatarImg);
+                  if (template === 'morandi') {
+                    this.drawMorandiPoster(canvas, ctx, bgImg, qrImg, avatarImg);
+                  } else if (template === 'vogue') {
+                    this.drawVoguePoster(canvas, ctx, bgImg, qrImg, avatarImg);
+                  } else {
+                    this.drawReceiptPoster(canvas, ctx, bgImg, qrImg, avatarImg);
                   }
                 });
               });
@@ -768,8 +768,7 @@ Page({
           canvas.width = 750 * dpr;
           canvas.height = 1000 * dpr;
           ctx.scale(dpr, dpr);
-          
-          const loadImage = (canvas, path) => {
+const loadImage = (canvas, path) => {
             return new Promise((resolve) => {
               if (!path) { resolve(null); return; }
               const img = canvas.createImage();
@@ -785,347 +784,282 @@ Page({
             loadImage(canvas, tempQrPath),
             loadImage(canvas, finalAvatarPath)
           ]).then(([bgImg, qrImg, avatarImg]) => {
-            if (template === 'vitality') {
-              this.drawGourmetVitalityPoster(canvas, ctx, bgImg, qrImg, avatarImg);
-            } else if (template === 'receipt') {
-              this.drawCalorieReceiptPoster(canvas, ctx, bgImg, qrImg, avatarImg);
-            } else if (template === 'polaroid') {
-              this.drawPolaroidPoster(canvas, ctx, bgImg, qrImg, avatarImg);
+            if (template === 'morandi') {
+              this.drawMorandiPoster(canvas, ctx, bgImg, qrImg, avatarImg);
+            } else if (template === 'vogue') {
+              this.drawVoguePoster(canvas, ctx, bgImg, qrImg, avatarImg);
+            } else {
+              this.drawReceiptPoster(canvas, ctx, bgImg, qrImg, avatarImg);
             }
           });
         });
     });
   },
 
-  drawCalorieReceiptPoster(canvas, ctx, bgImg, qrImg, avatarImg) {
-    const myId = app.globalData.userInfo ? app.globalData.userInfo.id : null;
-    const myMember = this.data.members.find(m => String(m.id) === String(myId)) || null;
-    const todayChecked = myMember ? myMember.todayChecked : false;
-    const successCount = myMember ? myMember.successCount : 0;
-    const targetCalories = app.globalData.userInfo && app.globalData.userInfo.targetCalories ? app.globalData.userInfo.targetCalories : 2000;
+  drawMorandiPoster(canvas, ctx, bgImg, qrImg, avatarImg) {
+    const user = app.globalData.userInfo;
+    const nickname = user && user.nickname ? user.nickname : '自律达人';
+    const myId = user ? user.id : null;
+    const myMember = (this.data.members || []).find(m => String(m.id) === String(myId)) || null;
+    const successCount = myMember ? myMember.successCount : 1;
+    const teamName = this.data.teamName || '食刻契约挑战组';
 
+    // 1. Sage Green & Soft Cream Gradient Background
     ctx.clearRect(0, 0, 750, 1000);
-
-    ctx.fillStyle = '#F4F1EA';
+    const bgGrad = ctx.createLinearGradient(0, 0, 750, 1000);
+    bgGrad.addColorStop(0, '#E8EFE5'); // Soft Morandi Sage Green
+    bgGrad.addColorStop(1, '#D8E2D3');
+    ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, 750, 1000);
 
-    ctx.fillStyle = '#FCFAF5';
-    ctx.shadowColor = 'rgba(27, 26, 23, 0.15)';
-    ctx.shadowBlur = 30;
-    ctx.shadowOffsetY = 10;
+    // 2. High-End Frosted Glass Container Card
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
+    ctx.shadowColor = 'rgba(47, 65, 52, 0.12)';
+    ctx.shadowBlur = 32;
+    ctx.shadowOffsetY = 16;
     ctx.beginPath();
-    this.drawRoundedRect(ctx, 80, 60, 590, 880, 12);
+    this.drawRoundedRect(ctx, 40, 50, 670, 900, 36);
     ctx.fill();
 
     ctx.shadowColor = 'transparent';
     ctx.shadowBlur = 0;
-    ctx.shadowOffsetY = 0;
-
-    ctx.strokeStyle = '#E2DDD3';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    
-    ctx.font = 'bold 36px Courier New, Courier, monospace, sans-serif';
-    ctx.fillStyle = '#1B1A17';
-    ctx.fillText('咔擦算卡 · 契约打卡账单', 375, 130);
+    // 3. Header Text & Minimalist Lifestyle Tag
+    ctx.font = 'bold 36px sans-serif';
+    ctx.fillStyle = '#2D3A31';
+    ctx.fillText('咔嚓算卡 · 契约打卡战报', 80, 125);
 
-    ctx.font = '22px Courier New, Courier, monospace, sans-serif';
-    ctx.fillText('SHIKE DIET BILL', 375, 175);
+    ctx.font = '22px sans-serif';
+    ctx.fillStyle = '#5A6E60';
+    ctx.fillText('小队: ' + teamName + ' · 连胜 ' + successCount + ' 天', 80, 165);
 
-    ctx.textAlign = 'left';
-    ctx.fillStyle = '#4F4E4A';
-    ctx.font = '22px Courier New, Courier, monospace, sans-serif';
-    
-    const todayStr = new Date().toISOString().split('T')[0];
-    ctx.fillText('日期: ' + todayStr, 120, 230);
-    ctx.fillText('邀请码: ' + (this.data.inviteCode || '无'), 120, 265);
-    ctx.fillText('连续达标: ' + successCount + ' 天', 120, 300);
-
-    ctx.strokeStyle = '#D6D0C2';
-    ctx.setLineDash([4, 4]);
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(120, 335);
-    ctx.lineTo(630, 335);
-    ctx.stroke();
-    ctx.setLineDash([]); 
-
-    const parsedItems = [];
-    let grandTotal = 0;
-    const dietRecords = this._dietRecords || [];
-    dietRecords.forEach(record => {
-      try {
-        const items = JSON.parse(record.foodItems);
-        if (Array.isArray(items)) {
-          items.forEach(item => {
-            const cal = Math.round(item.calories || ((item.unitCalories || 0) * item.weight) || 0);
-            parsedItems.push({
-              name: item.name,
-              weight: item.weight,
-              calories: cal
-            });
-            grandTotal += cal;
-          });
-        }
-      } catch (e) {
-        console.error('Error parsing foodItems for receipt:', e);
-      }
-    });
-
-    ctx.fillStyle = '#1B1A17';
-    ctx.font = '24px Courier New, Courier, monospace, sans-serif';
-    let currentY = 380;
-    
-    const formatReceiptLine = (left, right, maxLen = 28) => {
-      const getVisualLength = (str) => {
-        let len = 0;
-        for (let i = 0; i < str.length; i++) {
-          if (str.charCodeAt(i) > 127) {
-            len += 2;
-          } else {
-            len += 1;
-          }
-        }
-        return len;
-      };
-      const dotsCount = maxLen - getVisualLength(left) - getVisualLength(right);
-      if (dotsCount <= 0) return left + ' ' + right;
-      return left + ' ' + '.'.repeat(dotsCount) + ' ' + right;
-    };
-
-    if (parsedItems.length === 0) {
-      ctx.fillStyle = '#8E8B82';
-      ctx.textAlign = 'center';
-      ctx.fillText('[ 今日暂无饮食记录 ]', 375, currentY + 40);
-      ctx.fillText('继续保持自律生活！', 375, currentY + 80);
-      ctx.textAlign = 'left';
-      currentY += 120;
-    } else {
-      parsedItems.forEach((item, index) => {
-        if (currentY > 620) return; 
-        const itemNumStr = String(index + 1).padStart(2, '0') + '. ';
-        const namePart = item.name.length > 8 ? item.name.substring(0, 8) + '..' : item.name;
-        const leftText = itemNumStr + namePart + ' (' + item.weight + 'g)';
-        const rightText = item.calories + ' KCAL';
-        
-        ctx.fillText(formatReceiptLine(leftText, rightText), 120, currentY);
-        currentY += 45;
-      });
-    }
-
-    if (parsedItems.length > 0 && currentY < 560) {
-      currentY = 560;
-    }
-
-    ctx.strokeStyle = '#D6D0C2';
-    ctx.setLineDash([4, 4]);
-    ctx.beginPath();
-    ctx.moveTo(120, currentY + 10);
-    ctx.lineTo(630, currentY + 10);
-    ctx.stroke();
-    ctx.setLineDash([]); 
-    
-    currentY += 50;
-
-    ctx.font = 'bold 24px Courier New, Courier, monospace, sans-serif';
-    ctx.fillText(formatReceiptLine('今日累计摄入', grandTotal + ' KCAL'), 120, currentY);
-    ctx.font = '24px Courier New, Courier, monospace, sans-serif';
-    ctx.fillText(formatReceiptLine('每日目标预算', targetCalories + ' KCAL'), 120, currentY + 45);
-    
-    const diff = targetCalories - grandTotal;
-    const diffText = diff >= 0 ? '+' + diff : String(diff);
-    ctx.fillText(formatReceiptLine('热量结余', diffText + ' KCAL'), 120, currentY + 90);
-
-    ctx.save();
-    ctx.translate(330, currentY + 15);
-    ctx.rotate(-12 * Math.PI / 180); 
-    
-    if (todayChecked) {
-      ctx.strokeStyle = 'rgba(16, 185, 129, 0.75)'; 
-      ctx.fillStyle = 'rgba(16, 185, 129, 0.75)';
-      ctx.lineWidth = 4;
-      ctx.strokeRect(-90, -30, 180, 60);
-      ctx.font = 'bold 30px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('已达标', 0, 2);
-    } else {
-      ctx.strokeStyle = 'rgba(239, 68, 68, 0.75)'; 
-      ctx.fillStyle = 'rgba(239, 68, 68, 0.75)';
-      ctx.lineWidth = 4;
-      ctx.strokeRect(-90, -30, 180, 60);
-      ctx.font = 'bold 30px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('进行中', 0, 2);
-    }
-    ctx.restore();
-
-    ctx.strokeStyle = '#D6D0C2';
-    ctx.setLineDash([4, 4]);
-    ctx.beginPath();
-    ctx.moveTo(120, 785);
-    ctx.lineTo(630, 785);
-    ctx.stroke();
-    ctx.setLineDash([]); 
-
-    ctx.fillStyle = '#2D2B27';
-    let barX = 140;
-    const barY = 815;
-    const barHeight = 45;
-    const barPatterns = [3, 1, 4, 2, 1, 3, 2, 4, 1, 2, 3, 2, 1, 4, 1, 3, 2, 4, 1, 2, 3, 1, 4, 2, 1, 3, 2, 4, 2, 1, 3, 2];
-    barPatterns.forEach(w => {
-      ctx.fillRect(barX, barY, w, barHeight);
-      barX += w + Math.floor(Math.random() * 3) + 1;
-    });
-
-    ctx.font = '16px Courier New, Courier, monospace, sans-serif';
-    ctx.fillStyle = '#4F4E4A';
-    ctx.textAlign = 'center';
-    ctx.fillText('* ' + (this.data.inviteCode || 'SHIKE') + ' *', 230, 885);
-
+    // 4. Polaroid Photo Frame with food image
     ctx.fillStyle = '#FFFFFF';
-    ctx.strokeStyle = '#E2DDD3';
-    ctx.lineWidth = 2;
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.08)';
+    ctx.shadowBlur = 16;
     ctx.beginPath();
-    this.drawRoundedRect(ctx, 510, 695, 120, 120, 12);
+    this.drawRoundedRect(ctx, 80, 195, 590, 440, 24);
     ctx.fill();
-    ctx.stroke();
-
-    if (qrImg) {
-      ctx.drawImage(qrImg, 520, 705, 100, 100);
-    } else {
-      ctx.fillStyle = '#6366F1';
-      ctx.fillRect(530, 715, 25, 25);
-      ctx.fillRect(575, 715, 25, 25);
-      ctx.fillRect(530, 760, 25, 25);
-      ctx.fillRect(575, 760, 10, 10);
-    }
-    
-    ctx.font = '14px sans-serif';
-    ctx.fillStyle = '#8E8B82';
-    ctx.fillText('扫码加入小队', 570, 840);
-
-    this.saveCanvasToAlbum(canvas);
-  },
-
-  drawPolaroidPoster(canvas, ctx, bgImg, qrImg, avatarImg) {
-    const myId = app.globalData.userInfo ? app.globalData.userInfo.id : null;
-    const myMember = this.data.members.find(m => String(m.id) === String(myId)) || null;
-    const todayChecked = myMember ? myMember.todayChecked : false;
-    const successCount = myMember ? myMember.successCount : 0;
-
-    ctx.clearRect(0, 0, 750, 1000);
-
-    const bgGradient = ctx.createLinearGradient(0, 0, 750, 1000);
-    bgGradient.addColorStop(0, '#FAF6F0');
-    bgGradient.addColorStop(1, '#EFE4D6');
-    ctx.fillStyle = bgGradient;
-    ctx.fillRect(0, 0, 750, 1000);
-
-    ctx.fillStyle = '#FFFFFF';
-    ctx.shadowColor = 'rgba(79, 70, 58, 0.16)';
-    ctx.shadowBlur = 35;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 15;
-    
-    ctx.beginPath();
-    this.drawRoundedRect(ctx, 100, 120, 550, 620, 8);
-    ctx.fill();
-
     ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetY = 0;
-
-    ctx.fillStyle = '#F1ECE4';
-    ctx.fillRect(130, 150, 490, 440);
 
     if (bgImg) {
       ctx.save();
       ctx.beginPath();
-      ctx.rect(130, 150, 490, 440);
+      this.drawRoundedRect(ctx, 95, 210, 560, 360, 16);
       ctx.clip();
-      ctx.drawImage(bgImg, 130, 150, 490, 653); 
+      ctx.drawImage(bgImg, 95, 210, 560, 360);
       ctx.restore();
+    } else {
+      ctx.fillStyle = '#E2E8F0';
+      ctx.beginPath();
+      this.drawRoundedRect(ctx, 95, 210, 560, 360, 16);
+      ctx.fill();
+      ctx.font = '28px sans-serif';
+      ctx.fillStyle = '#94A3B8';
+      ctx.fillText('🥗 记录每一餐的精致美好', 220, 400);
     }
 
-    ctx.fillStyle = 'rgba(245, 158, 11, 0.35)'; 
-    ctx.save();
-    ctx.translate(375, 120);
-    ctx.rotate(-4 * Math.PI / 180);
-    ctx.fillRect(-65, -20, 130, 36);
-    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(-65, -20); ctx.lineTo(-65, 16);
-    ctx.moveTo(65, -20); ctx.lineTo(65, 16);
-    ctx.stroke();
-    ctx.restore();
-
-    ctx.textAlign = 'left';
-    ctx.fillStyle = '#2C251C';
-    
-    ctx.font = 'italic bold 26px sans-serif';
-    const todayStr = new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' });
-    ctx.fillText('📅 ' + todayStr, 140, 640);
-    
-    ctx.font = 'italic bold 24px sans-serif';
-    ctx.fillText('🔥 连续自律: ' + successCount + ' 天', 140, 685);
-
-    ctx.save();
-    ctx.translate(540, 650);
-    ctx.rotate(15 * Math.PI / 180);
-    ctx.strokeStyle = todayChecked ? '#10B981' : '#F59E0B';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(0, 0, 40, 0, 2 * Math.PI);
-    ctx.stroke();
-    ctx.fillStyle = todayChecked ? '#10B981' : '#F59E0B';
-    ctx.font = 'bold 20px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(todayChecked ? '已达标' : '进行中', 0, 0);
-    ctx.restore();
-
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'alphabetic';
-    ctx.font = 'italic bold 32px sans-serif';
-    ctx.fillStyle = '#4A3E31';
-    
-    ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
-    ctx.shadowBlur = 4;
-    ctx.fillText('“咔擦一拍，每一口都算数”', 100, 830);
+    // Photo Caption Inside Polaroid
     ctx.font = 'bold 24px sans-serif';
-    ctx.fillStyle = '#6E5D4F';
-    ctx.fillText('小队: ' + (this.data.teamName || '契约挑战组'), 100, 875);
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#334155';
+    ctx.fillText('🔥 今日契约完成！累计打卡 ' + successCount + ' 天', 105, 605);
 
+    // 5. User Avatar & Profile Bar (Bottom Left)
+    if (avatarImg) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(120, 785, 36, 0, 2 * Math.PI);
+      ctx.clip();
+      ctx.drawImage(avatarImg, 84, 749, 72, 72);
+      ctx.restore();
+      
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(120, 785, 36, 0, 2 * Math.PI);
+      ctx.stroke();
+    }
+
+    ctx.font = 'bold 26px sans-serif';
+    ctx.fillStyle = '#1E293B';
+    ctx.fillText(nickname, 170, 775);
+
+    ctx.font = '20px sans-serif';
+    ctx.fillStyle = '#64748B';
+    ctx.fillText('与小队伙伴一起对赌自律', 170, 805);
+
+    // 6. QR Code (Bottom Right)
+    if (qrImg) {
+      ctx.drawImage(qrImg, 530, 735, 140, 140);
+      ctx.font = '18px sans-serif';
+      ctx.fillStyle = '#64748B';
+      ctx.fillText('扫码加入小队', 550, 895);
+    }
+
+    this.saveCanvasToAlbum(canvas);
+  },
+
+  drawVoguePoster(canvas, ctx, bgImg, qrImg, avatarImg) {
+    const user = app.globalData.userInfo;
+    const nickname = user && user.nickname ? user.nickname : '自律达人';
+    const myId = user ? user.id : null;
+    const myMember = (this.data.members || []).find(m => String(m.id) === String(myId)) || null;
+    const successCount = myMember ? myMember.successCount : 1;
+    const teamName = this.data.teamName || '契约减脂队';
+
+    ctx.clearRect(0, 0, 750, 1000);
+
+    if (bgImg) {
+      ctx.drawImage(bgImg, 0, 0, 750, 1000);
+      const grad = ctx.createLinearGradient(0, 0, 0, 1000);
+      grad.addColorStop(0, 'rgba(15, 23, 42, 0.7)');
+      grad.addColorStop(0.4, 'rgba(15, 23, 42, 0.3)');
+      grad.addColorStop(1, 'rgba(15, 23, 42, 0.85)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 750, 1000);
+    } else {
+      const grad = ctx.createLinearGradient(0, 0, 750, 1000);
+      grad.addColorStop(0, '#0F172A');
+      grad.addColorStop(1, '#1E293B');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 750, 1000);
+    }
+
+    ctx.font = 'bold 44px sans-serif';
     ctx.fillStyle = '#FFFFFF';
-    ctx.strokeStyle = 'rgba(74, 62, 49, 0.1)';
-    ctx.lineWidth = 2;
+    ctx.fillText('SHIKE HEALTH EDITORIAL', 65, 110);
+
+    ctx.font = 'bold 20px sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.fillText('TEAM: ' + teamName + ' · STREAK ' + successCount + ' DAYS', 65, 150);
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    this.drawRoundedRect(ctx, 510, 775, 120, 120, 16);
+    ctx.moveTo(65, 175);
+    ctx.lineTo(685, 175);
+    ctx.stroke();
+
+    ctx.font = 'bold 100px sans-serif';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText(String(successCount), 65, 300);
+
+    ctx.font = 'bold 26px sans-serif';
+    ctx.fillStyle = '#38BDF8';
+    ctx.fillText('DAYS OF CONTINUOUS DISCIPLINE', 65, 345);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    this.drawRoundedRect(ctx, 65, 400, 620, 280, 24);
     ctx.fill();
     ctx.stroke();
 
-    if (qrImg) {
-      ctx.drawImage(qrImg, 520, 785, 100, 100);
-    } else {
-      ctx.fillStyle = '#F59E0B';
-      ctx.fillRect(530, 795, 25, 25);
-      ctx.fillRect(575, 795, 25, 25);
-      ctx.fillRect(530, 840, 25, 25);
-      ctx.fillRect(575, 840, 10, 10);
+    ctx.font = 'bold 26px sans-serif';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText('TEAM CHALLENGE METRICS', 95, 455);
+
+    ctx.font = '24px sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.fillText(`• 小队名称: ${teamName}`, 95, 510);
+    ctx.fillText(`• 目标周期: ${this.data.targetDays || 30} 天减脂契约`, 95, 560);
+    ctx.fillText(`• 达标奖励: 赢取 ${this.data.points || 500} 积分大池`, 95, 610);
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+    ctx.beginPath();
+    this.drawRoundedRect(ctx, 65, 730, 620, 200, 24);
+    ctx.fill();
+
+    if (avatarImg) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(125, 830, 40, 0, 2 * Math.PI);
+      ctx.clip();
+      ctx.drawImage(avatarImg, 85, 790, 80, 80);
+      ctx.restore();
+      ctx.strokeStyle = '#38BDF8';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(125, 830, 40, 0, 2 * Math.PI);
+      ctx.stroke();
     }
 
-    ctx.textAlign = 'center';
-    ctx.font = '14px sans-serif';
-    ctx.fillStyle = '#6E5D4F';
-    ctx.fillText('扫码加入对赌', 570, 915);
+    ctx.font = 'bold 28px sans-serif';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText(nickname, 185, 815);
+
+    ctx.font = '20px sans-serif';
+    ctx.fillStyle = '#94A3B8';
+    ctx.fillText('咔嚓算卡 · 契约减脂组成员', 185, 855);
+
+    if (qrImg) {
+      ctx.drawImage(qrImg, 525, 760, 140, 140);
+    }
+
+    this.saveCanvasToAlbum(canvas);
+  },
+
+  drawReceiptPoster(canvas, ctx, bgImg, qrImg, avatarImg) {
+    const user = app.globalData.userInfo;
+    const nickname = user && user.nickname ? user.nickname : '自律达人';
+    const myId = user ? user.id : null;
+    const myMember = (this.data.members || []).find(m => String(m.id) === String(myId)) || null;
+    const successCount = myMember ? myMember.successCount : 1;
+
+    ctx.clearRect(0, 0, 750, 1000);
+    ctx.fillStyle = '#E2E8F0';
+    ctx.fillRect(0, 0, 750, 1000);
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.shadowColor = 'rgba(15, 23, 42, 0.12)';
+    ctx.shadowBlur = 24;
+    ctx.beginPath();
+    this.drawRoundedRect(ctx, 55, 45, 640, 910, 16);
+    ctx.fill();
+
+    ctx.shadowColor = 'transparent';
+    ctx.font = 'bold 36px monospace';
+    ctx.fillStyle = '#0F172A';
+    ctx.fillText('=== CALORIE BILL RECORD ===', 100, 120);
+
+    ctx.font = '22px monospace';
+    ctx.fillStyle = '#475569';
+    ctx.fillText('STORE: 咔嚓算卡 HEALTH LAB', 100, 170);
+    ctx.fillText('CUSTOMER: ' + nickname, 100, 205);
+    ctx.fillText('INVITE CODE: ' + (this.data.inviteCode || 'SHIKE'), 100, 240);
+    ctx.fillText('-----------------------------------', 100, 275);
+
+    ctx.font = 'bold 26px monospace';
+    ctx.fillStyle = '#1E293B';
+    ctx.fillText('ITEM               STREAK  STATUS', 100, 320);
+    ctx.font = '22px monospace';
+    ctx.fillStyle = '#475569';
+    ctx.fillText('打卡连胜           ' + successCount + ' 天    ✓ 达标', 100, 365);
+    ctx.fillText('契约天数           ' + (this.data.targetDays || 30) + ' 天    进行中', 100, 410);
+    ctx.fillText('奖池积分           ' + (this.data.points || 500) + ' pt   生效中', 100, 455);
+    ctx.fillText('-----------------------------------', 100, 505);
+
+    ctx.font = 'bold 30px monospace';
+    ctx.fillStyle = '#0F172A';
+    ctx.fillText('CHALLENGE STREAK: ' + successCount + ' DAYS', 100, 555);
+
+    ctx.font = '22px monospace';
+    ctx.fillStyle = '#059669';
+    ctx.fillText('STATUS: ✓ 契约对赌持续生效中', 100, 615);
+    ctx.fillText('-----------------------------------', 100, 665);
+
+    if (qrImg) {
+      ctx.drawImage(qrImg, 490, 710, 160, 160);
+    }
+
+    ctx.font = '20px monospace';
+    ctx.fillStyle = '#64748B';
+    ctx.fillText('THANK YOU FOR BEING DISCIPLINED!', 100, 760);
+    ctx.fillText('SCAN QR CODE TO JOIN US', 100, 800);
 
     this.saveCanvasToAlbum(canvas);
   },
