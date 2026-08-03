@@ -14,6 +14,27 @@
     </view>
   </view>
 
+  <!-- 紧急扣分预警/提醒栏 -->
+  <view class="nudge-warning-bar flex justify-between align-center" wx:if="{{showLateCheckinWarning}}">
+    <view class="flex align-center" style="gap: 12rpx;">
+      <text style="font-size: 28rpx; animation: pulse 1.5s infinite;">⚠️</text>
+      <text style="font-size: 22rpx; color: #DC2626; font-weight: 700;">小队扣分预警：今晚24点结算，未打卡将扣除了100积分！</text>
+    </view>
+    <view class="btn-quick-photo" catchtap="onQuickPhotoRecord">📸 打卡</view>
+  </view>
+
+  <!-- 🥤 智能饮水按时提醒栏 -->
+  <view class="water-reminder-bar flex justify-between align-center" wx:if="{{showWaterReminderBar}}">
+    <view class="flex align-center" style="gap: 12rpx;">
+      <text style="font-size: 28rpx;">🥤</text>
+      <text style="font-size: 22rpx; color: #2563EB; font-weight: 700;">{{waterReminderMsg}}</text>
+    </view>
+    <view class="flex align-center" style="gap: 10rpx;">
+      <view class="btn-quick-water" catchtap="onQuickAddWater250">💧 +250ml</view>
+      <text class="water-reminder-close" catchtap="onDismissWaterReminder">✕</text>
+    </view>
+  </view>
+
   <!-- 1. 今日热量大环形看板 -->
   <view class="calorie-board-container align-center flex-col flex">
     <view class="calorie-ring-wrapper">
@@ -421,6 +442,20 @@
         </view>
         <view class="water-btn plus big" catchtap="onWaterAdd" data-amount="500">
           <text>+ 500ml 🚀</text>
+        </view>
+      </view>
+
+      <!-- 🔔 微信服务通知订阅授权卡片 -->
+      <view class="water-subscribe-card flex justify-between align-center" catchtap="onSubscribeWaterPush">
+        <view class="water-sub-left">
+          <text class="water-sub-icon">🔔</text>
+          <view class="water-sub-text">
+            <text class="water-sub-title">微信聊天框定时提醒</text>
+            <text class="water-sub-desc">预存提醒额度 · 锁屏自动接收</text>
+          </view>
+        </view>
+        <view class="water-sub-badge {{waterSubQuota > 0 ? 'active' : ''}}">
+          <text class="water-sub-badge-text">{{waterSubQuota > 0 ? '已开启 (剩' + waterSubQuota + '次)' : '预存提醒次数'}}</text>
         </view>
       </view>
     </view>

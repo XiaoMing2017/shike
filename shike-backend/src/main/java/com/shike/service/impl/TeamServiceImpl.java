@@ -30,8 +30,11 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.time.format.DateTimeFormatter;
+import java.util.concurrent.TimeUnit;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 @Service
 @RequiredArgsConstructor
@@ -44,6 +47,7 @@ public class TeamServiceImpl implements TeamService {
     private final UserRepository userRepository;
     private final DietRecordRepository dietRecordRepository;
     private final PointsRecordRepository pointsRecordRepository;
+    private final StringRedisTemplate stringRedisTemplate;
 
     @Value("${wx.mock}")
     private boolean wxMock;
@@ -442,5 +446,42 @@ public class TeamServiceImpl implements TeamService {
             log.error("Failed to generate WeChat QR Code", e);
             throw new BizException(500, "Failed to generate WeChat QR Code: " + e.getMessage());
         }
+    }
+
+    @Override
+    public String nudgeTeammate(Long senderId, Long targetUserId, Long teamId) {
+        User sender = userRepository.findById(senderId)
+                .orElseThrow(() -> new BizException(404, "发送者不存在"));
+        User target = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new BizException(404, "目标队友不存在"));
+
+        String todayStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        String redisKey = "shike:team:nudge:" + senderId + ":" + targetUserId + ":" + todayStr;
+
+        String countVal = stringRedisTemplate.opsForValue().get(redisKey);
+        int count = countVal != null ? Integer.parseInt(countVal) : 0;
+        if (count >= 3) {
+            throw new BizException(400, "今天已经提醒过该队友3次啦，给TA一点时间吧~");
+        }
+
+        stringRedisTemplate.opsForValue().set(redisKey, String.valueOf(count + 1), 24, TimeUnit.HOURS);
+
+        String alertKey = "shike:team:nudge:alert:" + targetUserId;
+        String senderName = sender.getNickname() != null ? sender.getNickname() : "队友";
+        String alertMsg = "🔔 队友【" + senderName + "】喊你快去打卡：今天就差你啦，快去拍照算卡吧！";
+        stringRedisTemplate.opsForValue().set(alertKey, alertMsg, 12, TimeUnit.HOURS);
+
+        return "已成功提醒 " + (target.getNickname() != null ? target.getNickname() : "队友") + " 打卡！";
+    }
+
+    @Override
+    public String getPendingNudgeAlert(Long userId) {
+        String alertKey = "shike:team:nudge:alert:" + userId;
+        String msg = stringRedisTemplate.opsForValue().get(alertKey);
+        if (msg != null) {
+            stringRedisTemplate.delete(alertKey);
+            return msg;
+        }
+        return null;
     }
 }

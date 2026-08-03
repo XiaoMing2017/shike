@@ -17,6 +17,7 @@ const COMMON_FOOD_DICTIONARY = [
 
 Page({
   data: {
+    isWaterSubscribed: false,
     currentDateStr: '',
     avatarUrl: '/images/profile.png',
     remainingCal: 2000,
@@ -220,6 +221,9 @@ Page({
   onShow() {
     this.updateDateDisplay();
     this.checkUserAndLoadData();
+    this.setData({
+      isWaterSubscribed: !!wx.getStorageSync('water_wx_subscribed')
+    });
   },
 
   updateDateDisplay() {
@@ -256,6 +260,11 @@ Page({
   },
 
   loadUserData(user) {
+    if (user && user.id) {
+      this.checkLateCheckinStatus(user.id);
+      this.checkPendingNudgeAlert(user.id);
+      this.checkWaterReminderStatus(user.id);
+    }
     // 1. Set calorie targets and dynamic nutrient distribution
     const targetCal = user.targetCalories || 2000;
     const userWeight = user.weight || 65;
@@ -1228,6 +1237,169 @@ Page({
             }
           });
         }
+      }
+    });
+  },
+
+  checkLateCheckinStatus(userId) {
+    const now = new Date();
+    const hour = now.getHours();
+    if (hour >= 20) {
+      wx.request({
+        url: `${app.globalData.baseUrl}/team/user/${userId}/active`,
+        method: 'GET',
+        success: (res) => {
+          if (res.data && res.data.code === 200 && res.data.data) {
+            const team = res.data.data;
+            const currentUserMember = team.members ? team.members.find(m => m.userId === userId) : null;
+            if (currentUserMember && !currentUserMember.todayChecked) {
+              this.setData({ showLateCheckinWarning: true });
+            } else {
+              this.setData({ showLateCheckinWarning: false });
+            }
+          }
+        }
+      });
+    } else {
+      this.setData({ showLateCheckinWarning: false });
+    }
+  },
+
+  checkPendingNudgeAlert(userId) {
+    if (!userId) return;
+    wx.request({
+      url: `${app.globalData.baseUrl}/team/nudge/alert?userId=${userId}`,
+      method: 'GET',
+      success: (res) => {
+        if (res.data && res.data.code === 200 && res.data.data) {
+          wx.showModal({
+            title: '🔔 小队打卡提醒',
+            content: res.data.data,
+            confirmText: '去拍照打卡',
+            confirmColor: '#10B981',
+            cancelText: '知道啦',
+            success: (mRes) => {
+              if (mRes.confirm) {
+                this.onTapAddMeal();
+              }
+            }
+          });
+        }
+      }
+    });
+  },
+
+  onQuickPhotoRecord() {
+    this.onTapAddMeal();
+  },
+
+  checkWaterReminderStatus(userId) {
+    if (!userId) return;
+    const today = new Date().toISOString().split('T')[0];
+
+    wx.request({
+      url: `${app.globalData.baseUrl}/water/reminder-check?userId=${userId}&targetAmount=${this.data.waterTarget}`,
+      method: 'GET',
+      success: (res) => {
+        if (res.data && res.data.code === 200 && res.data.data) {
+          const info = res.data.data;
+          const dismissedDate = wx.getStorageSync(`water_dismissed_${info.timeSlot}`);
+
+          if (info.needReminder && dismissedDate !== today) {
+            this.setData({
+              showWaterReminderBar: true,
+              waterReminderMsg: info.reminderMsg || '🥤 记得补水哦！保持水分代谢平衡',
+              currentWaterTimeSlot: info.timeSlot
+            });
+          } else {
+            this.setData({ showWaterReminderBar: false });
+          }
+        }
+      }
+    });
+  },
+
+  onQuickAddWater250() {
+    app.login((user) => {
+      const today = new Date().toISOString().split('T')[0];
+      const slot = this.data.currentWaterTimeSlot || 0;
+      wx.setStorageSync(`water_dismissed_${slot}`, today);
+
+      wx.request({
+        url: `${app.globalData.baseUrl}/water/add?userId=${user.id}&date=${today}&amount=250`,
+        method: 'POST',
+        success: (res) => {
+          if (res.data && res.data.code === 200) {
+            wx.showToast({ title: '已补水 250ml 💧', icon: 'success' });
+            this.setData({ showWaterReminderBar: false });
+            this.loadWaterRecord(user.id);
+          }
+        }
+      });
+    });
+  },
+
+  onDismissWaterReminder() {
+    const today = new Date().toISOString().split('T')[0];
+    const slot = this.data.currentWaterTimeSlot || 0;
+    wx.setStorageSync(`water_dismissed_${slot}`, today);
+    this.setData({ showWaterReminderBar: false });
+  },
+
+  onSubscribeWaterPush() {
+    if (this.data.isWaterSubscribed) {
+      wx.showModal({
+        title: '关闭微信提醒',
+        content: '确定要关闭微信聊天框定时喝水提醒吗？',
+        confirmText: '确定关闭',
+        cancelText: '保持开启',
+        success: (res) => {
+          if (res.confirm) {
+            this.setData({ isWaterSubscribed: false });
+            wx.removeStorageSync('water_wx_subscribed');
+            wx.showToast({ title: '已关闭微信提醒', icon: 'none' });
+
+            app.login((user) => {
+              if (user && user.id) {
+                wx.request({
+                  url: `${app.globalData.baseUrl}/user/unsubscribe?userId=${user.id}&type=WATER`,
+                  method: 'POST'
+                });
+              }
+            });
+          }
+        }
+      });
+      return;
+    }
+
+    const templateId = '6rHAfQw2A3WSw00LCaV9MUSop3OFVsRTAx4I-xgW5lw';
+
+    wx.requestSubscribeMessage({
+      tmplIds: [templateId],
+      success: (res) => {
+        if (res[templateId] === 'accept') {
+          this.setData({ isWaterSubscribed: true });
+          wx.setStorageSync('water_wx_subscribed', true);
+          wx.showToast({ title: '已开启微信服务通知！', icon: 'success' });
+
+          app.login((user) => {
+            if (user && user.id) {
+              wx.request({
+                url: `${app.globalData.baseUrl}/user/subscribe?userId=${user.id}&templateId=${templateId}&type=WATER`,
+                method: 'POST'
+              });
+            }
+          });
+        } else {
+          this.setData({ isWaterSubscribed: false });
+          wx.removeStorageSync('water_wx_subscribed');
+          wx.showToast({ title: '已取消授权', icon: 'none' });
+        }
+      },
+      fail: (err) => {
+        console.log('Subscribe message fail:', err);
+        wx.showToast({ title: '未开启授权', icon: 'none' });
       }
     });
   }

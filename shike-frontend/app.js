@@ -7,6 +7,22 @@ App({
     userInfo: null,
     baseUrl: 'https://shike.store/api/v1'
   },
+  formatImageUrl(url) {
+    const defaultAvatar = 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0';
+    if (!url || url === '/images/profile.png' || url === 'tmp' || url.includes('.tmp')) {
+      return defaultAvatar;
+    }
+    let formatted = url;
+    if (formatted.startsWith('/uploads/')) {
+      formatted = this.globalData.baseUrl + formatted;
+    } else if (formatted.startsWith('uploads/')) {
+      formatted = this.globalData.baseUrl + '/' + formatted;
+    }
+    if (formatted.startsWith('http://')) {
+      formatted = formatted.replace('http://', 'https://');
+    }
+    return formatted;
+  },
   login(callback) {
     if (this.globalData.userInfo) {
       if (callback) callback(this.globalData.userInfo);

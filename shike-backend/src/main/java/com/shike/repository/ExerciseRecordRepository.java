@@ -9,6 +9,7 @@ import java.util.List;
 
 @Repository
 public interface ExerciseRecordRepository extends JpaRepository<ExerciseRecord, Long> {
+    List<ExerciseRecord> findByRecordDate(LocalDate date);
     List<ExerciseRecord> findByUserIdAndRecordDate(Long userId, LocalDate date);
     List<ExerciseRecord> findByUserIdOrderByRecordDateDesc(Long userId);
     Long countByRecordDate(LocalDate date);

@@ -1,6 +1,7 @@
 package com.shike.service;
 
 import com.shike.model.dto.AdminStatsDTO;
+import com.shike.model.dto.AdminTeamDTO;
 import com.shike.model.dto.AdminUserDTO;
 import com.shike.model.dto.UserDetailRecordsDTO;
 
@@ -10,4 +11,6 @@ public interface AdminService {
     AdminStatsDTO getDashboardStats();
     List<AdminUserDTO> getAllUsers();
     UserDetailRecordsDTO getUserDetailRecords(Long userId);
+    List<AdminTeamDTO> getAllTeams();
+    void updateTeamStatus(Long teamId, String status);
 }

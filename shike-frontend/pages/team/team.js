@@ -41,6 +41,7 @@ Page({
   checkUserAndLoadData() {
     app.login((user) => {
       this.fetchTeamData(user.id);
+      this.checkPendingNudgeAlert(user.id);
     });
   },
 
@@ -51,6 +52,14 @@ Page({
       success: (res) => {
         if (res.data && res.data.code === 200 && res.data.data) {
           const detail = res.data.data;
+          const formattedMembers = (detail.members || []).map(m => {
+            let avatar = m.avatar || m.avatarUrl;
+            avatar = app.formatImageUrl(avatar);
+            return {
+              ...m,
+              avatar: avatar
+            };
+          });
           this.setData({
             hasTeam: true,
             teamId: detail.teamId,
@@ -59,7 +68,7 @@ Page({
             targetDays: detail.targetDays,
             points: detail.points,
             inviteCode: detail.inviteCode,
-            members: detail.members
+            members: formattedMembers
           });
         } else {
           this.setData({
@@ -1257,6 +1266,76 @@ Page({
             fail: () => {
               wx.hideLoading();
               wx.showToast({ title: '网络连接失败', icon: 'none' });
+            }
+          });
+        }
+      }
+    });
+  },
+
+  onNudgeTeammate(e) {
+    const targetUserId = e.currentTarget.dataset.userId;
+    const name = e.currentTarget.dataset.name || '队友';
+    const { userId, teamId } = this.data;
+
+    if (!targetUserId || !teamId || !userId) return;
+
+    wx.showLoading({ title: '提醒发送中...' });
+    wx.request({
+      url: `${app.globalData.baseUrl}/team/nudge`,
+      method: 'POST',
+      header: { 'content-type': 'application/x-www-form-urlencoded' },
+      data: { senderId: userId, targetUserId, teamId },
+      success: (res) => {
+        wx.hideLoading();
+        if (res.data && res.data.code === 200) {
+          wx.showToast({
+            title: res.data.data || `已提醒 ${name}！`,
+            icon: 'success',
+            duration: 2000
+          });
+        } else {
+          wx.showToast({
+            title: (res.data && res.data.message) || '提醒失败',
+            icon: 'none',
+            duration: 2000
+          });
+        }
+      },
+      fail: () => {
+        wx.hideLoading();
+        wx.showToast({ title: '网络连接失败', icon: 'none' });
+      }
+    });
+  },
+
+  onAvatarError(e) {
+    const index = e.currentTarget.dataset.index;
+    if (index !== undefined && this.data.members && this.data.members[index]) {
+      const key = `members[${index}].avatar`;
+      this.setData({
+        [key]: 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0'
+      });
+    }
+  },
+
+  checkPendingNudgeAlert(userId) {
+    if (!userId) return;
+    wx.request({
+      url: `${app.globalData.baseUrl}/team/nudge/alert?userId=${userId}`,
+      method: 'GET',
+      success: (res) => {
+        if (res.data && res.data.code === 200 && res.data.data) {
+          wx.showModal({
+            title: '🔔 小队打卡提醒',
+            content: res.data.data,
+            confirmText: '去拍照打卡',
+            confirmColor: '#10B981',
+            cancelText: '知道啦',
+            success: (mRes) => {
+              if (mRes.confirm) {
+                wx.switchTab({ url: '/pages/index/index' });
+              }
             }
           });
         }

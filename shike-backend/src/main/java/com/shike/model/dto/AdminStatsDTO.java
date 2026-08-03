@@ -14,8 +14,7 @@ public class AdminStatsDTO {
     private Long todayNewUsers;
     private Long todayAiRecognitions;
     private Long todayDietRecords;
-    private Long todayExerciseRecords;
-    private Long todayWaterRecords;
+    private Long todayActiveUsers;
     private Long activeTeams;
     private Long totalPoints;
 }

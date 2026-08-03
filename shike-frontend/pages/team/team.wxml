@@ -27,7 +27,7 @@
             <text wx:if="{{index === 0}}">👑</text>
             <text wx:else>{{index + 1}}</text>
           </view>
-          <image class="avatar" src="{{item.avatar}}" mode="aspectFill" />
+          <image class="avatar" src="{{item.avatar}}" mode="aspectFill" binderror="onAvatarError" data-index="{{index}}" />
           <view class="member-meta flex-col flex">
             <text class="member-name">{{item.name}}</text>
             <scroll-view class="progress-ticks-scroll" scroll-x enable-flex>
@@ -44,6 +44,13 @@
             {{item.todayChecked ? '今日已达标' : '今日未达标'}}
           </text>
           <text class="success-days">已连续达标 {{item.successCount}} 天</text>
+          <view class="nudge-btn flex align-center justify-center" 
+                wx:if="{{!item.todayChecked && item.userId !== userId}}" 
+                catchtap="onNudgeTeammate" 
+                data-user-id="{{item.userId}}" 
+                data-name="{{item.name}}">
+            <text style="font-size: 20rpx; font-weight: 700; color: #F59E0B;">🔔 催TA打卡</text>
+          </view>
         </view>
       </view>
     </view>

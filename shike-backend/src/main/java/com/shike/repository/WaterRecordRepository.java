@@ -10,6 +10,7 @@ import java.util.Optional;
 
 @Repository
 public interface WaterRecordRepository extends JpaRepository<WaterRecord, Long> {
+    List<WaterRecord> findByRecordDate(LocalDate date);
     Optional<WaterRecord> findByUserIdAndRecordDate(Long userId, LocalDate date);
     List<WaterRecord> findByUserIdOrderByRecordDateDesc(Long userId);
     Long countByRecordDate(LocalDate date);

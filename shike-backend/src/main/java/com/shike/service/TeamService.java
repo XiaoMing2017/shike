@@ -2,11 +2,10 @@ package com.shike.service;
 
 import com.shike.model.entity.Team;
 import com.shike.model.entity.TeamMember;
+import com.shike.model.dto.TeamDetailDTO;
 
 import java.time.LocalDate;
 import java.util.List;
-
-import com.shike.model.dto.TeamDetailDTO;
 
 public interface TeamService {
     Team createTeam(Long creatorId, String teamName, Integer targetDays, Integer depositPoints);
@@ -16,4 +15,6 @@ public interface TeamService {
     TeamDetailDTO getActiveTeamDetails(Long userId);
     void leaveTeam(Long userId, Long teamId);
     byte[] getTeamQrCode(String inviteCode);
+    String nudgeTeammate(Long senderId, Long targetUserId, Long teamId);
+    String getPendingNudgeAlert(Long userId);
 }

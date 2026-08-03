@@ -75,4 +75,16 @@ public class TeamController {
             }
         }
     }
+
+    @PostMapping("/nudge")
+    public ResultDTO<String> nudgeTeammate(@RequestParam Long senderId, @RequestParam Long targetUserId, @RequestParam Long teamId) {
+        String res = teamService.nudgeTeammate(senderId, targetUserId, teamId);
+        return ResultDTO.success(res);
+    }
+
+    @GetMapping("/nudge/alert")
+    public ResultDTO<String> getPendingNudgeAlert(@RequestParam Long userId) {
+        String alertMsg = teamService.getPendingNudgeAlert(userId);
+        return ResultDTO.success(alertMsg);
+    }
 }

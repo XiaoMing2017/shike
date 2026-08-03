@@ -9,6 +9,7 @@ import java.util.List;
 
 @Repository
 public interface TeamCheckinRepository extends JpaRepository<TeamCheckin, Long> {
+    List<TeamCheckin> findByCheckinDate(LocalDate date);
     List<TeamCheckin> findByTeamId(Long teamId);
     List<TeamCheckin> findByTeamIdAndCheckinDate(Long teamId, LocalDate date);
     List<TeamCheckin> findByTeamIdAndUserId(Long teamId, Long userId);

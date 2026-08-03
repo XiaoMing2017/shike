@@ -451,3 +451,16 @@
   box-shadow: 0 4rpx 12rpx rgba(15, 23, 42, 0.08);
 }
 
+.nudge-btn {
+  margin-top: 8rpx;
+  padding: 6rpx 16rpx;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1rpx solid rgba(245, 158, 11, 0.4);
+  border-radius: 20rpx;
+  transition: all 0.2s ease;
+}
+
+.nudge-btn:active {
+  transform: scale(0.95);
+  background: rgba(245, 158, 11, 0.25);
+}

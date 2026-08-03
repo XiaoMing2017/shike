@@ -1,6 +1,7 @@
 package com.shike.controller;
 
 import com.shike.common.ResultDTO;
+import com.shike.model.dto.WaterReminderDTO;
 import com.shike.model.entity.WaterRecord;
 import com.shike.service.WaterService;
 import lombok.RequiredArgsConstructor;
@@ -40,5 +41,13 @@ public class WaterController {
             @RequestParam("amount") int amount) {
         WaterRecord record = waterService.reduceWater(userId, date, amount);
         return ResultDTO.success(record);
+    }
+
+    @GetMapping("/reminder-check")
+    public ResultDTO<WaterReminderDTO> checkWaterReminder(
+            @RequestParam("userId") Long userId,
+            @RequestParam(value = "targetAmount", defaultValue = "2000") int targetAmount) {
+        WaterReminderDTO dto = waterService.getWaterReminderStatus(userId, LocalDate.now(), targetAmount);
+        return ResultDTO.success(dto);
     }
 }

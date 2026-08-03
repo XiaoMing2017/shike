@@ -68,12 +68,18 @@ public class UserController {
             // 使用 Java NIO 流拷贝，解决 Linux/云端环境下相对路径 FileNotFound 的兼容性 Bug
             java.nio.file.Files.copy(file.getInputStream(), dest.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 
-            String scheme = request.getScheme();
             String serverName = request.getServerName();
             int serverPort = request.getServerPort();
+            String scheme = request.getHeader("X-Forwarded-Proto");
+            if (scheme == null || scheme.isEmpty()) {
+                scheme = request.getScheme();
+            }
+            if ("shike.store".equalsIgnoreCase(serverName) || "117.72.61.18".equals(serverName) || "http".equals(scheme)) {
+                scheme = "https";
+            }
             
             String baseUrl = scheme + "://" + serverName;
-            if ((scheme.equals("http") && serverPort != 80) || (scheme.equals("https") && serverPort != 443)) {
+            if (serverPort != 80 && serverPort != 443 && !serverName.contains("shike.store")) {
                 baseUrl += ":" + serverPort;
             }
             String contextPath = request.getContextPath();
