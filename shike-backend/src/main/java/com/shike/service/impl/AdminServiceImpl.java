@@ -56,6 +56,16 @@ public class AdminServiceImpl implements AdminService {
                 .sum();
 
         Long todayDietRecords = dietRecordRepository.countByRecordDate(today);
+        
+        // Auto-clean ghost active teams with 0 members
+        List<Team> activeList = teamRepository.findByStatus("ACTIVE");
+        for (Team t : activeList) {
+            List<TeamMember> mList = teamMemberRepository.findByTeamId(t.getId());
+            if (mList == null || mList.isEmpty()) {
+                t.setStatus("DISBANDED");
+                teamRepository.save(t);
+            }
+        }
         Long activeTeams = teamRepository.countByStatus("ACTIVE");
 
         // Sum AI recognitions across all users today

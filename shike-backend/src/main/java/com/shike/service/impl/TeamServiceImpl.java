@@ -93,6 +93,20 @@ public class TeamServiceImpl implements TeamService {
                 .build();
         pointsRecordRepository.save(pRecord);
 
+        // 自动解散该用户之前创建且无其他成员的旧 ACTIVE 战队
+        List<Team> oldActiveTeams = teamRepository.findByStatus("ACTIVE");
+        for (Team oldTeam : oldActiveTeams) {
+            if (oldTeam.getCreatorId().equals(creatorId)) {
+                List<TeamMember> members = teamMemberRepository.findByTeamId(oldTeam.getId());
+                if (members == null || members.size() <= 1) {
+                    teamMemberRepository.deleteByTeamIdAndUserId(oldTeam.getId(), creatorId);
+                    oldTeam.setStatus("DISBANDED");
+                    teamRepository.save(oldTeam);
+                    log.info("Auto disbanded creator's old active team: {}", oldTeam.getId());
+                }
+            }
+        }
+
         // Generate a simple unique invite code (first 6 chars of a UUID)
         String inviteCode = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
 
@@ -353,8 +367,17 @@ public class TeamServiceImpl implements TeamService {
                     .remark("中途退出小队扣除惩罚积分")
                     .build();
             pointsRecordRepository.save(pRecord);
-        });
         log.info("User {} left team {} and got 100 points penalty.", userId, teamId);
+
+        // 如果团队内成员已经全部退出，自动将队伍状态更新为 DISBANDED
+        List<TeamMember> remaining = teamMemberRepository.findByTeamId(teamId);
+        if (remaining == null || remaining.isEmpty()) {
+            teamRepository.findById(teamId).ifPresent(team -> {
+                team.setStatus("DISBANDED");
+                teamRepository.save(team);
+                log.info("Team {} has 0 members left, auto-updated status to DISBANDED", teamId);
+            });
+        }
     }
 
     @Override

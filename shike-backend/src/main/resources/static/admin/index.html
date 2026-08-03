@@ -352,7 +352,10 @@
     }
 
     .modal-overlay.active {
-      display: flex;
+      display: flex !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      z-index: 9999 !important;
     }
 
     .modal-box {
@@ -702,7 +705,7 @@
         全量用户管理列表 (点击用户头像可放大预览原图)
       </div>
       <div style="display: flex; align-items: center; gap: 12px;">
-        <button class="btn-action" onclick="openTeamModal()" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8); box-shadow: 0 4px 12px rgba(59,130,246,0.3); font-size: 13px; padding: 8px 16px;">
+        <button class="btn-action" id="btnOpenTeamModalHeader" onclick="openTeamModal()" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8); box-shadow: 0 4px 12px rgba(59,130,246,0.3); font-size: 13px; padding: 8px 16px;">
           <i class="fa-solid fa-trophy"></i> 查看减脂小队与成员
         </button>
         <div class="search-box">
@@ -1232,7 +1235,12 @@
                 <span style="font-size: 13px; color: var(--text-muted);">
                   邀请码: <strong style="color:#FFF; background:rgba(255,255,255,0.1); padding:2px 8px; border-radius:6px; font-family:monospace; font-size:14px;">${t.inviteCode}</strong>
                 </span>
-                ${isRunning ? `<button class="filter-chip" onclick="toggleTeamStatus(${t.id}, 'FAILED')" style="border-color:#EF4444; color:#F87171; font-size:11px; padding:3px 8px;"><i class="fa-solid fa-power-off"></i> 结束战队</button>` : ''}
+                ${isRunning ? `
+                  <button class="filter-chip" onclick="toggleTeamStatus(${t.id}, 'DISBANDED')" style="border-color:#EF4444; color:#F87171; font-size:11px; padding:3px 8px;"><i class="fa-solid fa-trash-can"></i> 解散小队</button>
+                  <button class="filter-chip" onclick="toggleTeamStatus(${t.id}, 'FAILED')" style="border-color:#F59E0B; color:#FBBF24; font-size:11px; padding:3px 8px;"><i class="fa-solid fa-power-off"></i> 标记结算</button>
+                ` : `
+                  <button class="filter-chip" onclick="toggleTeamStatus(${t.id}, 'ACTIVE')" style="border-color:#10B981; color:#34D399; font-size:11px; padding:3px 8px;"><i class="fa-solid fa-play"></i> 重新激活</button>
+                `}
               </div>
             </div>
 
@@ -1290,6 +1298,18 @@
         alert('请求失败');
       }
     }
+
+    // Expose functions globally to ensure onclick attributes work everywhere
+    window.openTeamModal = openTeamModal;
+    window.closeTeamModal = closeTeamModal;
+    window.toggleTeamStatus = toggleTeamStatus;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const card = document.getElementById('activeTeamsCard');
+      if (card) card.onclick = openTeamModal;
+      const btn = document.getElementById('btnOpenTeamModalHeader');
+      if (btn) btn.onclick = openTeamModal;
+    });
 
     // Auto-update clock
     setInterval(() => {
