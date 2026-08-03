@@ -1555,6 +1555,13 @@ Page({
           wx.showToast({ title: '已取消授权', icon: 'none' });
         }
       },
+      fail: (err) => {
+        console.log('Subscribe message fail:', err);
+        wx.showToast({ title: '未开启授权', icon: 'none' });
+      }
+    });
+  },
+
   onGeneratePoster() {
     this.setData({
       showPosterModal: true,
