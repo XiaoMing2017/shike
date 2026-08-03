@@ -363,9 +363,45 @@
   background: rgba(255, 255, 255, 0.65) !important;
   border: 1rpx solid rgba(255, 255, 255, 0.6) !important;
   border-radius: 32rpx !important;
-  padding: 24rpx 30rpx !important;
+  padding: 20rpx 30rpx 24rpx 30rpx !important;
   margin-bottom: 40rpx !important;
   box-shadow: 0 10rpx 30rpx rgba(148, 163, 184, 0.03) !important;
+}
+
+.nutrients-header-row {
+  margin-bottom: 16rpx;
+  width: 100%;
+}
+
+.nutrients-header-title {
+  font-size: 22rpx;
+  color: #64748B;
+  font-weight: 700;
+  letter-spacing: 0.5rpx;
+}
+
+.nutrients-diag-trigger {
+  background: rgba(59, 130, 246, 0.08);
+  border: 1rpx solid rgba(59, 130, 246, 0.2);
+  border-radius: 20rpx;
+  padding: 4rpx 14rpx;
+  transition: all 0.2s ease;
+}
+
+.nutrients-diag-trigger:active {
+  transform: scale(0.95);
+  background: rgba(59, 130, 246, 0.16);
+}
+
+.diag-trigger-icon {
+  font-size: 20rpx;
+  margin-right: 6rpx;
+}
+
+.diag-trigger-text {
+  font-size: 20rpx;
+  font-weight: 700;
+  color: #2563EB;
 }
 
 .macronutrient-bar {

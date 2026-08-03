@@ -66,7 +66,15 @@
   </view>
 
   <!-- 2. 三大营养素并列占比条 -->
-  <view class="glass-card nutrients-card">
+  <view class="glass-card nutrients-card" catchtap="openNutritionDetailModal">
+    <view class="nutrients-header-row flex justify-between align-center">
+      <text class="nutrients-header-title">三大营养素分布</text>
+      <view class="nutrients-diag-trigger flex align-center">
+        <text class="diag-trigger-icon">💡</text>
+        <text class="diag-trigger-text">AI 营养诊断 ></text>
+      </view>
+    </view>
+
     <view class="macronutrient-bar">
       <view class="bar-segment carbs" style="width: {{nutrients.carbsPercent}}%;"></view>
       <view class="bar-segment protein" style="width: {{nutrients.proteinPercent}}%;"></view>
@@ -95,29 +103,6 @@
           <text class="lbl-val">{{nutrients.fat}}g <text class="lbl-pct">({{nutrients.fatPercent}}%)</text></text>
         </view>
       </view>
-    </view>
-  </view>
-
-  <!-- 2.1 智能营养诊断 & 膳食提醒卡片 -->
-  <view class="glass-card insight-card" catchtap="openNutritionDetailModal" wx:if="{{nutritionInsights && nutritionInsights.length > 0}}">
-    <view class="insight-header flex justify-between align-center">
-      <view class="insight-title-group flex align-center">
-        <text class="insight-icon">💡</text>
-        <text class="insight-title">智能营养平衡诊断与提醒</text>
-      </view>
-      <text class="insight-detail-btn">全景诊断 ></text>
-    </view>
-
-    <view class="insight-content-box">
-      <block wx:for="{{nutritionInsights}}" wx:key="id">
-        <view class="insight-item-row flex flex-col">
-          <view class="insight-badge-row flex align-center">
-            <text class="insight-badge {{item.badgeClass}}">{{item.badge}}</text>
-            <text class="insight-item-title">{{item.title}}</text>
-          </view>
-          <text class="insight-suggestion">{{item.suggestion}}</text>
-        </view>
-      </block>
     </view>
   </view>
 
