@@ -148,6 +148,13 @@
   height: 392rpx;
   z-index: 4;
   background: transparent !important;
+  transition: opacity 0.2s ease;
+}
+
+.calorie-canvas.canvas-hidden {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 .ring-content {
