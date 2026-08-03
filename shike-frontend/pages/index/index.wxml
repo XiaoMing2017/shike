@@ -94,6 +94,7 @@
           <text class="lbl-title">脂肪 (目标{{nutrients.targetFat}}g)</text>
           <text class="lbl-val">{{nutrients.fat}}g <text class="lbl-pct">({{nutrients.fatPercent}}%)</text></text>
         </view>
+      </view>
     </view>
   </view>
 
