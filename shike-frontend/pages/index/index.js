@@ -115,6 +115,10 @@ Page({
     // 智能营养平衡诊断卡片 & 弹窗
     nutritionInsights: [],
     showNutritionModal: false,
+    // 📸 晒餐海报弹窗
+    showPosterModal: false,
+    activeTemplate: 'vitality',
+    tempPosterPath: '',
     // 个人信息完善引导横幅
     showProfileGuide: false,
     // 运动消耗数据
@@ -1551,10 +1555,366 @@ Page({
           wx.showToast({ title: '已取消授权', icon: 'none' });
         }
       },
-      fail: (err) => {
-        console.log('Subscribe message fail:', err);
-        wx.showToast({ title: '未开启授权', icon: 'none' });
+  onGeneratePoster() {
+    this.setData({
+      showPosterModal: true,
+      tempPosterPath: ''
+    });
+
+    wx.showLoading({ title: '正在获取餐食与图文...' });
+
+    const user = app.globalData.userInfo;
+    const myId = user ? user.id : null;
+    const todayStr = this.getTodayDateString();
+
+    wx.request({
+      url: `${app.globalData.baseUrl}/diet/daily?userId=${myId}&date=${todayStr}`,
+      method: 'GET',
+      success: (dietRes) => {
+        const dietRecords = dietRes.data && dietRes.data.code === 200 ? dietRes.data.data : [];
+        this._dietRecords = dietRecords;
+
+        let foodImgUrl = '';
+        if (Array.isArray(dietRecords)) {
+          const recordWithImg = dietRecords.find(r => r.imageUrl && r.imageUrl.trim() !== '');
+          if (recordWithImg) {
+            foodImgUrl = recordWithImg.imageUrl;
+          }
+        }
+
+        let bgUrl = '/images/poster_bg.png';
+        let isRemoteBg = false;
+        if (foodImgUrl) {
+          if (foodImgUrl.startsWith('/uploads')) {
+            bgUrl = `${app.globalData.baseUrl.replace('/api/v1', '')}${foodImgUrl}`;
+            isRemoteBg = true;
+          } else if (foodImgUrl.startsWith('http')) {
+            bgUrl = foodImgUrl;
+            isRemoteBg = true;
+          }
+        }
+
+        const inviteCode = user && user.inviteCode ? user.inviteCode : '';
+        const qrUrl = inviteCode
+          ? `${app.globalData.baseUrl}/team/qrcode?inviteCode=${inviteCode}`
+          : `${app.globalData.baseUrl}/team/qrcode`;
+        
+        let avatarUrl = '/images/profile.png';
+        if (user && user.avatarUrl) {
+          if (user.avatarUrl.startsWith('/uploads')) {
+            avatarUrl = `${app.globalData.baseUrl}${user.avatarUrl}`;
+          } else {
+            avatarUrl = user.avatarUrl;
+          }
+        }
+
+        const downloadBgPromise = new Promise((resolve) => {
+          if (isRemoteBg) {
+            wx.downloadFile({
+              url: bgUrl,
+              success: (res) => resolve(res.statusCode === 200 ? res.tempFilePath : ''),
+              fail: () => resolve('')
+            });
+          } else {
+            wx.getImageInfo({
+              src: bgUrl,
+              success: (res) => resolve(res.path),
+              fail: () => resolve('')
+            });
+          }
+        });
+
+        const downloadQrPromise = new Promise((resolve) => {
+          wx.downloadFile({
+            url: qrUrl,
+            success: (res) => resolve(res.statusCode === 200 ? res.tempFilePath : ''),
+            fail: () => resolve('')
+          });
+        });
+
+        const downloadAvatarPromise = new Promise((resolve) => {
+          if (avatarUrl.startsWith('/')) {
+            wx.getImageInfo({
+              src: avatarUrl,
+              success: (res) => resolve(res.path),
+              fail: () => resolve('')
+            });
+          } else {
+            wx.downloadFile({
+              url: avatarUrl,
+              success: (res) => resolve(res.statusCode === 200 ? res.tempFilePath : ''),
+              fail: () => resolve('')
+            });
+          }
+        });
+
+        Promise.all([downloadBgPromise, downloadQrPromise, downloadAvatarPromise]).then(([tempBgPath, tempQrPath, tempAvatarPath]) => {
+          const avatarFallbackPromise = tempAvatarPath 
+            ? Promise.resolve(tempAvatarPath) 
+            : new Promise((res) => {
+                wx.getImageInfo({
+                  src: '/images/profile.png',
+                  success: (info) => res(info.path),
+                  fail: () => res('')
+                });
+              });
+
+          avatarFallbackPromise.then((finalAvatarPath) => {
+            const query = wx.createSelectorQuery();
+            query.select('#posterCanvas')
+              .fields({ node: true, size: true })
+              .exec((res) => {
+                if (!res[0] || !res[0].node) {
+                  wx.hideLoading();
+                  wx.showToast({ title: '未找到绘制画布', icon: 'none' });
+                  return;
+                }
+
+                const canvas = res[0].node;
+                const ctx = canvas.getContext('2d');
+                const systemInfo = wx.getSystemInfoSync ? wx.getSystemInfoSync() : null;
+                const dpr = (systemInfo && systemInfo.pixelRatio) || 2;
+                
+                canvas.width = 750 * dpr;
+                canvas.height = 1000 * dpr;
+                ctx.scale(dpr, dpr);
+
+                Promise.all([
+                  this.loadImage(canvas, tempBgPath),
+                  this.loadImage(canvas, tempQrPath),
+                  this.loadImage(canvas, finalAvatarPath)
+                ]).then(([bgImg, qrImg, avatarImg]) => {
+                  const template = this.data.activeTemplate;
+                  if (template === 'vitality') {
+                    this.drawGourmetVitalityPoster(canvas, ctx, bgImg, qrImg, avatarImg);
+                  } else if (template === 'receipt') {
+                    this.drawCalorieReceiptPoster(canvas, ctx, bgImg, qrImg, avatarImg);
+                  } else if (template === 'polaroid') {
+                    this.drawPolaroidPoster(canvas, ctx, bgImg, qrImg, avatarImg);
+                  }
+
+                  wx.canvasToTempFilePath({
+                    canvas,
+                    destWidth: 750,
+                    destHeight: 1000,
+                    success: (resTemp) => {
+                      wx.hideLoading();
+                      this.setData({ tempPosterPath: resTemp.tempFilePath });
+                    },
+                    fail: (err) => {
+                      console.error('Canvas export error:', err);
+                      wx.hideLoading();
+                      wx.showToast({ title: '导出图片失败', icon: 'none' });
+                    }
+                  });
+                });
+              });
+          });
+        }).catch((err) => {
+          console.error(err);
+          wx.hideLoading();
+          wx.showToast({ title: '下载素材失败', icon: 'none' });
+        });
+      },
+      fail: () => {
+        wx.hideLoading();
+        wx.showToast({ title: '拉取记录失败', icon: 'none' });
       }
     });
+  },
+
+  switchTemplate(e) {
+    const template = e.currentTarget.dataset.template;
+    if (template === this.data.activeTemplate) return;
+    this.setData({ activeTemplate: template, tempPosterPath: '' });
+    this.onGeneratePoster();
+  },
+
+  closePosterModal() {
+    this.setData({ showPosterModal: false });
+  },
+
+  savePosterToAlbum() {
+    if (!this.data.tempPosterPath) {
+      wx.showToast({ title: '海报生成中...', icon: 'none' });
+      return;
+    }
+    wx.saveImageToPhotosAlbum({
+      filePath: this.data.tempPosterPath,
+      success: () => {
+        wx.showToast({ title: '已保存至相册！', icon: 'success' });
+      },
+      fail: (err) => {
+        if (err.errMsg && err.errMsg.indexOf('auth deny') >= 0) {
+          wx.showModal({
+            title: '授权提示',
+            content: '请在设置中允许保存照片到相册',
+            success: (modalRes) => {
+              if (modalRes.confirm) wx.openSetting();
+            }
+          });
+        }
+      }
+    });
+  },
+
+  loadImage(canvas, src) {
+    return new Promise((resolve) => {
+      if (!src) { resolve(null); return; }
+      const img = canvas.createImage();
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = src;
+    });
+  },
+
+  drawRoundedRect(ctx, x, y, width, height, radius) {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.arcTo(x + width, y, x + width, y + height, radius);
+    ctx.arcTo(x + width, y + height, x, y + height, radius);
+    ctx.arcTo(x, y + height, x, y, radius);
+    ctx.arcTo(x, y, x + width, y, radius);
+    ctx.closePath();
+  },
+
+  drawGourmetVitalityPoster(canvas, ctx, bgImg, qrImg, avatarImg) {
+    const user = app.globalData.userInfo;
+    const nickname = user && user.nickname ? user.nickname : '自律达人';
+    const consumedCal = this.data.consumedCal || 0;
+    const targetCal = this.data.targetCal || 2000;
+
+    ctx.clearRect(0, 0, 750, 1000);
+    if (bgImg) {
+      ctx.drawImage(bgImg, 0, 0, 750, 1000);
+    } else {
+      const gradient = ctx.createLinearGradient(0, 0, 750, 1000);
+      gradient.addColorStop(0, '#F1F5F9');
+      gradient.addColorStop(1, '#E2E8F0');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 750, 1000);
+    }
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+    ctx.shadowColor = 'rgba(15, 23, 42, 0.12)';
+    ctx.shadowBlur = 30;
+    ctx.beginPath();
+    this.drawRoundedRect(ctx, 45, 60, 660, 880, 36);
+    ctx.fill();
+
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.font = 'bold 36px sans-serif';
+    ctx.fillStyle = '#0F172A';
+    ctx.fillText('咔嚓算卡 · 每日卡路里打卡', 90, 145);
+
+    ctx.font = '24px sans-serif';
+    ctx.fillStyle = '#475569';
+    ctx.fillText(nickname + ' 的今日健康收支记录', 90, 190);
+
+    if (avatarImg) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(600, 145, 40, 0, 2 * Math.PI);
+      ctx.clip();
+      ctx.drawImage(avatarImg, 560, 105, 80, 80);
+      ctx.restore();
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(600, 145, 40, 0, 2 * Math.PI);
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = 'rgba(15, 23, 42, 0.08)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(90, 230);
+    ctx.lineTo(660, 230);
+    ctx.stroke();
+
+    ctx.font = 'bold 28px sans-serif';
+    ctx.fillStyle = '#1E293B';
+    ctx.fillText('今日热量: ' + consumedCal + ' / ' + targetCal + ' kcal', 90, 285);
+
+    if (qrImg) {
+      ctx.drawImage(qrImg, 520, 750, 140, 140);
+      ctx.font = '18px sans-serif';
+      ctx.fillStyle = '#64748B';
+      ctx.fillText('长按识别打卡', 535, 910);
+    }
+  },
+
+  drawCalorieReceiptPoster(canvas, ctx, bgImg, qrImg, avatarImg) {
+    const user = app.globalData.userInfo;
+    const nickname = user && user.nickname ? user.nickname : '自律达人';
+    const consumedCal = this.data.consumedCal || 0;
+    const targetCal = this.data.targetCal || 2000;
+
+    ctx.clearRect(0, 0, 750, 1000);
+    ctx.fillStyle = '#F8FAFC';
+    ctx.fillRect(0, 0, 750, 1000);
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.08)';
+    ctx.shadowBlur = 20;
+    ctx.beginPath();
+    this.drawRoundedRect(ctx, 60, 60, 630, 880, 24);
+    ctx.fill();
+
+    ctx.shadowColor = 'transparent';
+    ctx.font = 'bold 36px monospace';
+    ctx.fillStyle = '#0F172A';
+    ctx.fillText('=== CALORIE RECEIPT ===', 120, 140);
+
+    ctx.font = '24px monospace';
+    ctx.fillStyle = '#475569';
+    ctx.fillText('用户: ' + nickname, 120, 200);
+    ctx.fillText('日期: ' + this.data.currentDateStr, 120, 240);
+    ctx.fillText('-----------------------------------', 120, 280);
+
+    ctx.fillText('已摄入总热量: ' + consumedCal + ' kcal', 120, 340);
+    ctx.fillText('每日目标预算: ' + targetCal + ' kcal', 120, 390);
+
+    if (qrImg) {
+      ctx.drawImage(qrImg, 500, 750, 140, 140);
+    }
+  },
+
+  drawPolaroidPoster(canvas, ctx, bgImg, qrImg, avatarImg) {
+    ctx.clearRect(0, 0, 750, 1000);
+    ctx.fillStyle = '#E2E8F0';
+    ctx.fillRect(0, 0, 750, 1000);
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+    ctx.shadowBlur = 30;
+    ctx.beginPath();
+    this.drawRoundedRect(ctx, 75, 80, 600, 840, 20);
+    ctx.fill();
+
+    ctx.shadowColor = 'transparent';
+    if (bgImg) {
+      ctx.drawImage(bgImg, 105, 110, 540, 540);
+    } else {
+      ctx.fillStyle = '#CBD5E1';
+      ctx.fillRect(105, 110, 540, 540);
+    }
+
+    ctx.font = 'bold 32px sans-serif';
+    ctx.fillStyle = '#0F172A';
+    ctx.fillText('咔嚓算卡 · ' + (this.data.consumedCal || 0) + ' kcal', 110, 710);
+
+    ctx.font = '22px sans-serif';
+    ctx.fillStyle = '#64748B';
+    ctx.fillText(this.data.currentDateStr, 110, 750);
+
+    if (qrImg) {
+      ctx.drawImage(qrImg, 500, 750, 130, 130);
+    }
   }
 })

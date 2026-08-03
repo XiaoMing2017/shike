@@ -108,7 +108,10 @@
   <!-- 3. 横向滑动三餐打卡记录卡片 -->
   <view class="meal-section">
     <view class="section-header flex justify-between align-center">
-      <text class="section-title">今日三餐记录</text>
+      <view class="flex align-center" style="gap: 12rpx;">
+        <text class="section-title">今日三餐记录</text>
+        <text class="poster-link-btn" catchtap="onGeneratePoster">📸 晒餐海报</text>
+      </view>
       <text class="history-link-btn" catchtap="onTapHistory">历史记录 ></text>
     </view>
     <scroll-view class="meal-scroll-row" scroll-x="true" enable-flex="true">
@@ -511,6 +514,38 @@
           </view>
         </view>
       </scroll-view>
+    </view>
+  </view>
+
+  <!-- 海报离屏绘制 Canvas -->
+  <canvas type="2d" id="posterCanvas" style="width: 375px; height: 500px; position: fixed; left: -9999px; top: -9999px;" width="750" height="1000"></canvas>
+
+  <!-- 📸 晒餐海报生成弹窗 (适配全局浅色磨砂风) -->
+  <view class="modal-backdrop {{showPosterModal ? 'active' : ''}}" catchtap="closePosterModal" catchtouchmove="preventBubble">
+    <view class="modal-dialog poster-dialog" catchtap="preventBubble">
+      <view class="modal-header flex justify-between align-center">
+        <text class="modal-title">📸 生成每日晒餐海报</text>
+        <text class="modal-close" catchtap="closePosterModal">✕</text>
+      </view>
+
+      <view class="poster-tabs flex justify-around">
+        <view class="poster-tab {{activeTemplate === 'vitality' ? 'active' : ''}}" catchtap="switchTemplate" data-template="vitality">元气活力</view>
+        <view class="poster-tab {{activeTemplate === 'receipt' ? 'active' : ''}}" catchtap="switchTemplate" data-template="receipt">热量账单</view>
+        <view class="poster-tab {{activeTemplate === 'polaroid' ? 'active' : ''}}" catchtap="switchTemplate" data-template="polaroid">拍立得</view>
+      </view>
+
+      <view class="poster-preview-container flex justify-center align-center">
+        <image class="poster-preview-img" src="{{tempPosterPath}}" mode="aspectFit" wx:if="{{tempPosterPath}}" />
+        <view class="poster-loading flex flex-col align-center justify-center" wx:else>
+          <text class="loading-icon" style="font-size: 48rpx; margin-bottom: 12rpx;">🎨</text>
+          <text class="loading-text" style="font-size: 24rpx; color: #64748B;">正在生成高质感海报...</text>
+        </view>
+      </view>
+
+      <view class="poster-action-buttons flex justify-between">
+        <button class="poster-btn save" catchtap="savePosterToAlbum">💾 保存到相册</button>
+        <button class="poster-btn share" open-type="share">📤 分享好友</button>
+      </view>
     </view>
   </view>
 
