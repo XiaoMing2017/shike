@@ -367,6 +367,7 @@ public class TeamServiceImpl implements TeamService {
                     .remark("中途退出小队扣除惩罚积分")
                     .build();
             pointsRecordRepository.save(pRecord);
+        });
         log.info("User {} left team {} and got 100 points penalty.", userId, teamId);
 
         // 如果团队内成员已经全部退出，自动将队伍状态更新为 DISBANDED
