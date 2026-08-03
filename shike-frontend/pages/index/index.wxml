@@ -105,6 +105,23 @@
     </view>
   </view>
 
+  <!-- 🎯 专属 AI 运动与饮食计划快捷入口卡片 -->
+  <view class="glass-card ai-plan-entry-card flex justify-between align-center" catchtap="openPlanModal">
+    <view class="ai-plan-left flex align-center">
+      <view class="ai-plan-badge flex align-center justify-center">🎯</view>
+      <view class="ai-plan-info flex flex-col">
+        <view class="flex align-center" style="gap: 10rpx;">
+          <text class="ai-plan-title">我的专属 AI 运动与膳食计划</text>
+          <text class="ai-plan-tag">RD/CSCS 认证</text>
+        </view>
+        <text class="ai-plan-sub">基于您的身体档案与阶段目标精准推算</text>
+      </view>
+    </view>
+    <view class="ai-plan-arrow-btn flex align-center">
+      <text class="arrow-text">查看计划 ></text>
+    </view>
+  </view>
+
   <!-- 3. 横向滑动三餐打卡记录卡片 -->
   <view class="meal-section">
     <view class="section-header flex justify-between align-center">
@@ -557,7 +574,136 @@
         <button class="poster-btn share" open-type="share">✉️ 发送好友</button>
         <button class="poster-btn timeline" catchtap="onSharePosterClick">📸 发朋友圈</button>
       </view>
+  <!-- 🎯 专属 AI 运动与饮食计划弹窗 (全景专业风) -->
+  <view class="modal-backdrop {{showPlanModal ? 'active' : ''}}" catchtap="closePlanModal" catchtouchmove="preventBubble">
+    <view class="modal-dialog plan-modal-dialog" catchtap="preventBubble">
+      <view class="modal-header flex justify-between align-center">
+        <view class="flex align-center" style="gap: 12rpx;">
+          <text class="modal-title">🎯 专属 AI 运动与饮食计划</text>
+        </view>
+        <text class="modal-close" catchtap="closePlanModal">✕</text>
+      </view>
+
+      <view class="plan-loading-box flex flex-col align-center justify-center" wx:if="{{planLoading}}">
+        <text class="loading-icon" style="font-size: 54rpx; margin-bottom: 16rpx;">🤖</text>
+        <text style="font-size: 26rpx; color: #475569; font-weight: 600;">顶级专家 AI 正在根据您的档案推算计划...</text>
+        <text style="font-size: 22rpx; color: #94A3B8; margin-top: 8rpx;">遵守 RD/CSCS 知识库准则 · 匹配 Zone2 有氧与抗阻容量</text>
+      </view>
+
+      <block wx:else>
+        <!-- 专家点评 Summary Card -->
+        <view class="plan-summary-card" wx:if="{{planData.summary}}">
+          <view class="flex align-center" style="gap: 8rpx; margin-bottom: 8rpx;">
+            <text style="font-size: 26rpx;">🩺</text>
+            <text class="summary-title">专家诊断与建议</text>
+          </view>
+          <text class="summary-content">{{planData.summary}}</text>
+        </view>
+
+        <!-- 计划 Tab 切换 -->
+        <view class="plan-tabs flex justify-between">
+          <view class="plan-tab {{planActiveTab === 'workout' ? 'active' : ''}}" catchtap="switchPlanTab" data-tab="workout">
+            🏋️ 7天运动安排
+          </view>
+          <view class="plan-tab {{planActiveTab === 'diet' ? 'active' : ''}}" catchtap="switchPlanTab" data-tab="diet">
+            🥗 每日膳食推荐
+          </view>
+        </view>
+
+        <!-- Tab 1: 7天运动计划 -->
+        <view class="plan-tab-content" wx:if="{{planActiveTab === 'workout'}}">
+          <!-- 星期选择横轴 -->
+          <scroll-view class="days-scroll flex" scroll-x="true" enable-flex="true">
+            <view class="day-chip {{planDayIndex === index ? 'active' : ''}}" wx:for="{{planData.workoutPlan}}" wx:key="day" catchtap="switchPlanDay" data-index="{{index}}">
+              <text class="day-chip-name">{{item.day}}</text>
+              <text class="day-chip-dot" wx:if="{{item.isRestDay}}">休息</text>
+            </view>
+          </scroll-view>
+
+          <!-- 选中日期的运动清单 -->
+          <view class="day-workout-card" wx:if="{{planData.workoutPlan[planDayIndex]}}">
+            <view class="day-focus-header flex justify-between align-center">
+              <text class="day-focus-title">🎯 训练焦点：{{planData.workoutPlan[planDayIndex].focus}}</text>
+              <text class="rest-badge" wx:if="{{planData.workoutPlan[planDayIndex].isRestDay}}">😴 深度恢复</text>
+            </view>
+
+            <view class="workout-items-list">
+              <view class="workout-item-card flex justify-between align-center" wx:for="{{planData.workoutPlan[planDayIndex].items}}" wx:key="name">
+                <view class="workout-item-left flex flex-col">
+                  <view class="flex align-center" style="gap: 12rpx;">
+                    <text class="workout-item-name">{{item.name}}</text>
+                    <text class="workout-item-meta">{{item.duration}}分钟 · {{item.calories}}kcal</text>
+                  </view>
+                  <text class="workout-item-detail" wx:if="{{item.detail}}">💡 {{item.detail}}</text>
+                </view>
+                <view class="btn-checkin-exercise" catchtap="onAddPlanExercise" data-name="{{item.name}}" data-duration="{{item.duration}}" data-calories="{{item.calories}}">
+                  ＋打卡
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <!-- Tab 2: 每日膳食计划 -->
+        <view class="plan-tab-content" wx:if="{{planActiveTab === 'diet'}}">
+          <view class="diet-meals-list">
+            <!-- 早餐 -->
+            <view class="diet-meal-card" wx:if="{{planData.dietPlan.breakfast}}">
+              <view class="diet-meal-header flex justify-between align-center">
+                <text class="meal-tag breakfast">🌅 早餐 · {{planData.dietPlan.breakfast.title}}</text>
+                <text class="meal-cal">{{planData.dietPlan.breakfast.calories}} kcal</text>
+              </view>
+              <text class="meal-portion-hint" wx:if="{{planData.dietPlan.breakfast.portionHint}}">✋ 估算推荐: {{planData.dietPlan.breakfast.portionHint}}</text>
+              <view class="meal-foods-tags flex flex-wrap">
+                <text class="food-tag" wx:for="{{planData.dietPlan.breakfast.foods}}" wx:key="*this">{{item}}</text>
+              </view>
+            </view>
+
+            <!-- 午餐 -->
+            <view class="diet-meal-card" wx:if="{{planData.dietPlan.lunch}}">
+              <view class="diet-meal-header flex justify-between align-center">
+                <text class="meal-tag lunch">☀️ 午餐 · {{planData.dietPlan.lunch.title}}</text>
+                <text class="meal-cal">{{planData.dietPlan.lunch.calories}} kcal</text>
+              </view>
+              <text class="meal-portion-hint" wx:if="{{planData.dietPlan.lunch.portionHint}}">✋ 估算推荐: {{planData.dietPlan.lunch.portionHint}}</text>
+              <view class="meal-foods-tags flex flex-wrap">
+                <text class="food-tag" wx:for="{{planData.dietPlan.lunch.foods}}" wx:key="*this">{{item}}</text>
+              </view>
+            </view>
+
+            <!-- 晚餐 -->
+            <view class="diet-meal-card" wx:if="{{planData.dietPlan.dinner}}">
+              <view class="diet-meal-header flex justify-between align-center">
+                <text class="meal-tag dinner">🌙 晚餐 · {{planData.dietPlan.dinner.title}}</text>
+                <text class="meal-cal">{{planData.dietPlan.dinner.calories}} kcal</text>
+              </view>
+              <text class="meal-portion-hint" wx:if="{{planData.dietPlan.dinner.portionHint}}">✋ 估算推荐: {{planData.dietPlan.dinner.portionHint}}</text>
+              <view class="meal-foods-tags flex flex-wrap">
+                <text class="food-tag" wx:for="{{planData.dietPlan.dinner.foods}}" wx:key="*this">{{item}}</text>
+              </view>
+            </view>
+
+            <!-- 加餐 -->
+            <view class="diet-meal-card" wx:if="{{planData.dietPlan.snack}}">
+              <view class="diet-meal-header flex justify-between align-center">
+                <text class="meal-tag snack">🥤 加餐 · {{planData.dietPlan.snack.title}}</text>
+                <text class="meal-cal">{{planData.dietPlan.snack.calories}} kcal</text>
+              </view>
+              <text class="meal-portion-hint" wx:if="{{planData.dietPlan.snack.portionHint}}">✋ 估算推荐: {{planData.dietPlan.snack.portionHint}}</text>
+              <view class="meal-foods-tags flex flex-wrap">
+                <text class="food-tag" wx:for="{{planData.dietPlan.snack.foods}}" wx:key="*this">{{item}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </block>
+
+      <view class="plan-footer-actions flex justify-between align-center">
+        <button class="btn-refresh-plan" catchtap="onRefreshPlan">🤖 AI 重新定制</button>
+        <button class="btn-close-plan" catchtap="closePlanModal">完成</button>
+      </view>
     </view>
   </view>
 
+</view>
 </view>

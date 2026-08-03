@@ -2137,3 +2137,298 @@
   background: rgba(239, 68, 68, 0.15);
   transform: scale(0.96);
 }
+
+/* 🎯 专属 AI 运动与饮食计划样式 */
+.ai-plan-entry-card {
+  margin: 20rpx 24rpx 0 24rpx;
+  padding: 24rpx 28rpx;
+  background: linear-gradient(135deg, rgba(238, 242, 255, 0.9) 0%, rgba(243, 244, 246, 0.95) 100%);
+  border: 1rpx solid rgba(99, 102, 241, 0.25);
+  border-radius: 28rpx;
+  box-shadow: 0 10rpx 24rpx rgba(99, 102, 241, 0.08);
+  transition: all 0.2s ease;
+}
+
+.ai-plan-entry-card:active {
+  transform: scale(0.98);
+  opacity: 0.95;
+}
+
+.ai-plan-badge {
+  width: 72rpx;
+  height: 72rpx;
+  background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+  border-radius: 20rpx;
+  font-size: 36rpx;
+  margin-right: 20rpx;
+  box-shadow: 0 6rpx 16rpx rgba(79, 70, 229, 0.3);
+}
+
+.ai-plan-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1E293B;
+}
+
+.ai-plan-tag {
+  font-size: 18rpx;
+  font-weight: 700;
+  color: #4F46E5;
+  background: rgba(99, 102, 241, 0.12);
+  padding: 4rpx 12rpx;
+  border-radius: 12rpx;
+}
+
+.ai-plan-sub {
+  font-size: 22rpx;
+  color: #64748B;
+  margin-top: 4rpx;
+}
+
+.ai-plan-arrow-btn {
+  padding: 10rpx 20rpx;
+  background: #4F46E5;
+  color: #FFFFFF;
+  border-radius: 24rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+  box-shadow: 0 4rpx 12rpx rgba(79, 70, 229, 0.25);
+}
+
+/* 🎯 计划弹窗样式 */
+.plan-modal-dialog {
+  width: 90vw;
+  max-height: 85vh;
+  background: #FFFFFF;
+  border-radius: 36rpx;
+  padding: 32rpx;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.2);
+  overflow-y: auto;
+}
+
+.plan-loading-box {
+  padding: 80rpx 20rpx;
+}
+
+.plan-summary-card {
+  background: #F8FAFC;
+  border-left: 6rpx solid #4F46E5;
+  border-radius: 16rpx;
+  padding: 20rpx 24rpx;
+  margin-bottom: 24rpx;
+}
+
+.summary-title {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #1E293B;
+}
+
+.summary-content {
+  font-size: 24rpx;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.plan-tabs {
+  background: #F1F5F9;
+  border-radius: 20rpx;
+  padding: 6rpx;
+  margin-bottom: 24rpx;
+}
+
+.plan-tab {
+  flex: 1;
+  text-align: center;
+  padding: 16rpx 0;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #64748B;
+  border-radius: 16rpx;
+  transition: all 0.2s ease;
+}
+
+.plan-tab.active {
+  background: #FFFFFF;
+  color: #4F46E5;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+}
+
+.days-scroll {
+  white-space: nowrap;
+  margin-bottom: 20rpx;
+}
+
+.day-chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12rpx 24rpx;
+  margin-right: 12rpx;
+  background: #F8FAFC;
+  border: 1rpx solid #E2E8F0;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  color: #64748B;
+  transition: all 0.2s ease;
+}
+
+.day-chip.active {
+  background: #4F46E5;
+  color: #FFFFFF;
+  border-color: #4F46E5;
+  box-shadow: 0 4rpx 12rpx rgba(79, 70, 229, 0.3);
+}
+
+.day-chip-dot {
+  font-size: 18rpx;
+  color: #F59E0B;
+  margin-top: 2rpx;
+}
+
+.day-chip.active .day-chip-dot {
+  color: #FDE68A;
+}
+
+.day-workout-card {
+  background: #F8FAFC;
+  border-radius: 24rpx;
+  padding: 24rpx;
+}
+
+.day-focus-header {
+  margin-bottom: 20rpx;
+}
+
+.day-focus-title {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #1E293B;
+}
+
+.rest-badge {
+  font-size: 20rpx;
+  color: #D97706;
+  background: #FEF3C7;
+  padding: 4rpx 12rpx;
+  border-radius: 12rpx;
+  font-weight: 600;
+}
+
+.workout-item-card {
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  padding: 20rpx;
+  margin-bottom: 16rpx;
+  border: 1rpx solid #E2E8F0;
+}
+
+.workout-item-name {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.workout-item-meta {
+  font-size: 22rpx;
+  color: #10B981;
+  font-weight: 600;
+}
+
+.workout-item-detail {
+  font-size: 22rpx;
+  color: #64748B;
+  margin-top: 6rpx;
+}
+
+.btn-checkin-exercise {
+  padding: 10rpx 20rpx;
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  font-size: 22rpx;
+  font-weight: 700;
+  border-radius: 20rpx;
+  border: 1rpx solid rgba(16, 185, 129, 0.2);
+  transition: all 0.2s ease;
+}
+
+.btn-checkin-exercise:active {
+  background: rgba(16, 185, 129, 0.2);
+  transform: scale(0.95);
+}
+
+.diet-meal-card {
+  background: #F8FAFC;
+  border-radius: 24rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  border: 1rpx solid #E2E8F0;
+}
+
+.diet-meal-header {
+  margin-bottom: 12rpx;
+}
+
+.meal-tag {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #1E293B;
+}
+
+.meal-cal {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #6366F1;
+}
+
+.meal-portion-hint {
+  font-size: 22rpx;
+  color: #D97706;
+  background: #FEF3C7;
+  padding: 6rpx 16rpx;
+  border-radius: 12rpx;
+  display: inline-block;
+  margin-bottom: 14rpx;
+  font-weight: 600;
+}
+
+.meal-foods-tags {
+  gap: 12rpx;
+}
+
+.food-tag {
+  font-size: 22rpx;
+  color: #334155;
+  background: #FFFFFF;
+  border: 1rpx solid #CBD5E1;
+  padding: 8rpx 16rpx;
+  border-radius: 16rpx;
+}
+
+.plan-footer-actions {
+  margin-top: 24rpx;
+  gap: 20rpx;
+}
+
+.btn-refresh-plan {
+  flex: 1;
+  background: #F1F5F9;
+  color: #475569;
+  font-size: 26rpx;
+  font-weight: 600;
+  border-radius: 24rpx;
+  border: none;
+}
+
+.btn-close-plan {
+  flex: 1;
+  background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+  color: #FFFFFF;
+  font-size: 26rpx;
+  font-weight: 600;
+  border-radius: 24rpx;
+  border: none;
+  box-shadow: 0 6rpx 16rpx rgba(79, 70, 229, 0.3);
+}

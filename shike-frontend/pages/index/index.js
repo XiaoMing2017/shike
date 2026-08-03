@@ -121,6 +121,12 @@ Page({
     activeTemplate: 'morandi',
     tempPosterPath: '',
     posterFoodImg: '', // 用户临时选择的食物照片 (仅本地 tempFilePath，不上传服务器)
+    // 🎯 专属 AI 运动与饮食计划
+    showPlanModal: false,
+    planData: null,
+    planActiveTab: 'workout',
+    planDayIndex: 0,
+    planLoading: false,
     // 个人信息完善引导横幅
     showProfileGuide: false,
     // 运动消耗数据
@@ -1630,6 +1636,99 @@ Page({
         console.log('Subscribe message fail:', err);
         wx.showToast({ title: '授权失败', icon: 'none' });
       }
+    });
+  },
+
+  openPlanModal() {
+    this.setData({ showPlanModal: true });
+    if (!this.data.planData) {
+      this.fetchAiPlan(false);
+    }
+  },
+
+  closePlanModal() {
+    this.setData({ showPlanModal: false });
+  },
+
+  switchPlanTab(e) {
+    const tab = e.currentTarget.dataset.tab;
+    this.setData({ planActiveTab: tab });
+  },
+
+  switchPlanDay(e) {
+    const index = e.currentTarget.dataset.index;
+    this.setData({ planDayIndex: index });
+  },
+
+  fetchAiPlan(forceRefresh) {
+    this.setData({ planLoading: true });
+    app.login((user) => {
+      if (!user || !user.id) {
+        this.setData({ planLoading: false });
+        return;
+      }
+      wx.request({
+        url: `${app.globalData.baseUrl}/plan/generate?userId=${user.id}&forceRefresh=${forceRefresh ? 'true' : 'false'}`,
+        method: 'GET',
+        success: (res) => {
+          this.setData({ planLoading: false });
+          if (res.data && res.data.code === 200) {
+            this.setData({
+              planData: res.data.data,
+              planDayIndex: 0
+            });
+            if (forceRefresh) {
+              wx.showToast({ title: 'AI 定制计划已更新！', icon: 'success' });
+            }
+          } else {
+            wx.showToast({ title: '获取计划失败', icon: 'none' });
+          }
+        },
+        fail: () => {
+          this.setData({ planLoading: false });
+          wx.showToast({ title: '网络失败', icon: 'none' });
+        }
+      });
+    });
+  },
+
+  onRefreshPlan() {
+    wx.showModal({
+      title: '🤖 重新定制计划',
+      content: '是否基于您最新的身体档案和目标，让 AI 重新推算生成专属计划？',
+      confirmText: '重新生成',
+      cancelText: '取消',
+      success: (res) => {
+        if (res.confirm) {
+          this.fetchAiPlan(true);
+        }
+      }
+    });
+  },
+
+  onAddPlanExercise(e) {
+    const { name, duration, calories } = e.currentTarget.dataset;
+    app.login((user) => {
+      if (!user || !user.id) return;
+      wx.request({
+        url: `${app.globalData.baseUrl}/exercise/add`,
+        method: 'POST',
+        header: { 'Content-Type': 'application/json' },
+        data: {
+          userId: user.id,
+          exerciseType: name,
+          durationMinutes: parseInt(duration) || 30,
+          caloriesBurned: parseInt(calories) || 150
+        },
+        success: (res) => {
+          if (res.data && res.data.code === 200) {
+            wx.showToast({ title: `已成功打卡 ${name}！`, icon: 'success' });
+            this.loadUserData(user); // 刷新首页进度条
+          } else {
+            wx.showToast({ title: '打卡失败', icon: 'none' });
+          }
+        }
+      });
     });
   },
 

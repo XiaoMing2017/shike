@@ -30,6 +30,18 @@
     <text style="color: #94A3B8; font-weight: bold; font-size: 26rpx;">></text>
   </view>
 
+  <!-- 🎯 AI 专属计划入口卡片 -->
+  <view class="glass-card flex justify-between align-center" style="margin-bottom: 24rpx; padding: 24rpx 30rpx; cursor: pointer; background: linear-gradient(135deg, rgba(238, 242, 255, 0.9) 0%, rgba(243, 244, 246, 0.95) 100%); border: 1rpx solid rgba(99, 102, 241, 0.25);" catchtap="onGoToHomePlan">
+    <view class="flex align-center" style="gap: 15rpx; align-items: center; display: flex;">
+      <text style="font-size: 34rpx;">🎯</text>
+      <view class="flex flex-col">
+        <text style="font-weight: 700; color: #1E293B; font-size: 28rpx;">我的专属 AI 运动与膳食计划</text>
+        <text style="font-size: 20rpx; color: #6366F1; font-weight: 600;">遵循 RD/CSCS 知识库 · 科学循序渐进</text>
+      </view>
+    </view>
+    <text style="color: #6366F1; font-weight: bold; font-size: 26rpx;">查看 ></text>
+  </view>
+
   <!-- 2. 健康档案编辑 -->
   <view class="glass-card profile-form-card">
     <view class="card-title flex justify-between align-center" catchtap="toggleFormCollapse" style="cursor: pointer;">

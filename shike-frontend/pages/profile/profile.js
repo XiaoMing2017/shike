@@ -610,5 +610,20 @@ Page({
     wx.navigateTo({
       url: '/pages/history/history'
     });
+  },
+
+  onGoToHomePlan() {
+    wx.switchTab({
+      url: '/pages/index/index',
+      success: () => {
+        setTimeout(() => {
+          const pages = getCurrentPages();
+          const indexPage = pages.find(p => p.route === 'pages/index/index');
+          if (indexPage) {
+            indexPage.openPlanModal();
+          }
+        }, 300);
+      }
+    });
   }
 })
