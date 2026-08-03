@@ -24,6 +24,13 @@ Page({
   },
 
   onLoad() {
+    if (wx.showShareMenu) {
+      wx.showShareMenu({
+        withShareTicket: true,
+        menus: ['shareAppMessage', 'shareTimeline']
+      });
+    }
+
     const today = new Date();
     const currentYear = today.getFullYear();
     const currentMonth = today.getMonth() + 1; // 1-indexed
@@ -347,5 +354,19 @@ Page({
         }
       }
     });
+  },
+
+  onShareAppMessage() {
+    return {
+      title: '📅 我的咔嚓算卡健康膳食历程，一起来打卡减脂吧！',
+      path: '/pages/index/index'
+    };
+  },
+
+  onShareTimeline() {
+    return {
+      title: '📅 咔嚓算卡 - 记录每一餐的精致与健康，自律从今天开始！',
+      query: ''
+    };
   }
 });

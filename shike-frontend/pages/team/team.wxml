@@ -138,7 +138,8 @@
       </view>
       <view class="poster-action-buttons">
         <view class="btn-action-save" catchtap="onSavePosterClick">💾 保存海报到相册</view>
-        <view class="btn-action-share" catchtap="onSharePosterClick">✉️ 微信好友 / 朋友圈</view>
+        <button class="btn-action-friend" open-type="share">✉️ 发送给微信好友</button>
+        <view class="btn-action-share" catchtap="onSharePosterClick">📸 发微信朋友圈 / 图文分享</view>
       </view>
     </view>
   </view>

@@ -50,7 +50,27 @@ Page({
   },
 
   onLoad() {
+    if (wx.showShareMenu) {
+      wx.showShareMenu({
+        withShareTicket: true,
+        menus: ['shareAppMessage', 'shareTimeline']
+      });
+    }
     this.loginAndFetchProfile();
+  },
+
+  onShareAppMessage() {
+    return {
+      title: '🥑 咔嚓算卡 - AI 智能拍照算卡与健康膳食助手',
+      path: '/pages/index/index'
+    };
+  },
+
+  onShareTimeline() {
+    return {
+      title: '🥑 咔嚓算卡 - 拍照即可自动识别千种食物与卡路里，开启自律生活！',
+      query: ''
+    };
   },
 
   loginAndFetchProfile() {

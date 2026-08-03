@@ -159,6 +159,13 @@ Page({
       console.error('Failed to calculate FAB position', e);
     }
 
+    if (wx.showShareMenu) {
+      wx.showShareMenu({
+        withShareTicket: true,
+        menus: ['shareAppMessage', 'shareTimeline']
+      });
+    }
+
     if (options && (options.inviteCode || options.scene)) {
       let inviteCode = options.inviteCode;
       if (options.scene) {
@@ -2070,5 +2077,43 @@ Page({
     ctx.fillStyle = '#64748B';
     ctx.fillText('THANK YOU FOR BEING DISCIPLINED!', 100, 760);
     ctx.fillText('SCAN QR CODE TO JOIN US', 100, 800);
+  },
+
+  onShareAppMessage() {
+    const user = app.globalData.userInfo;
+    const nickname = user && user.nickname ? user.nickname : '自律达人';
+    return {
+      title: `🥗 ${nickname}的今日卡路里膳食记录，拍照算卡，健康减脂！`,
+      path: '/pages/index/index',
+      imageUrl: this.data.tempPosterPath || ''
+    };
+  },
+
+  onShareTimeline() {
+    const user = app.globalData.userInfo;
+    const nickname = user && user.nickname ? user.nickname : '自律达人';
+    return {
+      title: `🥗 ${nickname}的今日卡路里膳食打卡，AI 智能算卡，快来和我一起自律！`,
+      query: '',
+      imageUrl: this.data.tempPosterPath || ''
+    };
+  },
+
+  onSharePosterClick() {
+    const filePath = this.data.tempPosterPath;
+    if (!filePath) {
+      wx.showToast({ title: '海报生成中，请稍候', icon: 'none' });
+      return;
+    }
+    if (wx.showShareImageMenu) {
+      wx.showShareImageMenu({
+        path: filePath,
+        fail: () => {
+          wx.showToast({ title: '已自动保存相册，可直接在微信中发送朋友圈', icon: 'none' });
+        }
+      });
+    } else {
+      wx.showToast({ title: '已自动保存相册，可直接在微信中发送朋友圈', icon: 'none' });
+    }
   }
 })

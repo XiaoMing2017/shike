@@ -23,6 +23,13 @@ Page({
   },
 
   onLoad(options) {
+    if (wx.showShareMenu) {
+      wx.showShareMenu({
+        withShareTicket: true,
+        menus: ['shareAppMessage', 'shareTimeline']
+      });
+    }
+
     if (options && options.inviteCode) {
       this.setData({ inputInviteCode: options.inviteCode });
       wx.showToast({ title: '已填入团队邀请码', icon: 'success' });
@@ -198,9 +205,20 @@ Page({
   },
 
   onShareAppMessage() {
+    const inviteCode = this.data.inviteCode ? `?inviteCode=${this.data.inviteCode}` : '';
     return {
-      title: `我发起了${this.data.targetDays}天减脂对赌小队，赢取 ${this.data.points} 积分！加入我的队伍吧！`,
-      path: `/pages/team/team?inviteCode=${this.data.inviteCode}`
+      title: `🔥 我在咔嚓算卡发起了[${this.data.teamName || '契约减脂队'}]对赌减脂，赢取 ${this.data.points || 500} 积分大池！加入我的队伍吧！`,
+      path: `/pages/team/team${inviteCode}`,
+      imageUrl: this.data.tempPosterPath || ''
+    };
+  },
+
+  onShareTimeline() {
+    const inviteCode = this.data.inviteCode ? `inviteCode=${this.data.inviteCode}` : '';
+    return {
+      title: `🔥 咔嚓算卡·契约减脂队[${this.data.teamName || '契约减脂队'}]开赛！邀你一起对赌自律，赢取 ${this.data.points || 500} 积分大池！`,
+      query: inviteCode,
+      imageUrl: this.data.tempPosterPath || ''
     };
   },
 
