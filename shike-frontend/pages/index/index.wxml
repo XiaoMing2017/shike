@@ -94,7 +94,29 @@
           <text class="lbl-title">脂肪 (目标{{nutrients.targetFat}}g)</text>
           <text class="lbl-val">{{nutrients.fat}}g <text class="lbl-pct">({{nutrients.fatPercent}}%)</text></text>
         </view>
+    </view>
+  </view>
+
+  <!-- 2.1 智能营养诊断 & 膳食提醒卡片 -->
+  <view class="glass-card insight-card" catchtap="openNutritionDetailModal" wx:if="{{nutritionInsights && nutritionInsights.length > 0}}">
+    <view class="insight-header flex justify-between align-center">
+      <view class="insight-title-group flex align-center">
+        <text class="insight-icon">💡</text>
+        <text class="insight-title">智能营养平衡诊断与提醒</text>
       </view>
+      <text class="insight-detail-btn">全景诊断 ></text>
+    </view>
+
+    <view class="insight-content-box">
+      <block wx:for="{{nutritionInsights}}" wx:key="id">
+        <view class="insight-item-row flex flex-col">
+          <view class="insight-badge-row flex align-center">
+            <text class="insight-badge {{item.badgeClass}}">{{item.badge}}</text>
+            <text class="insight-item-title">{{item.title}}</text>
+          </view>
+          <text class="insight-suggestion">{{item.suggestion}}</text>
+        </view>
+      </block>
     </view>
   </view>
 
@@ -458,6 +480,52 @@
           <text class="water-sub-badge-text">{{waterSubQuota > 0 ? '已开启 (剩' + waterSubQuota + '次)' : '预存提醒次数'}}</text>
         </view>
       </view>
+    </view>
+  </view>
+
+  <!-- 2.2 全景营养诊断仪表盘弹窗 -->
+  <view class="modal-mask" wx:if="{{showNutritionModal}}" catchtap="closeNutritionDetailModal">
+    <view class="modal-box glass-modal nutrition-modal" catchtap="preventBubble">
+      <view class="modal-header flex justify-between align-center">
+        <text class="modal-title">🥗 今日营养全景诊断分析</text>
+        <text class="modal-close" catchtap="closeNutritionDetailModal">✕</text>
+      </view>
+      <scroll-view scroll-y class="modal-body">
+        <view class="diag-section">
+          <text class="diag-sec-title">📊 摄入与目标比对</text>
+          <view class="diag-grid">
+            <view class="diag-grid-item">
+              <text class="diag-label">热量</text>
+              <text class="diag-val {{consumedCal > targetCal ? 'text-red' : 'text-green'}}">{{consumedCal}} / {{targetCal}} kcal</text>
+            </view>
+            <view class="diag-grid-item">
+              <text class="diag-label">碳水</text>
+              <text class="diag-val">{{nutrients.carbs}} / {{nutrients.targetCarbs}}g</text>
+            </view>
+            <view class="diag-grid-item">
+              <text class="diag-label">蛋白质</text>
+              <text class="diag-val {{nutrients.protein < nutrients.targetProtein * 0.75 ? 'text-yellow' : 'text-green'}}">{{nutrients.protein}} / {{nutrients.targetProtein}}g</text>
+            </view>
+            <view class="diag-grid-item">
+              <text class="diag-label">脂肪</text>
+              <text class="diag-val {{nutrients.fat > nutrients.targetFat ? 'text-red' : 'text-green'}}">{{nutrients.fat}} / {{nutrients.targetFat}}g</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="diag-section">
+          <text class="diag-sec-title">💡 专家级膳食调优建议</text>
+          <view class="diag-list">
+            <view class="diag-card-row" wx:for="{{nutritionInsights}}" wx:key="id">
+              <view class="diag-badge-line flex align-center">
+                <text class="insight-badge {{item.badgeClass}}">{{item.badge}}</text>
+                <text class="diag-card-title">{{item.title}}</text>
+              </view>
+              <text class="diag-card-desc">{{item.suggestion}}</text>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
     </view>
   </view>
 

@@ -1714,3 +1714,199 @@
   color: #1e293b;
   font-weight: 800;
 }
+
+/* ==========================================================================
+   智能营养平衡诊断 & 膳食提醒卡片与全景弹窗
+   ========================================================================== */
+.insight-card {
+  margin-top: 20rpx;
+  padding: 24rpx 28rpx;
+  background: rgba(30, 41, 59, 0.65);
+  backdrop-filter: blur(20px);
+  border: 1rpx solid rgba(255, 255, 255, 0.12);
+  border-radius: 28rpx;
+  box-shadow: 0 12rpx 30rpx rgba(0, 0, 0, 0.25);
+  transition: all 0.2s ease;
+}
+
+.insight-card:active {
+  transform: scale(0.98);
+  background: rgba(30, 41, 59, 0.85);
+}
+
+.insight-header {
+  margin-bottom: 16rpx;
+}
+
+.insight-icon {
+  font-size: 32rpx;
+  margin-right: 12rpx;
+}
+
+.insight-title {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #F8FAFC;
+  letter-spacing: 0.5rpx;
+}
+
+.insight-detail-btn {
+  font-size: 22rpx;
+  color: #60A5FA;
+  font-weight: 600;
+}
+
+.insight-content-box {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.insight-item-row {
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 18rpx;
+  padding: 16rpx 20rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.06);
+}
+
+.insight-badge-row {
+  margin-bottom: 8rpx;
+  gap: 12rpx;
+}
+
+.insight-badge {
+  font-size: 20rpx;
+  font-weight: 800;
+  padding: 4rpx 14rpx;
+  border-radius: 10rpx;
+  line-height: 1.2;
+}
+
+.badge-red {
+  background: rgba(239, 68, 68, 0.18);
+  color: #F87171;
+  border: 1rpx solid rgba(239, 68, 68, 0.35);
+}
+
+.badge-yellow {
+  background: rgba(245, 158, 11, 0.18);
+  color: #FBBF24;
+  border: 1rpx solid rgba(245, 158, 11, 0.35);
+}
+
+.badge-green {
+  background: rgba(16, 185, 129, 0.18);
+  color: #34D399;
+  border: 1rpx solid rgba(16, 185, 129, 0.35);
+}
+
+.badge-blue {
+  background: rgba(59, 130, 246, 0.18);
+  color: #60A5FA;
+  border: 1rpx solid rgba(59, 130, 246, 0.35);
+}
+
+.insight-item-title {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #F1F5F9;
+}
+
+.insight-suggestion {
+  font-size: 22rpx;
+  color: #94A3B8;
+  line-height: 1.4;
+}
+
+/* Modal Styling */
+.nutrition-modal {
+  width: 650rpx;
+  max-height: 80vh;
+  border-radius: 36rpx;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(30px);
+  border: 1rpx solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 30rpx 60rpx rgba(0, 0, 0, 0.6);
+}
+
+.diag-section {
+  margin-bottom: 28rpx;
+}
+
+.diag-sec-title {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #38BDF8;
+  margin-bottom: 16rpx;
+  display: block;
+}
+
+.diag-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+}
+
+.diag-grid-item {
+  background: rgba(30, 41, 59, 0.7);
+  padding: 18rpx 20rpx;
+  border-radius: 18rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.diag-label {
+  font-size: 20rpx;
+  color: #94A3B8;
+}
+
+.diag-val {
+  font-size: 24rpx;
+  font-weight: 800;
+  color: #F8FAFC;
+}
+
+.text-red {
+  color: #F87171 !important;
+}
+
+.text-yellow {
+  color: #FBBF24 !important;
+}
+
+.text-green {
+  color: #34D399 !important;
+}
+
+.diag-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18rpx;
+}
+
+.diag-card-row {
+  background: rgba(30, 41, 59, 0.6);
+  border-radius: 20rpx;
+  padding: 20rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.08);
+}
+
+.diag-badge-line {
+  gap: 12rpx;
+  margin-bottom: 8rpx;
+}
+
+.diag-card-title {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #F8FAFC;
+}
+
+.diag-card-desc {
+  font-size: 22rpx;
+  color: #94A3B8;
+  line-height: 1.4;
+  display: block;
+}

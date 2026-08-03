@@ -112,6 +112,9 @@ Page({
     waterFillHeight: 0,
     fabX: 300,
     fabY: 500,
+    // 智能营养平衡诊断卡片 & 弹窗
+    nutritionInsights: [],
+    showNutritionModal: false,
     // 个人信息完善引导横幅
     showProfileGuide: false,
     // 运动消耗数据
@@ -463,6 +466,21 @@ Page({
       fatPercent = Math.max(0, 100 - carbsPercent - proteinPercent);
     }
 
+    // 智能营养诊断核心算法计算
+    const diagnosisData = {
+      consumedCal: consumedCalVal,
+      targetCal: targetCalVal,
+      carbs: Math.round(carbs),
+      targetCarbs: this.data.nutrients.targetCarbs,
+      protein: Math.round(protein),
+      targetProtein: this.data.nutrients.targetProtein,
+      fat: Math.round(fat),
+      targetFat: this.data.nutrients.targetFat,
+      waterAmount: this.data.waterAmount || 0,
+      waterTarget: this.data.waterTarget || 2000
+    };
+    const nutritionInsights = this.calculateNutritionDiagnosis(diagnosisData);
+
     this.setData({
       consumedCal: consumedCalVal,
       remainingCal: displayCal,
@@ -470,6 +488,7 @@ Page({
       ringLabel,
       progressPercent,
       meals: updatedMeals,
+      nutritionInsights,
       'nutrients.carbs': Math.round(carbs),
       'nutrients.carbsPercent': carbsPercent,
       'nutrients.protein': Math.round(protein),
@@ -480,6 +499,124 @@ Page({
       // 渲染结束后，动态重绘 Canvas 2D 圆环
       this.drawCalorieRing(progressPercent, isOverLimit);
     });
+  },
+
+  calculateNutritionDiagnosis(data) {
+    const { consumedCal, targetCal, carbs, targetCarbs, protein, targetProtein, fat, targetFat, waterAmount, waterTarget } = data;
+    const insights = [];
+
+    // 1. 无记录处理
+    if (!consumedCal || consumedCal === 0) {
+      insights.push({
+        id: 'empty',
+        type: 'info',
+        badge: '💡 打卡引导',
+        badgeClass: 'badge-blue',
+        title: '今日尚未记录饮食',
+        suggestion: '点击“早餐/午餐/晚餐”或拍摄拍照，AI 将自动分析您的三大营养素与健康建议！'
+      });
+      return insights;
+    }
+
+    // 2. 热量维度判断
+    if (consumedCal > targetCal) {
+      const overCal = Math.round(consumedCal - targetCal);
+      insights.push({
+        id: 'cal_over',
+        type: 'warning',
+        badge: '🚨 热量已超预算',
+        badgeClass: 'badge-red',
+        title: `今日热量超出预算 ${overCal} kcal`,
+        suggestion: `目前已摄入 ${consumedCal} kcal (目标 ${targetCal} kcal)。建议增加 30 分钟有氧运动，或下半天餐饮热量减半。`
+      });
+    }
+
+    // 3. 脂肪维度判断
+    if (fat > targetFat) {
+      const overFat = Math.round(fat - targetFat);
+      insights.push({
+        id: 'fat_over',
+        type: 'warning',
+        badge: '🥑 脂肪摄入偏高',
+        badgeClass: 'badge-red',
+        title: `脂肪超出目标 ${overFat}g (${Math.round((fat / targetFat) * 100)}%)`,
+        suggestion: `脂肪摄入超标容易造成脂肪堆积。建议后半天餐食选择水煮/蒸煮，避免煎炸、重油酱料及坚果过量。`
+      });
+    }
+
+    // 4. 蛋白质维度判断
+    if (protein < targetProtein * 0.75) {
+      const needProtein = Math.round(targetProtein - protein);
+      const foodTips = needProtein >= 30 
+        ? '推荐补充：200g 鸡胸肉 / 150g 清蒸牛肉 / 2 块煎豆腐' 
+        : (needProtein >= 15 ? '推荐补充：2 颗水煮蛋 / 250ml 低脂纯牛奶 / 100g 虾仁' : '推荐补充：1 颗鸡蛋 / 200ml 无糖豆浆');
+      insights.push({
+        id: 'protein_lack',
+        type: 'deficit',
+        badge: '🥩 蛋白摄入不足',
+        badgeClass: 'badge-yellow',
+        title: `蛋白质尚缺 ${needProtein}g (已达成 ${Math.round((protein / targetProtein) * 100)}%)`,
+        suggestion: `蛋白质对于保持基础代谢与防止肌肉流失至关重要。建议下一餐优先补充：${foodTips}。`
+      });
+    }
+
+    // 5. 碳水维度判断
+    if (carbs > targetCarbs * 1.15) {
+      const overCarbs = Math.round(carbs - targetCarbs);
+      insights.push({
+        id: 'carbs_over',
+        type: 'warning',
+        badge: '🍚 碳水摄入偏多',
+        badgeClass: 'badge-yellow',
+        title: `碳水化合物超出 ${overCarbs}g`,
+        suggestion: `精制碳水偏高易引发血糖波动。下半天建议减少米饭、面食与含糖饮料，用紫薯或蔬菜替代。`
+      });
+    } else if (carbs < targetCarbs * 0.4 && consumedCal > targetCal * 0.5) {
+      const needCarbs = Math.round(targetCarbs - carbs);
+      insights.push({
+        id: 'carbs_lack',
+        type: 'deficit',
+        badge: '🥔 优质碳水偏低',
+        badgeClass: 'badge-blue',
+        title: `碳水不足，尚缺 ${needCarbs}g`,
+        suggestion: `碳水过低容易引起低血糖与头晕乏力。建议适量补充燕麦、紫薯、全麦面包等优质慢消化碳水。`
+      });
+    }
+
+    // 6. 饮水维度判断
+    if (waterAmount < waterTarget * 0.6) {
+      const needWater = Math.round(waterTarget - waterAmount);
+      insights.push({
+        id: 'water_lack',
+        type: 'deficit',
+        badge: '💧 饮水充盈度低',
+        badgeClass: 'badge-blue',
+        title: `饮水量还差 ${needWater} ml`,
+        suggestion: `充足的水分有助于加速脂肪代谢与毒素排出。建议分次补充 250~500ml 饮水。`
+      });
+    }
+
+    // 7. 完美结构
+    if (insights.length === 0) {
+      insights.push({
+        id: 'perfect',
+        type: 'healthy',
+        badge: '🥗 营养结构优秀',
+        badgeClass: 'badge-green',
+        title: '三大营养素与热量收支匹配完美！',
+        suggestion: '热量控制得当，营养占比契合您的健康目标，请继续保持这良好的饮食习惯！'
+      });
+    }
+
+    return insights;
+  },
+
+  openNutritionDetailModal() {
+    this.setData({ showNutritionModal: true });
+  },
+
+  closeNutritionDetailModal() {
+    this.setData({ showNutritionModal: false });
   },
 
   drawCalorieRing(progressPercent, isOverLimit) {
@@ -1039,6 +1176,23 @@ Page({
       waterTarget: target,
       waterPercent: pct,
       waterFillHeight: fillH
+    }, () => {
+      if (this.data.nutrients) {
+        const diagnosisData = {
+          consumedCal: this.data.consumedCal || 0,
+          targetCal: this.data.targetCal || 2000,
+          carbs: this.data.nutrients.carbs || 0,
+          targetCarbs: this.data.nutrients.targetCarbs || 250,
+          protein: this.data.nutrients.protein || 0,
+          targetProtein: this.data.nutrients.targetProtein || 70,
+          fat: this.data.nutrients.fat || 0,
+          targetFat: this.data.nutrients.targetFat || 50,
+          waterAmount: amount,
+          waterTarget: target
+        };
+        const nutritionInsights = this.calculateNutritionDiagnosis(diagnosisData);
+        this.setData({ nutritionInsights });
+      }
     });
   },
 
