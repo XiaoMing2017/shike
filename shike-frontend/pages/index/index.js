@@ -119,6 +119,7 @@ Page({
     showPosterModal: false,
     activeTemplate: 'morandi',
     tempPosterPath: '',
+    posterFoodImg: '', // 用户临时选择的食物照片 (仅本地 tempFilePath，不上传服务器)
     // 个人信息完善引导横幅
     showProfileGuide: false,
     // 运动消耗数据
@@ -1569,13 +1570,70 @@ Page({
     });
   },
 
+  onChoosePosterPhoto() {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: ['album', 'camera'],
+      sizeType: ['compressed'],
+      success: (res) => {
+        const tempFilePath = res.tempFiles[0].tempFilePath;
+        this.setData({ posterFoodImg: tempFilePath, tempPosterPath: '' });
+        // 如果海报弹窗已打开，自动重新绘制
+        if (this.data.showPosterModal) {
+          this._doGeneratePoster();
+        }
+      }
+    });
+  },
+
+  onRemovePosterPhoto() {
+    this.setData({ posterFoodImg: '', tempPosterPath: '' });
+    if (this.data.showPosterModal) {
+      this._doGeneratePoster();
+    }
+  },
+
   onGeneratePoster() {
     this.setData({
       showPosterModal: true,
       tempPosterPath: ''
     });
 
-    wx.showLoading({ title: '正在获取餐食与图文...' });
+    // 如果用户还没有选照片，先弹出选择器；如果已选过直接生成
+    if (!this.data.posterFoodImg) {
+      wx.showModal({
+        title: '🥗 选择一张今日美食照片',
+        content: '上传你的餐食美照，让海报更加精美有个性！\n（照片不会上传服务器，仅在本地临时使用）',
+        confirmText: '选择照片',
+        cancelText: '跳过',
+        success: (res) => {
+          if (res.confirm) {
+            wx.chooseMedia({
+              count: 1,
+              mediaType: ['image'],
+              sourceType: ['album', 'camera'],
+              sizeType: ['compressed'],
+              success: (mediaRes) => {
+                this.setData({ posterFoodImg: mediaRes.tempFiles[0].tempFilePath });
+                this._doGeneratePoster();
+              },
+              fail: () => {
+                this._doGeneratePoster();
+              }
+            });
+          } else {
+            this._doGeneratePoster();
+          }
+        }
+      });
+    } else {
+      this._doGeneratePoster();
+    }
+  },
+
+  _doGeneratePoster() {
+    wx.showLoading({ title: '正在生成海报...' });
 
     const user = app.globalData.userInfo;
     const myId = user ? user.id : null;
@@ -1588,25 +1646,8 @@ Page({
         const dietRecords = dietRes.data && dietRes.data.code === 200 ? dietRes.data.data : [];
         this._dietRecords = dietRecords;
 
-        let foodImgUrl = '';
-        if (Array.isArray(dietRecords)) {
-          const recordWithImg = dietRecords.find(r => r.imageUrl && r.imageUrl.trim() !== '');
-          if (recordWithImg) {
-            foodImgUrl = recordWithImg.imageUrl;
-          }
-        }
-
-        let bgUrl = '/images/poster_bg.png';
-        let isRemoteBg = false;
-        if (foodImgUrl) {
-          if (foodImgUrl.startsWith('/uploads')) {
-            bgUrl = `${app.globalData.baseUrl.replace('/api/v1', '')}${foodImgUrl}`;
-            isRemoteBg = true;
-          } else if (foodImgUrl.startsWith('http')) {
-            bgUrl = foodImgUrl;
-            isRemoteBg = true;
-          }
-        }
+        // 使用用户本地临时选择的照片 (不上传服务器，零内存负担)
+        let bgUrl = this.data.posterFoodImg || '';
 
         const inviteCode = user && user.inviteCode ? user.inviteCode : '';
         const qrUrl = inviteCode
@@ -1623,13 +1664,16 @@ Page({
         }
 
         const downloadBgPromise = new Promise((resolve) => {
-          if (isRemoteBg) {
+          if (!bgUrl) {
+            resolve('');
+          } else if (bgUrl.startsWith('http')) {
             wx.downloadFile({
               url: bgUrl,
               success: (res) => resolve(res.statusCode === 200 ? res.tempFilePath : ''),
               fail: () => resolve('')
             });
           } else {
+            // 本地临时文件路径 (wx.chooseMedia 返回的 tempFilePath)
             wx.getImageInfo({
               src: bgUrl,
               success: (res) => resolve(res.path),
@@ -1741,7 +1785,7 @@ Page({
     const template = e.currentTarget.dataset.template;
     if (template === this.data.activeTemplate) return;
     this.setData({ activeTemplate: template, tempPosterPath: '' });
-    this.onGeneratePoster();
+    this._doGeneratePoster();
   },
 
   closePosterModal() {
@@ -1848,13 +1892,42 @@ Page({
       ctx.drawImage(bgImg, 95, 210, 560, 360);
       ctx.restore();
     } else {
-      ctx.fillStyle = '#E2E8F0';
+      // 无照片时绘制精美莫兰迪风格装饰区域
+      const artGrad = ctx.createLinearGradient(95, 210, 95, 570);
+      artGrad.addColorStop(0, '#D4DDD0');
+      artGrad.addColorStop(0.5, '#C8D5C3');
+      artGrad.addColorStop(1, '#BCC9B6');
+      ctx.fillStyle = artGrad;
       ctx.beginPath();
       this.drawRoundedRect(ctx, 95, 210, 560, 360, 16);
       ctx.fill();
-      ctx.font = '28px sans-serif';
-      ctx.fillStyle = '#94A3B8';
-      ctx.fillText('🥗 记录每一餐的精致美好', 220, 400);
+
+      // 装饰性细线框
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      this.drawRoundedRect(ctx, 115, 230, 520, 320, 12);
+      ctx.stroke();
+
+      // 居中食物 emoji 装饰
+      ctx.font = '60px sans-serif';
+      ctx.fillText('🥗', 310, 350);
+
+      // 优雅提示文案
+      ctx.font = 'bold 26px sans-serif';
+      ctx.fillStyle = '#4A5E4F';
+      ctx.fillText('记录每一餐的精致美好', 220, 420);
+
+      ctx.font = '20px sans-serif';
+      ctx.fillStyle = '#6B7F70';
+      ctx.fillText('点击海报下方「📷 换照片」上传美食图', 175, 460);
+
+      // 四角装饰点
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.beginPath(); ctx.arc(135, 250, 4, 0, 2 * Math.PI); ctx.fill();
+      ctx.beginPath(); ctx.arc(615, 250, 4, 0, 2 * Math.PI); ctx.fill();
+      ctx.beginPath(); ctx.arc(135, 530, 4, 0, 2 * Math.PI); ctx.fill();
+      ctx.beginPath(); ctx.arc(615, 530, 4, 0, 2 * Math.PI); ctx.fill();
     }
 
     // Photo Caption Inside Polaroid

@@ -2096,3 +2096,44 @@
   transform: scale(0.96);
   opacity: 0.9;
 }
+
+/* 📷 海报照片选择/更换操作区 */
+.poster-photo-picker {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+  justify-content: center;
+  align-items: center;
+}
+
+.photo-pick-btn {
+  padding: 12rpx 28rpx;
+  background: rgba(99, 102, 241, 0.08);
+  color: #4F46E5;
+  font-size: 24rpx;
+  font-weight: 600;
+  border-radius: 28rpx;
+  border: 1rpx solid rgba(99, 102, 241, 0.2);
+  transition: all 0.2s ease;
+}
+
+.photo-pick-btn:active {
+  background: rgba(99, 102, 241, 0.16);
+  transform: scale(0.96);
+}
+
+.photo-remove-btn {
+  padding: 12rpx 24rpx;
+  background: rgba(239, 68, 68, 0.06);
+  color: #EF4444;
+  font-size: 22rpx;
+  font-weight: 600;
+  border-radius: 28rpx;
+  border: 1rpx solid rgba(239, 68, 68, 0.15);
+  transition: all 0.2s ease;
+}
+
+.photo-remove-btn:active {
+  background: rgba(239, 68, 68, 0.15);
+  transform: scale(0.96);
+}

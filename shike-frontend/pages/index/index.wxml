@@ -542,6 +542,16 @@
         </view>
       </view>
 
+      <!-- 📷 照片选择/更换操作区 -->
+      <view class="poster-photo-picker flex align-center justify-center">
+        <view class="photo-pick-btn" catchtap="onChoosePosterPhoto">
+          📷 {{posterFoodImg ? '换一张照片' : '选择美食照片'}}
+        </view>
+        <view class="photo-remove-btn" catchtap="onRemovePosterPhoto" wx:if="{{posterFoodImg}}">
+          ✕ 移除照片
+        </view>
+      </view>
+
       <view class="poster-action-buttons flex justify-between">
         <button class="poster-btn save" catchtap="savePosterToAlbum">💾 保存相册</button>
         <button class="poster-btn share" open-type="share">✉️ 发送好友</button>
