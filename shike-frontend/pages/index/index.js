@@ -18,6 +18,7 @@ const COMMON_FOOD_DICTIONARY = [
 Page({
   data: {
     isWaterSubscribed: false,
+    waterSubQuota: 0,
     currentDateStr: '',
     avatarUrl: '/images/profile.png',
     remainingCal: 2000,
@@ -236,9 +237,16 @@ Page({
   onShow() {
     this.updateDateDisplay();
     this.checkUserAndLoadData();
-    this.setData({
-      isWaterSubscribed: !!wx.getStorageSync('water_wx_subscribed')
-    });
+    const subscribed = !!wx.getStorageSync('water_wx_subscribed');
+    this.setData({ isWaterSubscribed: subscribed });
+
+    // 静默自动续费订阅额度：用户曾勾选"总是允许"后，此调用无感知通过
+    if (subscribed) {
+      this._silentRenewWaterQuota();
+    }
+
+    // 从后端拉取真实剩余额度
+    this._loadWaterSubQuota();
   },
 
   updateDateDisplay() {
@@ -1512,19 +1520,66 @@ Page({
     this.setData({ showWaterReminderBar: false });
   },
 
+  _loadWaterSubQuota() {
+    app.login((user) => {
+      if (!user || !user.id) return;
+      wx.request({
+        url: `${app.globalData.baseUrl}/user/subscribe-info?userId=${user.id}&type=WATER`,
+        method: 'GET',
+        success: (res) => {
+          if (res.data && res.data.code === 200) {
+            const quota = res.data.data.quota || 0;
+            this.setData({
+              waterSubQuota: quota,
+              isWaterSubscribed: quota > 0
+            });
+            if (quota > 0) {
+              wx.setStorageSync('water_wx_subscribed', true);
+            }
+          }
+        }
+      });
+    });
+  },
+
+  _silentRenewWaterQuota() {
+    const templateId = '6rHAfQw2A3WSw00LCaV9MUSop3OFVsRTAx4I-xgW5lw';
+    wx.requestSubscribeMessage({
+      tmplIds: [templateId],
+      success: (res) => {
+        if (res[templateId] === 'accept') {
+          // 静默续费成功，通知后端 +1 额度
+          app.login((user) => {
+            if (user && user.id) {
+              wx.request({
+                url: `${app.globalData.baseUrl}/user/subscribe?userId=${user.id}&templateId=${templateId}&type=WATER&count=1`,
+                method: 'POST',
+                success: () => {
+                  this._loadWaterSubQuota();
+                }
+              });
+            }
+          });
+        }
+      },
+      fail: () => {
+        // 静默续费失败 (用户未勾选"总是允许")，不提示
+      }
+    });
+  },
+
   onSubscribeWaterPush() {
     if (this.data.isWaterSubscribed) {
       wx.showModal({
         title: '关闭微信提醒',
-        content: '确定要关闭微信聊天框定时喝水提醒吗？',
+        content: `当前剩余 ${this.data.waterSubQuota} 次提醒额度。\n确定要关闭微信聊天框定时喝水提醒吗？`,
         confirmText: '确定关闭',
         cancelText: '保持开启',
         success: (res) => {
           if (res.confirm) {
-            this.setData({ isWaterSubscribed: false });
+            this.setData({ isWaterSubscribed: false, waterSubQuota: 0 });
             wx.removeStorageSync('water_wx_subscribed');
             wx.showToast({ title: '已关闭微信提醒', icon: 'none' });
-
             app.login((user) => {
               if (user && user.id) {
                 wx.request({
@@ -1547,25 +1602,33 @@ Page({
         if (res[templateId] === 'accept') {
           this.setData({ isWaterSubscribed: true });
           wx.setStorageSync('water_wx_subscribed', true);
-          wx.showToast({ title: '已开启微信服务通知！', icon: 'success' });
 
           app.login((user) => {
             if (user && user.id) {
               wx.request({
-                url: `${app.globalData.baseUrl}/user/subscribe?userId=${user.id}&templateId=${templateId}&type=WATER`,
-                method: 'POST'
+                url: `${app.globalData.baseUrl}/user/subscribe?userId=${user.id}&templateId=${templateId}&type=WATER&count=1`,
+                method: 'POST',
+                success: () => {
+                  this._loadWaterSubQuota();
+                  wx.showModal({
+                    title: '✅ 已开启饮水提醒',
+                    content: '💡 小贴士：授权弹窗中勾选「总是保持以上选择」后，每次打开小程序会自动续费额度，提醒永不断供！',
+                    showCancel: false,
+                    confirmText: '知道了'
+                  });
+                }
               });
             }
           });
         } else {
           this.setData({ isWaterSubscribed: false });
           wx.removeStorageSync('water_wx_subscribed');
-          wx.showToast({ title: '已取消授权', icon: 'none' });
+          wx.showToast({ title: '未授权，无法发送提醒', icon: 'none' });
         }
       },
       fail: (err) => {
         console.log('Subscribe message fail:', err);
-        wx.showToast({ title: '未开启授权', icon: 'none' });
+        wx.showToast({ title: '授权失败', icon: 'none' });
       }
     });
   },

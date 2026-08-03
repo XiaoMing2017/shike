@@ -461,11 +461,11 @@
           <text class="water-sub-icon">🔔</text>
           <view class="water-sub-text">
             <text class="water-sub-title">微信聊天框定时提醒</text>
-            <text class="water-sub-desc">预存提醒额度 · 锁屏自动接收</text>
+            <text class="water-sub-desc">{{waterSubQuota > 0 ? '每天 10:30 / 15:30 / 20:00 自动推送' : '开启后每天 3 次定时喝水提醒'}}</text>
           </view>
         </view>
         <view class="water-sub-badge {{waterSubQuota > 0 ? 'active' : ''}}">
-          <text class="water-sub-badge-text">{{waterSubQuota > 0 ? '已开启 (剩' + waterSubQuota + '次)' : '预存提醒次数'}}</text>
+          <text class="water-sub-badge-text">{{waterSubQuota > 0 ? '剩 ' + waterSubQuota + ' 次' : '点击开启'}}</text>
         </view>
       </view>
     </view>
