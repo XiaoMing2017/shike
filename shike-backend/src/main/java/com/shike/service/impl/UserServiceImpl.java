@@ -92,6 +92,7 @@ public class UserServiceImpl implements UserService {
                     .points(1000) // 初始契约分 1000
                     .activityLevel("SEDENTARY")
                     .goal("MAINTAIN")
+                    .trainingLevel("BEGINNER")
                     .build();
             return userRepository.save(newUser);
         }
@@ -134,7 +135,7 @@ public class UserServiceImpl implements UserService {
     public User updateProfile(Long userId, Integer age, Integer gender, BigDecimal height, BigDecimal weight, 
                                String activityLevel, String goal, String nickname, String avatarUrl,
                                String customGoalType, Integer customGoalDays, BigDecimal customGoalWeight,
-                               BigDecimal currentBodyFat) {
+                               BigDecimal currentBodyFat, String trainingLevel) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BizException(404, "User not found"));
 
@@ -148,6 +149,9 @@ public class UserServiceImpl implements UserService {
         user.setCustomGoalDays(customGoalDays);
         user.setCustomGoalWeight(customGoalWeight);
         user.setCurrentBodyFat(currentBodyFat);
+        if (trainingLevel != null && !trainingLevel.trim().isEmpty()) {
+            user.setTrainingLevel(trainingLevel);
+        }
 
         if (nickname != null && !nickname.trim().isEmpty()) {
             user.setNickname(nickname);

@@ -38,4 +38,5 @@ public class UserProfileDTO {
     private Integer customGoalDays;
     private BigDecimal customGoalWeight;
     private BigDecimal currentBodyFat;
+    private String trainingLevel; // BEGINNER, NOVICE, INTERMEDIATE, ADVANCED
 }

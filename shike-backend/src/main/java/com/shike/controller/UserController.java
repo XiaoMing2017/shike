@@ -41,7 +41,8 @@ public class UserController {
                 profileDTO.getCustomGoalType(),
                 profileDTO.getCustomGoalDays(),
                 profileDTO.getCustomGoalWeight(),
-                profileDTO.getCurrentBodyFat()
+                profileDTO.getCurrentBodyFat(),
+                profileDTO.getTrainingLevel()
         );
         return ResultDTO.success(user);
     }

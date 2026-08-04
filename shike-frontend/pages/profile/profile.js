@@ -32,7 +32,15 @@ Page({
       { key: 1, label: '男 ♂️' },
       { key: 2, label: '女 ♀️' }
     ],
+    trainingIndex: 0,
+    trainingOptions: [
+      { key: 'BEGINNER', label: '小白零基础 (未规律健身或 <6个月)' },
+      { key: 'NOVICE', label: '新手进阶 (规律健身 6个月~1.5年)' },
+      { key: 'INTERMEDIATE', label: '中级玩家 (规律健身 1.5~3年)' },
+      { key: 'ADVANCED', label: '资深老炮 (规律健身 3年以上)' }
+    ],
     showGenderSheet: false,
+    showTrainingSheet: false,
     isFormCollapsed: true,
     targetProtein: 0,
     targetCarbs: 0,
@@ -93,6 +101,7 @@ Page({
       if (user.age) {
         const activityIdx = this.data.activityOptions.findIndex(o => o.key === user.activityLevel);
         const goalIdx = this.data.goalOptions.findIndex(o => o.key === user.goal);
+        const trainingIdx = this.data.trainingOptions.findIndex(o => o.key === user.trainingLevel);
         const genderIdx = user.gender === 2 ? 1 : 0;
         
         this.setData({
@@ -101,6 +110,7 @@ Page({
           weight: user.weight,
           activityIndex: activityIdx !== -1 ? activityIdx : 0,
           goalIndex: goalIdx !== -1 ? goalIdx : 1,
+          trainingIndex: trainingIdx !== -1 ? trainingIdx : 0,
           genderIndex: genderIdx,
           bmr: user.bmr || 0,
           tdee: user.tdee || 0,
@@ -196,6 +206,23 @@ Page({
       showGenderSheet: false
     });
     this.recalculateMetabolism();
+    this.saveProfileSilent(null, null);
+  },
+
+  showTrainingModal() {
+    this.setData({ showTrainingSheet: true });
+  },
+
+  hideTrainingModal() {
+    this.setData({ showTrainingSheet: false });
+  },
+
+  selectTraining(e) {
+    const index = parseInt(e.currentTarget.dataset.index);
+    this.setData({
+      trainingIndex: index,
+      showTrainingSheet: false
+    });
     this.saveProfileSilent(null, null);
   },
 
@@ -437,6 +464,7 @@ Page({
     const activityLevel = this.data.activityOptions[this.data.activityIndex].key;
     const goal = this.data.goalOptions[this.data.goalIndex].key;
     const gender = this.data.genderOptions[this.data.genderIndex].key;
+    const trainingLevel = this.data.trainingOptions[this.data.trainingIndex].key;
 
     wx.request({
       url: `${app.globalData.baseUrl}/user/profile`,
@@ -449,6 +477,7 @@ Page({
         weight: this.data.weight,
         activityLevel: activityLevel,
         goal: goal,
+        trainingLevel: trainingLevel,
         nickname: newNickname !== null ? newNickname : this.data.nickname,
         avatarUrl: newAvatarUrl !== null ? newAvatarUrl : this.data.avatarUrl,
         customGoalType: goal === 'PERIOD' ? 'PERIOD' : (goal === 'ABS' ? 'ABS' : null),
@@ -477,6 +506,7 @@ Page({
     const activityLevel = this.data.activityOptions[this.data.activityIndex].key;
     const goal = this.data.goalOptions[this.data.goalIndex].key;
     const gender = this.data.genderOptions[this.data.genderIndex].key;
+    const trainingLevel = this.data.trainingOptions[this.data.trainingIndex].key;
 
     wx.request({
       url: `${app.globalData.baseUrl}/user/profile`,
@@ -489,6 +519,7 @@ Page({
         weight: this.data.weight,
         activityLevel: activityLevel,
         goal: goal,
+        trainingLevel: trainingLevel,
         nickname: this.data.nickname,
         avatarUrl: this.data.avatarUrl,
         customGoalType: goal === 'PERIOD' ? 'PERIOD' : (goal === 'ABS' ? 'ABS' : null),

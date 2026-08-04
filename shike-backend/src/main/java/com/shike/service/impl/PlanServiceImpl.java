@@ -111,6 +111,28 @@ public class PlanServiceImpl implements PlanService {
         String goalLabel = translateGoal(goal, user.getCustomGoalType());
         String activityLabel = translateActivity(user.getActivityLevel());
 
+        String trainingLevel = (user.getTrainingLevel() != null) ? user.getTrainingLevel() : "BEGINNER";
+        String trainingLevelLabel;
+        String trainingLevelGuidance;
+        switch (trainingLevel.toUpperCase()) {
+            case "NOVICE":
+                trainingLevelLabel = "新手进阶 (规律健身 6个月~1.5年)";
+                trainingLevelGuidance = "【训练经验-新手进阶】采用上下肢分化(Upper/Lower) 3-4天/周，注重动作规范与线性渐进超载。周训练容量控制在 10-14 组/肌群，RIR 2-3 (保留2-3次次次数)。";
+                break;
+            case "INTERMEDIATE":
+                trainingLevelLabel = "中级玩家 (规律健身 1.5~3年)";
+                trainingLevelGuidance = "【训练经验-中级玩家】采用推拉腿(PPL)或四分化 4-5天/周，注重容量累积与强度提升。周训练容量控制在 14-18 组/肌群(MAV甜蜜区)，RIR 1-2。";
+                break;
+            case "ADVANCED":
+                trainingLevelLabel = "资深老炮 (规律健身 3年以上)";
+                trainingLevelGuidance = "【训练经验-资深老炮】采用高容量部位专项分化 5-6天/周，注重肌群雕刻与周期化调控。周训练容量可达 16-20+ 组/肌群(MAV~MRV)，RIR 0-2 (允许部分动作达到完全力竭)。";
+                break;
+            default:
+                trainingLevelLabel = "小白零基础 (未规律健身或 <6个月)";
+                trainingLevelGuidance = "【训练经验-小白零基础】必须采用全身训练(Full Body) 3天/周，以基础复合动作(深蹲/卧推/划船/快走)建立动作模式。周训练容量严格控制在 8-10 组/肌群(最小有效容量MEV)，RIR 3-4 (保留较多体力，防酸痛过重与受伤)。";
+                break;
+        }
+
         // === 1. 基于体脂率的蛋白质系数与有氧比例动态调节 (出处: Eric Helms / RP) ===
         double proteinCoeff;
         String bodyFatTier;
@@ -231,12 +253,14 @@ public class PlanServiceImpl implements PlanService {
 
         sb.append("【用户基本档案】:\n");
         sb.append("- 性别: ").append(genderStr).append(", 年龄: ").append(age).append("岁, 身高: ").append(height).append("cm, 体重: ").append(weight).append("kg, 体脂率: ").append(bodyFat).append("%, BMI: ").append(String.format("%.1f", bmi)).append("\n");
+        sb.append("- 训练经验等级: ").append(trainingLevelLabel).append("\n");
         sb.append("- 当前活动水平: ").append(activityLabel).append("\n");
         sb.append("- 基础代谢 BMR: ").append(bmr).append(" kcal, 每日消耗 TDEE: ").append(tdee).append(" kcal\n");
         sb.append("- 设定目标: ").append(goalLabel).append("\n");
         sb.append("- 每日目标摄入热量: ").append((int) targetCal).append(" kcal (推荐三大营养素: 蛋白质 ").append(proteinG).append("g [").append(proteinCoeff).append("g/kg], 碳水 ").append(carbsG).append("g, 脂肪 ").append(fatG).append("g)\n\n");
 
         sb.append("【用户人群分层标签 (已由系统自动判定)】:\n");
+        sb.append("- 训练经验准则: ").append(trainingLevelGuidance).append("\n");
         sb.append("- 体脂分群: ").append(bodyFatTier).append("\n");
         sb.append("- 训练分化建议: ").append(trainingSplitGuidance).append("\n");
         sb.append("- 训练容量指导: ").append(trainingVolumeGuidance).append("\n");

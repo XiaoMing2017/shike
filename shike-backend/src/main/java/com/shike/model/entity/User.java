@@ -71,6 +71,9 @@ public class User {
     @Column(name = "current_body_fat", precision = 4, scale = 1)
     private BigDecimal currentBodyFat;
 
+    @Column(name = "training_level", length = 20, columnDefinition = "varchar(20) default 'BEGINNER'")
+    private String trainingLevel; // BEGINNER, NOVICE, INTERMEDIATE, ADVANCED
+
     @Column(length = 20, columnDefinition = "varchar(20) default 'ENABLED'")
     private String status; // ENABLED, DISABLED
 

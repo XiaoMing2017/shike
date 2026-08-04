@@ -10,7 +10,7 @@ public interface UserService {
     User updateProfile(Long userId, Integer age, Integer gender, BigDecimal height, BigDecimal weight, 
                        String activityLevel, String goal, String nickname, String avatarUrl,
                        String customGoalType, Integer customGoalDays, BigDecimal customGoalWeight,
-                       BigDecimal currentBodyFat);
+                       BigDecimal currentBodyFat, String trainingLevel);
     User getUserInfo(Long userId);
     User signIn(Long userId);
     java.util.List<com.shike.model.entity.PointsRecord> getPointsRecords(Long userId);

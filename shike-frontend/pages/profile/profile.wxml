@@ -69,6 +69,11 @@
         <text class="label">当前体重 (kg)</text>
         <input class="input" type="digit" value="{{weight}}" bindinput="onWeightInput" bindblur="onFieldBlur" />
       </view>
+
+      <view class="form-item flex justify-between align-center" catchtap="showTrainingModal">
+        <text class="label">训练经验等级</text>
+        <view class="picker-val">{{trainingOptions[trainingIndex].label}} ▾</view>
+      </view>
  
       <view class="form-item flex justify-between align-center" catchtap="showActivityModal">
         <text class="label">日常活动系数</text>
@@ -243,6 +248,24 @@
               catchtap="selectGender" data-index="{{index}}">
           <text class="modal-option-label">{{item.label}}</text>
           <icon type="success_no_circle" size="14" color="#10B981" wx:if="{{genderIndex === index}}" />
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <!-- 训练经验选择居中弹窗 -->
+  <view class="modal-backdrop {{showTrainingSheet ? 'active' : ''}}" catchtap="hideTrainingModal" catchtouchmove="preventBubble">
+    <view class="modal-dialog" catchtap="preventBubble">
+      <view class="modal-header">
+        <text class="modal-title">选择训练经验等级</text>
+        <text class="modal-close" catchtap="hideTrainingModal">✕</text>
+      </view>
+      <scroll-view class="modal-content" scroll-y>
+        <view class="modal-option {{trainingIndex === index ? 'active' : ''}}" 
+              wx:for="{{trainingOptions}}" wx:key="key" 
+              catchtap="selectTraining" data-index="{{index}}">
+          <text class="modal-option-label">{{item.label}}</text>
+          <icon type="success_no_circle" size="14" color="#10B981" wx:if="{{trainingIndex === index}}" />
         </view>
       </scroll-view>
     </view>
