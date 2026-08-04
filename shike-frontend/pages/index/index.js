@@ -124,6 +124,7 @@ Page({
     // 🎯 专属 AI 运动与饮食计划
     showPlanModal: false,
     planData: null,
+    activeDietPlan: null,
     planActiveTab: 'workout',
     planDayIndex: 0,
     planLoading: false,
@@ -1640,7 +1641,11 @@ Page({
   },
 
   openPlanModal() {
-    this.setData({ showPlanModal: true });
+    const activeDietPlan = this.updateActiveDietPlan(this.data.planData, this.data.planDayIndex || 0);
+    this.setData({
+      showPlanModal: true,
+      activeDietPlan: activeDietPlan
+    });
     if (!this.data.planData) {
       this.fetchAiPlan(false);
     }
