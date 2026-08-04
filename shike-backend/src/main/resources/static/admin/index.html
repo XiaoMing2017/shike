@@ -783,13 +783,19 @@
       </div>
     </div>
 
-    <div class="metric-card">
+    <!-- 可点击：今日 AI 模型总调用数 -->
+    <div class="metric-card metric-clickable" onclick="openTrendModal('ai')" title="点击查看近7天 AI 模型调用总频次趋势">
       <div class="metric-header">
         <span>今日 AI 模型总调用数</span>
         <div class="metric-icon icon-purple"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
       </div>
-      <div class="metric-val" id="todayAiRecognitions">-</div>
-      <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;" id="aiBreakdownSub">膳食识别: - | 计划生成: -</div>
+      <div class="metric-val-group" style="display:flex; justify-content:space-between; align-items:flex-end;">
+        <div>
+          <div class="metric-val" id="todayAiRecognitions">-</div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;" id="aiBreakdownSub">膳食识别: - | 计划生成: -</div>
+        </div>
+        <span class="click-hint-badge" style="color: #C4B5FD; background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.3);"><i class="fa-solid fa-chart-line"></i> AI调用趋势 <i class="fa-solid fa-chevron-right"></i></span>
+      </div>
     </div>
 
     <!-- 动态 AI 配额管理卡片 -->
@@ -848,16 +854,6 @@
     </div>
   </div>
 
-  <!-- AI 7-Day Trend Chart -->
-  <div class="section-card" style="margin-bottom: 28px; padding: 20px;">
-    <div style="font-weight: 700; font-size: 15px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
-      <span><i class="fa-solid fa-chart-simple" style="color: var(--accent-purple);"></i> 近 7 天 AI 拍照识别频次趋势</span>
-      <span style="font-size: 12px; color: var(--text-muted);">多模态视觉大模型服务频控统计</span>
-    </div>
-    <div id="aiTrendBarContainer" style="display: flex; align-items: flex-end; gap: 16px; height: 110px; padding-top: 10px;">
-      <div class="empty-tip" style="width: 100%;">加载趋势数据中...</div>
-    </div>
-  </div>
 
   <!-- Users Table Section -->
   <div class="section-card">
@@ -1394,7 +1390,6 @@
             document.getElementById('todayRetentionRate').innerText = (lastRet.day1Rate || 0) + ' %';
           }
 
-          renderAiTrendChart(stats.aiTrend);
         }
 
         if (usersRes && usersRes.code === 200) {
@@ -1403,33 +1398,10 @@
         } else if (!usersRes || usersRes.code === 401) {
           document.getElementById('userTableBody').innerHTML = 
             '<tr><td colspan="9" class="empty-tip" style="color:var(--danger);"><i class="fa-solid fa-lock"></i> 未授权或登录凭证已过期，请完成身份验证。<button class="btn-action" onclick="showLoginModal(\'请先验证身份\')" style="margin-left:12px; font-size:12px;"><i class="fa-solid fa-key"></i> 弹出登录框</button></td></tr>';
-          document.getElementById('aiTrendBarContainer').innerHTML = 
-            '<div class="empty-tip" style="width:100%; color:var(--text-muted);">等待验证管理员权限后自动刷新...</div>';
         }
       } catch (err) {
         console.error('Failed to load admin data:', err);
       }
-    }
-
-    function renderAiTrendChart(trendList) {
-      const container = document.getElementById('aiTrendBarContainer');
-      if (!trendList || trendList.length === 0) {
-        container.innerHTML = '<div class="empty-tip" style="width:100%;">暂无 AI 识别趋势数据</div>';
-        return;
-      }
-
-      const maxVal = Math.max(...trendList.map(t => t.count || 0), 1);
-
-      container.innerHTML = trendList.map(t => {
-        const pct = Math.max(Math.round((t.count / maxVal) * 100), 8);
-        return `
-          <div class="bar-item">
-            <span class="bar-val">${t.count} 次</span>
-            <div class="bar-fill" style="height: ${pct}%;"></div>
-            <span class="bar-label">${t.date}</span>
-          </div>
-        `;
-      }).join('');
     }
 
     function openTrendModal(type) {
@@ -1472,6 +1444,17 @@
         unit = '人';
         const avgDau = trendList.length > 0 ? (trendList.reduce((sum, item) => sum + (item.count || 0), 0) / trendList.length).toFixed(1) : 0;
         footerTip.innerText = `💡 近 7 天日均活跃用户 (DAU) 约 ${avgDau} 人`;
+      } else if (type === 'ai') {
+        title.innerText = '近 7 天 AI 模型调用总频次趋势';
+        subtitle.innerText = '包含膳食拍照多模态识别与 AI 专属计划生成';
+        icon.className = 'fa-solid fa-wand-magic-sparkles';
+        iconBox.style.background = 'rgba(139, 92, 246, 0.15)';
+        iconBox.style.color = '#8B5CF6';
+        trendList = cachedStats.aiTrend || [];
+        color = '#8B5CF6';
+        unit = '次';
+        const totalAiCalls = trendList.reduce((sum, item) => sum + (item.count || 0), 0);
+        footerTip.innerText = `💡 近 7 天全站累计 AI 模型服务调用 ${totalAiCalls} 次`;
       } else if (type === 'retention') {
         openRetentionModal();
         return;
