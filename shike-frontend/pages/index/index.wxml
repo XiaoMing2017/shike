@@ -574,6 +574,9 @@
         <button class="poster-btn share" open-type="share">✉️ 发送好友</button>
         <button class="poster-btn timeline" catchtap="onSharePosterClick">📸 发朋友圈</button>
       </view>
+    </view>
+  </view>
+
   <!-- 🎯 专属 AI 运动与饮食计划弹窗 (全景专业风) -->
   <view class="modal-backdrop {{showPlanModal ? 'active' : ''}}" catchtap="closePlanModal" catchtouchmove="preventBubble">
     <view class="modal-dialog plan-modal-dialog" catchtap="preventBubble">
@@ -705,5 +708,4 @@
     </view>
   </view>
 
-</view>
 </view>
