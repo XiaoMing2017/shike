@@ -2198,14 +2198,22 @@
 /* 🎯 计划弹窗样式 */
 .plan-modal-dialog {
   width: 90vw;
-  max-height: 85vh;
+  max-height: 80vh;
   background: #FFFFFF;
   border-radius: 36rpx;
-  padding: 32rpx;
+  padding: 32rpx 32rpx 20rpx 32rpx;
   display: flex;
   flex-direction: column;
   box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.2);
-  overflow-y: auto;
+  overflow: hidden;
+}
+
+.plan-modal-body {
+  flex: 1;
+  max-height: 60vh;
+  margin-top: 12rpx;
+  margin-bottom: 16rpx;
+  box-sizing: border-box;
 }
 
 .plan-loading-box {
