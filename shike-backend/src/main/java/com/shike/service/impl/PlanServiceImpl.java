@@ -278,8 +278,8 @@ public class PlanServiceImpl implements PlanService {
         sb.append("2. 【同肌群恢复期】(出处: Huberman Lab): 同一大肌群训练后至少间隔 48-72 小时，每周安排 1-2 天休息/主动恢复。\n");
         sb.append("3. 【RP Volume Landmarks容量管理】(出处: Dr. Mike Israetel): 严格遵守上方标注的每肌群周训练组数与RIR预留次数。\n");
         sb.append("4. 【可选运动类型】(必须从以下名称中挑选): 跑步 🏃, 慢跑 🏃‍♂️, 快走 🚶‍♂️, 散步 🚶, 动感单车 🚲, 游泳 🏊, 力量训练 💪, 瑜伽/普拉提 🧘, HIIT/有氧操 ⚡, 篮球/足球/球类 🏀。\n");
-        sb.append("5. 【三大营养素分配】(出处: Precision Nutrition / AARR): 蛋白质均匀分布在4餐中(每餐≥25g触发MPS)；碳水集中在训练前后；推荐普通超市易得天然食材。\n");
-        sb.append("6. 【手掌估算比喻】(出处: Precision Nutrition): 在膳食介绍中给出手掌大小比喻。\n\n");
+        sb.append("5. 【中国家庭实用接地气膳食 (7天每天不重样)】: 绝不顿顿使用水煮鸡胸肉西兰花等极端枯燥健身餐！必须设计【周一至周日共7天每天都不重样】的接地气中式减脂/健康食谱。食材推荐中国普通超市与菜市场易买到的天然家常食材，烹饪少油少盐健康做法（如：芹菜炒牛肉、清蒸鲈鱼/虾仁、番茄炒蛋少油、木耳炒肉片、家常豆腐汤、杂粮饭、玉米、红薯、小黄米粥、凉拌黄瓜等）。\n");
+        sb.append("6. 【手掌估算比喻】(出处: Precision Nutrition): 在每餐膳食介绍中给出手掌大小比喻（如 1掌心蛋白质、1拳头蔬菜、1手心碳水）。\n\n");
 
         sb.append("【请严格按以下 JSON 格式输出，不要包含任何 markdown 代码块标记或多余文字】:\n");
         sb.append("{\n");
@@ -302,12 +302,16 @@ public class PlanServiceImpl implements PlanService {
         sb.append("    }\n");
         sb.append("    // ... 周二至周日共7天\n");
         sb.append("  ],\n");
-        sb.append("  \"dietPlan\": {\n");
-        sb.append("    \"breakfast\": { \"title\": \"高蛋白唤醒早餐\", \"calories\": 400, \"protein\": 28, \"carbs\": 45, \"fat\": 12, \"portionHint\": \"约1掌心蛋白质+1手心碳水\", \"foods\": [\"无糖豆浆 300ml\", \"水煮蛋 2个\", \"全麦切片 2片\"] },\n");
-        sb.append("    \"lunch\": { \"title\": \"优质复合碳水午餐\", \"calories\": 650, \"protein\": 42, \"carbs\": 65, \"fat\": 18, \"portionHint\": \"约1.5掌心蛋白+1拳头蔬菜+1手心紫米\", \"foods\": [\"香煎鸡胸肉 150g\", \"紫米饭 150g\", \"蒜蓉西兰花 200g\"] },\n");
-        sb.append("    \"dinner\": { \"title\": \"轻盈低碳晚餐\", \"calories\": 450, \"protein\": 35, \"carbs\": 40, \"fat\": 14, \"portionHint\": \"约1掌心海鲜+1.5拳头蔬菜\", \"foods\": [\"清蒸三文鱼/虾仁 120g\", \"蒸南瓜 150g\", \"凉拌黄瓜 200g\"] },\n");
-        sb.append("    \"snack\": { \"title\": \"练前/练后加餐\", \"calories\": 200, \"protein\": 15, \"carbs\": 25, \"fat\": 4, \"portionHint\": \"练前补充1根香蕉或100g无糖酸奶\", \"foods\": [\"低脂无糖酸奶 150g\", \"香蕉 1根\"] }\n");
-        sb.append("  }\n");
+        sb.append("  \"dietPlan\": [\n");
+        sb.append("    {\n");
+        sb.append("      \"day\": \"周一\",\n");
+        sb.append("      \"breakfast\": { \"title\": \"接地气中式高蛋白早餐\", \"calories\": 400, \"protein\": 25, \"carbs\": 45, \"fat\": 12, \"portionHint\": \"约1掌心蛋白质+1手心碳水\", \"foods\": [\"小黄米粥 1碗\", \"水煮蛋 1个\", \"凉拌黄瓜 100g\"] },\n");
+        sb.append("      \"lunch\": { \"title\": \"家常优质复合碳水午餐\", \"calories\": 650, \"protein\": 40, \"carbs\": 65, \"fat\": 18, \"portionHint\": \"约1.5掌心蛋白+1拳头蔬菜+1手心杂粮饭\", \"foods\": [\"芹菜炒牛肉 150g\", \"杂粮饭 150g\", \"蒜蓉时蔬菜 150g\"] },\n");
+        sb.append("      \"dinner\": { \"title\": \"轻盈中式高纤晚餐\", \"calories\": 450, \"protein\": 30, \"carbs\": 40, \"fat\": 14, \"portionHint\": \"约1掌心海鲜/豆制品+1.5拳头蔬菜\", \"foods\": [\"清蒸鲈鱼 150g\", \"蒸红薯 100g\", \"番茄豆腐汤 1碗\"] },\n");
+        sb.append("      \"snack\": { \"title\": \"练前/练后加餐\", \"calories\": 200, \"protein\": 12, \"carbs\": 25, \"fat\": 4, \"portionHint\": \"1根香蕉或100g无糖酸奶\", \"foods\": [\"低脂无糖酸奶 150g\", \"香蕉 1根\"] }\n");
+        sb.append("    }\n");
+        sb.append("    // ... 周二至周日共7天，每天菜品与搭配不重样！\n");
+        sb.append("  ]\n");
         sb.append("}\n");
 
         return sb.toString();
@@ -325,7 +329,7 @@ public class PlanServiceImpl implements PlanService {
                     "model", aiModel,
                     "messages", List.of(systemMsg, userMsg),
                     "temperature", 0.6,
-                    "max_tokens", 2500,
+                    "max_tokens", 4500,
                     "enable_thinking", false
             );
         } else {
@@ -333,7 +337,7 @@ public class PlanServiceImpl implements PlanService {
                     "model", aiModel,
                     "messages", List.of(systemMsg, userMsg),
                     "temperature", 0.7,
-                    "max_tokens", 2500
+                    "max_tokens", 4500
             );
         }
 

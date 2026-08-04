@@ -1650,14 +1650,26 @@ Page({
     this.setData({ showPlanModal: false });
   },
 
+  updateActiveDietPlan(planData, dayIndex) {
+    if (!planData || !planData.dietPlan) return null;
+    if (Array.isArray(planData.dietPlan)) {
+      return planData.dietPlan[dayIndex] || planData.dietPlan[0];
+    }
+    return planData.dietPlan;
+  },
+
   switchPlanTab(e) {
     const tab = e.currentTarget.dataset.tab;
     this.setData({ planActiveTab: tab });
   },
 
   switchPlanDay(e) {
-    const index = e.currentTarget.dataset.index;
-    this.setData({ planDayIndex: index });
+    const index = parseInt(e.currentTarget.dataset.index) || 0;
+    const activeDietPlan = this.updateActiveDietPlan(this.data.planData, index);
+    this.setData({
+      planDayIndex: index,
+      activeDietPlan: activeDietPlan
+    });
   },
 
   fetchAiPlan(forceRefresh) {
@@ -1673,9 +1685,12 @@ Page({
         success: (res) => {
           this.setData({ planLoading: false });
           if (res.data && res.data.code === 200) {
+            const planData = res.data.data;
+            const activeDietPlan = this.updateActiveDietPlan(planData, 0);
             this.setData({
-              planData: res.data.data,
-              planDayIndex: 0
+              planData: planData,
+              planDayIndex: 0,
+              activeDietPlan: activeDietPlan
             });
             if (forceRefresh) {
               wx.showToast({ title: 'AI 定制计划已更新！', icon: 'success' });

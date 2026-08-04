@@ -651,52 +651,59 @@
 
           <!-- Tab 2: 每日膳食计划 -->
           <view class="plan-tab-content" wx:if="{{planActiveTab === 'diet'}}">
+            <!-- 7天膳食日期选择横轴 -->
+            <scroll-view class="days-scroll flex" scroll-x="true" enable-flex="true">
+              <view class="day-chip {{planDayIndex === index ? 'active' : ''}}" wx:for="{{planData.workoutPlan}}" wx:key="day" catchtap="switchPlanDay" data-index="{{index}}">
+                <text class="day-chip-name">{{item.day}}</text>
+              </view>
+            </scroll-view>
+
             <view class="diet-meals-list">
               <!-- 早餐 -->
-              <view class="diet-meal-card" wx:if="{{planData.dietPlan.breakfast}}">
+              <view class="diet-meal-card" wx:if="{{(activeDietPlan || planData.dietPlan).breakfast}}">
                 <view class="diet-meal-header flex justify-between align-center">
-                  <text class="meal-tag breakfast">🌅 早餐 · {{planData.dietPlan.breakfast.title}}</text>
-                  <text class="meal-cal">{{planData.dietPlan.breakfast.calories}} kcal</text>
+                  <text class="meal-tag breakfast">🌅 早餐 · {{(activeDietPlan || planData.dietPlan).breakfast.title}}</text>
+                  <text class="meal-cal">{{(activeDietPlan || planData.dietPlan).breakfast.calories}} kcal</text>
                 </view>
-                <text class="meal-portion-hint" wx:if="{{planData.dietPlan.breakfast.portionHint}}">✋ 估算推荐: {{planData.dietPlan.breakfast.portionHint}}</text>
+                <text class="meal-portion-hint" wx:if="{{(activeDietPlan || planData.dietPlan).breakfast.portionHint}}">✋ 估算推荐: {{(activeDietPlan || planData.dietPlan).breakfast.portionHint}}</text>
                 <view class="meal-foods-tags flex flex-wrap">
-                  <text class="food-tag" wx:for="{{planData.dietPlan.breakfast.foods}}" wx:key="*this">{{item}}</text>
+                  <text class="food-tag" wx:for="{{(activeDietPlan || planData.dietPlan).breakfast.foods}}" wx:key="*this">{{item}}</text>
                 </view>
               </view>
 
               <!-- 午餐 -->
-              <view class="diet-meal-card" wx:if="{{planData.dietPlan.lunch}}">
+              <view class="diet-meal-card" wx:if="{{(activeDietPlan || planData.dietPlan).lunch}}">
                 <view class="diet-meal-header flex justify-between align-center">
-                  <text class="meal-tag lunch">☀️ 午餐 · {{planData.dietPlan.lunch.title}}</text>
-                  <text class="meal-cal">{{planData.dietPlan.lunch.calories}} kcal</text>
+                  <text class="meal-tag lunch">☀️ 午餐 · {{(activeDietPlan || planData.dietPlan).lunch.title}}</text>
+                  <text class="meal-cal">{{(activeDietPlan || planData.dietPlan).lunch.calories}} kcal</text>
                 </view>
-                <text class="meal-portion-hint" wx:if="{{planData.dietPlan.lunch.portionHint}}">✋ 估算推荐: {{planData.dietPlan.lunch.portionHint}}</text>
+                <text class="meal-portion-hint" wx:if="{{(activeDietPlan || planData.dietPlan).lunch.portionHint}}">✋ 估算推荐: {{(activeDietPlan || planData.dietPlan).lunch.portionHint}}</text>
                 <view class="meal-foods-tags flex flex-wrap">
-                  <text class="food-tag" wx:for="{{planData.dietPlan.lunch.foods}}" wx:key="*this">{{item}}</text>
+                  <text class="food-tag" wx:for="{{(activeDietPlan || planData.dietPlan).lunch.foods}}" wx:key="*this">{{item}}</text>
                 </view>
               </view>
 
               <!-- 晚餐 -->
-              <view class="diet-meal-card" wx:if="{{planData.dietPlan.dinner}}">
+              <view class="diet-meal-card" wx:if="{{(activeDietPlan || planData.dietPlan).dinner}}">
                 <view class="diet-meal-header flex justify-between align-center">
-                  <text class="meal-tag dinner">🌙 晚餐 · {{planData.dietPlan.dinner.title}}</text>
-                  <text class="meal-cal">{{planData.dietPlan.dinner.calories}} kcal</text>
+                  <text class="meal-tag dinner">🌙 晚餐 · {{(activeDietPlan || planData.dietPlan).dinner.title}}</text>
+                  <text class="meal-cal">{{(activeDietPlan || planData.dietPlan).dinner.calories}} kcal</text>
                 </view>
-                <text class="meal-portion-hint" wx:if="{{planData.dietPlan.dinner.portionHint}}">✋ 估算推荐: {{planData.dietPlan.dinner.portionHint}}</text>
+                <text class="meal-portion-hint" wx:if="{{(activeDietPlan || planData.dietPlan).dinner.portionHint}}">✋ 估算推荐: {{(activeDietPlan || planData.dietPlan).dinner.portionHint}}</text>
                 <view class="meal-foods-tags flex flex-wrap">
-                  <text class="food-tag" wx:for="{{planData.dietPlan.dinner.foods}}" wx:key="*this">{{item}}</text>
+                  <text class="food-tag" wx:for="{{(activeDietPlan || planData.dietPlan).dinner.foods}}" wx:key="*this">{{item}}</text>
                 </view>
               </view>
 
               <!-- 加餐 -->
-              <view class="diet-meal-card" wx:if="{{planData.dietPlan.snack}}">
+              <view class="diet-meal-card" wx:if="{{(activeDietPlan || planData.dietPlan).snack}}">
                 <view class="diet-meal-header flex justify-between align-center">
-                  <text class="meal-tag snack">🥤 加餐 · {{planData.dietPlan.snack.title}}</text>
-                  <text class="meal-cal">{{planData.dietPlan.snack.calories}} kcal</text>
+                  <text class="meal-tag snack">🥤 加餐 · {{(activeDietPlan || planData.dietPlan).snack.title}}</text>
+                  <text class="meal-cal">{{(activeDietPlan || planData.dietPlan).snack.calories}} kcal</text>
                 </view>
-                <text class="meal-portion-hint" wx:if="{{planData.dietPlan.snack.portionHint}}">✋ 估算推荐: {{planData.dietPlan.snack.portionHint}}</text>
+                <text class="meal-portion-hint" wx:if="{{(activeDietPlan || planData.dietPlan).snack.portionHint}}">✋ 估算推荐: {{(activeDietPlan || planData.dietPlan).snack.portionHint}}</text>
                 <view class="meal-foods-tags flex flex-wrap">
-                  <text class="food-tag" wx:for="{{planData.dietPlan.snack.foods}}" wx:key="*this">{{item}}</text>
+                  <text class="food-tag" wx:for="{{(activeDietPlan || planData.dietPlan).snack.foods}}" wx:key="*this">{{item}}</text>
                 </view>
               </view>
             </view>
