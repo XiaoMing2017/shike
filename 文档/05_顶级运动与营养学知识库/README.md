@@ -12,8 +12,7 @@
 |---|---|---|
 | 📄 [`fitness_nutrition_expert_knowledge_base.md`](./fitness_nutrition_expert_knowledge_base.md) | **14 大核心专家知识点名录**<br>(包含知识点编号、权威出处、科学原理及后端 Prompt 规则转换表) | 后端 AI Prompt 编写、RAG 向量检索、算法推算逻辑 |
 | 📄 [`global_fitness_nutrition_weekly_report.md`](./global_fitness_nutrition_weekly_report.md) | **全球前沿周刊与学术调研综述**<br>(深度分析国际顶级周刊成果及对产品背书作用) | 产品科学背书、宣传推文、学术引用 |
-
----
+| 📄 [`personalized_training_methodology.md`](./personalized_training_methodology.md) | **🆕 顶级教练定制化训练计划方法论**<br>(按训练经验/体脂率/性别/年龄/目标的个性化分群定制策略与 AI Prompt 适配矩阵) | AI 训练计划 Prompt 个性化生成、人群分层逻辑 |
 
 ## 🔬 知识库核心理论原则总结
 

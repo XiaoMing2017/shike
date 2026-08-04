@@ -98,42 +98,168 @@ public class PlanServiceImpl implements PlanService {
 
     private String buildExpertPrompt(User user) {
         String genderStr = (user.getGender() != null && user.getGender() == 2) ? "女" : "男";
+        boolean isFemale = genderStr.equals("女");
         int age = (user.getAge() != null) ? user.getAge() : 25;
         double height = (user.getHeight() != null) ? user.getHeight().doubleValue() : 175.0;
         double weight = (user.getWeight() != null) ? user.getWeight().doubleValue() : 70.0;
-        double bodyFat = (user.getCurrentBodyFat() != null) ? user.getCurrentBodyFat().doubleValue() : (genderStr.equals("男") ? 18.0 : 24.0);
+        double bodyFat = (user.getCurrentBodyFat() != null) ? user.getCurrentBodyFat().doubleValue() : (isFemale ? 24.0 : 18.0);
         double bmr = (user.getBmr() != null) ? user.getBmr().doubleValue() : 1600.0;
         double tdee = (user.getTdee() != null) ? user.getTdee().doubleValue() : 2200.0;
         double targetCal = (user.getTargetCalories() != null) ? user.getTargetCalories().doubleValue() : 2000.0;
 
-        String goalLabel = translateGoal(user.getGoal(), user.getCustomGoalType());
+        String goal = (user.getGoal() != null) ? user.getGoal() : "MAINTAIN";
+        String goalLabel = translateGoal(goal, user.getCustomGoalType());
         String activityLabel = translateActivity(user.getActivityLevel());
 
-        // 根据三大营养素推算
-        int proteinG = (int) Math.round(weight * (goalLabel.contains("增肌") || goalLabel.contains("腹肌") ? 2.0 : 1.8));
+        // === 1. 基于体脂率的蛋白质系数与有氧比例动态调节 (出处: Eric Helms / RP) ===
+        double proteinCoeff;
+        String bodyFatTier;
+        String cardioGuidance;
+        String trainingVolumeGuidance;
+        String trainingSplitGuidance;
+
+        if (isFemale) {
+            if (bodyFat > 35) {
+                bodyFatTier = "高体脂减脂期";
+                proteinCoeff = 1.6;
+                cardioGuidance = "有氧占比35%，力量占比65%。优先低冲击有氧(快走/椭圆机/游泳)，每次25-35分钟，3-4次/周";
+                trainingVolumeGuidance = "每肌群8-10组/周(维持容量MV)，全身或上下肢分化，RIR 3(保留3次)";
+                trainingSplitGuidance = "全身训练3天/周 或 上下肢分化3-4天/周";
+            } else if (bodyFat > 25) {
+                bodyFatTier = "标准减脂期";
+                proteinCoeff = 1.8;
+                cardioGuidance = "有氧占比30%，力量占比70%。Zone 2稳态有氧3-4次/周×25-35分钟";
+                trainingVolumeGuidance = "每肌群10-14组/周(MEV~MAV)，推拉腿或上下肢分化，RIR 2";
+                trainingSplitGuidance = "上下肢分化4天/周 或 推拉腿5天/周";
+            } else if (bodyFat > 20) {
+                bodyFatTier = "体重重构/精雕期";
+                proteinCoeff = 1.8;
+                cardioGuidance = "有氧占比25%，力量占比75%。Zone 2有氧2-3次/周×20-30分钟";
+                trainingVolumeGuidance = "每肌群12-16组/周(MAV)，推拉腿分化，RIR 1-2";
+                trainingSplitGuidance = "推拉腿(PPL)5天/周";
+            } else {
+                bodyFatTier = "低体脂维持/增肌期";
+                proteinCoeff = 2.0;
+                cardioGuidance = "有氧占比15%，力量占比85%。有氧仅用于心血管健康，每周2次×20分钟";
+                trainingVolumeGuidance = "每肌群14-20组/周(MAV~MRV)，高容量分化训练，RIR 0-2";
+                trainingSplitGuidance = "推拉腿(PPL)或肌群专项5-6天/周";
+            }
+        } else {
+            if (bodyFat > 25) {
+                bodyFatTier = "高体脂减脂期";
+                proteinCoeff = 1.8;
+                cardioGuidance = "有氧占比35%，力量占比65%。优先Zone 2稳态(快走/慢跑/单车)，每次25-40分钟，3-4次/周";
+                trainingVolumeGuidance = "每肌群8-10组/周(维持容量MV~MEV)，复合动作为主，RIR 2-3";
+                trainingSplitGuidance = "全身训练3天/周 或 上下肢分化4天/周";
+            } else if (bodyFat > 18) {
+                bodyFatTier = "标准减脂期";
+                proteinCoeff = 1.8;
+                cardioGuidance = "有氧占比30%，力量占比70%。Zone 2稳态3-4次/周×25-35分钟，可选1次HIIT";
+                trainingVolumeGuidance = "每肌群10-14组/周(MEV~MAV)，推拉腿或上下肢分化，RIR 2";
+                trainingSplitGuidance = "上下肢分化4天/周 或 推拉腿5天/周";
+            } else if (bodyFat > 13) {
+                bodyFatTier = "体重重构/精雕期";
+                proteinCoeff = 2.0;
+                cardioGuidance = "有氧占比25%，力量占比75%。Zone 2有氧2-3次/周×20-30分钟";
+                trainingVolumeGuidance = "每肌群14-18组/周(MAV)，推拉腿分化，RIR 1-2";
+                trainingSplitGuidance = "推拉腿(PPL)5天/周";
+            } else {
+                bodyFatTier = "低体脂维持/增肌期";
+                proteinCoeff = 2.2;
+                cardioGuidance = "有氧占比15%，力量占比85%。有氧仅用于心血管健康，每周2次×20分钟";
+                trainingVolumeGuidance = "每肌群16-20+组/周(MAV~MRV)，高容量分化训练，RIR 0-2";
+                trainingSplitGuidance = "推拉腿(PPL)或肌群专项5-6天/周";
+            }
+        }
+
+        // === 2. 基于年龄段的训练强度与安全调节 (出处: Peter Attia / NSCA) ===
+        String ageGuidance;
+        if (age < 30) {
+            ageGuidance = "可承受较高训练密度与容量，优先建立正确动作模式与渐进超载习惯";
+        } else if (age < 40) {
+            ageGuidance = "增加热身时间至8-10分钟，注意肌腱恢复，同肌群严格间隔48h以上";
+        } else if (age < 50) {
+            ageGuidance = "减少1RM最大力量冲刺，以8-12RM容量训练为主。增加关节预热与动态拉伸。优先稳定性与平衡训练";
+        } else {
+            ageGuidance = "优先功能性训练+平衡+柔韧+骨密度保护。动作选择偏向低冲击关节友好型。降低爆发性运动比例，增加核心稳定训练";
+        }
+
+        // === 3. 基于目标类型的专项规则 (出处: Eric Helms / Stronger By Science / NSCA) ===
+        String goalSpecificRules;
+        switch (goal) {
+            case "LOSE_WEIGHT":
+                goalSpecificRules = "【减脂专项】保肌减脂 > 疯狂燃脂。力量训练重量不主动降低(维持肌肉信号)，容量可略降至MV~MEV。有氧以Zone 2稳态为主，避免过度HIIT导致皮质醇飙升。每日步数目标8000-10000步以锁定NEAT";
+                break;
+            case "GAIN_MUSCLE":
+                goalSpecificRules = "【增肌专项】渐进超载+充足恢复 > 追求酸痛。训练容量从MEV逐周递增至MAV。有氧最小化(避免干扰效应)，每周≤3次×20分钟低强度。碳水集中在训练前1h与训练后2h内";
+                break;
+            case "ABS":
+                goalSpecificRules = "【腹肌塑形专项】腹肌=低体脂+腹直肌肥大，两者缺一不可。大肌群维持容量训练保肌，额外增加每周3次直接腹肌专项(悬垂举腿3组×15次+死虫式/平板撑3组)。Zone 2有氧4-5次/周×30分钟深度燃脂";
+                break;
+            case "PERIOD":
+                goalSpecificRules = "【周期冲刺专项】采用波动周期化(Undulating Periodization)，每周内交替安排力量日(低次数高重量)与肌耐力日(高次数中重量)。严格控制每周减重速度≤体重的1%";
+                break;
+            default:
+                goalSpecificRules = "【维持专项】一致性 > 强度。每周3天全身训练维持容量(MV)，搭配2-3次低强度有氧。防止退步是第一优先级";
+                break;
+        }
+
+        // === 4. Skinny-Fat 特殊检测 (出处: Eric Helms) ===
+        double bmi = weight / Math.pow(height / 100.0, 2);
+        boolean isSkinnyFat = bmi < 24 && ((isFemale && bodyFat > 28) || (!isFemale && bodyFat > 20));
+        String skinnyFatOverride = "";
+        if (isSkinnyFat) {
+            skinnyFatOverride = "\n⚠️【Skinny-Fat体型特殊处理】: 该用户BMI正常但体脂偏高，属于典型Skinny-Fat体型。策略：优先增肌重构(轻微盈余TDEE×1.05)而非激进减脂。以复合力量训练为核心(深蹲/硬拉/卧推)，避免过度有氧导致肌肉量进一步流失。";
+        }
+
+        // === 5. 性别差异化微调 (出处: Menno Henselmans / NSCA) ===
+        String genderAdjustment = "";
+        if (isFemale) {
+            proteinCoeff = Math.max(proteinCoeff - 0.2, 1.6);
+            genderAdjustment = "\n【女性训练微调】: 女性中枢疲劳恢复更快，可适当提高训练频率(每肌群2-3次/周)。组间休息可缩短至60-90秒。有氧类型优先推荐关节友好型(快走/椭圆机/游泳)。";
+        }
+
+        // 最终计算三大营养素
+        int proteinG = (int) Math.round(weight * proteinCoeff);
         int fatG = (int) Math.round((targetCal * 0.25) / 9.0);
         int carbsG = (int) Math.round((targetCal - (proteinG * 4) - (fatG * 9)) / 4.0);
+        if (carbsG < 80) carbsG = 80; // 碳水最低安全线
 
         StringBuilder sb = new StringBuilder();
-        sb.append("你是一位拥有 15 年经验的资深注册营养师 (RD) 和国际体能训练专家 (CSCS)。\n");
-        sb.append("请根据以下用户的身体数据及专家知识库准则，生成【7天运动周计划】与【每日4餐膳食建议】。\n\n");
+        sb.append("你是一位拥有 15 年经验的资深注册营养师 (RD) 和国际体能训练专家 (CSCS)，同时精通 Renaissance Periodization 容量管理体系。\n");
+        sb.append("请根据以下用户的身体数据、人群分层标签及专家知识库准则，生成高度个性化的【7天运动周计划】与【每日4餐膳食建议】。\n\n");
+
         sb.append("【用户基本档案】:\n");
-        sb.append("- 性别: ").append(genderStr).append(", 年龄: ").append(age).append("岁, 身高: ").append(height).append("cm, 体重: ").append(weight).append("kg, 体脂率: ").append(bodyFat).append("%\n");
+        sb.append("- 性别: ").append(genderStr).append(", 年龄: ").append(age).append("岁, 身高: ").append(height).append("cm, 体重: ").append(weight).append("kg, 体脂率: ").append(bodyFat).append("%, BMI: ").append(String.format("%.1f", bmi)).append("\n");
         sb.append("- 当前活动水平: ").append(activityLabel).append("\n");
         sb.append("- 基础代谢 BMR: ").append(bmr).append(" kcal, 每日消耗 TDEE: ").append(tdee).append(" kcal\n");
         sb.append("- 设定目标: ").append(goalLabel).append("\n");
-        sb.append("- 每日目标摄入热量: ").append((int) targetCal).append(" kcal (推荐三大营养素: 蛋白质 ").append(proteinG).append("g, 碳水 ").append(carbsG).append("g, 脂肪 ").append(fatG).append("g)\n\n");
+        sb.append("- 每日目标摄入热量: ").append((int) targetCal).append(" kcal (推荐三大营养素: 蛋白质 ").append(proteinG).append("g [").append(proteinCoeff).append("g/kg], 碳水 ").append(carbsG).append("g, 脂肪 ").append(fatG).append("g)\n\n");
 
-        sb.append("【专家知识库核心准则 (必须严格遵守)】:\n");
-        sb.append("1. 【Zone 2 有氧与抗阻结合】(出处: Peter Attia / Dr. Huberman): 减脂/维持目标中，有氧优先推荐 Zone 2 心率稳态慢跑/快走；力量训练必须占主体以保肌。\n");
-        sb.append("2. 【同肌群恢复期】(出处: Huberman Lab): 同一大肌群（如胸/腿/背）训练后至少间隔 48-72 小时，每周安排 1-2 天休息/主动恢复。\n");
-        sb.append("3. 【可选运动类型】(必须从以下名称中挑选): 跑步 🏃, 慢跑 🏃‍♂️, 快走 🚶‍♂️, 散步 🚶, 动感单车 🚲, 游泳 🏊, 力量训练 💪, 瑜伽/普拉提 🧘, HIIT/有氧操 ⚡, 篮球/足球/球类 🏀。\n");
-        sb.append("4. 【三大营养素分配】(出处: Precision Nutrition / AARR): 蛋白质均匀分布在4餐中；碳水集中在训练前后；推荐普通超市易得天然食材（如无糖豆浆、水煮蛋、鸡胸肉、紫米饭、西兰花）。\n");
-        sb.append("5. 【手掌估算比喻】(出处: Precision Nutrition): 在膳食介绍中给出手掌大小比喻（如 1掌心蛋白质、1拳头蔬菜、1手心碳水）。\n\n");
+        sb.append("【用户人群分层标签 (已由系统自动判定)】:\n");
+        sb.append("- 体脂分群: ").append(bodyFatTier).append("\n");
+        sb.append("- 训练分化建议: ").append(trainingSplitGuidance).append("\n");
+        sb.append("- 训练容量指导: ").append(trainingVolumeGuidance).append("\n");
+        sb.append("- 有氧配比指导: ").append(cardioGuidance).append("\n");
+        sb.append("- 年龄段注意事项: ").append(ageGuidance).append("\n");
+        sb.append(skinnyFatOverride);
+        sb.append(genderAdjustment);
+        sb.append("\n\n");
+
+        sb.append("【目标专项规则 (必须严格遵守)】:\n");
+        sb.append(goalSpecificRules).append("\n\n");
+
+        sb.append("【通用专家知识库准则 (必须严格遵守)】:\n");
+        sb.append("1. 【Zone 2 有氧与抗阻结合】(出处: Peter Attia / Dr. Huberman): 有氧优先推荐 Zone 2 心率稳态(最大心率60-70%)；力量训练在任何目标中都必须占主体。\n");
+        sb.append("2. 【同肌群恢复期】(出处: Huberman Lab): 同一大肌群训练后至少间隔 48-72 小时，每周安排 1-2 天休息/主动恢复。\n");
+        sb.append("3. 【RP Volume Landmarks容量管理】(出处: Dr. Mike Israetel): 严格遵守上方标注的每肌群周训练组数与RIR预留次数。\n");
+        sb.append("4. 【可选运动类型】(必须从以下名称中挑选): 跑步 🏃, 慢跑 🏃‍♂️, 快走 🚶‍♂️, 散步 🚶, 动感单车 🚲, 游泳 🏊, 力量训练 💪, 瑜伽/普拉提 🧘, HIIT/有氧操 ⚡, 篮球/足球/球类 🏀。\n");
+        sb.append("5. 【三大营养素分配】(出处: Precision Nutrition / AARR): 蛋白质均匀分布在4餐中(每餐≥25g触发MPS)；碳水集中在训练前后；推荐普通超市易得天然食材。\n");
+        sb.append("6. 【手掌估算比喻】(出处: Precision Nutrition): 在膳食介绍中给出手掌大小比喻。\n\n");
 
         sb.append("【请严格按以下 JSON 格式输出，不要包含任何 markdown 代码块标记或多余文字】:\n");
         sb.append("{\n");
-        sb.append("  \"summary\": \"针对您的目标简明扼要的专业专家点评与建议（150字以内）\",\n");
+        sb.append("  \"summary\": \"针对该用户人群分层与目标的个性化专业点评与建议（200字以内，必须提及体脂分群策略与关键训练参数）\",\n");
         sb.append("  \"nutritionOverview\": {\n");
         sb.append("    \"targetCal\": ").append((int) targetCal).append(",\n");
         sb.append("    \"proteinG\": ").append(proteinG).append(",\n");
@@ -143,10 +269,10 @@ public class PlanServiceImpl implements PlanService {
         sb.append("  \"workoutPlan\": [\n");
         sb.append("    {\n");
         sb.append("      \"day\": \"周一\",\n");
-        sb.append("      \"focus\": \"训练部位与焦点（如：胸肌与三头力量 + Zone2有氧）\",\n");
+        sb.append("      \"focus\": \"训练部位与焦点（必须与上方训练分化建议一致）\",\n");
         sb.append("      \"isRestDay\": false,\n");
         sb.append("      \"items\": [\n");
-        sb.append("        { \"name\": \"力量训练 💪\", \"duration\": 35, \"calories\": 210, \"detail\": \"哑铃卧推/俯卧撑 4组x12次 (RIR 2)\" },\n");
+        sb.append("        { \"name\": \"力量训练 💪\", \"duration\": 35, \"calories\": 210, \"detail\": \"动作名称 组数x次数 (RIR N)\" },\n");
         sb.append("        { \"name\": \"慢跑 🏃‍♂️\", \"duration\": 25, \"calories\": 180, \"detail\": \"保持心率在 Zone 2 燃脂区间\" }\n");
         sb.append("      ]\n");
         sb.append("    }\n");
