@@ -47,7 +47,7 @@ public class PlanServiceImpl implements PlanService {
     private static final String REDIS_PLAN_KEY_PREFIX = "shike:user:plan:";
 
     @Override
-    public Map<String, Object> generateOrGetPlan(Long userId, Boolean forceRefresh) {
+    public Map<String, Object> generateOrGetPlan(Long userId, Boolean forceRefresh, Boolean createIfAbsent) {
         String cacheKey = REDIS_PLAN_KEY_PREFIX + userId;
 
         // 1. 检查 Redis 缓存
@@ -61,6 +61,12 @@ public class PlanServiceImpl implements PlanService {
                     log.warn("Failed to parse cached plan JSON, will regenerate", e);
                 }
             }
+        }
+
+        // 如果未指示生成 (createIfAbsent=false) 且不需要强制刷新，则不触发 AI 模型，直接返回 null
+        if (!Boolean.TRUE.equals(createIfAbsent) && !Boolean.TRUE.equals(forceRefresh)) {
+            log.info("No cached plan for userId {} and createIfAbsent is false. Skip AI invocation.", userId);
+            return null;
         }
 
         // 2. 获取用户档案

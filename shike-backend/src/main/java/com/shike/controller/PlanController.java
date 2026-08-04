@@ -24,9 +24,10 @@ public class PlanController {
     @GetMapping("/generate")
     public ResultDTO<Map<String, Object>> generateOrGetPlan(
             @RequestParam Long userId,
-            @RequestParam(defaultValue = "false") Boolean forceRefresh) {
-        log.info("Request plan for userId: {}, forceRefresh: {}", userId, forceRefresh);
-        Map<String, Object> plan = planService.generateOrGetPlan(userId, forceRefresh);
+            @RequestParam(defaultValue = "false") Boolean forceRefresh,
+            @RequestParam(defaultValue = "true") Boolean createIfAbsent) {
+        log.info("Request plan for userId: {}, forceRefresh: {}, createIfAbsent: {}", userId, forceRefresh, createIfAbsent);
+        Map<String, Object> plan = planService.generateOrGetPlan(userId, forceRefresh, createIfAbsent);
         return ResultDTO.success(plan);
     }
 }

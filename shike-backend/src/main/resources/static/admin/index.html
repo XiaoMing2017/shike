@@ -1815,7 +1815,7 @@
       document.getElementById('tabPoints').style.display = tab === 'points' ? 'block' : 'none';
 
       if (tab === 'plan' && currentDetailRecords && currentDetailRecords.user) {
-        loadUserAiPlan(currentDetailRecords.user.id, false);
+        loadUserAiPlan(currentDetailRecords.user.id, false, false);
       } else if (tab === 'points' && currentDetailRecords && currentDetailRecords.user) {
         loadUserPointLogs(currentDetailRecords.user.id);
       }
@@ -1976,16 +1976,32 @@
       }
     }
 
-    async function loadUserAiPlan(userId, forceRefresh = false) {
+    async function loadUserAiPlan(userId, forceRefresh = false, createIfAbsent = false) {
       const box = document.getElementById('planContentBox');
-      if (forceRefresh || box.innerText.includes('点击上方标签') || box.innerText.includes('暂无')) {
-        box.innerHTML = '<div class="empty-tip">🤖 运营系统正在调用 RD/CSCS AI 专家模型推算/读取计划...</div>';
+      if (forceRefresh || (createIfAbsent && (box.innerText.includes('点击上方标签') || box.innerText.includes('尚未在小程序')))) {
+        box.innerHTML = '<div class="empty-tip">🤖 运营系统正在调用 RD/CSCS AI 专家模型推算/生成计划...</div>';
       }
 
       try {
-        const res = await authFetch(`/api/v1/plan/generate?userId=${userId}&forceRefresh=${forceRefresh}`).then(r => r.json());
-        if (res.code === 200 && res.data) {
-          renderUserAiPlan(res.data, userId);
+        const res = await authFetch(`/api/v1/plan/generate?userId=${userId}&forceRefresh=${forceRefresh}&createIfAbsent=${createIfAbsent}`).then(r => r.json());
+        if (res.code === 200) {
+          if (res.data) {
+            renderUserAiPlan(res.data, userId);
+          } else {
+            box.innerHTML = `
+              <div class="empty-tip" style="padding: 24px 16px; text-align: center;">
+                <div style="font-size: 15px; font-weight: 700; color: #F59E0B; margin-bottom: 8px;">
+                  <i class="fa-solid fa-circle-info"></i> 该用户当前尚未在小程序生成 AI 专属计划
+                </div>
+                <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+                  用户尚未在小程序端主动点击生成。为了避免不必要的 AI 算力消耗，查看模式下不会自动调用大模型。
+                </div>
+                <button class="btn btn-action" style="font-size: 12px; padding: 8px 18px; background: linear-gradient(135deg, #6366F1, #4F46E5); color: #FFF; border: none;" onclick="loadUserAiPlan(${userId}, true, true)">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> 🤖 运营帮该用户生成 AI 计划
+                </button>
+              </div>
+            `;
+          }
         } else {
           box.innerHTML = `<div class="empty-tip" style="color: var(--danger);">加载 AI 计划失败: ${res.message || '未知错误'}</div>`;
         }
@@ -2007,7 +2023,7 @@
             <span style="font-size: 14px; font-weight: 700; color: var(--primary);">🎯 目标分配热量: ${overview.targetCal || '-'} kcal</span>
             <span style="font-size: 12px; color: var(--text-muted); margin-left: 12px;">(蛋白 ${overview.proteinG || '-'}g | 碳水 ${overview.carbsG || '-'}g | 脂肪 ${overview.fatG || '-'}g)</span>
           </div>
-          <button class="btn btn-outline" style="font-size: 12px; padding: 6px 14px;" onclick="loadUserAiPlan(${userId}, true)">🤖 运营帮该用户重新生成</button>
+          <button class="btn btn-outline" style="font-size: 12px; padding: 6px 14px;" onclick="loadUserAiPlan(${userId}, true, true)">🤖 运营帮该用户重新生成</button>
         </div>
       `;
 
