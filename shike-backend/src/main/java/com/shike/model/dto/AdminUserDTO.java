@@ -15,4 +15,5 @@ public class AdminUserDTO {
     private Integer todayAiCount; // AI recognition count today (0-10)
     private Long totalDietCount;  // Total diet records
     private Long totalExerciseCount; // Total exercise records
+    private Boolean activeToday; // 今日是否活跃
 }

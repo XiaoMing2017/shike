@@ -880,7 +880,16 @@
           <i class="fa-solid fa-magnifying-glass"></i>
           <input type="text" id="searchInput" placeholder="搜索昵称或ID..." oninput="filterUsers()">
         </div>
-      </div>
+    <div style="display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center;">
+      <button class="filter-chip active" id="userChipAll" onclick="setUserFilter('ALL')">
+        <i class="fa-solid fa-users"></i> 全部用户 (<span id="countAllUsers">0</span>)
+      </button>
+      <button class="filter-chip" id="userChipDau" onclick="setUserFilter('DAU')" style="color: #60A5FA; border-color: rgba(59, 130, 246, 0.4);">
+        <i class="fa-solid fa-bolt" style="color: #60A5FA;"></i> 🔥 今日活跃用户 (DAU) (<span id="countDauUsers">0</span>)
+      </button>
+      <button class="filter-chip" id="userChipBanned" onclick="setUserFilter('BANNED')" style="color: #F87171; border-color: rgba(239, 68, 68, 0.4);">
+        <i class="fa-solid fa-user-slash" style="color: #F87171;"></i> 🚫 已封禁用户 (<span id="countBannedUsers">0</span>)
+      </button>
     </div>
 
     <div class="table-responsive">
@@ -1547,10 +1556,55 @@
       window.open(url, '_blank');
     }
 
+    let currentUserFilter = 'ALL';
+
+    function setUserFilter(filterType) {
+      currentUserFilter = filterType;
+      document.getElementById('userChipAll').classList.toggle('active', filterType === 'ALL');
+      document.getElementById('userChipDau').classList.toggle('active', filterType === 'DAU');
+      document.getElementById('userChipBanned').classList.toggle('active', filterType === 'BANNED');
+      filterUsers();
+    }
+
+    function filterUsers() {
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      
+      const filtered = rawUserData.filter(item => {
+        const u = item.user;
+        
+        if (currentUserFilter === 'DAU' && !item.activeToday) {
+          return false;
+        }
+        if (currentUserFilter === 'BANNED' && u.status !== 'DISABLED') {
+          return false;
+        }
+
+        if (q) {
+          const matchName = u.nickname && u.nickname.toLowerCase().includes(q);
+          const matchId = String(u.id).includes(q);
+          const matchOpenid = u.openid && u.openid.toLowerCase().includes(q);
+          if (!matchName && !matchId && !matchOpenid) return false;
+        }
+
+        return true;
+      });
+
+      renderUserTable(filtered);
+    }
+
     function renderUserTable(users) {
+      if (document.getElementById('countAllUsers')) {
+        document.getElementById('countAllUsers').innerText = rawUserData.length;
+        document.getElementById('countDauUsers').innerText = rawUserData.filter(u => u.activeToday).length;
+        document.getElementById('countBannedUsers').innerText = rawUserData.filter(u => u.user && u.user.status === 'DISABLED').length;
+      }
+
       const tbody = document.getElementById('userTableBody');
       if (!users || users.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" class="empty-tip">暂无匹配的用户数据</td></tr>';
+        let emptyTip = '暂无匹配的用户数据';
+        if (currentUserFilter === 'DAU') emptyTip = '🔥 今日暂无活跃打卡/识别的用户数据';
+        else if (currentUserFilter === 'BANNED') emptyTip = '🎉 当前暂无已被封禁的用户';
+        tbody.innerHTML = `<tr><td colspan="9" class="empty-tip">${emptyTip}</td></tr>`;
         return;
       }
 
@@ -1565,6 +1619,10 @@
         const globalLimit = (cachedStats && cachedStats.globalAiLimit) ? cachedStats.globalAiLimit : 10;
         const aiBadgeClass = aiCount >= globalLimit ? 'badge-ai limit-reached' : 'badge-ai';
         const createdAt = u.createdAt ? u.createdAt.replace('T', ' ').substring(0, 16) : '-';
+
+        const activeBadge = item.activeToday 
+          ? '<span style="background:rgba(59,130,246,0.2); color:#60A5FA; border:1px solid rgba(59,130,246,0.4); font-size:10px; padding:1px 5px; border-radius:6px; font-weight:600; margin-left:6px;"><i class="fa-solid fa-bolt"></i> 今日活跃</span>' 
+          : '';
 
         const isBanned = u.status === 'DISABLED';
         const statusBadge = isBanned 
@@ -1583,7 +1641,7 @@
               <div class="user-cell">
                 <img src="${avatar}" class="user-avatar" title="点击放大预览头像" onclick="previewAvatar('${u.avatarUrl || ''}', '${nickname}')" onerror="this.src='https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0'">
                 <div>
-                  <div class="user-name">${nickname}</div>
+                  <div class="user-name">${nickname}${activeBadge}</div>
                   <div class="user-id-badge">ID: ${u.id}</div>
                 </div>
               </div>

@@ -293,6 +293,7 @@ public class AdminServiceImpl implements AdminService {
     public List<AdminUserDTO> getAllUsers() {
         LocalDate today = LocalDate.now();
         String todayStr = today.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        Set<Long> todayActiveIds = getActiveUserIdsForDate(today);
 
         List<User> users = userRepository.findAll(Sort.by(Sort.Direction.DESC, "id"));
         List<AdminUserDTO> result = new ArrayList<>();
@@ -312,11 +313,14 @@ public class AdminServiceImpl implements AdminService {
             Long dietCount = dietRecordRepository.countByUserId(u.getId());
             Long exerciseCount = exerciseRecordRepository.countByUserId(u.getId());
 
+            boolean isActiveToday = todayActiveIds.contains(u.getId()) || aiCount > 0;
+
             result.add(AdminUserDTO.builder()
                     .user(u)
                     .todayAiCount(aiCount)
                     .totalDietCount(dietCount)
                     .totalExerciseCount(exerciseCount)
+                    .activeToday(isActiveToday)
                     .build());
         }
 
