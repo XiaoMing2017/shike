@@ -1,13 +1,18 @@
 package com.shike.config;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.io.File;
 
 @Configuration
+@RequiredArgsConstructor
 public class WebConfig implements WebMvcConfigurer {
+
+    private final AdminAuthInterceptor adminAuthInterceptor;
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
@@ -17,5 +22,12 @@ public class WebConfig implements WebMvcConfigurer {
 
         registry.addResourceHandler("/admin/**")
                 .addResourceLocations("classpath:/static/admin/");
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(adminAuthInterceptor)
+                .addPathPatterns("/api/v1/admin/**")
+                .excludePathPatterns("/api/v1/admin/login");
     }
 }

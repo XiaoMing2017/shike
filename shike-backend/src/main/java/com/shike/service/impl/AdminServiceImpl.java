@@ -1,6 +1,7 @@
 package com.shike.service.impl;
 
 import com.shike.common.BizException;
+import com.shike.model.dto.AdminLoginDTO;
 import com.shike.model.dto.AdminStatsDTO;
 import com.shike.model.dto.AdminTeamDTO;
 import com.shike.model.dto.AdminUserDTO;
@@ -24,6 +25,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -38,6 +41,26 @@ public class AdminServiceImpl implements AdminService {
     private final TeamMemberRepository teamMemberRepository;
     private final TeamCheckinRepository teamCheckinRepository;
     private final StringRedisTemplate stringRedisTemplate;
+
+    @Override
+    public AdminLoginDTO login(AdminLoginDTO loginDTO) {
+        if (loginDTO == null || !("admin".equals(loginDTO.getUsername()) && "shike123456".equals(loginDTO.getPassword()))) {
+            throw new BizException(401, "管理员账号或密码错误");
+        }
+
+        String token = "shike-admin-" + UUID.randomUUID().toString().replace("-", "");
+        try {
+            stringRedisTemplate.opsForValue().set("shike:admin:token:" + token, "admin", 24, TimeUnit.HOURS);
+        } catch (Exception e) {
+            log.warn("Failed to set admin token in Redis: {}", e.getMessage());
+        }
+
+        return AdminLoginDTO.builder()
+                .username("admin")
+                .token(token)
+                .adminName("超级管理员")
+                .build();
+    }
 
     @Override
     public AdminStatsDTO getDashboardStats() {
@@ -68,21 +91,48 @@ public class AdminServiceImpl implements AdminService {
         }
         Long activeTeams = teamRepository.countByStatus("ACTIVE");
 
-        // Sum AI recognitions across all users today
+        // Sum AI recognitions across all users today & compute last 7 days trend
         long todayAiRecognitions = 0;
-        try {
-            Set<String> keys = stringRedisTemplate.keys("shike:ai:limit:*:" + todayStr);
-            if (keys != null && !keys.isEmpty()) {
-                for (String key : keys) {
-                    String val = stringRedisTemplate.opsForValue().get(key);
-                    if (val != null) {
-                        todayAiRecognitions += Long.parseLong(val);
+        List<AdminStatsDTO.AiTrendItem> aiTrendList = new ArrayList<>();
+        long totalHistoricalAiCount = 0;
+
+        for (int i = 6; i >= 0; i--) {
+            LocalDate date = today.minusDays(i);
+            String dateStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            long dayAiCount = 0;
+
+            try {
+                Set<String> keys = stringRedisTemplate.keys("shike:ai:limit:*:" + dateStr);
+                if (keys != null && !keys.isEmpty()) {
+                    for (String key : keys) {
+                        String val = stringRedisTemplate.opsForValue().get(key);
+                        if (val != null) {
+                            dayAiCount += Long.parseLong(val);
+                        }
                     }
                 }
+            } catch (Exception e) {
+                log.warn("Failed to query Redis AI recognition keys for {}: {}", dateStr, e.getMessage());
             }
-        } catch (Exception e) {
-            log.warn("Failed to query Redis AI recognition keys: {}", e.getMessage());
+
+            // Fallback: If Redis is cleared, estimate from DB diet records
+            if (dayAiCount == 0) {
+                dayAiCount = dietRecordRepository.countByRecordDate(date);
+            }
+
+            if (i == 0) {
+                todayAiRecognitions = dayAiCount;
+            }
+
+            totalHistoricalAiCount += dayAiCount;
+            aiTrendList.add(AdminStatsDTO.AiTrendItem.builder()
+                    .date(date.format(DateTimeFormatter.ofPattern("MM-dd")))
+                    .count(dayAiCount)
+                    .build());
         }
+
+        // Estimated Cost (0.02 CNY per AI Vision Request)
+        double estimatedCost = Math.round(totalHistoricalAiCount * 0.02 * 100.0) / 100.0;
 
         // Calculate distinct active users today (DAU)
         Set<Long> activeUserIds = new HashSet<>();
@@ -125,6 +175,8 @@ public class AdminServiceImpl implements AdminService {
                 .todayActiveUsers(todayActiveUsers)
                 .activeTeams(activeTeams)
                 .totalPoints(totalPoints)
+                .estimatedAiCost(estimatedCost)
+                .aiTrend(aiTrendList)
                 .build();
     }
 
@@ -292,5 +344,66 @@ public class AdminServiceImpl implements AdminService {
         team.setStatus(status);
         teamRepository.save(team);
         log.info("Admin updated team {} status to {}", teamId, status);
+    }
+
+    @Override
+    public String exportUsersCsv() {
+        StringBuilder csv = new StringBuilder();
+        // UTF-8 BOM to prevent Excel encoding issue
+        csv.append("\uFEFF");
+        csv.append("用户ID,微信OpenID,用户昵称,性别,年龄,身高(cm),体重(kg),BMR(kcal),TDEE(kcal),目标摄入(kcal),契约积分,注册时间\n");
+
+        List<User> users = userRepository.findAll(Sort.by(Sort.Direction.DESC, "id"));
+        for (User u : users) {
+            String genderStr = u.getGender() != null && u.getGender() == 2 ? "女" : (u.getGender() != null && u.getGender() == 1 ? "男" : "未设置");
+            String createdAt = u.getCreatedAt() != null ? u.getCreatedAt().toString().replace("T", " ") : "";
+
+            csv.append(u.getId()).append(",")
+                    .append(escapeCsv(u.getOpenid())).append(",")
+                    .append(escapeCsv(u.getNickname() != null ? u.getNickname() : "微信用户")).append(",")
+                    .append(genderStr).append(",")
+                    .append(u.getAge() != null ? u.getAge() : "").append(",")
+                    .append(u.getHeight() != null ? u.getHeight() : "").append(",")
+                    .append(u.getWeight() != null ? u.getWeight() : "").append(",")
+                    .append(u.getBmr() != null ? u.getBmr() : "").append(",")
+                    .append(u.getTdee() != null ? u.getTdee() : "").append(",")
+                    .append(u.getTargetCalories() != null ? u.getTargetCalories() : "").append(",")
+                    .append(u.getPoints() != null ? u.getPoints() : 0).append(",")
+                    .append(createdAt).append("\n");
+        }
+
+        return csv.toString();
+    }
+
+    @Override
+    public String exportDietsCsv() {
+        StringBuilder csv = new StringBuilder();
+        // UTF-8 BOM to prevent Excel encoding issue
+        csv.append("\uFEFF");
+        csv.append("记录ID,打卡日期,用户ID,餐别,摄入总热量(kcal),碳水(g),蛋白质(g),脂肪(g),餐品解析明细\n");
+
+        List<DietRecord> records = dietRecordRepository.findAll(Sort.by(Sort.Direction.DESC, "id"));
+        for (DietRecord r : records) {
+            csv.append(r.getId()).append(",")
+                    .append(r.getRecordDate() != null ? r.getRecordDate().toString() : "").append(",")
+                    .append(r.getUserId()).append(",")
+                    .append(escapeCsv(r.getMealType())).append(",")
+                    .append(r.getTotalCalories() != null ? r.getTotalCalories() : 0).append(",")
+                    .append(r.getTotalCarbs() != null ? r.getTotalCarbs() : 0).append(",")
+                    .append(r.getTotalProtein() != null ? r.getTotalProtein() : 0).append(",")
+                    .append(r.getTotalFat() != null ? r.getTotalFat() : 0).append(",")
+                    .append(escapeCsv(r.getFoodItems())).append("\n");
+        }
+
+        return csv.toString();
+    }
+
+    private String escapeCsv(String input) {
+        if (input == null) return "";
+        String escaped = input.replace("\"", "\"\"");
+        if (escaped.contains(",") || escaped.contains("\n") || escaped.contains("\"")) {
+            return "\"" + escaped + "\"";
+        }
+        return escaped;
     }
 }

@@ -92,7 +92,13 @@
     .header-status {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
+    }
+
+    .status-badge-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       background: rgba(16, 185, 129, 0.1);
       border: 1px solid rgba(16, 185, 129, 0.3);
       padding: 8px 16px;
@@ -122,7 +128,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 18px;
-      margin-bottom: 28px;
+      margin-bottom: 24px;
     }
 
     .metric-card {
@@ -199,7 +205,7 @@
 
     .search-box {
       position: relative;
-      width: 300px;
+      width: 260px;
     }
 
     .search-box input {
@@ -335,15 +341,15 @@
       transform: scale(1.02);
     }
 
-    /* Modal / Drawer for User Detail */
+    /* Modal / Drawer for User Detail & Login */
     .modal-overlay {
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(15, 23, 42, 0.8);
-      backdrop-filter: blur(8px);
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(10px);
       z-index: 1000;
       display: none;
       justify-content: center;
@@ -629,6 +635,34 @@
       padding: 2px 6px;
       border-radius: 6px;
     }
+
+    /* Bar Chart Styling */
+    .bar-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+    .bar-fill {
+      width: 100%;
+      max-width: 36px;
+      background: linear-gradient(180deg, #8B5CF6 0%, #6D28D9 100%);
+      border-radius: 6px 6px 0 0;
+      transition: height 0.5s ease;
+      min-height: 4px;
+    }
+    .bar-val {
+      font-size: 11px;
+      font-weight: 700;
+      color: #A78BFA;
+    }
+    .bar-label {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
   </style>
 </head>
 <body>
@@ -643,8 +677,16 @@
       </div>
     </div>
     <div class="header-status">
-      <div class="status-dot"></div>
-      <span id="currentTime">服务运行正常</span>
+      <div class="status-badge-box">
+        <div class="status-dot"></div>
+        <span id="currentTime">服务运行正常</span>
+      </div>
+      <div style="font-size: 13px; color: var(--text-muted);">
+        管理员：<strong id="adminNameDisplay" style="color: #FFF;">未登录</strong>
+      </div>
+      <button class="btn-action" onclick="handleLogout()" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #F87171; padding: 6px 12px;">
+        <i class="fa-solid fa-right-from-bracket"></i> 退出
+      </button>
     </div>
   </header>
 
@@ -673,10 +715,10 @@
     </div>
     <div class="metric-card">
       <div class="metric-header">
-        <span>今日饮食打卡</span>
-        <div class="metric-icon icon-orange"><i class="fa-solid fa-bowl-food"></i></div>
+        <span>预估 AI API 消耗成本</span>
+        <div class="metric-icon icon-orange"><i class="fa-solid fa-calculator"></i></div>
       </div>
-      <div class="metric-val" id="todayDietRecords">-</div>
+      <div class="metric-val" id="estimatedAiCost" style="color: #F97316;">￥ 0.00</div>
     </div>
     <div class="metric-card">
       <div class="metric-header">
@@ -690,10 +732,21 @@
         <span>活跃减脂小队</span>
         <div class="metric-icon icon-blue"><i class="fa-solid fa-trophy"></i></div>
       </div>
-      <div class="metric-val-group" style="display:flex; justify-content:space-between; align-items:flex-end;">
+      <div class="metric-val-group" style="display:flex; justify-space-between; align-items:flex-end;">
         <div class="metric-val" id="activeTeams">-</div>
         <span class="click-hint-badge"><i class="fa-solid fa-users"></i> 查看队伍与成员 <i class="fa-solid fa-chevron-right"></i></span>
       </div>
+    </div>
+  </div>
+
+  <!-- AI 7-Day Trend Chart -->
+  <div class="section-card" style="margin-bottom: 28px; padding: 20px;">
+    <div style="font-weight: 700; font-size: 15px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
+      <span><i class="fa-solid fa-chart-simple" style="color: var(--accent-purple);"></i> 近 7 天 AI 拍照识别频次趋势</span>
+      <span style="font-size: 12px; color: var(--text-muted);">多模态视觉大模型服务频控统计</span>
+    </div>
+    <div id="aiTrendBarContainer" style="display: flex; align-items: flex-end; gap: 16px; height: 110px; padding-top: 10px;">
+      <div class="empty-tip" style="width: 100%;">加载趋势数据中...</div>
     </div>
   </div>
 
@@ -702,10 +755,16 @@
     <div class="section-header">
       <div class="section-title">
         <i class="fa-solid fa-address-book" style="color: var(--primary);"></i>
-        全量用户管理列表 (点击用户头像可放大预览原图)
+        全量用户管理列表
       </div>
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <button class="btn-action" id="btnOpenTeamModalHeader" onclick="openTeamModal()" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8); box-shadow: 0 4px 12px rgba(59,130,246,0.3); font-size: 13px; padding: 8px 16px;">
+      <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <button class="btn-action" onclick="exportCsv('users')" style="background: linear-gradient(135deg, #10B981, #059669); font-size: 12px;">
+          <i class="fa-solid fa-file-csv"></i> 导出用户 CSV
+        </button>
+        <button class="btn-action" onclick="exportCsv('diets')" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9); font-size: 12px;">
+          <i class="fa-solid fa-file-excel"></i> 导出饮食明细 CSV
+        </button>
+        <button class="btn-action" id="btnOpenTeamModalHeader" onclick="openTeamModal()" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8); font-size: 12px;">
           <i class="fa-solid fa-trophy"></i> 查看减脂小队与成员
         </button>
         <div class="search-box">
@@ -735,6 +794,32 @@
           </tr>
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- Admin Login Modal -->
+  <div class="modal-overlay active" id="loginModal">
+    <div class="modal-box" style="width: 400px; max-width: 90vw; padding: 32px; text-align: center;">
+      <div class="brand-icon" style="margin: 0 auto 16px auto; width: 56px; height: 56px; font-size: 28px;">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 8px;">食刻运维后台登录</h2>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px;">请输入超级管理员安全授权凭证</p>
+      
+      <div style="margin-bottom: 16px; text-align: left;">
+        <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">管理员账号</label>
+        <input type="text" id="loginUsername" value="admin" style="width: 100%; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--card-border); padding: 10px 14px; border-radius: 10px; color: #FFF; font-size: 14px; outline: none;">
+      </div>
+      <div style="margin-bottom: 20px; text-align: left;">
+        <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">密码</label>
+        <input type="password" id="loginPassword" value="shike123456" style="width: 100%; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--card-border); padding: 10px 14px; border-radius: 10px; color: #FFF; font-size: 14px; outline: none;">
+      </div>
+
+      <div id="loginErrorMsg" style="color: #EF4444; font-size: 12px; margin-bottom: 14px; display: none;"></div>
+
+      <button class="btn-action" onclick="handleLogin()" style="width: 100%; justify-content: center; padding: 12px; font-size: 14px; background: linear-gradient(135deg, #10B981, #059669);">
+        <i class="fa-solid fa-key"></i> 验证并登录管理后台
+      </button>
     </div>
   </div>
 
@@ -857,6 +942,84 @@
     let currentDetailRecords = null;
     let currentModalAvatarUrl = '';
 
+    function getAdminToken() {
+      return localStorage.getItem('shike_admin_token') || '';
+    }
+
+    function setAdminToken(token, name) {
+      if (token) {
+        localStorage.setItem('shike_admin_token', token);
+        localStorage.setItem('shike_admin_name', name || '超级管理员');
+      } else {
+        localStorage.removeItem('shike_admin_token');
+        localStorage.removeItem('shike_admin_name');
+      }
+    }
+
+    async function authFetch(url, options = {}) {
+      const headers = options.headers || {};
+      const token = getAdminToken();
+      if (token) {
+        headers['Authorization'] = 'Bearer ' + token;
+      }
+      options.headers = headers;
+
+      const res = await fetch(url, options);
+      if (res.status === 401) {
+        showLoginModal();
+        throw new Error('Unauthorized');
+      }
+      return res;
+    }
+
+    function showLoginModal() {
+      document.getElementById('loginModal').classList.add('active');
+    }
+
+    function hideLoginModal() {
+      document.getElementById('loginModal').classList.remove('active');
+      const adminName = localStorage.getItem('shike_admin_name') || '超级管理员';
+      document.getElementById('adminNameDisplay').innerText = adminName;
+    }
+
+    async function handleLogin() {
+      const u = document.getElementById('loginUsername').value.trim();
+      const p = document.getElementById('loginPassword').value.trim();
+      const errBox = document.getElementById('loginErrorMsg');
+
+      if (!u || !p) {
+        errBox.innerText = '请输入账号与密码';
+        errBox.style.display = 'block';
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/v1/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: u, password: p })
+        }).then(r => r.json());
+
+        if (res.code === 200 && res.data && res.data.token) {
+          setAdminToken(res.data.token, res.data.adminName);
+          errBox.style.display = 'none';
+          hideLoginModal();
+          loadDashboard();
+        } else {
+          errBox.innerText = res.message || '登录失败，凭证错误';
+          errBox.style.display = 'block';
+        }
+      } catch (e) {
+        errBox.innerText = '网络连接异常';
+        errBox.style.display = 'block';
+      }
+    }
+
+    function handleLogout() {
+      setAdminToken('', '');
+      showLoginModal();
+    }
+
     // Image URL Resolver (handles local fallback, WeChat qlogo, and /uploads/ paths)
     function resolveAvatarUrl(url) {
       const defaultAvatar = 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0';
@@ -894,8 +1057,8 @@
     async function loadDashboard() {
       try {
         const [statsRes, usersRes] = await Promise.all([
-          fetch('/api/v1/admin/stats').then(res => res.json()),
-          fetch('/api/v1/admin/users').then(res => res.json())
+          authFetch('/api/v1/admin/stats').then(res => res.json()),
+          authFetch('/api/v1/admin/users').then(res => res.json())
         ]);
 
         if (statsRes.code === 200) {
@@ -906,6 +1069,9 @@
           document.getElementById('todayDietRecords').innerText = stats.todayDietRecords || 0;
           document.getElementById('todayActiveUsers').innerText = stats.todayActiveUsers || 0;
           document.getElementById('activeTeams').innerText = stats.activeTeams || 0;
+          document.getElementById('estimatedAiCost').innerText = `￥ ${(stats.estimatedAiCost || 0).toFixed(2)}`;
+
+          renderAiTrendChart(stats.aiTrend);
         }
 
         if (usersRes.code === 200) {
@@ -915,6 +1081,37 @@
       } catch (err) {
         console.error('Failed to load admin data:', err);
       }
+    }
+
+    function renderAiTrendChart(trendList) {
+      const container = document.getElementById('aiTrendBarContainer');
+      if (!trendList || trendList.length === 0) {
+        container.innerHTML = '<div class="empty-tip" style="width:100%;">暂无 AI 识别趋势数据</div>';
+        return;
+      }
+
+      const maxVal = Math.max(...trendList.map(t => t.count || 0), 1);
+
+      container.innerHTML = trendList.map(t => {
+        const pct = Math.max(Math.round((t.count / maxVal) * 100), 8);
+        return `
+          <div class="bar-item">
+            <span class="bar-val">${t.count} 次</span>
+            <div class="bar-fill" style="height: ${pct}%;"></div>
+            <span class="bar-label">${t.date}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function exportCsv(type) {
+      const token = getAdminToken();
+      if (!token) {
+        showLoginModal();
+        return;
+      }
+      const url = `/api/v1/admin/export/${type}?token=${encodeURIComponent(token)}`;
+      window.open(url, '_blank');
     }
 
     function renderUserTable(users) {
@@ -982,7 +1179,7 @@
       document.getElementById('dietList').innerHTML = '<div class="empty-tip">加载明细数据中...</div>';
       
       try {
-        const res = await fetch(`/api/v1/admin/users/${userId}/records`).then(r => r.json());
+        const res = await authFetch(`/api/v1/admin/users/${userId}/records`).then(r => r.json());
         if (res.code === 200) {
           currentDetailRecords = res.data;
           const u = currentDetailRecords.user;
@@ -1132,7 +1329,7 @@
       document.getElementById('teamModalSubtitle').innerText = '正在获取全部减脂小队与成员数据...';
 
       try {
-        const res = await fetch('/api/v1/admin/teams').then(r => r.json());
+        const res = await authFetch('/api/v1/admin/teams').then(r => r.json());
         if (res.code === 200) {
           rawTeamData = res.data || [];
           const activeCount = rawTeamData.filter(t => t.status === 'ACTIVE').length;
@@ -1288,7 +1485,7 @@
     async function toggleTeamStatus(teamId, newStatus) {
       if (!confirm(`确定要将小队 (ID: ${teamId}) 的状态修改为 [ ${newStatus} ] 吗？`)) return;
       try {
-        const res = await fetch(`/api/v1/admin/teams/${teamId}/status?status=${newStatus}`, { method: 'POST' }).then(r => r.json());
+        const res = await authFetch(`/api/v1/admin/teams/${teamId}/status?status=${newStatus}`, { method: 'POST' }).then(r => r.json());
         if (res.code === 200) {
           openTeamModal();
           loadDashboard();
@@ -1305,12 +1502,23 @@
     window.openTeamModal = openTeamModal;
     window.closeTeamModal = closeTeamModal;
     window.toggleTeamStatus = toggleTeamStatus;
+    window.handleLogin = handleLogin;
+    window.handleLogout = handleLogout;
+    window.exportCsv = exportCsv;
 
     document.addEventListener('DOMContentLoaded', () => {
       const card = document.getElementById('activeTeamsCard');
       if (card) card.onclick = openTeamModal;
       const btn = document.getElementById('btnOpenTeamModalHeader');
       if (btn) btn.onclick = openTeamModal;
+
+      const token = getAdminToken();
+      if (token) {
+        hideLoginModal();
+        loadDashboard();
+      } else {
+        showLoginModal();
+      }
     });
 
     // Auto-update clock
@@ -1318,9 +1526,6 @@
       const now = new Date();
       document.getElementById('currentTime').innerText = now.toLocaleString('zh-CN');
     }, 1000);
-
-    // Initial Load
-    loadDashboard();
   </script>
 </body>
 </html>
