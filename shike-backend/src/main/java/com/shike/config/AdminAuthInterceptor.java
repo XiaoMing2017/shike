@@ -27,8 +27,20 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
         }
 
         String requestURI = request.getRequestURI();
-        // Allow static resources and login endpoint
-        if (requestURI.startsWith("/admin/") || requestURI.equals("/api/v1/admin/login") || requestURI.equals("/api/v1/admin/check-auth")) {
+        String servletPath = request.getServletPath();
+
+        // 放行静态资源（HTML、CSS、JS、图片等）与登录、状态检查端点
+        if (requestURI.endsWith(".html") 
+                || requestURI.endsWith(".css") 
+                || requestURI.endsWith(".js") 
+                || requestURI.endsWith(".png") 
+                || requestURI.endsWith(".jpg") 
+                || requestURI.endsWith(".ico")
+                || requestURI.contains("/admin/index.html")
+                || servletPath.equals("/admin/login")
+                || servletPath.equals("/admin/check-auth")
+                || requestURI.endsWith("/login")
+                || requestURI.endsWith("/check-auth")) {
             return true;
         }
 
@@ -54,7 +66,7 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
             }
         }
 
-        log.warn("Unauthorized access attempt to {}", requestURI);
+        log.warn("Unauthorized access attempt to {} (servletPath: {})", requestURI, servletPath);
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json;charset=UTF-8");
         ResultDTO<Void> errorResult = ResultDTO.error(401, "请先登录管理后台");

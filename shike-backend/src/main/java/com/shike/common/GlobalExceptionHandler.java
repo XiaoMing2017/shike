@@ -35,6 +35,12 @@ public class GlobalExceptionHandler {
         return ResultDTO.error(400, msg);
     }
 
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ResultDTO<?> handleNoResourceFoundException(Exception e) {
+        log.warn("No static resource found: {}", e.getMessage());
+        return ResultDTO.error(404, "请求的资源或接口不存在: " + e.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResultDTO<?> handleException(Exception e) {
         log.error("Internal Server Error: ", e);

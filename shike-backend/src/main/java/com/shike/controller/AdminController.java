@@ -17,54 +17,54 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping({"/admin", "/api/v1/admin"})
 @RequiredArgsConstructor
 public class AdminController {
 
     private final AdminService adminService;
 
-    @PostMapping("/login")
+    @PostMapping({"/login", "/api/v1/admin/login"})
     public ResultDTO<AdminLoginDTO> login(@RequestBody AdminLoginDTO loginDTO) {
         return ResultDTO.success(adminService.login(loginDTO));
     }
 
-    @GetMapping("/check-auth")
+    @GetMapping({"/check-auth", "/api/v1/admin/check-auth"})
     public ResultDTO<String> checkAuth() {
         return ResultDTO.success("Authenticated");
     }
 
-    @PostMapping("/logout")
+    @PostMapping({"/logout", "/api/v1/admin/logout"})
     public ResultDTO<Void> logout() {
         return ResultDTO.success();
     }
 
-    @GetMapping("/stats")
+    @GetMapping({"/stats", "/api/v1/admin/stats"})
     public ResultDTO<AdminStatsDTO> getDashboardStats() {
         return ResultDTO.success(adminService.getDashboardStats());
     }
 
-    @GetMapping("/users")
+    @GetMapping({"/users", "/api/v1/admin/users"})
     public ResultDTO<List<AdminUserDTO>> getAllUsers() {
         return ResultDTO.success(adminService.getAllUsers());
     }
 
-    @GetMapping("/users/{userId}/records")
+    @GetMapping({"/users/{userId}/records", "/api/v1/admin/users/{userId}/records"})
     public ResultDTO<UserDetailRecordsDTO> getUserDetailRecords(@PathVariable Long userId) {
         return ResultDTO.success(adminService.getUserDetailRecords(userId));
     }
 
-    @GetMapping("/teams")
+    @GetMapping({"/teams", "/api/v1/admin/teams"})
     public ResultDTO<List<AdminTeamDTO>> getAllTeams() {
         return ResultDTO.success(adminService.getAllTeams());
     }
 
-    @PostMapping("/teams/{teamId}/status")
+    @PostMapping({"/teams/{teamId}/status", "/api/v1/admin/teams/{teamId}/status"})
     public ResultDTO<Void> updateTeamStatus(@PathVariable Long teamId, @RequestParam String status) {
         adminService.updateTeamStatus(teamId, status);
         return ResultDTO.success();
     }
 
-    @GetMapping("/export/users")
+    @GetMapping({"/export/users", "/api/v1/admin/export/users"})
     public ResponseEntity<byte[]> exportUsersCsv() {
         String csvContent = adminService.exportUsersCsv();
         byte[] bytes = csvContent.getBytes(StandardCharsets.UTF_8);
@@ -75,7 +75,7 @@ public class AdminController {
                 .body(bytes);
     }
 
-    @GetMapping("/export/diets")
+    @GetMapping({"/export/diets", "/api/v1/admin/export/diets"})
     public ResponseEntity<byte[]> exportDietsCsv() {
         String csvContent = adminService.exportDietsCsv();
         byte[] bytes = csvContent.getBytes(StandardCharsets.UTF_8);

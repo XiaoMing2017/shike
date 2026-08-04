@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/plan")
+@RequestMapping({"/plan", "/api/v1/plan"})
 @RequiredArgsConstructor
 @Slf4j
 public class PlanController {
@@ -21,7 +21,7 @@ public class PlanController {
      * @param userId 用户ID
      * @param forceRefresh 是否强制重新生成 (默认 false)
      */
-    @GetMapping("/generate")
+    @GetMapping({"/generate", "/api/v1/plan/generate"})
     public ResultDTO<Map<String, Object>> generateOrGetPlan(
             @RequestParam Long userId,
             @RequestParam(defaultValue = "false") Boolean forceRefresh) {
