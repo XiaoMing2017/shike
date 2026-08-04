@@ -73,6 +73,7 @@ public class PlanServiceImpl implements PlanService {
             String prompt = buildExpertPrompt(user);
             String aiResponseJson = callTextLlm(prompt);
             planMap = parseAndCleanJson(aiResponseJson);
+            recordPlanAiUsage();
         } catch (Exception e) {
             log.error("AI Generation failed for user {}, fallback to template plan: {}", userId, e.getMessage());
             planMap = generateScientificFallbackPlan(user);
@@ -323,5 +324,15 @@ public class PlanServiceImpl implements PlanService {
 
         res.put("dietPlan", dietPlan);
         return res;
+    }
+
+    private void recordPlanAiUsage() {
+        try {
+            String todayStr = java.time.LocalDate.now().toString();
+            stringRedisTemplate.opsForValue().increment("shike:ai:plan:count:" + todayStr);
+            stringRedisTemplate.opsForValue().increment("shike:ai:plan:tokens:" + todayStr, 3500); // 平均约 3500 Tokens/次
+        } catch (Exception e) {
+            log.warn("Failed to record plan AI usage in Redis: {}", e.getMessage());
+        }
     }
 }

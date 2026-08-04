@@ -21,6 +21,10 @@ public class AdminStatsDTO {
     private Long totalPoints;
 
     private Double estimatedAiCost;
+    private Long totalAiTokens;
+    private Long todayMealAiRecognitions;
+    private Long todayPlanAiGenerations;
+    private String aiCostFormula;
     private List<AiTrendItem> aiTrend;
 
     @Data

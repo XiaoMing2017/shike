@@ -92,14 +92,17 @@ public class AdminServiceImpl implements AdminService {
         Long activeTeams = teamRepository.countByStatus("ACTIVE");
 
         // Sum AI recognitions across all users today & compute last 7 days trend
-        long todayAiRecognitions = 0;
+        long todayMealAiCount = 0;
+        long todayPlanAiCount = 0;
+        long totalHistoricalMealCount = 0;
+        long totalHistoricalPlanCount = 0;
         List<AdminStatsDTO.AiTrendItem> aiTrendList = new ArrayList<>();
-        long totalHistoricalAiCount = 0;
 
         for (int i = 6; i >= 0; i--) {
             LocalDate date = today.minusDays(i);
             String dateStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            long dayAiCount = 0;
+            long dayMealCount = 0;
+            long dayPlanCount = 0;
 
             try {
                 Set<String> keys = stringRedisTemplate.keys("shike:ai:limit:*:" + dateStr);
@@ -107,7 +110,7 @@ public class AdminServiceImpl implements AdminService {
                     for (String key : keys) {
                         String val = stringRedisTemplate.opsForValue().get(key);
                         if (val != null) {
-                            dayAiCount += Long.parseLong(val);
+                            dayMealCount += Long.parseLong(val);
                         }
                     }
                 }
@@ -115,24 +118,40 @@ public class AdminServiceImpl implements AdminService {
                 log.warn("Failed to query Redis AI recognition keys for {}: {}", dateStr, e.getMessage());
             }
 
-            // Fallback: If Redis is cleared, estimate from DB diet records
-            if (dayAiCount == 0) {
-                dayAiCount = dietRecordRepository.countByRecordDate(date);
+            try {
+                String planVal = stringRedisTemplate.opsForValue().get("shike:ai:plan:count:" + dateStr);
+                if (planVal != null) {
+                    dayPlanCount = Long.parseLong(planVal);
+                }
+            } catch (Exception ignored) {}
+
+            if (dayMealCount == 0) {
+                dayMealCount = dietRecordRepository.countByRecordDate(date);
             }
 
             if (i == 0) {
-                todayAiRecognitions = dayAiCount;
+                todayMealAiCount = dayMealCount;
+                todayPlanAiCount = dayPlanCount;
             }
 
-            totalHistoricalAiCount += dayAiCount;
+            totalHistoricalMealCount += dayMealCount;
+            totalHistoricalPlanCount += dayPlanCount;
+
             aiTrendList.add(AdminStatsDTO.AiTrendItem.builder()
                     .date(date.format(DateTimeFormatter.ofPattern("MM-dd")))
-                    .count(dayAiCount)
+                    .count(dayMealCount + dayPlanCount)
                     .build());
         }
 
-        // Estimated Cost (0.02 CNY per AI Vision Request)
-        double estimatedCost = Math.round(totalHistoricalAiCount * 0.02 * 100.0) / 100.0;
+        long todayAiRecognitions = todayMealAiCount + todayPlanAiCount;
+        long totalHistoricalAiCount = totalHistoricalMealCount + totalHistoricalPlanCount;
+        long totalAiTokens = (totalHistoricalMealCount * 2000L) + (totalHistoricalPlanCount * 3500L);
+
+        // 估算成本 (按平均 1,000 Tokens ￥0.015 算法)
+        double estimatedCost = Math.round((totalAiTokens / 1000.0 * 0.015) * 100.0) / 100.0;
+        if (estimatedCost == 0.0 && totalHistoricalAiCount > 0) {
+            estimatedCost = Math.round(totalHistoricalAiCount * 0.02 * 100.0) / 100.0;
+        }
 
         // Calculate distinct active users today (DAU)
         Set<Long> activeUserIds = new HashSet<>();
@@ -171,11 +190,15 @@ public class AdminServiceImpl implements AdminService {
                 .totalUsers(totalUsers)
                 .todayNewUsers(todayNewUsers)
                 .todayAiRecognitions(todayAiRecognitions)
+                .todayMealAiRecognitions(todayMealAiCount)
+                .todayPlanAiGenerations(todayPlanAiCount)
                 .todayDietRecords(todayDietRecords)
                 .todayActiveUsers(todayActiveUsers)
                 .activeTeams(activeTeams)
                 .totalPoints(totalPoints)
+                .totalAiTokens(totalAiTokens)
                 .estimatedAiCost(estimatedCost)
+                .aiCostFormula("膳食识别~2K Token/次，AI计划生成~3.5K Token/次 (按￥0.015/千Token估算)")
                 .aiTrend(aiTrendList)
                 .build();
     }

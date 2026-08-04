@@ -734,8 +734,11 @@
         <div class="status-dot"></div>
         <span id="currentTime">服务运行正常</span>
       </div>
-      <div style="font-size: 13px; color: var(--text-muted);">
-        管理员：<strong id="adminNameDisplay" style="color: #FFF;">未登录</strong>
+      <div style="font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
+        <span>管理员：<strong id="adminNameDisplay" style="color: #FFF;">未登录</strong></span>
+        <button class="btn-action" onclick="showLoginModal('请输入管理员凭证进行登录')" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #34D399; padding: 5px 10px; font-size: 12px;">
+          <i class="fa-solid fa-key"></i> 重新登录
+        </button>
       </div>
       <button class="btn-action" onclick="handleLogout()" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #F87171; padding: 6px 12px;">
         <i class="fa-solid fa-right-from-bracket"></i> 退出
@@ -761,10 +764,19 @@
     </div>
     <div class="metric-card">
       <div class="metric-header">
-        <span>今日 AI 识别总次数</span>
+        <span>今日 AI 模型总调用数</span>
         <div class="metric-icon icon-purple"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
       </div>
       <div class="metric-val" id="todayAiRecognitions">-</div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;" id="aiBreakdownSub">膳食识别: - | 计划生成: -</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-header">
+        <span>AI Token 累计消耗</span>
+        <div class="metric-icon icon-blue"><i class="fa-solid fa-brain"></i></div>
+      </div>
+      <div class="metric-val" id="totalAiTokens" style="color: #60A5FA;">-</div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">多模态 Vision + 文本 LLM</div>
     </div>
     <div class="metric-card">
       <div class="metric-header">
@@ -772,6 +784,7 @@
         <div class="metric-icon icon-orange"><i class="fa-solid fa-calculator"></i></div>
       </div>
       <div class="metric-val" id="estimatedAiCost" style="color: #F97316;">￥ 0.00</div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;" id="aiCostFormulaSub">按千 Token ￥0.015 算法</div>
     </div>
     <div class="metric-card">
       <div class="metric-header">
@@ -1027,14 +1040,20 @@
 
       const res = await fetch(url, options);
       if (res.status === 401) {
-        showLoginModal();
+        setAdminToken('', '');
+        showLoginModal('登录凭证不存在或已过期，请重新登录');
         throw new Error('Unauthorized');
       }
       return res;
     }
 
-    function showLoginModal() {
+    function showLoginModal(msg) {
       document.getElementById('loginModal').classList.add('active');
+      if (msg) {
+        const errBox = document.getElementById('loginErrorMsg');
+        errBox.innerText = msg;
+        errBox.style.display = 'block';
+      }
     }
 
     function hideLoginModal() {
@@ -1117,27 +1136,50 @@
     // Fetch Dashboard Stats & User List
     async function loadDashboard() {
       try {
-        const [statsRes, usersRes] = await Promise.all([
-          authFetch('/api/v1/admin/stats').then(res => res.json()),
-          authFetch('/api/v1/admin/users').then(res => res.json())
-        ]);
+        let statsRes = null;
+        let usersRes = null;
 
-        if (statsRes.code === 200) {
+        try {
+          statsRes = await authFetch('/api/v1/admin/stats').then(res => res.json());
+        } catch (e) {
+          console.warn('Stats fetch skipped/unauthorized:', e);
+        }
+
+        try {
+          usersRes = await authFetch('/api/v1/admin/users').then(res => res.json());
+        } catch (e) {
+          console.warn('Users fetch skipped/unauthorized:', e);
+        }
+
+        if (statsRes && statsRes.code === 200) {
           const stats = statsRes.data;
           document.getElementById('totalUsers').innerText = stats.totalUsers || 0;
           document.getElementById('todayNewUsers').innerText = stats.todayNewUsers || 0;
           document.getElementById('todayAiRecognitions').innerText = stats.todayAiRecognitions || 0;
-          document.getElementById('todayDietRecords').innerText = stats.todayDietRecords || 0;
+          document.getElementById('aiBreakdownSub').innerText = `膳食识别: ${stats.todayMealAiRecognitions || 0} | 计划生成: ${stats.todayPlanAiGenerations || 0}`;
+          
+          const tokens = stats.totalAiTokens || 0;
+          const tokenStr = tokens >= 1000 ? (tokens / 1000).toFixed(1) + 'k Tokens' : tokens + ' Tokens';
+          document.getElementById('totalAiTokens').innerText = tokenStr;
+
           document.getElementById('todayActiveUsers').innerText = stats.todayActiveUsers || 0;
           document.getElementById('activeTeams').innerText = stats.activeTeams || 0;
           document.getElementById('estimatedAiCost').innerText = `￥ ${(stats.estimatedAiCost || 0).toFixed(2)}`;
+          if (stats.aiCostFormula) {
+            document.getElementById('aiCostFormulaSub').innerText = stats.aiCostFormula;
+          }
 
           renderAiTrendChart(stats.aiTrend);
         }
 
-        if (usersRes.code === 200) {
+        if (usersRes && usersRes.code === 200) {
           rawUserData = usersRes.data || [];
           renderUserTable(rawUserData);
+        } else if (!usersRes || usersRes.code === 401) {
+          document.getElementById('userTableBody').innerHTML = 
+            '<tr><td colspan="8" class="empty-tip" style="color:var(--danger);"><i class="fa-solid fa-lock"></i> 未授权或登录凭证已过期，请完成身份验证。<button class="btn-action" onclick="showLoginModal(\'请先验证身份\')" style="margin-left:12px; font-size:12px;"><i class="fa-solid fa-key"></i> 弹出登录框</button></td></tr>';
+          document.getElementById('aiTrendBarContainer').innerHTML = 
+            '<div class="empty-tip" style="width:100%; color:var(--text-muted);">等待验证管理员权限后自动刷新...</div>';
         }
       } catch (err) {
         console.error('Failed to load admin data:', err);
@@ -1670,6 +1712,9 @@
     window.toggleTeamStatus = toggleTeamStatus;
     window.handleLogin = handleLogin;
     window.handleLogout = handleLogout;
+    window.showLoginModal = showLoginModal;
+    window.hideLoginModal = hideLoginModal;
+    window.loadDashboard = loadDashboard;
     window.exportCsv = exportCsv;
 
     document.addEventListener('DOMContentLoaded', () => {
