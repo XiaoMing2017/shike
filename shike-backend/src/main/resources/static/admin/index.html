@@ -464,6 +464,59 @@
       color: var(--primary);
     }
 
+    /* 🎯 专属 AI 计划管理后台样式 */
+    .plan-admin-summary {
+      background: rgba(99, 102, 241, 0.12);
+      border-left: 4px solid #6366F1;
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #E2E8F0;
+    }
+
+    .plan-section-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #F8FAFC;
+      margin: 16px 0 10px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .workout-day-admin-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+
+    .workout-day-admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: #38BDF8;
+      margin-bottom: 8px;
+    }
+
+    .diet-admin-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+
+    .diet-admin-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
     .food-card-list {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -861,6 +914,7 @@
           <button class="tab-btn active" onclick="switchTab('diet')">🍽️ 饮食记录</button>
           <button class="tab-btn" onclick="switchTab('exercise')">🏃 运动与水份</button>
           <button class="tab-btn" onclick="switchTab('team')">🏆 减脂小队打卡</button>
+          <button class="tab-btn" onclick="switchTab('plan')">🎯 专属 AI 计划</button>
         </div>
 
         <!-- Diet Records Content -->
@@ -881,6 +935,13 @@
         <div id="tabTeam" class="tab-content" style="display: none;">
           <div id="teamCheckinList">
             <div class="empty-tip">暂无小队打卡记录</div>
+          </div>
+        </div>
+
+        <!-- AI Plan Content -->
+        <div id="tabPlan" class="tab-content" style="display: none;">
+          <div id="planContentBox">
+            <div class="empty-tip">点击上方标签即可实时读取/生成该用户的 AI 运动与膳食计划</div>
           </div>
         </div>
       </div>
@@ -1313,6 +1374,111 @@
       document.getElementById('tabDiet').style.display = tab === 'diet' ? 'block' : 'none';
       document.getElementById('tabExercise').style.display = tab === 'exercise' ? 'block' : 'none';
       document.getElementById('tabTeam').style.display = tab === 'team' ? 'block' : 'none';
+      document.getElementById('tabPlan').style.display = tab === 'plan' ? 'block' : 'none';
+
+      if (tab === 'plan' && currentDetailRecords && currentDetailRecords.user) {
+        loadUserAiPlan(currentDetailRecords.user.id, false);
+      }
+    }
+
+    async function loadUserAiPlan(userId, forceRefresh = false) {
+      const box = document.getElementById('planContentBox');
+      if (forceRefresh || box.innerText.includes('点击上方标签') || box.innerText.includes('暂无')) {
+        box.innerHTML = '<div class="empty-tip">🤖 运营系统正在调用 RD/CSCS AI 专家模型推算/读取计划...</div>';
+      }
+
+      try {
+        const res = await authFetch(`/api/v1/plan/generate?userId=${userId}&forceRefresh=${forceRefresh}`).then(r => r.json());
+        if (res.code === 200 && res.data) {
+          renderUserAiPlan(res.data, userId);
+        } else {
+          box.innerHTML = `<div class="empty-tip" style="color: var(--danger);">加载 AI 计划失败: ${res.message || '未知错误'}</div>`;
+        }
+      } catch (err) {
+        console.error('Failed to load user AI plan:', err);
+        box.innerHTML = '<div class="empty-tip" style="color: var(--danger);">网络异常，无法获取计划</div>';
+      }
+    }
+
+    function renderUserAiPlan(plan, userId) {
+      const box = document.getElementById('planContentBox');
+      const overview = plan.nutritionOverview || {};
+      const workout = plan.workoutPlan || [];
+      const diet = plan.dietPlan || {};
+
+      let html = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <div>
+            <span style="font-size: 14px; font-weight: 700; color: var(--primary);">🎯 目标分配热量: ${overview.targetCal || '-'} kcal</span>
+            <span style="font-size: 12px; color: var(--text-muted); margin-left: 12px;">(蛋白 ${overview.proteinG || '-'}g | 碳水 ${overview.carbsG || '-'}g | 脂肪 ${overview.fatG || '-'}g)</span>
+          </div>
+          <button class="btn btn-outline" style="font-size: 12px; padding: 6px 14px;" onclick="loadUserAiPlan(${userId}, true)">🤖 运营帮该用户重新生成</button>
+        </div>
+      `;
+
+      if (plan.summary) {
+        html += `
+          <div class="plan-admin-summary">
+            <div style="font-weight: 700; font-size: 14px; margin-bottom: 4px; color: #818CF8;">🩺 RD / CSCS 专家诊断点评与规划：</div>
+            ${plan.summary}
+          </div>
+        `;
+      }
+
+      html += `<div class="plan-section-title">🏋️ 7天运动安排周计划 (共 ${workout.length} 天)</div>`;
+      if (workout.length > 0) {
+        html += workout.map(w => {
+          const itemsHtml = (w.items || []).map(i => `
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; margin-top: 6px; padding: 6px 10px; background: rgba(255,255,255,0.03); border-radius: 6px;">
+              <span><strong style="color: #F8FAFC;">${i.name}</strong> (${i.duration}分钟)</span>
+              <span style="color: #10B981; font-weight: 600;">+${i.calories} kcal</span>
+            </div>
+            ${i.detail ? `<div style="font-size: 11px; color: #94A3B8; margin-left: 10px; margin-top: 2px;">💡 ${i.detail}</div>` : ''}
+          `).join('');
+
+          return `
+            <div class="workout-day-admin-card">
+              <div class="workout-day-admin-header">
+                <span>${w.day} · ${w.focus}</span>
+                ${w.isRestDay ? '<span class="badge badge-team" style="background: rgba(245, 158, 11, 0.2); color: #F59E0B;">😴 恢复日</span>' : ''}
+              </div>
+              ${itemsHtml}
+            </div>
+          `;
+        }).join('');
+      } else {
+        html += '<div class="empty-tip">暂无运动计划数据</div>';
+      }
+
+      html += `<div class="plan-section-title" style="margin-top: 24px;">🥗 每日四餐膳食配比建议</div>`;
+      html += '<div class="diet-admin-grid">';
+      
+      const mealKeys = [
+        { key: 'breakfast', label: '🌅 早餐' },
+        { key: 'lunch', label: '☀️ 午餐' },
+        { key: 'dinner', label: '🌙 晚餐' },
+        { key: 'snack', label: '🥤 加餐' }
+      ];
+
+      mealKeys.forEach(m => {
+        const item = diet[m.key];
+        if (item) {
+          const foodsHtml = (item.foods || []).map(f => `<span style="font-size: 11px; background: rgba(255,255,255,0.06); padding: 3px 8px; border-radius: 4px; margin-right: 4px; margin-top: 4px; display: inline-block;">${f}</span>`).join('');
+          html += `
+            <div class="diet-admin-card">
+              <div style="font-size: 13px; font-weight: 700; color: #F8FAFC; margin-bottom: 6px; display: flex; justify-content: space-between;">
+                <span>${m.label} · ${item.title || ''}</span>
+                <span style="color: #6366F1;">${item.calories || 0} kcal</span>
+              </div>
+              ${item.portionHint ? `<div style="font-size: 11px; color: #F59E0B; background: rgba(245,158,11,0.1); padding: 3px 8px; border-radius: 4px; margin-bottom: 8px; display: inline-block;">✋ ${item.portionHint}</div>` : ''}
+              <div>${foodsHtml}</div>
+            </div>
+          `;
+        }
+      });
+      html += '</div>';
+
+      box.innerHTML = html;
     }
 
     function closeModal() {
