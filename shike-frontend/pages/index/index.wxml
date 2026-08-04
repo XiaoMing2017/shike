@@ -1,4 +1,4 @@
-<view class="container">
+<view class="container {{(showPlanModal || showWaterSheet || showNutritionModal || showAiResultModal || showExerciseModal || showMealOptionSheet || showOilOptionSheet || showViewModeSheet) ? 'page-lock' : ''}}">
   <!-- 0. 顶部导航/状态栏 -->
   <view class="app-header flex justify-between align-center">
     <view class="header-icon-btn" catchtap="showViewModeModal">
@@ -578,7 +578,7 @@
   </view>
 
   <!-- 🎯 专属 AI 运动与饮食计划弹窗 (全景专业风) -->
-  <view class="modal-backdrop {{showPlanModal ? 'active' : ''}}" catchtap="closePlanModal">
+  <view class="modal-backdrop {{showPlanModal ? 'active' : ''}}" catchtap="closePlanModal" catchtouchmove="preventBubble">
     <view class="modal-dialog plan-modal-dialog" catchtap="preventBubble">
       <view class="modal-header flex justify-between align-center">
         <view class="flex align-center" style="gap: 12rpx;">

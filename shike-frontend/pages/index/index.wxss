@@ -7,6 +7,11 @@
   box-sizing: border-box;
 }
 
+.container.page-lock {
+  height: 100vh;
+  overflow: hidden;
+}
+
 /* 0. 顶部导航/状态栏 */
 .app-header {
   width: 100%;
