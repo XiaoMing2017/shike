@@ -52,7 +52,7 @@ public class DietServiceImpl implements DietService {
     @Value("${ai.endpoint:https://api.openai.com/v1/chat/completions}")
     private String aiEndpoint;
 
-    @Value("${ai.model:gpt-4o-mini}")
+    @Value("${ai.diet-model:${ai.model:qwen3.6-flash}}")
     private String aiModel;
 
     @Value("${ai.timeout-ms:120000}")
