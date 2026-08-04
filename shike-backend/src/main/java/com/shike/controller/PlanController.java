@@ -21,7 +21,7 @@ public class PlanController {
      * @param userId 用户ID
      * @param forceRefresh 是否强制重新生成 (默认 false)
      */
-    @GetMapping({"/generate", "/api/v1/plan/generate"})
+    @GetMapping("/generate")
     public ResultDTO<Map<String, Object>> generateOrGetPlan(
             @RequestParam Long userId,
             @RequestParam(defaultValue = "false") Boolean forceRefresh) {

@@ -71,6 +71,9 @@ public class User {
     @Column(name = "current_body_fat", precision = 4, scale = 1)
     private BigDecimal currentBodyFat;
 
+    @Column(length = 20, columnDefinition = "varchar(20) default 'ENABLED'")
+    private String status; // ENABLED, DISABLED
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

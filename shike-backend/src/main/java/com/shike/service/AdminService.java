@@ -18,4 +18,10 @@ public interface AdminService {
     AdminLoginDTO login(AdminLoginDTO loginDTO);
     String exportUsersCsv();
     String exportDietsCsv();
+
+    void updateUserStatus(Long userId, String status, String adminUsername);
+    void updateUserPoints(Long userId, Integer pointsDelta, String remark, String adminUsername);
+    void updateGlobalAiLimit(Integer limit, String adminUsername);
+    List<com.shike.model.entity.PointLog> getUserPointLogs(Long userId);
+    List<com.shike.model.entity.AdminAuditLog> getAuditLogs();
 }

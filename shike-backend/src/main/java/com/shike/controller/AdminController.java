@@ -64,6 +64,34 @@ public class AdminController {
         return ResultDTO.success();
     }
 
+    @PostMapping({"/users/{userId}/status", "/api/v1/admin/users/{userId}/status"})
+    public ResultDTO<Void> updateUserStatus(@PathVariable Long userId, @RequestParam String status) {
+        adminService.updateUserStatus(userId, status, "admin");
+        return ResultDTO.success();
+    }
+
+    @PostMapping({"/users/{userId}/points", "/api/v1/admin/users/{userId}/points"})
+    public ResultDTO<Void> updateUserPoints(@PathVariable Long userId, @RequestParam Integer pointsDelta, @RequestParam(required = false) String remark) {
+        adminService.updateUserPoints(userId, pointsDelta, remark, "admin");
+        return ResultDTO.success();
+    }
+
+    @PostMapping({"/config/ai-limit", "/api/v1/admin/config/ai-limit"})
+    public ResultDTO<Void> updateGlobalAiLimit(@RequestParam Integer limit) {
+        adminService.updateGlobalAiLimit(limit, "admin");
+        return ResultDTO.success();
+    }
+
+    @GetMapping({"/users/{userId}/point-logs", "/api/v1/admin/users/{userId}/point-logs"})
+    public ResultDTO<List<com.shike.model.entity.PointLog>> getUserPointLogs(@PathVariable Long userId) {
+        return ResultDTO.success(adminService.getUserPointLogs(userId));
+    }
+
+    @GetMapping({"/audit-logs", "/api/v1/admin/audit-logs"})
+    public ResultDTO<List<com.shike.model.entity.AdminAuditLog>> getAuditLogs() {
+        return ResultDTO.success(adminService.getAuditLogs());
+    }
+
     @GetMapping({"/export/users", "/api/v1/admin/export/users"})
     public ResponseEntity<byte[]> exportUsersCsv() {
         String csvContent = adminService.exportUsersCsv();

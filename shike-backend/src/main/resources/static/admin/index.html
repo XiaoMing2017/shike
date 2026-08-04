@@ -736,6 +736,9 @@
       </div>
       <div style="font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
         <span>管理员：<strong id="adminNameDisplay" style="color: #FFF;">未登录</strong></span>
+        <button class="btn-action" onclick="openAuditLogModal()" style="background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); color: #C4B5FD; padding: 5px 10px; font-size: 12px;">
+          <i class="fa-solid fa-clipboard-list"></i> 安全审计日志
+        </button>
         <button class="btn-action" onclick="showLoginModal('请输入管理员凭证进行登录')" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #34D399; padding: 5px 10px; font-size: 12px;">
           <i class="fa-solid fa-key"></i> 重新登录
         </button>
@@ -755,13 +758,31 @@
       </div>
       <div class="metric-val" id="totalUsers">-</div>
     </div>
-    <div class="metric-card">
+
+    <!-- 可点击：今日新增注册 -->
+    <div class="metric-card metric-clickable" onclick="openTrendModal('registration')" title="点击查看近7天新增注册增长趋势">
       <div class="metric-header">
         <span>今日新增注册</span>
         <div class="metric-icon icon-blue"><i class="fa-solid fa-user-plus"></i></div>
       </div>
-      <div class="metric-val" id="todayNewUsers">-</div>
+      <div class="metric-val-group" style="display:flex; justify-content:space-between; align-items:flex-end;">
+        <div class="metric-val" id="todayNewUsers">-</div>
+        <span class="click-hint-badge" style="color: #34D399; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3);"><i class="fa-solid fa-chart-line"></i> 注册趋势 <i class="fa-solid fa-chevron-right"></i></span>
+      </div>
     </div>
+
+    <!-- 可点击：用户留存分析看板 -->
+    <div class="metric-card metric-clickable" onclick="openTrendModal('retention')" title="点击查看近7天用户留存率 (次留/7留) Cohort 分析">
+      <div class="metric-header">
+        <span>用户留存分析 (次留/7留)</span>
+        <div class="metric-icon icon-purple"><i class="fa-solid fa-chart-pie"></i></div>
+      </div>
+      <div class="metric-val-group" style="display:flex; justify-content:space-between; align-items:flex-end;">
+        <div class="metric-val" id="todayRetentionRate" style="color: #C4B5FD;">- %</div>
+        <span class="click-hint-badge" style="color: #C4B5FD; background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.3);"><i class="fa-solid fa-chart-pie"></i> 留存看板 <i class="fa-solid fa-chevron-right"></i></span>
+      </div>
+    </div>
+
     <div class="metric-card">
       <div class="metric-header">
         <span>今日 AI 模型总调用数</span>
@@ -770,6 +791,22 @@
       <div class="metric-val" id="todayAiRecognitions">-</div>
       <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;" id="aiBreakdownSub">膳食识别: - | 计划生成: -</div>
     </div>
+
+    <!-- 动态 AI 配额管理卡片 -->
+    <div class="metric-card">
+      <div class="metric-header">
+        <span>全局 AI 每日限制次数</span>
+        <div class="metric-icon icon-orange"><i class="fa-solid fa-sliders"></i></div>
+      </div>
+      <div class="metric-val-group" style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="metric-val" id="globalAiLimitDisplay" style="color: #FBBF24;">10 次</div>
+        <button class="btn-action" onclick="changeGlobalAiLimit()" style="padding: 4px 10px; font-size: 11px; background: rgba(245, 158, 11, 0.2); border: 1px solid rgba(245, 158, 11, 0.4); color: #FBBF24;">
+          <i class="fa-solid fa-pen-to-square"></i> 修改配额
+        </button>
+      </div>
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">普通用户每日动态识别配额</div>
+    </div>
+
     <div class="metric-card">
       <div class="metric-header">
         <span>AI Token 累计消耗</span>
@@ -786,19 +823,25 @@
       <div class="metric-val" id="estimatedAiCost" style="color: #F97316;">￥ 0.00</div>
       <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;" id="aiCostFormulaSub">按千 Token ￥0.015 算法</div>
     </div>
-    <div class="metric-card">
+
+    <!-- 可点击：今日用户活跃度 -->
+    <div class="metric-card metric-clickable" onclick="openTrendModal('dau')" title="点击查看近7天用户活跃度 (DAU) 趋势">
       <div class="metric-header">
         <span>今日用户活跃度 (DAU)</span>
         <div class="metric-icon icon-green"><i class="fa-solid fa-bolt"></i></div>
       </div>
-      <div class="metric-val" id="todayActiveUsers">-</div>
+      <div class="metric-val-group" style="display:flex; justify-content:space-between; align-items:flex-end;">
+        <div class="metric-val" id="todayActiveUsers">-</div>
+        <span class="click-hint-badge" style="color: #60A5FA; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3);"><i class="fa-solid fa-chart-line"></i> 活跃趋势 <i class="fa-solid fa-chevron-right"></i></span>
+      </div>
     </div>
+
     <div class="metric-card metric-clickable" id="activeTeamsCard" onclick="openTeamModal()" title="点击查看所有队伍名称及成员明细">
       <div class="metric-header">
         <span>活跃减脂小队</span>
         <div class="metric-icon icon-blue"><i class="fa-solid fa-trophy"></i></div>
       </div>
-      <div class="metric-val-group" style="display:flex; justify-space-between; align-items:flex-end;">
+      <div class="metric-val-group" style="display:flex; justify-content:space-between; align-items:flex-end;">
         <div class="metric-val" id="activeTeams">-</div>
         <span class="click-hint-badge"><i class="fa-solid fa-users"></i> 查看队伍与成员 <i class="fa-solid fa-chevron-right"></i></span>
       </div>
@@ -850,16 +893,115 @@
             <th>今日 AI 使用次数</th>
             <th>累计打卡数 (膳食/运动)</th>
             <th>契约积分</th>
+            <th>账号状态</th>
             <th>注册时间</th>
             <th>操作</th>
           </tr>
         </thead>
         <tbody id="userTableBody">
           <tr>
-            <td colspan="8" class="empty-tip">正在加载用户数据...</td>
+            <td colspan="9" class="empty-tip">正在加载用户数据...</td>
           </tr>
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- Trend Chart Modal -->
+  <div class="modal-overlay" id="trendModal">
+    <div class="modal-box" style="width: 600px; max-width: 92vw; padding: 24px;">
+      <div class="modal-header" style="margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div id="trendModalIconBox" style="width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; background: rgba(59, 130, 246, 0.15); color: #3B82F6;">
+            <i class="fa-solid fa-chart-line" id="trendModalIcon"></i>
+          </div>
+          <div>
+            <h3 id="trendModalTitle" style="font-size: 17px; font-weight: 700; color: #FFF; margin: 0;">近 7 天趋势图</h3>
+            <span id="trendModalSubtitle" style="font-size: 12px; color: var(--text-muted);">历史数据可视化分析</span>
+          </div>
+        </div>
+        <button class="btn-action" onclick="closeTrendModal()" style="background: rgba(255,255,255,0.06); border: 1px solid var(--card-border); padding: 6px 12px; font-size: 13px;">
+          <i class="fa-solid fa-xmark"></i> 关闭
+        </button>
+      </div>
+
+      <div style="padding: 16px; background: rgba(15, 23, 42, 0.5); border-radius: 14px; border: 1px solid var(--card-border); margin-bottom: 20px;">
+        <div id="modalTrendContainer" style="display: flex; align-items: flex-end; gap: 18px; height: 160px; padding-top: 20px; justify-content: space-around;">
+          <div class="empty-tip" style="width: 100%;">数据加载中...</div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.4); padding: 12px 16px; border-radius: 10px; font-size: 12px; color: var(--text-muted);">
+        <span id="trendModalFooterTip">💡 柱状图展示近 7 天分布变化趋势</span>
+        <button class="btn-action" onclick="closeTrendModal()" style="padding: 6px 16px; font-size: 12px; background: var(--primary);">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Adjust Points Modal -->
+  <div class="modal-overlay" id="pointsModal">
+    <div class="modal-box" style="width: 440px; max-width: 90vw; padding: 24px;">
+      <div class="modal-header" style="margin-bottom: 18px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(16, 185, 129, 0.15); color: #10B981; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+            <i class="fa-solid fa-coins"></i>
+          </div>
+          <div>
+            <h3 style="font-size: 16px; font-weight: 700; color: #FFF; margin: 0;">手动调整用户积分</h3>
+            <span id="pointsModalSubtitle" style="font-size: 12px; color: var(--text-muted);">针对指定用户增减契约积分</span>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closePointsModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div style="margin-bottom: 14px;">
+        <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">积分变动数值 (如: +100 或 -50)</label>
+        <input type="number" id="pointsDeltaInput" placeholder="输入整数, 增加填写正数, 扣除填写负数" style="width: 100%; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--card-border); padding: 10px 14px; border-radius: 10px; color: #FFF; font-size: 14px; outline: none;">
+      </div>
+      <div style="margin-bottom: 18px;">
+        <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">调整原因 / 备注</label>
+        <input type="text" id="pointsRemarkInput" placeholder="例如: 平台活动奖励 / 违规扣除" style="width: 100%; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--card-border); padding: 10px 14px; border-radius: 10px; color: #FFF; font-size: 14px; outline: none;">
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn-action" onclick="closePointsModal()" style="background: transparent; border: 1px solid var(--card-border);">取消</button>
+        <button class="btn-action" onclick="submitPointsAdjustment()" style="background: linear-gradient(135deg, #10B981, #059669);"><i class="fa-solid fa-check"></i> 确认更新积分</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audit Log Modal -->
+  <div class="modal-overlay" id="auditLogModal">
+    <div class="modal-box" style="width: 840px; max-width: 95vw; padding: 24px;">
+      <div class="modal-header" style="margin-bottom: 18px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(139, 92, 246, 0.15); color: #C4B5FD; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+            <i class="fa-solid fa-clipboard-list"></i>
+          </div>
+          <div>
+            <h3 style="font-size: 17px; font-weight: 700; color: #FFF; margin: 0;">管理员敏感调控操作审计日志</h3>
+            <span style="font-size: 12px; color: var(--text-muted);">全量安全追溯（包含封禁解封、积分调整、AI限额修改等操作）</span>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeAuditLogModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="table-responsive" style="max-height: 60vh; overflow-y: auto; background: rgba(15, 23, 42, 0.4); border-radius: 12px; border: 1px solid var(--card-border);">
+        <table>
+          <thead>
+            <tr>
+              <th>时间</th>
+              <th>管理员账号</th>
+              <th>动作类型</th>
+              <th>操作目标</th>
+              <th>详细信息</th>
+            </tr>
+          </thead>
+          <tbody id="auditLogTableBody">
+            <tr><td colspan="5" class="empty-tip">正在加载日志记录...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -928,6 +1070,7 @@
           <button class="tab-btn" onclick="switchTab('exercise')">🏃 运动与水份</button>
           <button class="tab-btn" onclick="switchTab('team')">🏆 减脂小队打卡</button>
           <button class="tab-btn" onclick="switchTab('plan')">🎯 专属 AI 计划</button>
+          <button class="tab-btn" onclick="switchTab('points')">💰 积分变动流水</button>
         </div>
 
         <!-- Diet Records Content -->
@@ -955,6 +1098,13 @@
         <div id="tabPlan" class="tab-content" style="display: none;">
           <div id="planContentBox">
             <div class="empty-tip">点击上方标签即可实时读取/生成该用户的 AI 运动与膳食计划</div>
+          </div>
+        </div>
+
+        <!-- Point Logs Content -->
+        <div id="tabPoints" class="tab-content" style="display: none;">
+          <div id="pointLogList">
+            <div class="empty-tip">正在加载积分变动记录...</div>
           </div>
         </div>
       </div>
@@ -1015,6 +1165,7 @@
     let rawUserData = [];
     let currentDetailRecords = null;
     let currentModalAvatarUrl = '';
+    let cachedStats = null;
 
     function getAdminToken() {
       return localStorage.getItem('shike_admin_token') || '';
@@ -1153,6 +1304,7 @@
 
         if (statsRes && statsRes.code === 200) {
           const stats = statsRes.data;
+          cachedStats = stats;
           document.getElementById('totalUsers').innerText = stats.totalUsers || 0;
           document.getElementById('todayNewUsers').innerText = stats.todayNewUsers || 0;
           document.getElementById('todayAiRecognitions').innerText = stats.todayAiRecognitions || 0;
@@ -1169,6 +1321,14 @@
             document.getElementById('aiCostFormulaSub').innerText = stats.aiCostFormula;
           }
 
+          if (document.getElementById('globalAiLimitDisplay')) {
+            document.getElementById('globalAiLimitDisplay').innerText = (stats.globalAiLimit || 10) + ' 次';
+          }
+          if (document.getElementById('todayRetentionRate') && stats.retentionStats && stats.retentionStats.length > 0) {
+            const lastRet = stats.retentionStats[stats.retentionStats.length - 1];
+            document.getElementById('todayRetentionRate').innerText = (lastRet.day1Rate || 0) + ' %';
+          }
+
           renderAiTrendChart(stats.aiTrend);
         }
 
@@ -1177,7 +1337,7 @@
           renderUserTable(rawUserData);
         } else if (!usersRes || usersRes.code === 401) {
           document.getElementById('userTableBody').innerHTML = 
-            '<tr><td colspan="8" class="empty-tip" style="color:var(--danger);"><i class="fa-solid fa-lock"></i> 未授权或登录凭证已过期，请完成身份验证。<button class="btn-action" onclick="showLoginModal(\'请先验证身份\')" style="margin-left:12px; font-size:12px;"><i class="fa-solid fa-key"></i> 弹出登录框</button></td></tr>';
+            '<tr><td colspan="9" class="empty-tip" style="color:var(--danger);"><i class="fa-solid fa-lock"></i> 未授权或登录凭证已过期，请完成身份验证。<button class="btn-action" onclick="showLoginModal(\'请先验证身份\')" style="margin-left:12px; font-size:12px;"><i class="fa-solid fa-key"></i> 弹出登录框</button></td></tr>';
           document.getElementById('aiTrendBarContainer').innerHTML = 
             '<div class="empty-tip" style="width:100%; color:var(--text-muted);">等待验证管理员权限后自动刷新...</div>';
         }
@@ -1207,6 +1367,127 @@
       }).join('');
     }
 
+    function openTrendModal(type) {
+      const modal = document.getElementById('trendModal');
+      const title = document.getElementById('trendModalTitle');
+      const subtitle = document.getElementById('trendModalSubtitle');
+      const icon = document.getElementById('trendModalIcon');
+      const iconBox = document.getElementById('trendModalIconBox');
+      const container = document.getElementById('modalTrendContainer');
+      const footerTip = document.getElementById('trendModalFooterTip');
+
+      if (!cachedStats) {
+        alert('基础数据加载中，请稍后再试');
+        return;
+      }
+
+      let trendList = [];
+      let unit = '人';
+      let color = '#3B82F6';
+
+      if (type === 'registration') {
+        title.innerText = '近 7 天新增注册用户趋势';
+        subtitle.innerText = '平台每日新注册用户增长曲线统计';
+        icon.className = 'fa-solid fa-user-plus';
+        iconBox.style.background = 'rgba(16, 185, 129, 0.15)';
+        iconBox.style.color = '#10B981';
+        trendList = cachedStats.userRegistrationTrend || [];
+        color = '#10B981';
+        unit = '人';
+        const totalNew = trendList.reduce((sum, item) => sum + (item.count || 0), 0);
+        footerTip.innerText = `💡 近 7 天累计新增注册用户 ${totalNew} 人`;
+      } else if (type === 'dau') {
+        title.innerText = '近 7 天每日活跃用户 (DAU) 趋势';
+        subtitle.innerText = '包含饮食/运动/饮水/打卡/AI使用等行为的综合活跃度';
+        icon.className = 'fa-solid fa-bolt';
+        iconBox.style.background = 'rgba(59, 130, 246, 0.15)';
+        iconBox.style.color = '#3B82F6';
+        trendList = cachedStats.dauTrend || [];
+        color = '#3B82F6';
+        unit = '人';
+        const avgDau = trendList.length > 0 ? (trendList.reduce((sum, item) => sum + (item.count || 0), 0) / trendList.length).toFixed(1) : 0;
+        footerTip.innerText = `💡 近 7 天日均活跃用户 (DAU) 约 ${avgDau} 人`;
+      } else if (type === 'retention') {
+        title.innerText = '近 7 天用户留存率 (次留/7留) 看板';
+        subtitle.innerText = '基于用户注册日期的 Cohort 留存表现分析';
+        icon.className = 'fa-solid fa-chart-pie';
+        iconBox.style.background = 'rgba(139, 92, 246, 0.15)';
+        iconBox.style.color = '#C4B5FD';
+        const retentionStats = cachedStats.retentionStats || [];
+        
+        let avgD1 = 0;
+        if (retentionStats.length > 0) {
+          avgD1 = (retentionStats.reduce((sum, r) => sum + (r.day1Rate || 0), 0) / retentionStats.length).toFixed(1);
+        }
+        footerTip.innerText = `💡 近 7 天批次平均次日留存率 (Day 1 Retention) 约 ${avgD1}%`;
+
+        if (!retentionStats || retentionStats.length === 0) {
+          container.innerHTML = '<div class="empty-tip" style="width:100%;">暂无留存趋势数据</div>';
+        } else {
+          container.innerHTML = `
+            <div style="width:100%;">
+              <div style="display:flex; align-items:flex-end; gap:16px; height:110px; margin-bottom:14px; justify-space-around:space-around;">
+                ${retentionStats.map(r => {
+                  const pct = Math.max(Math.round(r.day1Rate || 0), 6);
+                  return `
+                    <div class="bar-item" style="flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end;">
+                      <span class="bar-val" style="font-size:11px; font-weight:700; color:#C4B5FD; margin-bottom:4px;">${r.day1Rate}%</span>
+                      <div class="bar-fill" style="width:70%; max-width:32px; height:${pct}%; background:linear-gradient(180deg, #8B5CF6, #6D28D9); border-radius:6px 6px 0 0;"></div>
+                      <span class="bar-label" style="font-size:11px; color:var(--text-muted); margin-top:6px;">${r.date}</span>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+              <table style="width:100%; font-size:12px; border-collapse:collapse; text-align:center;">
+                <thead>
+                  <tr style="color:var(--text-muted); border-bottom:1px solid var(--card-border);">
+                    <th style="padding:6px;">注册日期</th>
+                    <th style="padding:6px;">新注册人数</th>
+                    <th style="padding:6px;">次日留存人数</th>
+                    <th style="padding:6px;">次日留存率</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${retentionStats.map(r => `
+                    <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                      <td style="padding:6px; color:#FFF;">${r.date}</td>
+                      <td style="padding:6px;">${r.regCount} 人</td>
+                      <td style="padding:6px; color:#34D399;">${r.day1Count} 人</td>
+                      <td style="padding:6px; font-weight:700; color:#C4B5FD;">${r.day1Rate}%</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        }
+        modal.classList.add('active');
+        return;
+      }
+
+      if (!trendList || trendList.length === 0) {
+        container.innerHTML = '<div class="empty-tip" style="width:100%;">暂无趋势数据</div>';
+      } else {
+        const maxVal = Math.max(...trendList.map(t => t.count || 0), 1);
+        container.innerHTML = trendList.map(t => {
+          const pct = Math.max(Math.round((t.count / maxVal) * 100), 8);
+          return `
+            <div class="bar-item" style="flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end;">
+              <span class="bar-val" style="font-size:12px; font-weight:700; color:#FFF; margin-bottom:6px;">${t.count} ${unit}</span>
+              <div class="bar-fill" style="width:70%; max-width:36px; height:${pct}%; background:linear-gradient(180deg, ${color}, ${color}88); border-radius:6px 6px 0 0; transition:all 0.3s ease;"></div>
+              <span class="bar-label" style="font-size:11px; color:var(--text-muted); margin-top:8px;">${t.date}</span>
+            </div>
+          `;
+        }).join('');
+      }
+
+      modal.classList.add('active');
+    }
+
+    function closeTrendModal() {
+      document.getElementById('trendModal').classList.remove('active');
+    }
+
     function exportCsv(type) {
       const token = getAdminToken();
       if (!token) {
@@ -1220,7 +1501,7 @@
     function renderUserTable(users) {
       const tbody = document.getElementById('userTableBody');
       if (!users || users.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="empty-tip">暂无匹配的用户数据</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="empty-tip">暂无匹配的用户数据</td></tr>';
         return;
       }
 
@@ -1232,8 +1513,20 @@
         const statsStr = (u.height && u.weight) ? `${u.height}cm / ${u.weight}kg` : '未录入';
         const calStr = u.targetCalories ? `${u.targetCalories} kcal` : '未计算';
         const aiCount = item.todayAiCount || 0;
-        const aiBadgeClass = aiCount >= 10 ? 'badge-ai limit-reached' : 'badge-ai';
+        const globalLimit = (cachedStats && cachedStats.globalAiLimit) ? cachedStats.globalAiLimit : 10;
+        const aiBadgeClass = aiCount >= globalLimit ? 'badge-ai limit-reached' : 'badge-ai';
         const createdAt = u.createdAt ? u.createdAt.replace('T', ' ').substring(0, 16) : '-';
+
+        const isBanned = u.status === 'DISABLED';
+        const statusBadge = isBanned 
+          ? '<span style="background:rgba(239, 68, 68, 0.15); color:#F87171; border:1px solid rgba(239, 68, 68, 0.3); padding:3px 8px; border-radius:10px; font-size:11px;"><i class="fa-solid fa-user-slash"></i> 已封禁</span>'
+          : '<span style="background:rgba(16, 185, 129, 0.15); color:#34D399; border:1px solid rgba(16, 185, 129, 0.3); padding:3px 8px; border-radius:10px; font-size:11px;"><i class="fa-solid fa-user-check"></i> 正常</span>';
+
+        const banBtn = isBanned
+          ? `<button class="btn-action" onclick="toggleUserStatus(${u.id}, 'DISABLED', '${nickname}')" style="background:rgba(16, 185, 129, 0.2); color:#34D399; border:1px solid rgba(16, 185, 129, 0.4); font-size:11px; padding:3px 6px;"><i class="fa-solid fa-unlock"></i> 解封</button>`
+          : `<button class="btn-action" onclick="toggleUserStatus(${u.id}, 'ENABLED', '${nickname}')" style="background:rgba(239, 68, 68, 0.2); color:#F87171; border:1px solid rgba(239, 68, 68, 0.4); font-size:11px; padding:3px 6px;"><i class="fa-solid fa-ban"></i> 禁用</button>`;
+
+        const pointBtn = `<button class="btn-action" onclick="openPointsModal(${u.id}, '${nickname}', ${u.points || 0})" style="background:rgba(245, 158, 11, 0.2); color:#FBBF24; border:1px solid rgba(245, 158, 11, 0.4); font-size:11px; padding:3px 6px;"><i class="fa-solid fa-coins"></i> 积分</button>`;
 
         return `
           <tr>
@@ -1417,9 +1710,167 @@
       document.getElementById('tabExercise').style.display = tab === 'exercise' ? 'block' : 'none';
       document.getElementById('tabTeam').style.display = tab === 'team' ? 'block' : 'none';
       document.getElementById('tabPlan').style.display = tab === 'plan' ? 'block' : 'none';
+      document.getElementById('tabPoints').style.display = tab === 'points' ? 'block' : 'none';
 
       if (tab === 'plan' && currentDetailRecords && currentDetailRecords.user) {
         loadUserAiPlan(currentDetailRecords.user.id, false);
+      } else if (tab === 'points' && currentDetailRecords && currentDetailRecords.user) {
+        loadUserPointLogs(currentDetailRecords.user.id);
+      }
+    }
+
+    let currentPointUserId = null;
+    let currentPointUserNickname = '';
+
+    // 1. 账号状态控制 (禁用 / 解封)
+    async function toggleUserStatus(userId, currentStatus, nickname) {
+      const targetStatus = currentStatus === 'DISABLED' ? 'ENABLED' : 'DISABLED';
+      const actionText = targetStatus === 'DISABLED' ? '禁用/封禁' : '解封/恢复';
+      if (!confirm(`确定要 ${actionText} 用户 [ ${nickname} ] (ID: ${userId}) 的账号吗？`)) return;
+
+      try {
+        const res = await authFetch(`/api/v1/admin/users/${userId}/status?status=${targetStatus}`, { method: 'POST' }).then(r => r.json());
+        if (res.code === 200) {
+          alert(`已成功 ${actionText} 用户账号！`);
+          loadDashboard();
+        } else {
+          alert('操作失败: ' + (res.message || '系统错误'));
+        }
+      } catch (e) {
+        alert('网络请求异常');
+      }
+    }
+
+    // 2. 积分调整 Modal
+    function openPointsModal(userId, nickname, points) {
+      currentPointUserId = userId;
+      currentPointUserNickname = nickname;
+      document.getElementById('pointsModalSubtitle').innerText = `针对用户 [ ${nickname} ] (ID: ${userId}, 当前积分: ${points} pts) 调整契约积分`;
+      document.getElementById('pointsDeltaInput').value = '';
+      document.getElementById('pointsRemarkInput').value = '';
+      document.getElementById('pointsModal').classList.add('active');
+    }
+
+    function closePointsModal() {
+      document.getElementById('pointsModal').classList.remove('active');
+    }
+
+    async function submitPointsAdjustment() {
+      const delta = parseInt(document.getElementById('pointsDeltaInput').value);
+      const remark = document.getElementById('pointsRemarkInput').value.trim();
+      if (isNaN(delta) || delta === 0) {
+        alert('请输入有效的积分变动整数（如 +100 或 -50）');
+        return;
+      }
+
+      try {
+        const res = await authFetch(`/api/v1/admin/users/${currentPointUserId}/points?pointsDelta=${delta}&remark=${encodeURIComponent(remark)}`, { method: 'POST' }).then(r => r.json());
+        if (res.code === 200) {
+          alert('积分调整成功并已写入流水！');
+          closePointsModal();
+          loadDashboard();
+        } else {
+          alert('积分调整失败: ' + (res.message || '系统错误'));
+        }
+      } catch (e) {
+        alert('网络请求异常');
+      }
+    }
+
+    // 3. 修改全局 AI 限额
+    async function changeGlobalAiLimit() {
+      const current = (cachedStats && cachedStats.globalAiLimit) ? cachedStats.globalAiLimit : 10;
+      const val = prompt(`请输入新的普通用户每日 AI 识别频次上限 (当前为 ${current} 次):`, current);
+      if (val === null) return;
+      const limit = parseInt(val);
+      if (isNaN(limit) || limit < 1) {
+        alert('请输入大于 0 的有效次数限制');
+        return;
+      }
+
+      try {
+        const res = await authFetch(`/api/v1/admin/config/ai-limit?limit=${limit}`, { method: 'POST' }).then(r => r.json());
+        if (res.code === 200) {
+          alert(`全局每日 AI 调用上限已设为 ${limit} 次！`);
+          loadDashboard();
+        } else {
+          alert('设置失败: ' + (res.message || '系统错误'));
+        }
+      } catch (e) {
+        alert('网络请求异常');
+      }
+    }
+
+    // 4. 审计日志 Modal
+    async function openAuditLogModal() {
+      document.getElementById('auditLogModal').classList.add('active');
+      document.getElementById('auditLogTableBody').innerHTML = '<tr><td colspan="5" class="empty-tip">加载安全审计日志中...</div></td></tr>';
+      try {
+        const res = await authFetch('/api/v1/admin/audit-logs').then(r => r.json());
+        if (res.code === 200 && res.data) {
+          const logs = res.data;
+          if (logs.length === 0) {
+            document.getElementById('auditLogTableBody').innerHTML = '<tr><td colspan="5" class="empty-tip">暂无敏感操作审计轨迹</td></tr>';
+          } else {
+            document.getElementById('auditLogTableBody').innerHTML = logs.map(l => `
+              <tr>
+                <td style="font-size:12px; color:var(--text-muted);">${(l.createdAt || '').replace('T', ' ').substring(0, 19)}</td>
+                <td><strong style="color:#FFF;">${l.adminUsername || 'admin'}</strong></td>
+                <td><span class="badge badge-points" style="font-size:11px;">${l.action}</span></td>
+                <td><span style="font-size:12px; color:#60A5FA;">Target: ${l.target || '-'}</span></td>
+                <td style="font-size:12px; color:#E2E8F0;">${l.details || '-'}</td>
+              </tr>
+            `).join('');
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load audit logs:', e);
+      }
+    }
+
+    function closeAuditLogModal() {
+      document.getElementById('auditLogModal').classList.remove('active');
+    }
+
+    // 5. 积分流水查询
+    async function loadUserPointLogs(userId) {
+      const box = document.getElementById('pointLogList');
+      box.innerHTML = '<div class="empty-tip">正在查询积分变动账单与流水...</div>';
+      try {
+        const res = await authFetch(`/api/v1/admin/users/${userId}/point-logs`).then(r => r.json());
+        if (res.code === 200 && res.data) {
+          const logs = res.data;
+          if (logs.length === 0) {
+            box.innerHTML = '<div class="empty-tip">该用户暂无积分变动流水</div>';
+          } else {
+            box.innerHTML = `
+              <table>
+                <thead>
+                  <tr>
+                    <th>变动时间</th>
+                    <th>类型</th>
+                    <th>数值</th>
+                    <th>备注说明</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${logs.map(l => `
+                    <tr>
+                      <td style="font-size:12px; color:var(--text-muted);">${(l.createdAt || '').replace('T', ' ').substring(0, 16)}</td>
+                      <td><span class="badge badge-points">${l.type}</span></td>
+                      <td style="font-weight:700; color: ${l.amount >= 0 ? '#34D399' : '#F87171'};">
+                        ${l.amount >= 0 ? '+' : ''}${l.amount} pts
+                      </td>
+                      <td style="font-size:12px;">${l.remark || '-'}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            `;
+          }
+        }
+      } catch (e) {
+        box.innerHTML = '<div class="empty-tip" style="color:var(--danger);">加载积分流水失败</div>';
       }
     }
 

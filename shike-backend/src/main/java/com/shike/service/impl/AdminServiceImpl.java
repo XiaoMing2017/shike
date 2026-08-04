@@ -40,6 +40,8 @@ public class AdminServiceImpl implements AdminService {
     private final TeamRepository teamRepository;
     private final TeamMemberRepository teamMemberRepository;
     private final TeamCheckinRepository teamCheckinRepository;
+    private final PointLogRepository pointLogRepository;
+    private final AdminAuditLogRepository adminAuditLogRepository;
     private final StringRedisTemplate stringRedisTemplate;
 
     @Override
@@ -153,38 +155,118 @@ public class AdminServiceImpl implements AdminService {
             estimatedCost = Math.round(totalHistoricalAiCount * 0.02 * 100.0) / 100.0;
         }
 
-        // Calculate distinct active users today (DAU)
-        Set<Long> activeUserIds = new HashSet<>();
-        allUsers.stream()
-                .filter(u -> u.getCreatedAt() != null && u.getCreatedAt().toLocalDate().equals(today))
-                .forEach(u -> activeUserIds.add(u.getId()));
+        // ========== 近7天注册用户趋势 & DAU趋势 ==========
+        List<AdminStatsDTO.AiTrendItem> registrationTrendList = new ArrayList<>();
+        List<AdminStatsDTO.AiTrendItem> dauTrendList = new ArrayList<>();
 
-        allUsers.stream()
-                .filter(u -> u.getUpdatedAt() != null && u.getUpdatedAt().toLocalDate().equals(today))
-                .forEach(u -> activeUserIds.add(u.getId()));
+        for (int i = 6; i >= 0; i--) {
+            LocalDate date = today.minusDays(i);
+            String dateLabel = date.format(DateTimeFormatter.ofPattern("MM-dd"));
+            String dateFullStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
-        dietRecordRepository.findByRecordDate(today).forEach(d -> activeUserIds.add(d.getUserId()));
-        exerciseRecordRepository.findByRecordDate(today).forEach(e -> activeUserIds.add(e.getUserId()));
-        waterRecordRepository.findByRecordDate(today).forEach(w -> activeUserIds.add(w.getUserId()));
-        teamCheckinRepository.findByCheckinDate(today).forEach(tc -> activeUserIds.add(tc.getUserId()));
+            // 每日注册用户数
+            long dayRegistrations = allUsers.stream()
+                    .filter(u -> u.getCreatedAt() != null && u.getCreatedAt().toLocalDate().equals(date))
+                    .count();
+            registrationTrendList.add(AdminStatsDTO.AiTrendItem.builder()
+                    .date(dateLabel)
+                    .count(dayRegistrations)
+                    .build());
 
-        try {
-            Set<String> keys = stringRedisTemplate.keys("shike:ai:limit:*:" + todayStr);
-            if (keys != null) {
-                for (String key : keys) {
-                    String[] parts = key.split(":");
-                    if (parts.length >= 4) {
-                        try {
-                            activeUserIds.add(Long.parseLong(parts[3]));
-                        } catch (NumberFormatException ignored) {}
+            // 每日活跃用户数 (DAU) - 合并饮食/运动/饮水/打卡/AI使用
+            Set<Long> dayActiveIds = new HashSet<>();
+            // 当天注册
+            allUsers.stream()
+                    .filter(u -> u.getCreatedAt() != null && u.getCreatedAt().toLocalDate().equals(date))
+                    .forEach(u -> dayActiveIds.add(u.getId()));
+            // 当天更新
+            allUsers.stream()
+                    .filter(u -> u.getUpdatedAt() != null && u.getUpdatedAt().toLocalDate().equals(date))
+                    .forEach(u -> dayActiveIds.add(u.getId()));
+            // 饮食记录
+            dietRecordRepository.findByRecordDate(date).forEach(d -> dayActiveIds.add(d.getUserId()));
+            // 运动记录
+            exerciseRecordRepository.findByRecordDate(date).forEach(e -> dayActiveIds.add(e.getUserId()));
+            // 饮水记录
+            waterRecordRepository.findByRecordDate(date).forEach(w -> dayActiveIds.add(w.getUserId()));
+            // 小队打卡
+            teamCheckinRepository.findByCheckinDate(date).forEach(tc -> dayActiveIds.add(tc.getUserId()));
+            // Redis AI使用记录
+            try {
+                Set<String> aiKeys = stringRedisTemplate.keys("shike:ai:limit:*:" + dateFullStr);
+                if (aiKeys != null) {
+                    for (String key : aiKeys) {
+                        String[] parts = key.split(":");
+                        if (parts.length >= 4) {
+                            try {
+                                dayActiveIds.add(Long.parseLong(parts[3]));
+                            } catch (NumberFormatException ignored) {}
+                        }
                     }
                 }
-            }
-        } catch (Exception e) {
-            log.warn("Failed to parse Redis active user keys: {}", e.getMessage());
+            } catch (Exception ignored) {}
+
+            dauTrendList.add(AdminStatsDTO.AiTrendItem.builder()
+                    .date(dateLabel)
+                    .count((long) dayActiveIds.size())
+                    .build());
         }
 
-        Long todayActiveUsers = (long) activeUserIds.size();
+        // 今日DAU取最后一天的结果
+        Long todayActiveUsers = dauTrendList.isEmpty() ? 0L : dauTrendList.get(dauTrendList.size() - 1).getCount();
+
+        // ========== 留存率 Cohort 分析 ==========
+        List<AdminStatsDTO.RetentionItem> retentionList = new ArrayList<>();
+        int defaultAiLimit = 10;
+        try {
+            String limitVal = stringRedisTemplate.opsForValue().get("shike:sys:config:ai_daily_limit");
+            if (limitVal != null) {
+                defaultAiLimit = Integer.parseInt(limitVal);
+            }
+        } catch (Exception ignored) {}
+
+        for (int i = 6; i >= 0; i--) {
+            LocalDate regDate = today.minusDays(i);
+            String regDateLabel = regDate.format(DateTimeFormatter.ofPattern("MM-dd"));
+
+            List<User> regUsers = allUsers.stream()
+                    .filter(u -> u.getCreatedAt() != null && u.getCreatedAt().toLocalDate().equals(regDate))
+                    .toList();
+            long regCount = regUsers.size();
+
+            long day1Count = 0;
+            long day7Count = 0;
+
+            if (regCount > 0) {
+                LocalDate day1Date = regDate.plusDays(1);
+                LocalDate day7Date = regDate.plusDays(7);
+
+                Set<Long> regUserIds = new HashSet<>();
+                regUsers.forEach(u -> regUserIds.add(u.getId()));
+
+                if (!day1Date.isAfter(today)) {
+                    Set<Long> activeD1 = getActiveUserIdsForDate(day1Date);
+                    day1Count = regUserIds.stream().filter(activeD1::contains).count();
+                }
+
+                if (!day7Date.isAfter(today)) {
+                    Set<Long> activeD7 = getActiveUserIdsForDate(day7Date);
+                    day7Count = regUserIds.stream().filter(activeD7::contains).count();
+                }
+            }
+
+            double day1Rate = regCount > 0 ? Math.round((day1Count * 100.0 / regCount) * 10.0) / 10.0 : 0.0;
+            double day7Rate = regCount > 0 ? Math.round((day7Count * 100.0 / regCount) * 10.0) / 10.0 : 0.0;
+
+            retentionList.add(AdminStatsDTO.RetentionItem.builder()
+                    .date(regDateLabel)
+                    .regCount(regCount)
+                    .day1Count(day1Count)
+                    .day1Rate(day1Rate)
+                    .day7Count(day7Count)
+                    .day7Rate(day7Rate)
+                    .build());
+        }
 
         return AdminStatsDTO.builder()
                 .totalUsers(totalUsers)
@@ -200,6 +282,10 @@ public class AdminServiceImpl implements AdminService {
                 .estimatedAiCost(estimatedCost)
                 .aiCostFormula("膳食识别~2K Token/次，AI计划生成~3.5K Token/次 (按￥0.015/千Token估算)")
                 .aiTrend(aiTrendList)
+                .userRegistrationTrend(registrationTrendList)
+                .dauTrend(dauTrendList)
+                .globalAiLimit(defaultAiLimit)
+                .retentionStats(retentionList)
                 .build();
     }
 
@@ -428,5 +514,72 @@ public class AdminServiceImpl implements AdminService {
             return "\"" + escaped + "\"";
         }
         return escaped;
+    }
+
+    private Set<Long> getActiveUserIdsForDate(LocalDate date) {
+        Set<Long> activeUserIds = new HashSet<>();
+        dietRecordRepository.findByRecordDate(date).forEach(d -> activeUserIds.add(d.getUserId()));
+        exerciseRecordRepository.findByRecordDate(date).forEach(e -> activeUserIds.add(e.getUserId()));
+        waterRecordRepository.findByRecordDate(date).forEach(w -> activeUserIds.add(w.getUserId()));
+        teamCheckinRepository.findByCheckinDate(date).forEach(tc -> activeUserIds.add(tc.getUserId()));
+        return activeUserIds;
+    }
+
+    @Override
+    public void updateUserStatus(Long userId, String status, String adminUsername) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BizException(404, "用户不存在"));
+        user.setStatus(status);
+        userRepository.save(user);
+        logAudit(adminUsername, "BAN_UNBAN_USER", String.valueOf(userId), "修改用户 [" + (user.getNickname() != null ? user.getNickname() : "微信用户") + "] 账号状态为: " + status);
+    }
+
+    @Override
+    public void updateUserPoints(Long userId, Integer pointsDelta, String remark, String adminUsername) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BizException(404, "用户不存在"));
+        int oldPoints = user.getPoints() != null ? user.getPoints() : 0;
+        int newPoints = Math.max(0, oldPoints + pointsDelta);
+        user.setPoints(newPoints);
+        userRepository.save(user);
+
+        pointLogRepository.save(com.shike.model.entity.PointLog.builder()
+                .userId(userId)
+                .amount(pointsDelta)
+                .type("ADMIN_ADJUST")
+                .remark(remark != null && !remark.isBlank() ? remark : "管理员手动调整积分")
+                .build());
+
+        logAudit(adminUsername, "ADJUST_POINTS", String.valueOf(userId), "调整用户 [" + (user.getNickname() != null ? user.getNickname() : "微信用户") + "] 积分: " + (pointsDelta >= 0 ? "+" : "") + pointsDelta + "，备注: " + remark);
+    }
+
+    @Override
+    public void updateGlobalAiLimit(Integer limit, String adminUsername) {
+        if (limit == null || limit < 1) limit = 10;
+        stringRedisTemplate.opsForValue().set("shike:sys:config:ai_daily_limit", String.valueOf(limit));
+        logAudit(adminUsername, "UPDATE_AI_LIMIT", "GLOBAL", "修改全局每日 AI 调用上限为: " + limit + " 次");
+    }
+
+    @Override
+    public List<com.shike.model.entity.PointLog> getUserPointLogs(Long userId) {
+        return pointLogRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    }
+
+    @Override
+    public List<com.shike.model.entity.AdminAuditLog> getAuditLogs() {
+        return adminAuditLogRepository.findAllByOrderByCreatedAtDesc();
+    }
+
+    private void logAudit(String adminUsername, String action, String target, String details) {
+        try {
+            adminAuditLogRepository.save(com.shike.model.entity.AdminAuditLog.builder()
+                    .adminUsername(adminUsername != null ? adminUsername : "admin")
+                    .action(action)
+                    .target(target)
+                    .details(details)
+                    .build());
+        } catch (Exception e) {
+            log.warn("Failed to write audit log: {}", e.getMessage());
+        }
     }
 }
