@@ -128,6 +128,7 @@ Page({
     planActiveTab: 'workout',
     planDayIndex: 0,
     planLoading: false,
+    planStatus: { hasPlan: false, isFirstTime: true, userPoints: 0 },
     // 个人信息完善引导横幅
     showProfileGuide: false,
     // 运动消耗数据
@@ -1641,14 +1642,29 @@ Page({
   },
 
   openPlanModal() {
-    const activeDietPlan = this.updateActiveDietPlan(this.data.planData, this.data.planDayIndex || 0);
-    this.setData({
-      showPlanModal: true,
-      activeDietPlan: activeDietPlan
+    this.setData({ showPlanModal: true });
+    this.fetchPlanStatus(() => {
+      // 如果已有计划缓存且本页面 planData 尚空，只读取不主动付费生成
+      if (this.data.planStatus && this.data.planStatus.hasPlan && !this.data.planData) {
+        this.fetchAiPlan(false, false);
+      }
     });
-    if (!this.data.planData) {
-      this.fetchAiPlan(false);
-    }
+  },
+
+  fetchPlanStatus(callback) {
+    app.login((user) => {
+      if (!user || !user.id) return;
+      wx.request({
+        url: `${app.globalData.baseUrl}/plan/status?userId=${user.id}`,
+        method: 'GET',
+        success: (res) => {
+          if (res.data && res.data.code === 200) {
+            this.setData({ planStatus: res.data.data });
+            if (callback) callback();
+          }
+        }
+      });
+    });
   },
 
   closePlanModal() {
@@ -1677,7 +1693,50 @@ Page({
     });
   },
 
-  fetchAiPlan(forceRefresh) {
+  onGeneratePlanClick() {
+    const status = this.data.planStatus || { isFirstTime: true, userPoints: 0 };
+    const isFirstTime = status.isFirstTime;
+    const userPoints = status.userPoints || 0;
+
+    if (!isFirstTime && userPoints < 100) {
+      wx.showModal({
+        title: '契约积分不足',
+        content: `重新定制计划需消耗 100 积分，您当前共有 ${userPoints} 积分。\n\n可以通过每日签到（+20积分）或打卡赚取积分哦！`,
+        confirmText: '去签到',
+        cancelText: '取消',
+        success: (res) => {
+          if (res.confirm) {
+            wx.navigateTo({ url: '/pages/profile/profile' });
+          }
+        }
+      });
+      return;
+    }
+
+    const title = isFirstTime ? '✨ 首次生成免费' : '🤖 重新定制计划';
+    const content = isFirstTime
+      ? '首次生成专属 7 天运动与膳食食谱【免费】！是否立即让 AI 为您推算？'
+      : `本次重新定制将消耗 100 积分（当前可用 ${userPoints} 积分），是否确定生成？`;
+
+    wx.showModal({
+      title,
+      content,
+      confirmText: '确定生成',
+      confirmColor: '#10B981',
+      cancelText: '取消',
+      success: (res) => {
+        if (res.confirm) {
+          this.fetchAiPlan(true, true);
+        }
+      }
+    });
+  },
+
+  onRefreshPlan() {
+    this.onGeneratePlanClick();
+  },
+
+  fetchAiPlan(forceRefresh, createIfAbsent = true) {
     this.setData({ planLoading: true });
     app.login((user) => {
       if (!user || !user.id) {
@@ -1685,23 +1744,29 @@ Page({
         return;
       }
       wx.request({
-        url: `${app.globalData.baseUrl}/plan/generate?userId=${user.id}&forceRefresh=${forceRefresh ? 'true' : 'false'}`,
+        url: `${app.globalData.baseUrl}/plan/generate?userId=${user.id}&forceRefresh=${forceRefresh ? 'true' : 'false'}&createIfAbsent=${createIfAbsent ? 'true' : 'false'}`,
         method: 'GET',
         success: (res) => {
           this.setData({ planLoading: false });
           if (res.data && res.data.code === 200) {
             const planData = res.data.data;
-            const activeDietPlan = this.updateActiveDietPlan(planData, 0);
-            this.setData({
-              planData: planData,
-              planDayIndex: 0,
-              activeDietPlan: activeDietPlan
-            });
-            if (forceRefresh) {
-              wx.showToast({ title: 'AI 定制计划已更新！', icon: 'success' });
+            if (planData) {
+              const activeDietPlan = this.updateActiveDietPlan(planData, 0);
+              const userPoints = planData.userPoints !== undefined ? planData.userPoints : (this.data.planStatus ? this.data.planStatus.userPoints : 0);
+              this.setData({
+                planData: planData,
+                planDayIndex: 0,
+                activeDietPlan: activeDietPlan,
+                'planStatus.hasPlan': true,
+                'planStatus.isFirstTime': false,
+                'planStatus.userPoints': userPoints
+              });
+              if (forceRefresh) {
+                wx.showToast({ title: 'AI 定制计划已更新！', icon: 'success' });
+              }
             }
           } else {
-            wx.showToast({ title: '获取计划失败', icon: 'none' });
+            wx.showToast({ title: res.data.message || '获取计划失败', icon: 'none' });
           }
         },
         fail: () => {

@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 public class PlanServiceImpl implements PlanService {
 
     private final UserRepository userRepository;
+    private final PointsRecordRepository pointsRecordRepository;
     private final StringRedisTemplate stringRedisTemplate;
     private final ObjectMapper objectMapper;
 
@@ -45,6 +46,21 @@ public class PlanServiceImpl implements PlanService {
     private Integer aiTimeoutMs;
 
     private static final String REDIS_PLAN_KEY_PREFIX = "shike:user:plan:";
+
+    @Override
+    public Map<String, Object> getPlanStatus(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BizException(404, "找不到该用户档案"));
+        String cacheKey = REDIS_PLAN_KEY_PREFIX + userId;
+        boolean hasCachedPlan = Boolean.TRUE.equals(stringRedisTemplate.hasKey(cacheKey));
+        boolean hasGeneratedBefore = pointsRecordRepository.existsByUserIdAndType(userId, "PLAN_GEN");
+
+        Map<String, Object> statusMap = new HashMap<>();
+        statusMap.put("hasPlan", hasCachedPlan);
+        statusMap.put("isFirstTime", !hasGeneratedBefore);
+        statusMap.put("userPoints", user.getPoints() != null ? user.getPoints() : 0);
+        return statusMap;
+    }
 
     @Override
     public Map<String, Object> generateOrGetPlan(Long userId, Boolean forceRefresh, Boolean createIfAbsent) {
@@ -73,7 +89,37 @@ public class PlanServiceImpl implements PlanService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BizException(404, "找不到该用户档案"));
 
-        // 3. 构建专属 AI Prompt (融合专家知识库准则)
+        // 3. 校验并扣除积分 (首次免费，以后每次扣除 100 积分)
+        boolean hasGeneratedBefore = pointsRecordRepository.existsByUserIdAndType(userId, "PLAN_GEN");
+        if (hasGeneratedBefore) {
+            int currentPoints = user.getPoints() != null ? user.getPoints() : 0;
+            if (currentPoints < 100) {
+                throw new BizException(400, "契约积分不足 100 分（当前可用余额: " + currentPoints + " 分）。可以通过每日签到或参与挑战小队赚取积分！");
+            }
+            user.setPoints(currentPoints - 100);
+            userRepository.save(user);
+
+            PointsRecord record = PointsRecord.builder()
+                    .userId(userId)
+                    .amount(-100)
+                    .type("PLAN_GEN")
+                    .remark("AI 定制运动与饮食计划 (消耗 100 积分)")
+                    .build();
+            pointsRecordRepository.save(record);
+            log.info("Deducted 100 points for user {} for AI plan generation. Remaining balance: {}", userId, user.getPoints());
+        } else {
+            // 首次免费记录
+            PointsRecord record = PointsRecord.builder()
+                    .userId(userId)
+                    .amount(0)
+                    .type("PLAN_GEN")
+                    .remark("AI 定制运动与饮食计划 (首次生成免费)")
+                    .build();
+            pointsRecordRepository.save(record);
+            log.info("First time AI plan generation for user {}, free of charge.", userId);
+        }
+
+        // 4. 构建专属 AI Prompt (融合专家知识库准则)
         Map<String, Object> planMap;
         try {
             String prompt = buildExpertPrompt(user);
@@ -85,7 +131,10 @@ public class PlanServiceImpl implements PlanService {
             planMap = generateScientificFallbackPlan(user);
         }
 
-        // 4. 写入缓存 (保留 7 天)
+        // 附带返回用户最新积分信息，方便前端实时同步
+        planMap.put("userPoints", user.getPoints() != null ? user.getPoints() : 0);
+
+        // 5. 写入缓存 (保留 7 天)
         try {
             String planJson = objectMapper.writeValueAsString(planMap);
             stringRedisTemplate.opsForValue().set(cacheKey, planJson, 7, TimeUnit.DAYS);

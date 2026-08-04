@@ -13,4 +13,6 @@ public interface PointsRecordRepository extends JpaRepository<PointsRecord, Long
     List<PointsRecord> findByUserIdOrderByCreatedAtDesc(Long userId);
     
     boolean existsByUserIdAndTypeAndCreatedAtAfter(Long userId, String type, LocalDateTime startOfDay);
+    
+    boolean existsByUserIdAndType(Long userId, String type);
 }

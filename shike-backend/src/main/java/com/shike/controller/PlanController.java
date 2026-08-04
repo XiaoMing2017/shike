@@ -30,4 +30,13 @@ public class PlanController {
         Map<String, Object> plan = planService.generateOrGetPlan(userId, forceRefresh, createIfAbsent);
         return ResultDTO.success(plan);
     }
+
+    /**
+     * 查询用户专属计划状态、是否首次免费、当前积分余额
+     */
+    @GetMapping("/status")
+    public ResultDTO<Map<String, Object>> getPlanStatus(@RequestParam Long userId) {
+        Map<String, Object> status = planService.getPlanStatus(userId);
+        return ResultDTO.success(status);
+    }
 }

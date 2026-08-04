@@ -12,4 +12,6 @@ public interface PlanService {
      * @return 包含 workoutPlan 和 dietPlan 的结构化 Map
      */
     Map<String, Object> generateOrGetPlan(Long userId, Boolean forceRefresh, Boolean createIfAbsent);
+    
+    Map<String, Object> getPlanStatus(Long userId);
 }
