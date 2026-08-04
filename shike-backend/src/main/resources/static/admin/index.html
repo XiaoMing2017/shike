@@ -880,7 +880,12 @@
           <i class="fa-solid fa-magnifying-glass"></i>
           <input type="text" id="searchInput" placeholder="搜索昵称或ID..." oninput="filterUsers()">
         </div>
-    <div style="display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center;">
+      </div>
+    </div>
+
+    <!-- 用户列表类别筛选芯片 (Filter Chips) -->
+    <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; background: rgba(15, 23, 42, 0.4); padding: 12px 16px; border-radius: 12px; border: 1px solid var(--card-border);">
+      <span style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-right: 6px;"><i class="fa-solid fa-filter"></i> 视角筛选:</span>
       <button class="filter-chip active" id="userChipAll" onclick="setUserFilter('ALL')">
         <i class="fa-solid fa-users"></i> 全部用户 (<span id="countAllUsers">0</span>)
       </button>
@@ -1648,33 +1653,23 @@
             </td>
             <td>${genderStr} · ${u.age || '-'}岁<br><span style="font-size:12px; color:var(--text-muted);">${statsStr}</span></td>
             <td><strong>${calStr}</strong><br><span style="font-size:11px; color:var(--text-muted);">TDEE: ${u.tdee || '-'}</span></td>
-            <td><span class="badge ${aiBadgeClass}">${aiCount} / 10 次</span></td>
+            <td><span class="badge ${aiBadgeClass}">${aiCount} / ${globalLimit} 次</span></td>
             <td>${item.totalDietCount || 0} 餐 / ${item.totalExerciseCount || 0} 运动</td>
             <td><span class="badge badge-points">${u.points || 0} pts</span></td>
+            <td>${statusBadge}</td>
             <td><span style="font-size:12px; color:var(--text-muted);">${createdAt}</span></td>
             <td>
-              <button class="btn-action" onclick="viewUserDetail(${u.id})">
-                <i class="fa-solid fa-chart-line"></i> 使用明细
-              </button>
+              <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                <button class="btn-action" onclick="viewUserDetail(${u.id})" style="font-size:11px; padding:3px 8px; background:linear-gradient(135deg, #10B981, #059669);">
+                  <i class="fa-solid fa-chart-line"></i> 明细
+                </button>
+                ${banBtn}
+                ${pointBtn}
+              </div>
             </td>
           </tr>
         `;
       }).join('');
-    }
-
-    function filterUsers() {
-      const q = document.getElementById('searchInput').value.trim().toLowerCase();
-      if (!q) {
-        renderUserTable(rawUserData);
-        return;
-      }
-      const filtered = rawUserData.filter(item => {
-        const u = item.user;
-        return (u.nickname && u.nickname.toLowerCase().includes(q)) || 
-               String(u.id).includes(q) || 
-               (u.openid && u.openid.toLowerCase().includes(q));
-      });
-      renderUserTable(filtered);
     }
 
     async function viewUserDetail(userId) {
