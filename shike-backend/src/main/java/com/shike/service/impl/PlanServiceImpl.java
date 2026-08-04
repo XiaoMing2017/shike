@@ -279,7 +279,8 @@ public class PlanServiceImpl implements PlanService {
         sb.append("3. 【RP Volume Landmarks容量管理】(出处: Dr. Mike Israetel): 严格遵守上方标注的每肌群周训练组数与RIR预留次数。\n");
         sb.append("4. 【可选运动类型】(必须从以下名称中挑选): 跑步 🏃, 慢跑 🏃‍♂️, 快走 🚶‍♂️, 散步 🚶, 动感单车 🚲, 游泳 🏊, 力量训练 💪, 瑜伽/普拉提 🧘, HIIT/有氧操 ⚡, 篮球/足球/球类 🏀。\n");
         sb.append("5. 【中国家庭实用接地气膳食 (7天每天不重样)】: 绝不顿顿使用水煮鸡胸肉西兰花等极端枯燥健身餐！必须设计【周一至周日共7天每天都不重样】的接地气中式减脂/健康食谱。食材推荐中国普通超市与菜市场易买到的天然家常食材，烹饪少油少盐健康做法（如：芹菜炒牛肉、清蒸鲈鱼/虾仁、番茄炒蛋少油、木耳炒肉片、家常豆腐汤、杂粮饭、玉米、红薯、小黄米粥、凉拌黄瓜等）。\n");
-        sb.append("6. 【手掌估算比喻】(出处: Precision Nutrition): 在每餐膳食介绍中给出手掌大小比喻（如 1掌心蛋白质、1拳头蔬菜、1手心碳水）。\n\n");
+        sb.append("6. 【手掌估算比喻】(出处: Precision Nutrition): 在每餐膳食介绍中给出手掌大小比喻（如 1掌心蛋白质、1拳头蔬菜、1手心碳水）。\n");
+        sb.append("7. 【输出精炼控制】: 动作与食材名称务必简洁明了(如'芹菜炒牛肉 150g')，控制总 JSON 输出在 1500 Tokens 以内，确保 JSON 格式完整闭合、绝不截断！\n\n");
 
         sb.append("【请严格按以下 JSON 格式输出，不要包含任何 markdown 代码块标记或多余文字】:\n");
         sb.append("{\n");
@@ -305,10 +306,10 @@ public class PlanServiceImpl implements PlanService {
         sb.append("  \"dietPlan\": [\n");
         sb.append("    {\n");
         sb.append("      \"day\": \"周一\",\n");
-        sb.append("      \"breakfast\": { \"title\": \"接地气中式高蛋白早餐\", \"calories\": 400, \"protein\": 25, \"carbs\": 45, \"fat\": 12, \"portionHint\": \"约1掌心蛋白质+1手心碳水\", \"foods\": [\"小黄米粥 1碗\", \"水煮蛋 1个\", \"凉拌黄瓜 100g\"] },\n");
-        sb.append("      \"lunch\": { \"title\": \"家常优质复合碳水午餐\", \"calories\": 650, \"protein\": 40, \"carbs\": 65, \"fat\": 18, \"portionHint\": \"约1.5掌心蛋白+1拳头蔬菜+1手心杂粮饭\", \"foods\": [\"芹菜炒牛肉 150g\", \"杂粮饭 150g\", \"蒜蓉时蔬菜 150g\"] },\n");
-        sb.append("      \"dinner\": { \"title\": \"轻盈中式高纤晚餐\", \"calories\": 450, \"protein\": 30, \"carbs\": 40, \"fat\": 14, \"portionHint\": \"约1掌心海鲜/豆制品+1.5拳头蔬菜\", \"foods\": [\"清蒸鲈鱼 150g\", \"蒸红薯 100g\", \"番茄豆腐汤 1碗\"] },\n");
-        sb.append("      \"snack\": { \"title\": \"练前/练后加餐\", \"calories\": 200, \"protein\": 12, \"carbs\": 25, \"fat\": 4, \"portionHint\": \"1根香蕉或100g无糖酸奶\", \"foods\": [\"低脂无糖酸奶 150g\", \"香蕉 1根\"] }\n");
+        sb.append("      \"breakfast\": { \"title\": \"中式高蛋白早餐\", \"calories\": 400, \"protein\": 25, \"carbs\": 45, \"fat\": 12, \"portionHint\": \"1掌心蛋白+1手心碳水\", \"foods\": [\"小黄米粥 1碗\", \"水煮蛋 1个\", \"凉拌黄瓜 100g\"] },\n");
+        sb.append("      \"lunch\": { \"title\": \"家常复合碳水午餐\", \"calories\": 650, \"protein\": 40, \"carbs\": 65, \"fat\": 18, \"portionHint\": \"1.5掌心蛋白+1拳头蔬菜+1手心杂粮饭\", \"foods\": [\"芹菜炒牛肉 150g\", \"杂粮饭 150g\", \"蒜蓉时菜 150g\"] },\n");
+        sb.append("      \"dinner\": { \"title\": \"轻盈高纤晚餐\", \"calories\": 450, \"protein\": 30, \"carbs\": 40, \"fat\": 14, \"portionHint\": \"1掌心海鲜/豆制品+1.5拳头蔬菜\", \"foods\": [\"清蒸鲈鱼 150g\", \"蒸红薯 100g\", \"番茄豆腐汤 1碗\"] },\n");
+        sb.append("      \"snack\": { \"title\": \"练前加餐\", \"calories\": 200, \"protein\": 12, \"carbs\": 25, \"fat\": 4, \"portionHint\": \"1根香蕉或100g无糖酸奶\", \"foods\": [\"低脂无糖酸奶 150g\", \"香蕉 1根\"] }\n");
         sb.append("    }\n");
         sb.append("    // ... 周二至周日共7天，每天菜品与搭配不重样！\n");
         sb.append("  ]\n");
@@ -328,16 +329,16 @@ public class PlanServiceImpl implements PlanService {
             payload = Map.of(
                     "model", aiModel,
                     "messages", List.of(systemMsg, userMsg),
-                    "temperature", 0.6,
-                    "max_tokens", 4500,
+                    "temperature", 0.5,
+                    "max_tokens", 2000,
                     "enable_thinking", false
             );
         } else {
             payload = Map.of(
                     "model", aiModel,
                     "messages", List.of(systemMsg, userMsg),
-                    "temperature", 0.7,
-                    "max_tokens", 4500
+                    "temperature", 0.6,
+                    "max_tokens", 2000
             );
         }
 
@@ -412,7 +413,7 @@ public class PlanServiceImpl implements PlanService {
     }
 
     /**
-     * 当 AI 接口超时或不可用时的保底科学计划，确保功能永不断供
+     * 当 AI 接口超时或不可用时的保底科学计划，确保功能永不断供 (全7天中式不重样食谱)
      */
     private Map<String, Object> generateScientificFallbackPlan(User user) {
         double weight = (user.getWeight() != null) ? user.getWeight().doubleValue() : 70.0;
@@ -424,7 +425,7 @@ public class PlanServiceImpl implements PlanService {
         int carbsG = (int) Math.round((targetCal - (proteinG * 4) - (fatG * 9)) / 4.0);
 
         Map<String, Object> res = new HashMap<>();
-        res.put("summary", "根据您的档案与RD/CSCS专家知识库，为您制订了科学循序渐进的周运动与饮食分配方案。");
+        res.put("summary", "根据您的档案与RD/CSCS专家知识库，为您制订了7天接地气中式家常健身膳食与运动方案。");
 
         Map<String, Object> overview = new HashMap<>();
         overview.put("targetCal", (int) targetCal);
@@ -476,13 +477,73 @@ public class PlanServiceImpl implements PlanService {
         }
         res.put("workoutPlan", workoutList);
 
-        Map<String, Object> dietPlan = new HashMap<>();
-        dietPlan.put("breakfast", Map.of("title", "高蛋白唤醒早餐", "calories", 400, "protein", 28, "carbs", 45, "fat", 12, "portionHint", "约1掌心蛋白+1手心碳水", "foods", List.of("无糖豆浆 300ml", "水煮蛋 2个", "全麦切片 2片")));
-        dietPlan.put("lunch", Map.of("title", "优质复合碳水午餐", "calories", 650, "protein", 42, "carbs", 65, "fat", 18, "portionHint", "约1.5掌心蛋白+1拳头蔬菜+1手心紫米", "foods", List.of("香煎鸡胸肉 150g", "紫米饭 150g", "蒜蓉西兰花 200g")));
-        dietPlan.put("dinner", Map.of("title", "轻盈低碳晚餐", "calories", 450, "protein", 35, "carbs", 40, "fat", 14, "portionHint", "约1掌心海鲜+1.5拳头蔬菜", "foods", List.of("清蒸三文鱼/虾仁 120g", "蒸南瓜 150g", "凉拌黄瓜 200g")));
-        dietPlan.put("snack", Map.of("title", "练前/练后加餐", "calories", 200, "protein", 15, "carbs", 25, "fat", 4, "portionHint", "练前补充1根香蕉或100g无糖酸奶", "foods", List.of("低脂无糖酸奶 150g", "香蕉 1根")));
+        // 7天中式不重样家常膳食保底方案
+        List<Map<String, Object>> dietList = new ArrayList<>();
+        
+        // 周一
+        dietList.add(Map.of(
+                "day", "周一",
+                "breakfast", Map.of("title", "小米粥蛋餐", "calories", 380, "protein", 22, "carbs", 45, "fat", 10, "portionHint", "1掌心蛋白+1手心碳水", "foods", List.of("小黄米粥 1碗", "水煮蛋 1个", "凉拌黄瓜 100g")),
+                "lunch", Map.of("title", "芹菜牛肉餐", "calories", 650, "protein", 42, "carbs", 65, "fat", 18, "portionHint", "1.5掌心蛋白+1拳头蔬菜+1手心杂粮饭", "foods", List.of("芹菜炒牛肉 150g", "杂粮饭 150g", "蒜蓉西兰花 150g")),
+                "dinner", Map.of("title", "清蒸鲈鱼餐", "calories", 450, "protein", 35, "carbs", 40, "fat", 12, "portionHint", "1掌心鱼肉+1.5拳头蔬菜", "foods", List.of("清蒸鲈鱼 150g", "蒸红薯 100g", "番茄豆腐汤 1碗")),
+                "snack", Map.of("title", "练前酸奶", "calories", 180, "protein", 10, "carbs", 22, "fat", 4, "portionHint", "1根香蕉或100g酸奶", "foods", List.of("无糖酸奶 150g", "香蕉 1根"))
+        ));
 
-        res.put("dietPlan", dietPlan);
+        // 周二
+        dietList.add(Map.of(
+                "day", "周二",
+                "breakfast", Map.of("title", "燕麦黑豆浆", "calories", 390, "protein", 24, "carbs", 48, "fat", 11, "portionHint", "1掌心蛋白+1手心燕麦", "foods", List.of("无糖黑豆浆 300ml", "煮玉米 1根", "煎蛋 1个")),
+                "lunch", Map.of("title", "彩椒鸡丁餐", "calories", 640, "protein", 40, "carbs", 60, "fat", 16, "portionHint", "1.5掌心蛋白+1拳头彩椒+1手心紫米饭", "foods", List.of("少油彩椒炒鸡丁 150g", "紫米饭 150g", "手撕包菜 150g")),
+                "dinner", Map.of("title", "木耳炒肉片", "calories", 460, "protein", 32, "carbs", 38, "fat", 15, "portionHint", "1掌心瘦肉+1.5拳头木耳菌菇", "foods", List.of("木耳炒瘦肉片 130g", "蒸南瓜 120g", "清炒空心菜 150g")),
+                "snack", Map.of("title", "坚果水果", "calories", 190, "protein", 6, "carbs", 20, "fat", 8, "portionHint", "1小把坚果", "foods", List.of("混合坚果 15g", "苹果 0.5个"))
+        ));
+
+        // 周三
+        dietList.add(Map.of(
+                "day", "周三",
+                "breakfast", Map.of("title", "全麦红豆粥", "calories", 370, "protein", 20, "carbs", 50, "fat", 9, "portionHint", "1掌心蛋白+1手心红豆粥", "foods", List.of("红豆薏米粥 1碗", "茶叶蛋 1个", "小咸菜少许")),
+                "lunch", Map.of("title", "番茄炒蛋牛肉餐", "calories", 660, "protein", 38, "carbs", 68, "fat", 19, "portionHint", "1.5掌心蛋白+1拳头番茄+1手心糙米饭", "foods", List.of("少油番茄炒蛋 1.5份", "卤牛肉 80g", "糙米饭 150g")),
+                "dinner", Map.of("title", "家常豆腐鲜虾", "calories", 440, "protein", 36, "carbs", 35, "fat", 13, "portionHint", "1掌心虾仁豆腐+1.5拳头小白菜", "foods", List.of("鲜虾炖豆腐 150g", "煮土豆块 100g", "清炒小白菜 150g")),
+                "snack", Map.of("title", "清爽黄瓜豆浆", "calories", 160, "protein", 12, "carbs", 15, "fat", 3, "portionHint", "1杯豆浆", "foods", List.of("无糖豆浆 250ml", "水果黄瓜 1根"))
+        ));
+
+        // 周四
+        dietList.add(Map.of(
+                "day", "周四",
+                "breakfast", Map.of("title", "蒸薯蛋奶餐", "calories", 400, "protein", 25, "carbs", 46, "fat", 12, "portionHint", "1掌心蛋白+1手心紫薯", "foods", List.of("鲜牛奶 250ml", "蒸紫薯 100g", "水煮蛋 1个")),
+                "lunch", Map.of("title", "香菇炖鸡餐", "calories", 650, "protein", 41, "carbs", 62, "fat", 17, "portionHint", "1.5掌心去皮鸡肉+1手心黑米饭", "foods", List.of("香菇炖去皮鸡块 150g", "黑米饭 150g", "上汤娃娃菜 150g")),
+                "dinner", Map.of("title", "白灼虾高纤餐", "calories", 430, "protein", 34, "carbs", 36, "fat", 11, "portionHint", "1掌心白灼虾+1.5拳头西兰花", "foods", List.of("白灼鲜虾 120g", "蒸山药 100g", "白灼西兰花 150g")),
+                "snack", Map.of("title", "低脂全脂奶", "calories", 170, "protein", 9, "carbs", 18, "fat", 5, "portionHint", "1杯牛奶", "foods", List.of("低脂牛奶 200ml", "猕猴桃 1个"))
+        ));
+
+        // 周五
+        dietList.add(Map.of(
+                "day", "周五",
+                "breakfast", Map.of("title", "南瓜粥煎蛋", "calories", 385, "protein", 21, "carbs", 49, "fat", 10, "portionHint", "1掌心蛋白+1手心南瓜", "foods", List.of("老南瓜粥 1碗", "少油煎蛋白 2个", "凉拌木耳 80g")),
+                "lunch", Map.of("title", "洋葱炒猪瘦肉", "calories", 655, "protein", 39, "carbs", 64, "fat", 18, "portionHint", "1.5掌心瘦肉+1拳头洋葱+1手心红豆饭", "foods", List.of("洋葱炒瘦猪肉 140g", "红豆饭 150g", "清炒菠菜 150g")),
+                "dinner", Map.of("title", "鲫鱼豆腐汤", "calories", 420, "protein", 33, "carbs", 32, "fat", 14, "portionHint", "1掌心鱼肉豆腐+1.5拳头冬瓜", "foods", List.of("鲫鱼豆腐汤 1碗", "蒸芋头 100g", "清炒冬瓜 150g")),
+                "snack", Map.of("title", "番茄小圣女果", "calories", 150, "protein", 5, "carbs", 22, "fat", 2, "portionHint", "1把圣女果", "foods", List.of("圣女果 150g", "无糖绿茶 1杯"))
+        ));
+
+        // 周六
+        dietList.add(Map.of(
+                "day", "周六",
+                "breakfast", Map.of("title", "全麦馒头豆浆", "calories", 410, "protein", 23, "carbs", 52, "fat", 11, "portionHint", "1掌心蛋白+1手心全麦馒头", "foods", List.of("无糖豆浆 300ml", "全麦小馒头 1个", "蒸蛋羹 1碗")),
+                "lunch", Map.of("title", "青椒炒鸡胸肉", "calories", 630, "protein", 43, "carbs", 61, "fat", 15, "portionHint", "1.5掌心鸡胸+1手心玉米饭", "foods", List.of("青椒炒鸡胸肉片 150g", "玉米饭 150g", "炒凉拌西葫芦 150g")),
+                "dinner", Map.of("title", "清蒸龙利鱼餐", "calories", 440, "protein", 35, "carbs", 38, "fat", 12, "portionHint", "1掌心龙利鱼+1.5拳头生菜", "foods", List.of("清蒸龙利鱼 140g", "蒸甜玉米 0.5根", "耗油生菜 150g")),
+                "snack", Map.of("title", "无糖酸奶蓝莓", "calories", 180, "protein", 11, "carbs", 20, "fat", 4, "portionHint", "1盒酸奶", "foods", List.of("无糖酸奶 140g", "蓝莓 50g"))
+        ));
+
+        // 周日
+        dietList.add(Map.of(
+                "day", "周日",
+                "breakfast", Map.of("title", "燕麦牛奶餐", "calories", 395, "protein", 25, "carbs", 46, "fat", 11, "portionHint", "1掌心蛋白+1手心燕麦片", "foods", List.of("热牛奶冲燕麦片 1碗", "水煮蛋 1个", "苹果 0.5个")),
+                "lunch", Map.of("title", "蒜苔炒牛肉餐", "calories", 665, "protein", 41, "carbs", 66, "fat", 19, "portionHint", "1.5掌心牛肉+1手心五谷饭", "foods", List.of("蒜苔炒牛肉 150g", "五谷杂粮饭 150g", "清炒四季豆 150g")),
+                "dinner", Map.of("title", "海带豆腐炖排骨", "calories", 470, "protein", 31, "carbs", 35, "fat", 17, "portionHint", "1掌心精瘦排骨+1.5拳头海带", "foods", List.of("海带豆腐炖精排 130g", "蒸红薯 100g", "白灼菜心 150g")),
+                "snack", Map.of("title", "橙子全麦饼干", "calories", 170, "protein", 5, "carbs", 24, "fat", 4, "portionHint", "1个水果", "foods", List.of("鲜橙 1个", "无糖全麦饼干 2片"))
+        ));
+
+        res.put("dietPlan", dietList);
         return res;
     }
 
