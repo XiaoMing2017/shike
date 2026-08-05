@@ -121,6 +121,8 @@ Page({
     activeTemplate: 'morandi',
     tempPosterPath: '',
     posterFoodImg: '', // 用户临时选择的食物照片 (仅本地 tempFilePath，不上传服务器)
+    // 🎛️ 线上动态功能开关配置
+    features: { ai_plan: false, diet_diagnosis: true, poster_share: true, team_challenge: true, water_log: true },
     // 🎯 专属 AI 运动与饮食计划
     showPlanModal: false,
     planData: null,
@@ -175,6 +177,8 @@ Page({
         menus: ['shareAppMessage', 'shareTimeline']
       });
     }
+
+    this.fetchFeatureToggles();
 
     if (options && (options.inviteCode || options.scene)) {
       let inviteCode = options.inviteCode;
@@ -1642,11 +1646,27 @@ Page({
   },
 
   openPlanModal() {
+    if (this.data.features && this.data.features.ai_plan === false) {
+      wx.showToast({ title: '该功能升级维护中，敬请期待！', icon: 'none' });
+      return;
+    }
     this.setData({ showPlanModal: true });
     this.fetchPlanStatus(() => {
       // 如果已有计划缓存且本页面 planData 尚空，只读取不主动付费生成
       if (this.data.planStatus && this.data.planStatus.hasPlan && !this.data.planData) {
         this.fetchAiPlan(false, false);
+      }
+    });
+  },
+
+  fetchFeatureToggles() {
+    wx.request({
+      url: `${app.globalData.baseUrl}/config/features`,
+      method: 'GET',
+      success: (res) => {
+        if (res.data && res.data.code === 200 && res.data.data) {
+          this.setData({ features: res.data.data });
+        }
       }
     });
   },

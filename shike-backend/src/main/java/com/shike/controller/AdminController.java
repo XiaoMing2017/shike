@@ -113,4 +113,15 @@ public class AdminController {
                 .contentType(MediaType.parseMediaType("text/csv;charset=UTF-8"))
                 .body(bytes);
     }
+
+    @GetMapping({"/features", "/api/v1/admin/features"})
+    public ResultDTO<List<com.shike.model.entity.FeatureToggle>> getAllFeatureToggles() {
+        return ResultDTO.success(adminService.getAllFeatureToggles());
+    }
+
+    @PostMapping({"/features/{featureKey}/toggle", "/api/v1/admin/features/{featureKey}/toggle"})
+    public ResultDTO<Void> updateFeatureToggle(@PathVariable String featureKey, @RequestParam Boolean enabled) {
+        adminService.updateFeatureToggle(featureKey, enabled, "admin");
+        return ResultDTO.success();
+    }
 }

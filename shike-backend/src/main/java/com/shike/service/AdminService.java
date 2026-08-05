@@ -24,4 +24,8 @@ public interface AdminService {
     void updateGlobalAiLimit(Integer limit, String adminUsername);
     List<com.shike.model.entity.PointLog> getUserPointLogs(Long userId);
     List<com.shike.model.entity.AdminAuditLog> getAuditLogs();
+
+    List<com.shike.model.entity.FeatureToggle> getAllFeatureToggles();
+    void updateFeatureToggle(String featureKey, Boolean enabled, String adminUsername);
+    java.util.Map<String, Boolean> getPublicFeatureToggles();
 }

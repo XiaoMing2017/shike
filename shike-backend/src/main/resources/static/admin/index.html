@@ -869,6 +869,9 @@
         <button class="btn-action" onclick="exportCsv('diets')" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9); font-size: 12px;">
           <i class="fa-solid fa-file-excel"></i> 导出饮食明细 CSV
         </button>
+        <button class="btn-action" onclick="openFeatureToggleModal()" style="background: linear-gradient(135deg, #F59E0B, #D97706); font-size: 12px;">
+          <i class="fa-solid fa-sliders"></i> 🎛️ 功能开关控制
+        </button>
         <button class="btn-action" id="btnOpenTeamModalHeader" onclick="openTeamModal()" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8); font-size: 12px;">
           <i class="fa-solid fa-trophy"></i> 查看减脂小队与成员
         </button>
@@ -1089,6 +1092,29 @@
       <button class="btn-action" onclick="handleLogin()" style="width: 100%; justify-content: center; padding: 12px; font-size: 14px; background: linear-gradient(135deg, #10B981, #059669);">
         <i class="fa-solid fa-key"></i> 验证并登录管理后台
       </button>
+    </div>
+  </div>
+
+  <!-- Feature Toggle Control Modal -->
+  <div class="modal-overlay" id="featureToggleModal">
+    <div class="modal-box" style="width: 720px; max-width: 95vw; padding: 28px;">
+      <div class="modal-header" style="margin-bottom: 20px;">
+        <div>
+          <h2 style="font-size: 20px; font-weight: 700; color: #FFF; display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-sliders" style="color: #F59E0B;"></i> 小程序功能线上开关控制
+          </h2>
+          <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">运营人员可在此一键控制小程序各功能模块在线显示与隐退下架，更改实时生效</p>
+        </div>
+        <button class="modal-close" onclick="closeFeatureToggleModal()">&times;</button>
+      </div>
+
+      <div id="featureToggleList" style="display: flex; flex-direction: column; gap: 14px; max-height: 62vh; overflow-y: auto; padding-right: 4px;">
+        <div style="text-align: center; color: var(--text-muted); padding: 30px;">正在加载功能配置清单...</div>
+      </div>
+
+      <div style="margin-top: 20px; text-align: right;">
+        <button class="btn-action" onclick="closeFeatureToggleModal()" style="background: var(--card-border); font-size: 13px;">关闭</button>
+      </div>
     </div>
   </div>
 
@@ -2258,10 +2284,90 @@
       }
     }
 
+    // Feature Toggle Manager
+    function openFeatureToggleModal() {
+      const modal = document.getElementById('featureToggleModal');
+      if (modal) modal.classList.add('active');
+      loadFeatureToggles();
+    }
+
+    function closeFeatureToggleModal() {
+      const modal = document.getElementById('featureToggleModal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function loadFeatureToggles() {
+      fetch('/api/v1/admin/features')
+        .then(r => r.json())
+        .then(res => {
+          if (res.code === 200) {
+            renderFeatureToggles(res.data);
+          } else {
+            document.getElementById('featureToggleList').innerHTML = '<div style="text-align:center; color:#EF4444; padding:20px;">加载配置失败: ' + (res.message || '') + '</div>';
+          }
+        })
+        .catch(e => {
+          console.error(e);
+          document.getElementById('featureToggleList').innerHTML = '<div style="text-align:center; color:#EF4444; padding:20px;">网络请求失败</div>';
+        });
+    }
+
+    function renderFeatureToggles(toggles) {
+      const container = document.getElementById('featureToggleList');
+      if (!toggles || toggles.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#94A3B8; padding:20px;">暂无功能开关配置</div>';
+        return;
+      }
+
+      container.innerHTML = toggles.map(t => {
+        const isEnabled = t.enabled === true;
+        return `
+          <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid ${isEnabled ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.3)'}; border-radius: 14px; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; transition: all 0.2s;">
+            <div style="flex: 1;">
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap;">
+                <span style="font-size: 16px; font-weight: 700; color: #F8FAFC;">${t.featureName}</span>
+                <span style="font-size: 11px; background: rgba(59, 130, 246, 0.15); color: #60A5FA; padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(59, 130, 246, 0.3); font-weight: 500;">${t.category || '核心功能'}</span>
+                <span style="font-size: 11px; padding: 2px 8px; border-radius: 6px; font-weight: 600; ${isEnabled ? 'background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3);' : 'background: rgba(239, 68, 68, 0.15); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.3);'}">
+                  ${isEnabled ? '🟢 线上展示中' : '🔴 隐藏下架中'}
+                </span>
+              </div>
+              <div style="font-size: 13px; color: #94A3B8; line-height: 1.5;">${t.description || ''}</div>
+              <div style="font-size: 11px; color: #64748B; margin-top: 4px; font-family: monospace;">key: ${t.featureKey}</div>
+            </div>
+            <div style="display: flex; align-items: center;">
+              <button onclick="toggleFeatureKey('${t.featureKey}', ${!isEnabled})" style="background: ${isEnabled ? 'linear-gradient(135deg, #EF4444, #DC2626)' : 'linear-gradient(135deg, #10B981, #059669)'}; color: white; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+                <i class="fa-solid ${isEnabled ? 'fa-eye-slash' : 'fa-eye'}"></i>
+                ${isEnabled ? '下架/隐藏' : '上线/开启'}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleFeatureKey(key, enabled) {
+      fetch(`/api/v1/admin/features/${key}/toggle?enabled=${enabled}`, { method: 'POST' })
+        .then(r => r.json())
+        .then(res => {
+          if (res.code === 200) {
+            alert(enabled ? `✅ 已在小程序线上开启该功能` : `🔴 已在小程序隐藏下架该功能`);
+            loadFeatureToggles();
+          } else {
+            alert('操作失败: ' + (res.message || ''));
+          }
+        })
+        .catch(e => {
+          alert('网络通信异常');
+        });
+    }
+
     // Expose functions globally to ensure onclick attributes work everywhere
     window.openTeamModal = openTeamModal;
     window.closeTeamModal = closeTeamModal;
     window.toggleTeamStatus = toggleTeamStatus;
+    window.openFeatureToggleModal = openFeatureToggleModal;
+    window.closeFeatureToggleModal = closeFeatureToggleModal;
+    window.toggleFeatureKey = toggleFeatureKey;
     window.handleLogin = handleLogin;
     window.handleLogout = handleLogout;
     window.showLoginModal = showLoginModal;

@@ -68,7 +68,7 @@
   <view class="glass-card nutrients-card" catchtap="openNutritionDetailModal">
     <view class="nutrients-header-row flex justify-between align-center">
       <text class="nutrients-header-title">三大营养素分布</text>
-      <view class="nutrients-diag-trigger flex align-center">
+      <view class="nutrients-diag-trigger flex align-center" wx:if="{{features.diet_diagnosis !== false}}">
         <text class="diag-trigger-icon">💡</text>
         <text class="diag-trigger-text">AI 营养诊断 ></text>
       </view>
@@ -106,7 +106,7 @@
   </view>
 
   <!-- 🎯 专属 AI 运动与饮食计划快捷入口卡片 -->
-  <view class="glass-card ai-plan-entry-card flex justify-between align-center" catchtap="openPlanModal">
+  <view class="glass-card ai-plan-entry-card flex justify-between align-center" catchtap="openPlanModal" wx:if="{{features.ai_plan !== false}}">
     <view class="ai-plan-left flex align-center">
       <view class="ai-plan-badge flex align-center justify-center">🎯</view>
       <view class="ai-plan-info flex flex-col">
@@ -127,7 +127,7 @@
     <view class="section-header flex justify-between align-center">
       <view class="flex align-center" style="gap: 12rpx;">
         <text class="section-title">今日三餐记录</text>
-        <text class="poster-link-btn" catchtap="onGeneratePoster">📸 晒餐海报</text>
+        <text class="poster-link-btn" catchtap="onGeneratePoster" wx:if="{{features.poster_share !== false}}">📸 晒餐海报</text>
       </view>
       <text class="history-link-btn" catchtap="onTapHistory">历史记录 ></text>
     </view>

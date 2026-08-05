@@ -42,6 +42,7 @@ public class AdminServiceImpl implements AdminService {
     private final TeamCheckinRepository teamCheckinRepository;
     private final PointLogRepository pointLogRepository;
     private final AdminAuditLogRepository adminAuditLogRepository;
+    private final com.shike.repository.FeatureToggleRepository featureToggleRepository;
     private final StringRedisTemplate stringRedisTemplate;
 
     @Override
@@ -572,6 +573,90 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public List<com.shike.model.entity.AdminAuditLog> getAuditLogs() {
         return adminAuditLogRepository.findAllByOrderByCreatedAtDesc();
+    }
+
+    @jakarta.annotation.PostConstruct
+    public void initFeatureToggles() {
+        try {
+            initSingleToggle("ai_plan", "AI 专属定制计划", "AI大模型功能", false, "基于档案由 Qwen3.8-Max 大模型推算周运动与 28 餐食谱");
+            initSingleToggle("diet_diagnosis", "AI 营养诊断/拍照算卡", "AI大模型功能", true, "照片多模态识别食物热量与营养成分分析");
+            initSingleToggle("poster_share", "晒餐/打卡海报生成", "社交与分享", true, "生成拍立得、大餐救急等精美海报与打卡图");
+            initSingleToggle("team_challenge", "契约小队对赌打卡", "互动与挑战", true, "组队习惯养成打卡与积分对赌池");
+            initSingleToggle("water_log", "饮水追踪与记录", "健康追踪", true, "每日饮水量实时目标进度追踪");
+        } catch (Exception e) {
+            log.warn("Failed to initialize feature toggles: {}", e.getMessage());
+        }
+    }
+
+    private void initSingleToggle(String key, String name, String category, boolean defaultEnabled, String desc) {
+        if (!featureToggleRepository.existsByFeatureKey(key)) {
+            featureToggleRepository.save(com.shike.model.entity.FeatureToggle.builder()
+                    .featureKey(key)
+                    .featureName(name)
+                    .category(category)
+                    .enabled(defaultEnabled)
+                    .description(desc)
+                    .build());
+            log.info("Initialized default feature toggle [{}]: enabled={}", key, defaultEnabled);
+        }
+    }
+
+    @Override
+    public List<com.shike.model.entity.FeatureToggle> getAllFeatureToggles() {
+        initFeatureToggles();
+        return featureToggleRepository.findAll();
+    }
+
+    @Override
+    public void updateFeatureToggle(String featureKey, Boolean enabled, String adminUsername) {
+        com.shike.model.entity.FeatureToggle toggle = featureToggleRepository.findByFeatureKey(featureKey)
+                .orElseThrow(() -> new com.shike.common.BizException(404, "找不到功能开关: " + featureKey));
+
+        toggle.setEnabled(enabled);
+        featureToggleRepository.save(toggle);
+
+        // 清除 Redis 缓存
+        try {
+            stringRedisTemplate.delete("shike:sys:feature_toggles");
+        } catch (Exception e) {
+            log.warn("Failed to clear feature toggles redis cache: {}", e.getMessage());
+        }
+
+        logAudit(adminUsername, "UPDATE_FEATURE_TOGGLE", featureKey, (enabled ? "开启" : "关闭/下架") + " 功能开关 [" + toggle.getFeatureName() + "]");
+    }
+
+    @Override
+    public java.util.Map<String, Boolean> getPublicFeatureToggles() {
+        String cacheKey = "shike:sys:feature_toggles";
+        try {
+            String cached = stringRedisTemplate.opsForValue().get(cacheKey);
+            if (cached != null && !cached.isBlank()) {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                return mapper.readValue(cached, new com.fasterxml.jackson.core.type.TypeReference<java.util.Map<String, Boolean>>() {});
+            }
+        } catch (Exception e) {
+            log.warn("Failed to read feature toggles cache from redis", e);
+        }
+
+        List<com.shike.model.entity.FeatureToggle> list = featureToggleRepository.findAll();
+        if (list.isEmpty()) {
+            initFeatureToggles();
+            list = featureToggleRepository.findAll();
+        }
+
+        java.util.Map<String, Boolean> res = new java.util.HashMap<>();
+        for (com.shike.model.entity.FeatureToggle ft : list) {
+            res.put(ft.getFeatureKey(), Boolean.TRUE.equals(ft.getEnabled()));
+        }
+
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            stringRedisTemplate.opsForValue().set(cacheKey, mapper.writeValueAsString(res), 1, TimeUnit.HOURS);
+        } catch (Exception e) {
+            log.warn("Failed to write feature toggles to redis cache", e);
+        }
+
+        return res;
     }
 
     private void logAudit(String adminUsername, String action, String target, String details) {
