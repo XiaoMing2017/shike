@@ -7,9 +7,12 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDate;
 import java.util.List;
 
+import java.util.Map;
+
 public interface DietService {
     DietRecord recognizeMeal(MultipartFile file, String hint, Long userId);
     DietRecord recordMeal(Long userId, String mealType, String foodItemsJson, String oilLevel, String imageUrl);
     List<DietRecord> getDailyRecords(Long userId, LocalDate date);
     List<MonthSummaryDTO> getMonthSummary(Long userId, int year, int month);
+    Map<String, Object> diagnoseDiet(Long userId, LocalDate date);
 }

@@ -933,4 +933,89 @@ public class DietServiceImpl implements DietService {
             log.error("Failed to increment daily AI count in Redis", e);
         }
     }
+
+    @Override
+    @Transactional
+    public java.util.Map<String, Object> diagnoseDiet(Long userId, LocalDate date) {
+        if (userId == null) {
+            throw new BizException(400, "用户ID不能为空");
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BizException(404, "用户不存在"));
+
+        boolean hasDiagnosisBefore = pointsRecordRepository.existsByUserIdAndType(userId, "DIET_DIAGNOSIS");
+        if (hasDiagnosisBefore) {
+            int currentPoints = (user.getPoints() != null) ? user.getPoints() : 0;
+            if (currentPoints < 15) {
+                throw new BizException(400, "积分不足！生成 AI 深度营养诊断需要 15 积分，您当前剩余 " + currentPoints + " 积分。");
+            }
+            user.setPoints(currentPoints - 15);
+            userRepository.save(user);
+
+            PointsRecord record = PointsRecord.builder()
+                    .userId(userId)
+                    .amount(-15)
+                    .type("DIET_DIAGNOSIS")
+                    .remark("AI 膳食深度诊断 (消耗 15 积分)")
+                    .build();
+            pointsRecordRepository.save(record);
+            log.info("Deducted 15 points for user {} for AI diet diagnosis. Remaining: {}", userId, user.getPoints());
+        } else {
+            PointsRecord record = PointsRecord.builder()
+                    .userId(userId)
+                    .amount(0)
+                    .type("DIET_DIAGNOSIS")
+                    .remark("AI 膳食深度诊断 (首次生成免费)")
+                    .build();
+            pointsRecordRepository.save(record);
+            log.info("First time AI diet diagnosis for user {}, free of charge.", userId);
+        }
+
+        List<DietRecord> dailyRecords = getDailyRecords(userId, date);
+        StringBuilder sb = new StringBuilder();
+        sb.append("你是一位拥有 15 年经验的资深注册营养师 (RD)。请根据用户今日的实际三餐打卡菜品与摄入数据，进行专业、温和且极其落地可操作的【AI 营养深度诊断点评】。\n\n");
+        sb.append("【用户基本档案】:\n");
+        sb.append("- 性别: ").append((user.getGender() != null && user.getGender() == 2) ? "女" : "男")
+                .append(", 年龄: ").append(user.getAge() != null ? user.getAge() : 25)
+                .append("岁, 体重: ").append(user.getWeight() != null ? user.getWeight() : 70).append("kg")
+                .append(", 目标热量: ").append(user.getTargetCalories() != null ? user.getTargetCalories() : 2000).append(" kcal\n\n");
+
+        sb.append("【今日已打卡餐食记录】:\n");
+        if (dailyRecords == null || dailyRecords.isEmpty()) {
+            sb.append("（用户今日尚未打卡任何餐食）\n");
+        } else {
+            for (DietRecord r : dailyRecords) {
+                sb.append("- ").append(r.getMealType()).append(": ").append(r.getFoodItems()).append(" (摄入热量约 ").append(r.getCalories()).append(" kcal)\n");
+            }
+        }
+
+        sb.append("\n【请输出标准的 JSON，包含专家点评与3条具体的调优建议，不要包含 markdown 标记】:\n");
+        sb.append("{\n");
+        sb.append("  \"expertComment\": \"150字以内的专业点评与总结，点评今日菜品搭配的优缺点，并给出温和鼓励。\",\n");
+        sb.append("  \"aiInsights\": [\n");
+        sb.append("    { \"badge\": \"🥩 蛋白诊断\", \"badgeClass\": \"badge-yellow\", \"title\": \"蛋白质达标点评\", \"suggestion\": \"结合今日吃过的菜品，给出下一餐具体补充食材(如 200g 鸡胸肉/2颗水煮蛋)\" },\n");
+        sb.append("    { \"badge\": \"🍚 碳水评估\", \"badgeClass\": \"badge-blue\", \"title\": \"优质碳水占比\", \"suggestion\": \"具体主食替换或调整建议\" },\n");
+        sb.append("    { \"badge\": \"💡 综合调优\", \"badgeClass\": \"badge-green\", \"title\": \"后续饮食策略\", \"suggestion\": \"针对性的饮食或运动搭配建议\" }\n");
+        sb.append("  ]\n");
+        sb.append("}\n");
+
+        java.util.Map<String, Object> resMap = new java.util.HashMap<>();
+        try {
+            String textModel = (aiModel != null && !aiModel.isEmpty()) ? aiModel : "qwen3.6-flash";
+            String aiResponseJson = callTextAi(textModel, sb.toString());
+            String jsonText = aiResponseJson.trim();
+            if (jsonText.startsWith("```json")) jsonText = jsonText.substring(7);
+            if (jsonText.startsWith("```")) jsonText = jsonText.substring(3);
+            if (jsonText.endsWith("```")) jsonText = jsonText.substring(0, jsonText.length() - 3);
+            jsonText = jsonText.trim();
+
+            resMap = objectMapper.readValue(jsonText, new com.fasterxml.jackson.core.type.TypeReference<java.util.Map<String, Object>>() {});
+        } catch (Exception e) {
+            log.error("Failed to generate AI diet diagnosis for user {}, fallback", userId, e);
+            resMap.put("expertComment", "根据您今日的录入情况，总体饮食结构控制得当。建议后半天保持充足饮水并优先选择少油高蛋白食材！");
+        }
+
+        resMap.put("userPoints", user.getPoints() != null ? user.getPoints() : 0);
+        return resMap;
+    }
 }

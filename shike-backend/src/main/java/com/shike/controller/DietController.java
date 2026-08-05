@@ -96,4 +96,15 @@ public class DietController {
         List<MonthSummaryDTO> summary = dietService.getMonthSummary(userId, year, month);
         return ResultDTO.success(summary);
     }
+
+    @PostMapping("/diagnose")
+    public ResultDTO<java.util.Map<String, Object>> diagnoseDiet(
+            @RequestParam("userId") Long userId,
+            @RequestParam(value = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        if (date == null) {
+            date = LocalDate.now();
+        }
+        java.util.Map<String, Object> diagnosis = dietService.diagnoseDiet(userId, date);
+        return ResultDTO.success(diagnosis);
+    }
 }

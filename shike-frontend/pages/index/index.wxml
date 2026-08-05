@@ -519,8 +519,20 @@
           </view>
         </view>
 
+        <view class="diag-section" style="margin-top: 24rpx;" wx:if="{{aiExpertComment}}">
+          <text class="diag-sec-title">🤖 专家级 AI 深度点评</text>
+          <view class="ai-comment-card">
+            <text class="ai-comment-text">{{aiExpertComment}}</text>
+          </view>
+        </view>
+
         <view class="diag-section" style="margin-top: 24rpx;">
-          <text class="diag-sec-title">💡 AI 膳食调优与补充建议</text>
+          <view class="flex justify-between align-center" style="margin-bottom: 16rpx;">
+            <text class="diag-sec-title">💡 膳食调优与补充建议</text>
+            <button class="btn-ai-diag-trigger" catchtap="onGenerateAiDiagnosis" loading="{{isDiagnosing}}">
+              {{isDiagnosing ? '分析中...' : '🤖 AI 深度诊断 (15积分)'}}
+            </button>
+          </view>
           <view class="diag-list">
             <view class="diag-card-row" wx:for="{{nutritionInsights}}" wx:key="id">
               <view class="diag-badge-line flex align-center">

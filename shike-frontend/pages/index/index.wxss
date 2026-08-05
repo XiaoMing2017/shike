@@ -2634,3 +2634,36 @@
   color: #94A3B8;
   padding: 10rpx;
 }
+
+/* AI 深度营养诊断按钮与专家点评卡片 */
+.btn-ai-diag-trigger {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #4F46E5;
+  background: #EEF2FF;
+  border: 1rpx solid #C7D2FE;
+  border-radius: 20rpx;
+  padding: 6rpx 20rpx;
+  height: 52rpx;
+  line-height: 40rpx;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.ai-comment-card {
+  background: linear-gradient(135deg, #F0FDFA 0%, #EEF2FF 100%);
+  border-radius: 24rpx;
+  padding: 24rpx 28rpx;
+  border: 1rpx solid #CCFBF1;
+  box-shadow: 0 4rpx 16rpx rgba(15, 23, 42, 0.04);
+}
+
+.ai-comment-text {
+  font-size: 26rpx;
+  color: #0F766E;
+  line-height: 1.6;
+  font-weight: 500;
+}

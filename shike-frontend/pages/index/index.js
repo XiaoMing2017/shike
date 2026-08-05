@@ -154,7 +154,9 @@ Page({
       { name: 'HIIT/有氧操 ⚡', met: 8.0 },
       { name: '篮球/足球/球类 🏀', met: 6.0 }
     ],
-    showNewFeatureModal: false
+    showNewFeatureModal: false,
+    isDiagnosing: false,
+    aiExpertComment: ''
   },
 
   onLoad(options) {
@@ -684,6 +686,41 @@ Page({
 
   closeNutritionDetailModal() {
     this.setData({ showNutritionModal: false });
+  },
+
+  onGenerateAiDiagnosis() {
+    const user = (app.globalData && app.globalData.userInfo) || wx.getStorageSync('userInfo');
+    if (!user || !user.id) {
+      wx.showToast({ title: '请先登录', icon: 'none' });
+      return;
+    }
+    this.setData({ isDiagnosing: true });
+
+    wx.request({
+      url: `${app.globalData.baseUrl}/diet/diagnose?userId=${user.id}`,
+      method: 'POST',
+      success: (res) => {
+        this.setData({ isDiagnosing: false });
+        if (res.data && res.data.code === 200) {
+          const data = res.data.data;
+          const updates = {};
+          if (data.expertComment) {
+            updates.aiExpertComment = data.expertComment;
+          }
+          if (data.aiInsights && data.aiInsights.length > 0) {
+            updates.nutritionInsights = data.aiInsights;
+          }
+          this.setData(updates);
+          wx.showToast({ title: 'AI 诊断计算完成！', icon: 'success' });
+        } else {
+          wx.showToast({ title: (res.data && res.data.message) || '生成诊断失败', icon: 'none' });
+        }
+      },
+      fail: () => {
+        this.setData({ isDiagnosing: false });
+        wx.showToast({ title: '网络连接失败，请稍后重试', icon: 'none' });
+      }
+    });
   },
 
   drawCalorieRing(progressPercent, isOverLimit) {
