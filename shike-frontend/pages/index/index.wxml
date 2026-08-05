@@ -529,7 +529,7 @@
         <view class="diag-section" style="margin-top: 24rpx;">
           <view class="flex justify-between align-center" style="margin-bottom: 16rpx;">
             <text class="diag-sec-title">💡 膳食调优与补充建议</text>
-            <button class="btn-ai-diag-trigger" catchtap="onGenerateAiDiagnosis" loading="{{isDiagnosing}}">
+            <button class="btn-ai-diag-trigger" catchtap="onGenerateAiDiagnosis" loading="{{isDiagnosing}}" wx:if="{{features.diet_diagnosis !== false}}">
               {{isDiagnosing ? '分析中...' : '🤖 AI 深度诊断 (15积分)'}}
             </button>
           </view>

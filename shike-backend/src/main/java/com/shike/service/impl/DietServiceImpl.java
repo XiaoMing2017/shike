@@ -42,6 +42,7 @@ public class DietServiceImpl implements DietService {
     private final PointsRecordRepository pointsRecordRepository;
     private final ObjectMapper objectMapper;
     private final StringRedisTemplate stringRedisTemplate;
+    private final com.shike.service.AdminService adminService;
 
     @Value("${ai.provider:OPENAI}")
     private String aiProvider;
@@ -937,6 +938,11 @@ public class DietServiceImpl implements DietService {
     @Override
     @Transactional
     public java.util.Map<String, Object> diagnoseDiet(Long userId, LocalDate date) {
+        java.util.Map<String, Boolean> toggles = adminService.getPublicFeatureToggles("release");
+        if (toggles != null && Boolean.FALSE.equals(toggles.get("diet_diagnosis"))) {
+            throw new BizException(400, "AI 营养诊断功能暂未开放或在维护中");
+        }
+
         if (userId == null) {
             throw new BizException(400, "用户ID不能为空");
         }
