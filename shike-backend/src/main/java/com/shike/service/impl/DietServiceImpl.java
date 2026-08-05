@@ -71,6 +71,11 @@ public class DietServiceImpl implements DietService {
     @Override
     @Transactional
     public DietRecord recognizeMeal(MultipartFile file, String hint, Long userId) {
+        java.util.Map<String, Boolean> toggles = adminService.getPublicFeatureToggles("release");
+        if (toggles != null && Boolean.FALSE.equals(toggles.get("photo_recognize"))) {
+            throw new BizException(400, "AI 拍照识图算卡功能暂未开放或在维护中");
+        }
+
         if (file.isEmpty()) {
             throw new BizException(400, "Uploaded file cannot be empty");
         }

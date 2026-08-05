@@ -122,7 +122,7 @@ Page({
     tempPosterPath: '',
     posterFoodImg: '', // 用户临时选择的食物照片 (仅本地 tempFilePath，不上传服务器)
     // 🎛️ 线上动态功能开关配置
-    features: { ai_plan: false, diet_diagnosis: true, poster_share: true, team_challenge: true, water_log: true },
+    features: { ai_plan: false, diet_diagnosis: true, photo_recognize: true, poster_share: true, team_challenge: true, water_log: true },
     // 🎯 专属 AI 运动与饮食计划
     showPlanModal: false,
     planData: null,
@@ -891,6 +891,11 @@ Page({
 
     const user = app.globalData.userInfo;
     if (!user) return;
+
+    if (this.data.features && this.data.features.photo_recognize === false) {
+      wx.showToast({ title: 'AI 拍照识图算卡功能维护中，暂未开放', icon: 'none' });
+      return;
+    }
 
     wx.chooseMedia({
       count: 1,

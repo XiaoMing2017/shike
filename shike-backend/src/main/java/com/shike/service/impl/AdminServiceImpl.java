@@ -579,7 +579,8 @@ public class AdminServiceImpl implements AdminService {
     public void initFeatureToggles() {
         try {
             initSingleToggle("ai_plan", "AI 专属定制计划", "AI大模型功能", "TEST_ONLY", false, "基于档案由 AI 推算周运动与 28 餐食谱");
-            initSingleToggle("diet_diagnosis", "AI 膳食深度诊断与拍照算卡", "AI大模型功能", "PROD_AND_TEST", true, "Qwen大模型三餐深度复盘点评 (15积分/次) & 拍照识图算卡算热量");
+            initSingleToggle("diet_diagnosis", "AI 膳食深度诊断", "AI大模型功能", "PROD_AND_TEST", true, "Qwen 大模型每日三餐深度复盘点评 (15积分/次)");
+            initSingleToggle("photo_recognize", "AI 拍照识图算卡", "AI大模型功能", "PROD_AND_TEST", true, "Qwen-VL 多模态识别食物照片热量、重量与三大营养素");
             initSingleToggle("poster_share", "晒餐/打卡海报生成", "社交与分享", "PROD_AND_TEST", true, "生成拍立得、大餐救急等精美海报与打卡图");
             initSingleToggle("team_challenge", "契约小队对赌打卡", "互动与挑战", "PROD_AND_TEST", true, "组队习惯养成打卡与积分对赌池");
             initSingleToggle("water_log", "饮水追踪与记录", "健康追踪", "PROD_AND_TEST", true, "每日饮水量实时目标进度追踪");
