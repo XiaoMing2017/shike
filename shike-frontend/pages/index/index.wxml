@@ -109,16 +109,16 @@
   <view class="glass-card ai-plan-entry-card flex justify-between align-center" catchtap="openPlanModal" wx:if="{{features.ai_plan !== false}}">
     <view class="ai-plan-left flex align-center">
       <view class="ai-plan-badge flex align-center justify-center">🎯</view>
-      <view class="ai-plan-info flex flex-col">
-        <view class="flex align-center" style="gap: 10rpx;">
+      <view class="ai-plan-info flex flex-col justify-center">
+        <view class="ai-plan-header-row flex align-center">
           <text class="ai-plan-title">我的专属 AI 运动与膳食计划</text>
-          <text class="ai-plan-tag">RD/CSCS 认证</text>
+          <text class="ai-plan-tag">RD/CSCS认证</text>
         </view>
         <text class="ai-plan-sub">基于您的身体档案与阶段目标精准推算</text>
       </view>
     </view>
-    <view class="ai-plan-arrow-btn flex align-center">
-      <text class="arrow-text">查看计划 ></text>
+    <view class="ai-plan-arrow-btn flex align-center justify-center">
+      <text class="arrow-text">查看计划 ›</text>
     </view>
   </view>
 
