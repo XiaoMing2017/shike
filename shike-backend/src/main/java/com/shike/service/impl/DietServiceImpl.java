@@ -985,7 +985,7 @@ public class DietServiceImpl implements DietService {
             sb.append("（用户今日尚未打卡任何餐食）\n");
         } else {
             for (DietRecord r : dailyRecords) {
-                sb.append("- ").append(r.getMealType()).append(": ").append(r.getFoodItems()).append(" (摄入热量约 ").append(r.getCalories()).append(" kcal)\n");
+                sb.append("- ").append(r.getMealType()).append(": ").append(r.getFoodItems()).append(" (摄入热量约 ").append(r.getTotalCalories() != null ? r.getTotalCalories() : 0).append(" kcal)\n");
             }
         }
 
