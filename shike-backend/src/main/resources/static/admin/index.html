@@ -2297,7 +2297,7 @@
     }
 
     function loadFeatureToggles() {
-      fetch('/api/v1/admin/features')
+      authFetch('/api/v1/admin/features')
         .then(r => r.json())
         .then(res => {
           if (res.code === 200) {
@@ -2308,7 +2308,9 @@
         })
         .catch(e => {
           console.error(e);
-          document.getElementById('featureToggleList').innerHTML = '<div style="text-align:center; color:#EF4444; padding:20px;">网络请求失败</div>';
+          if (e.message !== 'Unauthorized') {
+            document.getElementById('featureToggleList').innerHTML = '<div style="text-align:center; color:#EF4444; padding:20px;">网络请求失败</div>';
+          }
         });
     }
 
@@ -2346,7 +2348,7 @@
     }
 
     function toggleFeatureKey(key, enabled) {
-      fetch(`/api/v1/admin/features/${key}/toggle?enabled=${enabled}`, { method: 'POST' })
+      authFetch(`/api/v1/admin/features/${key}/toggle?enabled=${enabled}`, { method: 'POST' })
         .then(r => r.json())
         .then(res => {
           if (res.code === 200) {
@@ -2357,7 +2359,9 @@
           }
         })
         .catch(e => {
-          alert('网络通信异常');
+          if (e.message !== 'Unauthorized') {
+            alert('网络通信异常');
+          }
         });
     }
 
