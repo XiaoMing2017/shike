@@ -213,7 +213,11 @@ Page({
   closeNewFeatureModal() {
     this.setData({ showNewFeatureModal: false });
     try {
-      wx.setStorageSync('has_seen_v2_new_feature_modal', true);
+      const user = (app.globalData && app.globalData.userInfo) || wx.getStorageSync('userInfo');
+      const isUser2 = user && (user.id == 2 || user.id == '2');
+      if (!isUser2) {
+        wx.setStorageSync('has_seen_v2_new_feature_modal', true);
+      }
     } catch (e) {}
   },
 
@@ -323,6 +327,13 @@ Page({
       this.checkLateCheckinStatus(user.id);
       this.checkPendingNudgeAlert(user.id);
       this.checkWaterReminderStatus(user.id);
+
+      // 用户 ID 为 2 (测试开发者账号) 每次进入均自动展现弹窗；其他用户仅展现 1 次
+      const isUser2 = (user.id == 2 || user.id == '2');
+      const hasSeenModal = wx.getStorageSync('has_seen_v2_new_feature_modal');
+      if (isUser2 || !hasSeenModal) {
+        this.setData({ showNewFeatureModal: true });
+      }
     }
     // 1. Set calorie targets and dynamic nutrient distribution
     const targetCal = user.targetCalories || 2000;
