@@ -153,10 +153,22 @@ Page({
       { name: '瑜伽/普拉提 🧘', met: 2.5 },
       { name: 'HIIT/有氧操 ⚡', met: 8.0 },
       { name: '篮球/足球/球类 🏀', met: 6.0 }
-    ]
+    ],
+    showNewFeatureModal: false
   },
 
   onLoad(options) {
+    // 检查是否显示新功能上线重磅引导弹窗 (每个版本仅对用户显示1次)
+    try {
+      const hasSeenModal = wx.getStorageSync('has_seen_v2_new_feature_modal');
+      if (!hasSeenModal) {
+        setTimeout(() => {
+          this.setData({ showNewFeatureModal: true });
+        }, 800);
+      }
+    } catch (e) {
+      console.error('Error reading modal storage', e);
+    }
     // 动态计算悬浮饮水气泡的初始位置 (右边 34rpx，距离底部 186rpx)
     try {
       const sys = wx.getSystemInfoSync();
@@ -196,6 +208,18 @@ Page({
         duration: 3500
       });
     }
+  },
+
+  closeNewFeatureModal() {
+    this.setData({ showNewFeatureModal: false });
+    try {
+      wx.setStorageSync('has_seen_v2_new_feature_modal', true);
+    } catch (e) {}
+  },
+
+  onLaunchAiPlanFromModal() {
+    this.closeNewFeatureModal();
+    this.openPlanModal();
   },
 
   showViewModeModal() {

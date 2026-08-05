@@ -40,7 +40,7 @@
       <view class="ring-outer-glow"></view>
       <view class="ring-glass-disc"></view>
       <view class="ring-inner-disc"></view>
-      <canvas type="2d" id="calorieCanvas" class="calorie-canvas {{(showPlanModal || showNutritionModal || showAiResultModal || showExerciseModal || showMealOptionSheet || showOilOptionSheet || showWaterSheet || showViewModeSheet) ? 'canvas-hidden' : ''}}"></canvas>
+      <canvas type="2d" id="calorieCanvas" class="calorie-canvas {{(showNewFeatureModal || showPlanModal || showNutritionModal || showAiResultModal || showExerciseModal || showMealOptionSheet || showOilOptionSheet || showWaterSheet || showViewModeSheet) ? 'canvas-hidden' : ''}}"></canvas>
       <view class="ring-content flex-col align-center flex">
         <text class="ring-label {{isOverLimit ? 'over-limit-lbl' : (progressPercent <= 15 ? 'danger-lbl' : (progressPercent <= 40 ? 'warning-lbl' : ''))}}">{{ringLabel}}</text>
         <text class="ring-value {{isOverLimit ? 'over-limit-val' : (progressPercent <= 15 ? 'danger-val' : (progressPercent <= 40 ? 'warning-val' : ''))}}">{{remainingCal}}</text>
@@ -113,6 +113,7 @@
         <view class="ai-plan-header-row flex align-center">
           <text class="ai-plan-title">我的专属 AI 运动与膳食计划</text>
           <text class="ai-plan-tag">RD/CSCS认证</text>
+          <text class="new-glow-badge">NEW</text>
         </view>
         <text class="ai-plan-sub">基于您的身体档案与阶段目标精准推算</text>
       </view>
@@ -420,7 +421,7 @@
   <!-- 悬浮饮水气泡 (支持拖拽移动) -->
   <movable-area class="fab-movable-area">
     <movable-view class="fab-movable-view" direction="all" x="{{fabX}}" y="{{fabY}}" out-of-bounds="{{false}}">
-      <view class="water-fab {{(showPlanModal || showWaterSheet || showNutritionModal || showAiResultModal || showExerciseModal || showMealOptionSheet || showOilOptionSheet || showViewModeSheet) ? 'hide' : ''}}" catchtap="openWaterSheet">
+      <view class="water-fab {{(showNewFeatureModal || showPlanModal || showWaterSheet || showNutritionModal || showAiResultModal || showExerciseModal || showMealOptionSheet || showOilOptionSheet || showViewModeSheet) ? 'hide' : ''}}" catchtap="openWaterSheet">
         <view class="water-fab-inner">
           <view class="water-fab-fill" style="height: {{waterFillHeight}}%;">
             <view class="fab-wave fab-wave1"></view>
@@ -731,6 +732,48 @@
       <view class="plan-footer-actions flex justify-between align-center">
         <button class="btn-refresh-plan" catchtap="onRefreshPlan" wx:if="{{planData}}">🤖 重新定制 (100积分)</button>
         <button class="btn-close-plan" catchtap="closePlanModal" style="{{!planData ? 'width: 100%;' : ''}}">完成</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 💥 全新升级：新功能上线重磅引导弹窗 -->
+  <view class="new-feature-mask flex justify-center align-center" wx:if="{{showNewFeatureModal}}" catchtap="closeNewFeatureModal">
+    <view class="new-feature-card flex flex-col align-center" catchtap="preventBubble">
+      <view class="new-feature-header flex flex-col align-center">
+        <view class="new-feature-badge-top">v2.0 重磅升级</view>
+        <text class="new-feature-title">🎉 专属 AI 助手全新上线</text>
+        <text class="new-feature-subtitle">精细化膳食、运动打卡与诊断全面开启</text>
+      </view>
+
+      <view class="new-feature-list flex flex-col">
+        <view class="feature-item-row flex align-center">
+          <view class="feature-icon-box bg-purple flex align-center justify-center">🤖</view>
+          <view class="feature-item-info flex flex-col">
+            <text class="feature-item-title">7天 AI 专属运动与食谱</text>
+            <text class="feature-item-desc">精准推荐每日3~4个动作与接地气食谱</text>
+          </view>
+        </view>
+
+        <view class="feature-item-row flex align-center">
+          <view class="feature-icon-box bg-amber flex align-center justify-center">💡</view>
+          <view class="feature-item-info flex flex-col">
+            <text class="feature-item-title">AI 专家级营养健康诊断</text>
+            <text class="feature-item-desc">评估三大营养占比，针对性给出指导</text>
+          </view>
+        </view>
+
+        <view class="feature-item-row flex align-center">
+          <view class="feature-icon-box bg-green flex align-center justify-center">📸</view>
+          <view class="feature-item-info flex flex-col">
+            <text class="feature-item-title">高颜值晒餐海报</text>
+            <text class="feature-item-desc">一键生成精美饮食打卡图，分享朋友圈</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="new-feature-actions flex flex-col align-center">
+        <button class="btn-primary-launch" catchtap="onLaunchAiPlanFromModal">✨ 立即体验 AI 计划</button>
+        <text class="btn-dismiss-text" catchtap="closeNewFeatureModal">知道了，先逛逛</text>
       </view>
     </view>
   </view>
