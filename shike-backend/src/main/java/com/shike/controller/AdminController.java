@@ -120,8 +120,11 @@ public class AdminController {
     }
 
     @PostMapping({"/features/{featureKey}/toggle", "/api/v1/admin/features/{featureKey}/toggle"})
-    public ResultDTO<Void> updateFeatureToggle(@PathVariable String featureKey, @RequestParam Boolean enabled) {
-        adminService.updateFeatureToggle(featureKey, enabled, "admin");
+    public ResultDTO<Void> updateFeatureToggle(
+            @PathVariable String featureKey,
+            @RequestParam(required = false) String envMode,
+            @RequestParam(required = false) Boolean enabled) {
+        adminService.updateFeatureToggle(featureKey, envMode, enabled, "admin");
         return ResultDTO.success();
     }
 }

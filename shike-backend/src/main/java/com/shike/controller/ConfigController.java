@@ -20,7 +20,7 @@ public class ConfigController {
      * 获取全平台公开的功能开关状态 (供小程序前端显示隐藏控制)
      */
     @GetMapping("/features")
-    public ResultDTO<Map<String, Boolean>> getPublicFeatureToggles() {
-        return ResultDTO.success(adminService.getPublicFeatureToggles());
+    public ResultDTO<Map<String, Boolean>> getPublicFeatureToggles(@org.springframework.web.bind.annotation.RequestParam(required = false, defaultValue = "release") String env) {
+        return ResultDTO.success(adminService.getPublicFeatureToggles(env));
     }
 }

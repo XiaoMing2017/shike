@@ -1660,8 +1660,14 @@ Page({
   },
 
   fetchFeatureToggles() {
+    let env = 'release';
+    try {
+      const accountInfo = wx.getAccountInfoSync();
+      env = (accountInfo && accountInfo.miniProgram && accountInfo.miniProgram.envVersion) || 'release';
+    } catch (e) {}
+
     wx.request({
-      url: `${app.globalData.baseUrl}/config/features`,
+      url: `${app.globalData.baseUrl}/config/features?env=${env}`,
       method: 'GET',
       success: (res) => {
         if (res.data && res.data.code === 200 && res.data.data) {

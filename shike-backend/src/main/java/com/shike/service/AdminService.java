@@ -26,6 +26,6 @@ public interface AdminService {
     List<com.shike.model.entity.AdminAuditLog> getAuditLogs();
 
     List<com.shike.model.entity.FeatureToggle> getAllFeatureToggles();
-    void updateFeatureToggle(String featureKey, Boolean enabled, String adminUsername);
-    java.util.Map<String, Boolean> getPublicFeatureToggles();
+    void updateFeatureToggle(String featureKey, String envMode, Boolean enabled, String adminUsername);
+    java.util.Map<String, Boolean> getPublicFeatureToggles(String env);
 }

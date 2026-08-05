@@ -578,41 +578,59 @@ public class AdminServiceImpl implements AdminService {
     @jakarta.annotation.PostConstruct
     public void initFeatureToggles() {
         try {
-            initSingleToggle("ai_plan", "AI 专属定制计划", "AI大模型功能", false, "基于档案由 Qwen3.8-Max 大模型推算周运动与 28 餐食谱");
-            initSingleToggle("diet_diagnosis", "AI 营养诊断/拍照算卡", "AI大模型功能", true, "照片多模态识别食物热量与营养成分分析");
-            initSingleToggle("poster_share", "晒餐/打卡海报生成", "社交与分享", true, "生成拍立得、大餐救急等精美海报与打卡图");
-            initSingleToggle("team_challenge", "契约小队对赌打卡", "互动与挑战", true, "组队习惯养成打卡与积分对赌池");
-            initSingleToggle("water_log", "饮水追踪与记录", "健康追踪", true, "每日饮水量实时目标进度追踪");
+            initSingleToggle("ai_plan", "AI 专属定制计划", "AI大模型功能", "TEST_ONLY", false, "基于档案由 AI 推算周运动与 28 餐食谱");
+            initSingleToggle("diet_diagnosis", "AI 营养诊断/拍照算卡", "AI大模型功能", "PROD_AND_TEST", true, "照片多模态识别食物热量与营养成分分析");
+            initSingleToggle("poster_share", "晒餐/打卡海报生成", "社交与分享", "PROD_AND_TEST", true, "生成拍立得、大餐救急等精美海报与打卡图");
+            initSingleToggle("team_challenge", "契约小队对赌打卡", "互动与挑战", "PROD_AND_TEST", true, "组队习惯养成打卡与积分对赌池");
+            initSingleToggle("water_log", "饮水追踪与记录", "健康追踪", "PROD_AND_TEST", true, "每日饮水量实时目标进度追踪");
         } catch (Exception e) {
             log.warn("Failed to initialize feature toggles: {}", e.getMessage());
         }
     }
 
-    private void initSingleToggle(String key, String name, String category, boolean defaultEnabled, String desc) {
+    private void initSingleToggle(String key, String name, String category, String defaultEnvMode, boolean defaultEnabled, String desc) {
         if (!featureToggleRepository.existsByFeatureKey(key)) {
             featureToggleRepository.save(com.shike.model.entity.FeatureToggle.builder()
                     .featureKey(key)
                     .featureName(name)
                     .category(category)
+                    .envMode(defaultEnvMode != null ? defaultEnvMode : "PROD_AND_TEST")
                     .enabled(defaultEnabled)
                     .description(desc)
                     .build());
-            log.info("Initialized default feature toggle [{}]: enabled={}", key, defaultEnabled);
+            log.info("Initialized default feature toggle [{}]: envMode={}, enabled={}", key, defaultEnvMode, defaultEnabled);
         }
     }
 
     @Override
     public List<com.shike.model.entity.FeatureToggle> getAllFeatureToggles() {
         initFeatureToggles();
-        return featureToggleRepository.findAll();
+        List<com.shike.model.entity.FeatureToggle> list = featureToggleRepository.findAll();
+        for (com.shike.model.entity.FeatureToggle ft : list) {
+            if (ft.getEnvMode() == null || ft.getEnvMode().isBlank()) {
+                ft.setEnvMode(Boolean.TRUE.equals(ft.getEnabled()) ? "PROD_AND_TEST" : "DISABLED");
+            }
+        }
+        return list;
     }
 
     @Override
-    public void updateFeatureToggle(String featureKey, Boolean enabled, String adminUsername) {
+    public void updateFeatureToggle(String featureKey, String envMode, Boolean enabled, String adminUsername) {
         com.shike.model.entity.FeatureToggle toggle = featureToggleRepository.findByFeatureKey(featureKey)
                 .orElseThrow(() -> new com.shike.common.BizException(404, "找不到功能开关: " + featureKey));
 
-        toggle.setEnabled(enabled);
+        if (envMode != null && !envMode.isBlank()) {
+            toggle.setEnvMode(envMode);
+            if ("DISABLED".equals(envMode)) {
+                toggle.setEnabled(false);
+            } else {
+                toggle.setEnabled(true);
+            }
+        } else if (enabled != null) {
+            toggle.setEnabled(enabled);
+            toggle.setEnvMode(enabled ? "PROD_AND_TEST" : "DISABLED");
+        }
+
         featureToggleRepository.save(toggle);
 
         // 清除 Redis 缓存
@@ -622,12 +640,15 @@ public class AdminServiceImpl implements AdminService {
             log.warn("Failed to clear feature toggles redis cache: {}", e.getMessage());
         }
 
-        logAudit(adminUsername, "UPDATE_FEATURE_TOGGLE", featureKey, (enabled ? "开启" : "关闭/下架") + " 功能开关 [" + toggle.getFeatureName() + "]");
+        String modeDesc = "PROD_AND_TEST".equals(toggle.getEnvMode()) ? "全量线上(正式+测试)" : ("TEST_ONLY".equals(toggle.getEnvMode()) ? "仅测试环境(开发者工具)" : "全网下架隐藏");
+        logAudit(adminUsername, "UPDATE_FEATURE_TOGGLE", featureKey, "设置功能 [" + toggle.getFeatureName() + "] 部署环境为: " + modeDesc);
     }
 
     @Override
-    public java.util.Map<String, Boolean> getPublicFeatureToggles() {
-        String cacheKey = "shike:sys:feature_toggles";
+    public java.util.Map<String, Boolean> getPublicFeatureToggles(String env) {
+        String isTestEnv = ("develop".equalsIgnoreCase(env) || "trial".equalsIgnoreCase(env)) ? "test" : "prod";
+        String cacheKey = "shike:sys:feature_toggles:" + isTestEnv;
+
         try {
             String cached = stringRedisTemplate.opsForValue().get(cacheKey);
             if (cached != null && !cached.isBlank()) {
@@ -644,9 +665,25 @@ public class AdminServiceImpl implements AdminService {
             list = featureToggleRepository.findAll();
         }
 
+        boolean isTest = "test".equals(isTestEnv);
         java.util.Map<String, Boolean> res = new java.util.HashMap<>();
+
         for (com.shike.model.entity.FeatureToggle ft : list) {
-            res.put(ft.getFeatureKey(), Boolean.TRUE.equals(ft.getEnabled()));
+            String mode = ft.getEnvMode();
+            if (mode == null || mode.isBlank()) {
+                mode = Boolean.TRUE.equals(ft.getEnabled()) ? "PROD_AND_TEST" : "DISABLED";
+            }
+
+            boolean active = false;
+            if ("PROD_AND_TEST".equals(mode)) {
+                active = true;
+            } else if ("TEST_ONLY".equals(mode)) {
+                active = isTest; // 仅测试/开发环境开启！正式版隐藏！
+            } else {
+                active = false; // DISABLED
+            }
+
+            res.put(ft.getFeatureKey(), active);
         }
 
         try {

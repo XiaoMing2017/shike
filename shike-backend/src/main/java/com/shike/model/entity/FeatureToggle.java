@@ -29,6 +29,9 @@ public class FeatureToggle {
     @Column(name = "enabled", nullable = false)
     private Boolean enabled;
 
+    @Column(name = "env_mode", length = 30)
+    private String envMode; // PROD_AND_TEST, TEST_ONLY, DISABLED
+
     @Column(name = "description", length = 255)
     private String description;
 

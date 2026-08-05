@@ -2344,24 +2344,43 @@
       }
 
       container.innerHTML = toggles.map(t => {
-        const isEnabled = t.enabled === true;
+        const mode = t.envMode || (t.enabled ? 'PROD_AND_TEST' : 'DISABLED');
+        
+        let badgeHtml = '';
+        if (mode === 'PROD_AND_TEST') {
+          badgeHtml = '<span style="font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 700; background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.4);">🚀 全量线上 (正式+测试均显示)</span>';
+        } else if (mode === 'TEST_ONLY') {
+          badgeHtml = '<span style="font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 700; background: rgba(245, 158, 11, 0.18); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.4);">🧪 仅测试开启 (正式版隐藏/开发者工具可测)</span>';
+        } else {
+          badgeHtml = '<span style="font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 700; background: rgba(239, 68, 68, 0.15); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.4);">⛔ 全网下架 (全局隐藏)</span>';
+        }
+
         return `
-          <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid ${isEnabled ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.3)'}; border-radius: 14px; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; transition: all 0.2s;">
-            <div style="flex: 1;">
-              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap;">
-                <span style="font-size: 16px; font-weight: 700; color: #F8FAFC;">${t.featureName}</span>
-                <span style="font-size: 11px; background: rgba(59, 130, 246, 0.15); color: #60A5FA; padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(59, 130, 246, 0.3); font-weight: 500;">${t.category || '核心功能'}</span>
-                <span style="font-size: 11px; padding: 2px 8px; border-radius: 6px; font-weight: 600; ${isEnabled ? 'background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3);' : 'background: rgba(239, 68, 68, 0.15); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.3);'}">
-                  ${isEnabled ? '🟢 线上展示中' : '🔴 隐藏下架中'}
-                </span>
+          <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid ${mode === 'PROD_AND_TEST' ? 'rgba(16, 185, 129, 0.35)' : (mode === 'TEST_ONLY' ? 'rgba(245, 158, 11, 0.4)' : 'rgba(239, 68, 68, 0.3)')}; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 14px; transition: all 0.2s;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap;">
+                  <span style="font-size: 16px; font-weight: 700; color: #F8FAFC;">${t.featureName}</span>
+                  <span style="font-size: 11px; background: rgba(59, 130, 246, 0.15); color: #60A5FA; padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(59, 130, 246, 0.3); font-weight: 500;">${t.category || '核心功能'}</span>
+                  ${badgeHtml}
+                </div>
+                <div style="font-size: 13px; color: #94A3B8; line-height: 1.5;">${t.description || ''}</div>
               </div>
-              <div style="font-size: 13px; color: #94A3B8; line-height: 1.5;">${t.description || ''}</div>
-              <div style="font-size: 11px; color: #64748B; margin-top: 4px; font-family: monospace;">key: ${t.featureKey}</div>
+              <div style="font-size: 11px; color: #64748B; font-family: monospace;">key: ${t.featureKey}</div>
             </div>
-            <div style="display: flex; align-items: center;">
-              <button onclick="toggleFeatureKey('${t.featureKey}', ${!isEnabled})" style="background: ${isEnabled ? 'linear-gradient(135deg, #EF4444, #DC2626)' : 'linear-gradient(135deg, #10B981, #059669)'}; color: white; border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
-                <i class="fa-solid ${isEnabled ? 'fa-eye-slash' : 'fa-eye'}"></i>
-                ${isEnabled ? '下架/隐藏' : '上线/开启'}
+
+            <!-- 3环境模式分段选择按钮 (Mode Pill Selectors) -->
+            <div style="display: flex; gap: 10px; background: rgba(30, 41, 59, 0.6); padding: 8px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08); flex-wrap: wrap;">
+              <button onclick="setFeatureMode('${t.featureKey}', 'PROD_AND_TEST')" style="flex: 1; padding: 8px 12px; font-size: 12px; font-weight: 600; border-radius: 8px; cursor: pointer; transition: all 0.2s; ${mode === 'PROD_AND_TEST' ? 'background: linear-gradient(135deg, #10B981, #059669); color: #FFF; border: none; box-shadow: 0 4px 12px rgba(16,185,129,0.3);' : 'background: transparent; color: #94A3B8; border: 1px solid transparent;'}">
+                🚀 全量线上 (正式+测试)
+              </button>
+
+              <button onclick="setFeatureMode('${t.featureKey}', 'TEST_ONLY')" style="flex: 1; padding: 8px 12px; font-size: 12px; font-weight: 600; border-radius: 8px; cursor: pointer; transition: all 0.2s; ${mode === 'TEST_ONLY' ? 'background: linear-gradient(135deg, #F59E0B, #D97706); color: #FFF; border: none; box-shadow: 0 4px 12px rgba(245,158,11,0.3);' : 'background: transparent; color: #94A3B8; border: 1px solid transparent;'}">
+                🧪 仅测试环境 (正式隐退)
+              </button>
+
+              <button onclick="setFeatureMode('${t.featureKey}', 'DISABLED')" style="flex: 1; padding: 8px 12px; font-size: 12px; font-weight: 600; border-radius: 8px; cursor: pointer; transition: all 0.2s; ${mode === 'DISABLED' ? 'background: linear-gradient(135deg, #EF4444, #DC2626); color: #FFF; border: none; box-shadow: 0 4px 12px rgba(239,68,68,0.3);' : 'background: transparent; color: #94A3B8; border: 1px solid transparent;'}">
+                ⛔ 全网下架 (全局隐藏)
               </button>
             </div>
           </div>
@@ -2369,12 +2388,13 @@
       }).join('');
     }
 
-    function toggleFeatureKey(key, enabled) {
-      authFetch(`/api/v1/admin/features/${key}/toggle?enabled=${enabled}`, { method: 'POST' })
+    function setFeatureMode(key, envMode) {
+      authFetch(`/api/v1/admin/features/${key}/toggle?envMode=${envMode}`, { method: 'POST' })
         .then(r => r.json())
         .then(res => {
           if (res.code === 200) {
-            alert(enabled ? `✅ 已在小程序线上开启该功能` : `🔴 已在小程序隐藏下架该功能`);
+            const desc = envMode === 'PROD_AND_TEST' ? '全量线上 (正式+测试)' : (envMode === 'TEST_ONLY' ? '仅测试环境 (开发者工具)' : '全网隐藏下架');
+            alert(`✅ 已成功将 [${key}] 功能设置为: ${desc}`);
             loadFeatureToggles();
           } else {
             alert('操作失败: ' + (res.message || ''));
@@ -2393,7 +2413,7 @@
     window.toggleTeamStatus = toggleTeamStatus;
     window.openFeatureToggleModal = openFeatureToggleModal;
     window.closeFeatureToggleModal = closeFeatureToggleModal;
-    window.toggleFeatureKey = toggleFeatureKey;
+    window.setFeatureMode = setFeatureMode;
     window.handleLogin = handleLogin;
     window.handleLogout = handleLogout;
     window.showLoginModal = showLoginModal;
