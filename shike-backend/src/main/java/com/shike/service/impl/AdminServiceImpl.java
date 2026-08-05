@@ -633,9 +633,11 @@ public class AdminServiceImpl implements AdminService {
 
         featureToggleRepository.save(toggle);
 
-        // 清除 Redis 缓存
+        // 清除 Redis 缓存（全量与分环境缓存）
         try {
             stringRedisTemplate.delete("shike:sys:feature_toggles");
+            stringRedisTemplate.delete("shike:sys:feature_toggles:test");
+            stringRedisTemplate.delete("shike:sys:feature_toggles:prod");
         } catch (Exception e) {
             log.warn("Failed to clear feature toggles redis cache: {}", e.getMessage());
         }
