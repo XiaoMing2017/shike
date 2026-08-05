@@ -29,7 +29,11 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
         String requestURI = request.getRequestURI();
         String servletPath = request.getServletPath();
 
-        // 放行静态资源（HTML、CSS、JS、图片等）与登录、状态检查端点
+        // 放行静态资源与公开功能配置读取 (只对 GET /features 放行，修改 toggle 依然验权)
+        if ("GET".equalsIgnoreCase(request.getMethod()) && (requestURI.endsWith("/features") || servletPath.endsWith("/features"))) {
+            return true;
+        }
+
         if (requestURI.endsWith(".html") 
                 || requestURI.endsWith(".css") 
                 || requestURI.endsWith(".js") 
