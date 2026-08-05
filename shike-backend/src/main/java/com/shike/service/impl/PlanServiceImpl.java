@@ -384,7 +384,7 @@ public class PlanServiceImpl implements PlanService {
                     "model", aiModel,
                     "messages", List.of(systemMsg, userMsg),
                     "temperature", 0.5,
-                    "max_tokens", 2000,
+                    "max_tokens", 3500,
                     "enable_thinking", false
             );
         } else {
@@ -392,7 +392,7 @@ public class PlanServiceImpl implements PlanService {
                     "model", aiModel,
                     "messages", List.of(systemMsg, userMsg),
                     "temperature", 0.6,
-                    "max_tokens", 2000
+                    "max_tokens", 3500
             );
         }
 
