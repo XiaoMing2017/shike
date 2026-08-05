@@ -40,7 +40,7 @@
       <view class="ring-outer-glow"></view>
       <view class="ring-glass-disc"></view>
       <view class="ring-inner-disc"></view>
-      <canvas type="2d" id="calorieCanvas" class="calorie-canvas {{(showNutritionModal || showAiResultModal || showExerciseModal || showMealOptionSheet || showOilOptionSheet || showWaterSheet || showViewModeSheet) ? 'canvas-hidden' : ''}}"></canvas>
+      <canvas type="2d" id="calorieCanvas" class="calorie-canvas {{(showPlanModal || showNutritionModal || showAiResultModal || showExerciseModal || showMealOptionSheet || showOilOptionSheet || showWaterSheet || showViewModeSheet) ? 'canvas-hidden' : ''}}"></canvas>
       <view class="ring-content flex-col align-center flex">
         <text class="ring-label {{isOverLimit ? 'over-limit-lbl' : (progressPercent <= 15 ? 'danger-lbl' : (progressPercent <= 40 ? 'warning-lbl' : ''))}}">{{ringLabel}}</text>
         <text class="ring-value {{isOverLimit ? 'over-limit-val' : (progressPercent <= 15 ? 'danger-val' : (progressPercent <= 40 ? 'warning-val' : ''))}}">{{remainingCal}}</text>
@@ -420,7 +420,7 @@
   <!-- 悬浮饮水气泡 (支持拖拽移动) -->
   <movable-area class="fab-movable-area">
     <movable-view class="fab-movable-view" direction="all" x="{{fabX}}" y="{{fabY}}" out-of-bounds="{{false}}">
-      <view class="water-fab {{(showWaterSheet || showNutritionModal || showAiResultModal || showExerciseModal || showMealOptionSheet || showOilOptionSheet || showViewModeSheet) ? 'hide' : ''}}" catchtap="openWaterSheet">
+      <view class="water-fab {{(showPlanModal || showWaterSheet || showNutritionModal || showAiResultModal || showExerciseModal || showMealOptionSheet || showOilOptionSheet || showViewModeSheet) ? 'hide' : ''}}" catchtap="openWaterSheet">
         <view class="water-fab-inner">
           <view class="water-fab-fill" style="height: {{waterFillHeight}}%;">
             <view class="fab-wave fab-wave1"></view>
