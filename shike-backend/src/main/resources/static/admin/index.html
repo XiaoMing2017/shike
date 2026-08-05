@@ -1282,6 +1282,19 @@
         showLoginModal('登录凭证不存在或已过期，请重新登录');
         throw new Error('Unauthorized');
       }
+
+      const clone = res.clone();
+      try {
+        const json = await clone.json();
+        if (json && json.code === 401) {
+          setAdminToken('', '');
+          showLoginModal(json.message || '登录凭证不存在或已过期，请重新登录');
+          throw new Error('Unauthorized');
+        }
+      } catch (e) {
+        if (e.message === 'Unauthorized') throw e;
+      }
+
       return res;
     }
 
@@ -1323,6 +1336,10 @@
           errBox.style.display = 'none';
           hideLoginModal();
           loadDashboard();
+          const ftModal = document.getElementById('featureToggleModal');
+          if (ftModal && ftModal.classList.contains('active')) {
+            loadFeatureToggles();
+          }
         } else {
           errBox.innerText = res.message || '登录失败，凭证错误';
           errBox.style.display = 'block';
@@ -2286,6 +2303,11 @@
 
     // Feature Toggle Manager
     function openFeatureToggleModal() {
+      const token = getAdminToken();
+      if (!token) {
+        showLoginModal('请先登录管理后台授权凭证');
+        return;
+      }
       const modal = document.getElementById('featureToggleModal');
       if (modal) modal.classList.add('active');
       loadFeatureToggles();
