@@ -579,7 +579,7 @@ public class AdminServiceImpl implements AdminService {
     public void initFeatureToggles() {
         try {
             initSingleToggle("ai_plan", "AI 专属定制计划", "AI大模型功能", "TEST_ONLY", false, "基于档案由 AI 推算周运动与 28 餐食谱");
-            initSingleToggle("diet_diagnosis", "AI 营养诊断/拍照算卡", "AI大模型功能", "PROD_AND_TEST", true, "照片多模态识别食物热量与营养成分分析");
+            initSingleToggle("diet_diagnosis", "AI 膳食深度诊断与拍照算卡", "AI大模型功能", "PROD_AND_TEST", true, "Qwen大模型三餐深度复盘点评 (15积分/次) & 拍照识图算卡算热量");
             initSingleToggle("poster_share", "晒餐/打卡海报生成", "社交与分享", "PROD_AND_TEST", true, "生成拍立得、大餐救急等精美海报与打卡图");
             initSingleToggle("team_challenge", "契约小队对赌打卡", "互动与挑战", "PROD_AND_TEST", true, "组队习惯养成打卡与积分对赌池");
             initSingleToggle("water_log", "饮水追踪与记录", "健康追踪", "PROD_AND_TEST", true, "每日饮水量实时目标进度追踪");
@@ -589,7 +589,8 @@ public class AdminServiceImpl implements AdminService {
     }
 
     private void initSingleToggle(String key, String name, String category, String defaultEnvMode, boolean defaultEnabled, String desc) {
-        if (!featureToggleRepository.existsByFeatureKey(key)) {
+        com.shike.model.entity.FeatureToggle toggle = featureToggleRepository.findByFeatureKey(key).orElse(null);
+        if (toggle == null) {
             featureToggleRepository.save(com.shike.model.entity.FeatureToggle.builder()
                     .featureKey(key)
                     .featureName(name)
@@ -599,6 +600,10 @@ public class AdminServiceImpl implements AdminService {
                     .description(desc)
                     .build());
             log.info("Initialized default feature toggle [{}]: envMode={}, enabled={}", key, defaultEnvMode, defaultEnabled);
+        } else {
+            toggle.setFeatureName(name);
+            toggle.setDescription(desc);
+            featureToggleRepository.save(toggle);
         }
     }
 
