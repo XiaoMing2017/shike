@@ -324,48 +324,63 @@ public class PlanServiceImpl implements PlanService {
         sb.append("【目标专项规则 (必须严格遵守)】:\n");
         sb.append(goalSpecificRules).append("\n\n");
 
-        sb.append("【通用专家知识库准则 (必须严格遵守)】:\n");
-        sb.append("1. 【Zone 2 有氧与抗阻结合】(出处: Peter Attia / Dr. Huberman): 有氧优先推荐 Zone 2 心率稳态(最大心率60-70%)；力量训练在任何目标中都必须占主体。\n");
-        sb.append("2. 【同肌群恢复期】(出处: Huberman Lab): 同一大肌群训练后至少间隔 48-72 小时，每周安排 1-2 天休息/主动恢复。\n");
-        sb.append("3. 【RP Volume Landmarks容量管理】(出处: Dr. Mike Israetel): 严格遵守上方标注的每肌群周训练组数与RIR预留次数。\n");
-        sb.append("4. 【运动动作拆解细化 (必须严格遵守)】: 每个训练日的 items 数组中必须包含 3~4 个具体的动作细项（例如：动作1'哑铃卧推 💪', 动作2'上斜哑铃推举 💪', 动作3'双杠臂屈伸 💪', 动作4'Zone2慢跑 🏃‍♂️'），每个动作单独作为 items 中的一个对象，给明明确名称、时长(分钟)、消耗(kcal)和动作细节(组数x次数/RIR)，绝不能只给1个粗糙的'力量训练'合并名称！方便用户逐个动作打卡完成！\n");
-        sb.append("5. 【可选运动类型】: 跑步 🏃, 慢跑 🏃‍♂️, 快走 🚶‍♂️, 散步 🚶, 动感单车 🚲, 游泳 🏊, 哑铃卧推 💪, 深蹲 💪, 硬拉 💪, 引体向上 💪, 划船 💪, 哑铃推举 💪, 臂屈伸 💪, 弯举 💪, 瑜伽/普拉提 🧘, HIIT ⚡, 球类 🏀。\n");
-        sb.append("6. 【中国家庭实用接地气膳食 (7天每天不重样)】: 绝不顿顿使用水煮鸡胸肉西兰花等极端枯燥健身餐！必须设计【周一至周日共7天每天都不重样】的接地气中式减脂/健康食谱。食材推荐中国普通超市与菜市场易买到的天然家常食材，烹饪少油少盐健康做法（如：芹菜炒牛肉、清蒸鲈鱼/虾仁、番茄炒蛋少油、木耳炒肉片、家常豆腐汤、杂粮饭、玉米、红薯、小黄米粥、凉拌黄瓜等）。\n");
-        sb.append("7. 【手掌估算比喻】(出处: Precision Nutrition): 在每餐膳食介绍中给出手掌大小比喻（如 1掌心蛋白质、1拳头蔬菜、1手心碳水）。\n");
-        sb.append("8. 【输出精炼控制】: 动作与食材名称务必简洁明了(如'哑铃卧推 💪 4组x12次')，控制总 JSON 输出在 1500 Tokens 以内，确保 JSON 格式完整闭合、绝不截断！\n\n");
+        sb.append("【1. 统一减脂期训练容量与强度规则 (RP Volume Landmarks)】:\n");
+        sb.append("- 大肌群容量: 每周 10-14 个有效训练组 (控制在 MAV 内保肌与保证恢复)\n");
+        sb.append("- 小肌群容量: 每周 6-10 个有效训练组\n");
+        sb.append("- 训练强度: 70%-85% 1RM，力量训练保持重量不主动降低\n");
+        sb.append("- RIR (保留次数): 复合动作 RIR 2 (保留2次)，孤立动作 RIR 1-2 (保留1-2次)\n\n");
 
-        sb.append("【请严格按以下 JSON 格式输出，不要包含任何 markdown 代码块标记或多余文字】:\n");
+        sb.append("【2. 训练动作生成规则 (严禁笼统描述)】:\n");
+        sb.append("- 每个训练日必须拆分为 3-5 个具体动作\n");
+        sb.append("- 每个动作必须明确: 1.动作名称 2.训练组数 3.次数范围 4.RIR 5.时长(分钟) 6.热量消耗(kcal)\n");
+        sb.append("- 严禁出现 '力量训练'、'胸部训练'、'腿部训练' 等笼统文字，必须具体到如 '哑铃卧推 💪 4组x12次 (RIR 2)'！\n\n");
+
+        sb.append("【3. 渐进超负荷与恢复管理规则】:\n");
+        sb.append("- 渐进超负荷: 完成目标次数且 RIR≥2 时，上肢下次 +1-2kg，下肢 +2.5-5kg；若未完成最低次数，保持重量或降低 5%\n");
+        sb.append("- 恢复管理: 力量训练 4-5天/周，Zone2 有氧 3-4次/周 (单次25-35min)，安排 1-2天 休息/主动恢复\n");
+        sb.append("- 训练时长控制: 力量训练 45-70min，Zone2 25-35min，单次总时长 ≤ 90分钟\n");
+        sb.append("- 减脂速度控制: 每周减重目标 0.5%-1%，每日热量缺口控制在 500-700kcal\n\n");
+
+        sb.append("【4. 饮食与食材替换规则】:\n");
+        sb.append("- 每日 4 餐: 早餐、午餐、下午加餐、晚餐，每餐包含 蛋白+碳水+蔬菜+热量\n");
+        sb.append("- 手掌估算: 蛋白质 1-2掌心，碳水 1手心，蔬菜 1拳头\n");
+        sb.append("- 禁止连续 7 天出现相同主食和蛋白质；每餐在说明中给出食材替换方案 (如 鸡蛋=虾仁=牛肉=鸡胸肉; 米饭=红薯=紫米饭=燕麦)\n\n");
+
+        sb.append("【请严格按以下固定 JSON 格式输出，不允许输出任何解释文字或 markdown 标记】:\n");
         sb.append("{\n");
-        sb.append("  \"summary\": \"针对该用户人群分层与目标的个性化专业点评与建议（200字以内，必须提及体脂分群策略与关键训练参数）\",\n");
-        sb.append("  \"nutritionOverview\": {\n");
-        sb.append("    \"targetCal\": ").append((int) targetCal).append(",\n");
-        sb.append("    \"proteinG\": ").append(proteinG).append(",\n");
-        sb.append("    \"carbsG\": ").append(carbsG).append(",\n");
-        sb.append("    \"fatG\": ").append(fatG).append("\n");
+        sb.append("  \"user_summary\": {\n");
+        sb.append("    \"goal\": \"").append(goalLabel).append("\",\n");
+        sb.append("    \"target_calories\": ").append((int) targetCal).append(",\n");
+        sb.append("    \"protein\": ").append(proteinG).append(",\n");
+        sb.append("    \"carbs\": ").append(carbsG).append(",\n");
+        sb.append("    \"fat\": ").append(fatG).append("\n");
         sb.append("  },\n");
-        sb.append("  \"workoutPlan\": [\n");
+        sb.append("  \"weekly_training\": [\n");
         sb.append("    {\n");
         sb.append("      \"day\": \"周一\",\n");
-        sb.append("      \"focus\": \"胸大肌与三头力量 + Zone2慢跑\",\n");
-        sb.append("      \"isRestDay\": false,\n");
+        sb.append("      \"training_type\": \"胸大肌与三头力量 + Zone2慢跑\",\n");
+        sb.append("      \"total_duration\": 60,\n");
         sb.append("      \"items\": [\n");
-        sb.append("        { \"name\": \"哑铃卧推 💪\", \"duration\": 12, \"calories\": 70, \"detail\": \"4组x12次 (RIR 2) 目标胸大肌\" },\n");
-        sb.append("        { \"name\": \"上斜哑铃推举 💪\", \"duration\": 10, \"calories\": 60, \"detail\": \"3组x12次 专注上胸\" },\n");
-        sb.append("        { \"name\": \"双杠臂屈伸 💪\", \"duration\": 10, \"calories\": 50, \"detail\": \"3组x10次 下胸与三头\" },\n");
-        sb.append("        { \"name\": \"慢跑 🏃‍♂️\", \"duration\": 25, \"calories\": 180, \"detail\": \"心率维持 Zone 2 燃脂区间\" }\n");
+        sb.append("        { \"name\": \"哑铃卧推 💪\", \"duration_min\": 15, \"calorie_kcal\": 90, \"sets_reps_rir\": \"4组x12次 (RIR 2)\" },\n");
+        sb.append("        { \"name\": \"上斜哑铃推举 💪\", \"duration_min\": 12, \"calorie_kcal\": 70, \"sets_reps_rir\": \"3组x12次 (RIR 2)\" },\n");
+        sb.append("        { \"name\": \"双杠臂屈伸 💪\", \"duration_min\": 10, \"calorie_kcal\": 60, \"sets_reps_rir\": \"3组x10次 (RIR 1-2)\" },\n");
+        sb.append("        { \"name\": \"Zone 2 慢跑 🏃‍♂️\", \"duration_min\": 25, \"calorie_kcal\": 180, \"sets_reps_rir\": \"心率维持 60-70% 最大心率\" }\n");
         sb.append("      ]\n");
         sb.append("    }\n");
-        sb.append("    // ... 周二至周日共7天，每天包含3-4个具体动作细项！\n");
+        sb.append("    // ... 周二至周日共7天\n");
         sb.append("  ],\n");
-        sb.append("  \"dietPlan\": [\n");
+        sb.append("  \"weekly_diet\": [\n");
         sb.append("    {\n");
         sb.append("      \"day\": \"周一\",\n");
-        sb.append("      \"breakfast\": { \"title\": \"中式高蛋白早餐\", \"calories\": 400, \"protein\": 25, \"carbs\": 45, \"fat\": 12, \"portionHint\": \"1掌心蛋白+1手心碳水\", \"foods\": [\"小黄米粥 1碗\", \"水煮蛋 1个\", \"凉拌黄瓜 100g\"] },\n");
-        sb.append("      \"lunch\": { \"title\": \"家常复合碳水午餐\", \"calories\": 650, \"protein\": 40, \"carbs\": 65, \"fat\": 18, \"portionHint\": \"1.5掌心蛋白+1拳头蔬菜+1手心杂粮饭\", \"foods\": [\"芹菜炒牛肉 150g\", \"杂粮饭 150g\", \"蒜蓉时菜 150g\"] },\n");
-        sb.append("      \"dinner\": { \"title\": \"轻盈高纤晚餐\", \"calories\": 450, \"protein\": 30, \"carbs\": 40, \"fat\": 14, \"portionHint\": \"1掌心海鲜/豆制品+1.5拳头蔬菜\", \"foods\": [\"清蒸鲈鱼 150g\", \"蒸红薯 100g\", \"番茄豆腐汤 1碗\"] },\n");
-        sb.append("      \"snack\": { \"title\": \"练前加餐\", \"calories\": 200, \"protein\": 12, \"carbs\": 25, \"fat\": 4, \"portionHint\": \"1根香蕉或100g无糖酸奶\", \"foods\": [\"低脂无糖酸奶 150g\", \"香蕉 1根\"] }\n");
+        sb.append("      \"total_calories\": ").append((int) targetCal).append(",\n");
+        sb.append("      \"meals\": [\n");
+        sb.append("        { \"meal\": \"早餐\", \"foods\": \"小黄米粥 1碗 + 水煮蛋 1个 + 凉拌黄瓜 100g (替换: 燕麦/黑豆浆)\", \"hand_size_reference\": \"1掌心蛋白+1手心碳水\" },\n");
+        sb.append("        { \"meal\": \"午餐\", \"foods\": \"芹菜炒牛肉 150g + 杂粮饭 150g + 蒜蓉西兰花 150g (替换: 清蒸鲈鱼/鸡胸肉)\", \"hand_size_reference\": \"1.5掌心蛋白+1拳头蔬菜+1手心碳水\" },\n");
+        sb.append("        { \"meal\": \"下午加餐\", \"foods\": \"无糖酸奶 150g + 香蕉 1根\", \"hand_size_reference\": \"1根香蕉或100g酸奶\" },\n");
+        sb.append("        { \"meal\": \"晚餐\", \"foods\": \"清蒸鲈鱼 150g + 蒸红薯 100g + 番茄豆腐汤 1碗 (替换: 豆腐/虾仁)\", \"hand_size_reference\": \"1掌心蛋白+1.5拳头蔬菜\" }\n");
+        sb.append("      ]\n");
         sb.append("    }\n");
-        sb.append("    // ... 周二至周日共7天，每天菜品与搭配不重样！\n");
+        sb.append("    // ... 周二至周日共7天，主食与蛋白不重样\n");
         sb.append("  ]\n");
         sb.append("}\n");
 
@@ -440,7 +455,75 @@ public class PlanServiceImpl implements PlanService {
         }
         jsonText = jsonText.trim();
 
-        return objectMapper.readValue(jsonText, new TypeReference<Map<String, Object>>() {});
+        Map<String, Object> map = objectMapper.readValue(jsonText, new TypeReference<Map<String, Object>>() {});
+        
+        // 自动适配固定 JSON 输出结构与前端字段映射
+        if (map.containsKey("user_summary") && !map.containsKey("nutritionOverview")) {
+            Map<String, Object> userSum = (Map<String, Object>) map.get("user_summary");
+            Map<String, Object> overview = new HashMap<>();
+            overview.put("targetCal", userSum.get("target_calories"));
+            overview.put("proteinG", userSum.get("protein"));
+            overview.put("carbsG", userSum.get("carbs"));
+            overview.put("fatG", userSum.get("fat"));
+            map.put("nutritionOverview", overview);
+            map.put("summary", "【" + userSum.get("goal") + "】每日目标热量 " + userSum.get("target_calories") + " kcal (蛋白质 " + userSum.get("protein") + "g, 碳水 " + userSum.get("carbs") + "g, 脂肪 " + userSum.get("fat") + "g)");
+        }
+        
+        if (map.containsKey("weekly_training") && !map.containsKey("workoutPlan")) {
+            List<Map<String, Object>> weeklyTraining = (List<Map<String, Object>>) map.get("weekly_training");
+            List<Map<String, Object>> workoutPlan = new ArrayList<>();
+            for (Map<String, Object> day : weeklyTraining) {
+                Map<String, Object> dayMap = new HashMap<>();
+                dayMap.put("day", day.get("day"));
+                String tType = (String) day.get("training_type");
+                dayMap.put("focus", tType);
+                dayMap.put("isRestDay", "休息日".equals(tType) || "主动恢复".equals(tType) || "完全休息".equals(tType));
+                
+                List<Map<String, Object>> items = new ArrayList<>();
+                List<Map<String, Object>> rawItems = (List<Map<String, Object>>) day.get("items");
+                if (rawItems != null) {
+                    for (Map<String, Object> rawItem : rawItems) {
+                        Map<String, Object> itemMap = new HashMap<>();
+                        itemMap.put("name", rawItem.get("name"));
+                        itemMap.put("duration", rawItem.get("duration_min"));
+                        itemMap.put("calories", rawItem.get("calorie_kcal"));
+                        itemMap.put("detail", rawItem.get("sets_reps_rir"));
+                        items.add(itemMap);
+                    }
+                }
+                dayMap.put("items", items);
+                workoutPlan.add(dayMap);
+            }
+            map.put("workoutPlan", workoutPlan);
+        }
+
+        if (map.containsKey("weekly_diet") && !map.containsKey("dietPlan")) {
+            List<Map<String, Object>> weeklyDiet = (List<Map<String, Object>>) map.get("weekly_diet");
+            List<Map<String, Object>> dietPlan = new ArrayList<>();
+            for (Map<String, Object> day : weeklyDiet) {
+                Map<String, Object> dayMap = new HashMap<>();
+                dayMap.put("day", day.get("day"));
+                List<Map<String, Object>> meals = (List<Map<String, Object>>) day.get("meals");
+                if (meals != null) {
+                    for (Map<String, Object> meal : meals) {
+                        String mealName = (String) meal.get("meal");
+                        Map<String, Object> mealObj = new HashMap<>();
+                        mealObj.put("title", mealName);
+                        mealObj.put("portionHint", meal.get("hand_size_reference"));
+                        mealObj.put("foods", List.of((String) meal.get("foods")));
+                        mealObj.put("calories", 400);
+                        if (mealName.contains("早")) dayMap.put("breakfast", mealObj);
+                        else if (mealName.contains("午")) dayMap.put("lunch", mealObj);
+                        else if (mealName.contains("晚")) dayMap.put("dinner", mealObj);
+                        else dayMap.put("snack", mealObj);
+                    }
+                }
+                dietPlan.add(dayMap);
+            }
+            map.put("dietPlan", dietPlan);
+        }
+
+        return map;
     }
 
     private String translateGoal(String goal, String customGoalType) {
