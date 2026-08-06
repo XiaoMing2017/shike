@@ -80,6 +80,8 @@ Page({
     viewModeIndex: 0,
     viewModeOptions: ['日', '周'],
     showViewModeSheet: false,
+    weekDashboardData: null,
+    weekDashboardLoading: false,
     showMealOptionSheet: false,
     showOilOptionSheet: false,
     currentMealType: '',
@@ -122,13 +124,14 @@ Page({
     tempPosterPath: '',
     posterFoodImg: '', // 用户临时选择的食物照片 (仅本地 tempFilePath，不上传服务器)
     // 🎛️ 线上动态功能开关配置
-    features: { ai_plan: false, diet_diagnosis: true, photo_recognize: true, poster_share: true, team_challenge: true, water_log: true },
+    features: { ai_plan: false, diet_diagnosis: true, photo_recognize: true, poster_share: true, team_challenge: true, water_log: true, week_dashboard: true },
     // 🎯 专属 AI 运动与饮食计划
     showPlanModal: false,
     planData: null,
     activeDietPlan: null,
     planActiveTab: 'workout',
     planDayIndex: 0,
+    todayPlanDayIndex: -1,
     planLoading: false,
     planStatus: { hasPlan: false, isFirstTime: true, userPoints: 0 },
     // 个人信息完善引导横幅
@@ -155,15 +158,20 @@ Page({
       { name: '篮球/足球/球类 🏀', met: 6.0 }
     ],
     showNewFeatureModal: false,
+    announcementConfig: null,
+    checkedPlanExercisesMap: {},
     isDiagnosing: false,
     aiExpertComment: ''
   },
 
   onLoad(options) {
-    // 检查是否显示新功能上线重磅引导弹窗 (每个版本仅对用户显示1次)
+    this.fetchAnnouncementConfig();
+    // 检查是否显示新功能上线重磅引导弹窗 (页面首次加载/每次打开进入展现1次)
     try {
+      const user = (app.globalData && app.globalData.userInfo) || wx.getStorageSync('userInfo');
+      const isUser2 = user && (user.id == 2 || user.id == '2');
       const hasSeenModal = wx.getStorageSync('has_seen_v2_new_feature_modal');
-      if (!hasSeenModal) {
+      if (isUser2 || !hasSeenModal) {
         setTimeout(() => {
           this.setData({ showNewFeatureModal: true });
         }, 800);
@@ -212,6 +220,21 @@ Page({
     }
   },
 
+  fetchAnnouncementConfig() {
+    wx.request({
+      url: `${app.globalData.baseUrl}/config/announcement`,
+      method: 'GET',
+      success: (res) => {
+        if (res.data && res.data.code === 200 && res.data.data) {
+          this.setData({ announcementConfig: res.data.data });
+        }
+      },
+      fail: (err) => {
+        console.error('Failed to fetch announcement config', err);
+      }
+    });
+  },
+
   closeNewFeatureModal() {
     this.setData({ showNewFeatureModal: false });
     try {
@@ -226,6 +249,20 @@ Page({
   onLaunchAiPlanFromModal() {
     this.closeNewFeatureModal();
     this.openPlanModal();
+  },
+
+  onLaunchAnnouncementAction() {
+    this.closeNewFeatureModal();
+    const config = this.data.announcementConfig;
+    const action = (config && config.buttonAction) ? config.buttonAction : 'AI_PLAN';
+    
+    if (action === 'AI_PLAN') {
+      this.openPlanModal();
+    } else if (action === 'HEALTH_DIAGNOSIS') {
+      this.openNutritionModal();
+    } else if (action === 'PHOTO_MEAL') {
+      this.selectMealOption();
+    }
   },
 
   showViewModeModal() {
@@ -255,20 +292,60 @@ Page({
   },
 
 
+  switchToDayMode() {
+    this.setData({
+      viewModeIndex: 0,
+      showViewModeSheet: false
+    });
+    wx.pageScrollTo({
+      scrollTop: 0,
+      duration: 300
+    });
+  },
+
   selectViewMode(e) {
     const index = parseInt(e.currentTarget.dataset.index);
     if (index === 1) {
-      wx.showToast({
-        title: '周看板即将上线，敬请期待！',
-        icon: 'none',
-        duration: 2000
+      // Check feature toggle
+      if (this.data.features && this.data.features.week_dashboard === false) {
+        wx.showToast({
+          title: '周看板功能暂未开启（后台已停用）',
+          icon: 'none',
+          duration: 2000
+        });
+        this.setData({ showViewModeSheet: false });
+        return;
+      }
+      this.setData({
+        viewModeIndex: 1,
+        showViewModeSheet: false
       });
-      this.setData({ showViewModeSheet: false });
-      return;
+      this.fetchWeekDashboard();
+    } else {
+      this.switchToDayMode();
     }
-    this.setData({
-      viewModeIndex: index,
-      showViewModeSheet: false
+  },
+
+  fetchWeekDashboard() {
+    const user = app.globalData.userInfo;
+    if (!user || !user.id) return;
+    this.setData({ weekDashboardLoading: true });
+    wx.request({
+      url: `${app.globalData.baseUrl}/diet/week-dashboard?userId=${user.id}`,
+      method: 'GET',
+      success: (res) => {
+        if (res.data && res.data.code === 200 && res.data.data) {
+          this.setData({
+            weekDashboardData: res.data.data,
+            weekDashboardLoading: false
+          });
+        } else {
+          this.setData({ weekDashboardLoading: false });
+        }
+      },
+      fail: () => {
+        this.setData({ weekDashboardLoading: false });
+      }
     });
   },
 
@@ -281,11 +358,6 @@ Page({
     this.checkUserAndLoadData();
     const subscribed = !!wx.getStorageSync('water_wx_subscribed');
     this.setData({ isWaterSubscribed: subscribed });
-
-    // 静默自动续费订阅额度：用户曾勾选"总是允许"后，此调用无感知通过
-    if (subscribed) {
-      this._silentRenewWaterQuota();
-    }
 
     // 从后端拉取真实剩余额度
     this._loadWaterSubQuota();
@@ -316,9 +388,15 @@ Page({
           } else {
             this.loadUserData(user);
           }
+          if (this.data.viewModeIndex === 1) {
+            this.fetchWeekDashboard();
+          }
         },
         fail: () => {
           this.loadUserData(user);
+          if (this.data.viewModeIndex === 1) {
+            this.fetchWeekDashboard();
+          }
         }
       });
     });
@@ -329,13 +407,6 @@ Page({
       this.checkLateCheckinStatus(user.id);
       this.checkPendingNudgeAlert(user.id);
       this.checkWaterReminderStatus(user.id);
-
-      // 用户 ID 为 2 (测试开发者账号) 每次进入均自动展现弹窗；其他用户仅展现 1 次
-      const isUser2 = (user.id == 2 || user.id == '2');
-      const hasSeenModal = wx.getStorageSync('has_seen_v2_new_feature_modal');
-      if (isUser2 || !hasSeenModal) {
-        this.setData({ showNewFeatureModal: true });
-      }
     }
     // 1. Set calorie targets and dynamic nutrient distribution
     const targetCal = user.targetCalories || 2000;
@@ -397,27 +468,23 @@ Page({
       },
       success: (exRes) => {
         if (exRes.data && exRes.data.code === 200) {
-          const emojiMap = {
-            '跑步': '🏃',
-            '慢跑': '🏃‍♂️',
-            '快走': '🚶‍♂️',
-            '散步': '🚶',
-            '动感单车': '🚲',
-            '游泳': '🏊',
-            '力量训练': '💪',
-            '瑜伽/普拉提': '🧘',
-            'HIIT/有氧操': '⚡',
-            '篮球/足球/球类': '🏀'
-          };
-          const exercises = (exRes.data.data.records || []).map(item => ({
-            ...item,
-            emoji: emojiMap[item.activityName] || '🏃'
-          }));
+          const rawRecords = exRes.data.data.records || [];
+          const exercises = rawRecords.map(item => {
+            const meta = this.getExerciseMeta(item.activityName);
+            return {
+              ...item,
+              cleanActivityName: meta.name,
+              emoji: meta.emoji,
+              color: meta.color,
+              bg: meta.bg
+            };
+          });
           const exerciseCal = Math.round(exRes.data.data.totalCalories || 0);
           this.setData({
             exercises,
             exerciseCal
           }, () => {
+            this.updateCheckedPlanExercisesMap(exercises);
             this.fetchDietRecords(user.id, todayStr, targetCal);
           });
         } else {
@@ -1435,7 +1502,7 @@ Page({
       return;
     }
 
-    const activityName = this.data.exerciseTypeOptions[idx].name.replace(/[\uD83C-\uDBFF\uDC00-\uDFFF\s]/g, ''); // 过滤表情
+    const activityName = this.data.exerciseTypeOptions[idx].name.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, ''); // 过滤表情与特殊符号
     const todayStr = this.getTodayDateString();
     
     wx.showLoading({ title: '正在保存...' });
@@ -1631,50 +1698,65 @@ Page({
     });
   },
 
-  _silentRenewWaterQuota() {
+  _renewWaterQuotaOnUserGesture(showToastIfSuccess = false) {
     const templateId = '6rHAfQw2A3WSw00LCaV9MUSop3OFVsRTAx4I-xgW5lw';
     wx.requestSubscribeMessage({
       tmplIds: [templateId],
       success: (res) => {
         if (res[templateId] === 'accept') {
-          // 静默续费成功，通知后端 +1 额度
+          wx.setStorageSync('water_wx_subscribed', true);
           app.login((user) => {
             if (user && user.id) {
               wx.request({
-                url: `${app.globalData.baseUrl}/user/subscribe?userId=${user.id}&templateId=${templateId}&type=WATER&count=1`,
+                url: `${app.globalData.baseUrl}/user/subscribe?userId=${user.id}&templateId=${templateId}&type=WATER&count=3`,
                 method: 'POST',
                 success: () => {
                   this._loadWaterSubQuota();
+                  if (showToastIfSuccess) {
+                    wx.showToast({ title: '提醒额度已增加 🥤', icon: 'success' });
+                  }
                 }
               });
             }
           });
         }
       },
-      fail: () => {
-        // 静默续费失败 (用户未勾选"总是允许")，不提示
+      fail: (err) => {
+        console.log('Subscribe message on gesture failed or rejected:', err);
       }
     });
   },
 
   onSubscribeWaterPush() {
-    if (this.data.isWaterSubscribed) {
-      wx.showModal({
-        title: '关闭微信提醒',
-        content: `当前剩余 ${this.data.waterSubQuota} 次提醒额度。\n确定要关闭微信聊天框定时喝水提醒吗？`,
-        confirmText: '确定关闭',
-        cancelText: '保持开启',
+    const templateId = '6rHAfQw2A3WSw00LCaV9MUSop3OFVsRTAx4I-xgW5lw';
+
+    if (this.data.isWaterSubscribed && this.data.waterSubQuota > 0) {
+      wx.showActionSheet({
+        itemList: [`➕ 补充提醒次数 (当前剩 ${this.data.waterSubQuota} 次)`, '🚫 关闭微信定时提醒'],
+        itemColor: '#0F172A',
         success: (res) => {
-          if (res.confirm) {
-            this.setData({ isWaterSubscribed: false, waterSubQuota: 0 });
-            wx.removeStorageSync('water_wx_subscribed');
-            wx.showToast({ title: '已关闭微信提醒', icon: 'none' });
-            app.login((user) => {
-              if (user && user.id) {
-                wx.request({
-                  url: `${app.globalData.baseUrl}/user/unsubscribe?userId=${user.id}&type=WATER`,
-                  method: 'POST'
-                });
+          if (res.tapIndex === 0) {
+            this._renewWaterQuotaOnUserGesture(true);
+          } else if (res.tapIndex === 1) {
+            wx.showModal({
+              title: '关闭微信提醒',
+              content: `确定要关闭微信聊天框定时喝水提醒吗？`,
+              confirmText: '确定关闭',
+              cancelText: '保持开启',
+              success: (mRes) => {
+                if (mRes.confirm) {
+                  this.setData({ isWaterSubscribed: false, waterSubQuota: 0 });
+                  wx.removeStorageSync('water_wx_subscribed');
+                  wx.showToast({ title: '已关闭微信提醒', icon: 'none' });
+                  app.login((user) => {
+                    if (user && user.id) {
+                      wx.request({
+                        url: `${app.globalData.baseUrl}/user/unsubscribe?userId=${user.id}&type=WATER`,
+                        method: 'POST'
+                      });
+                    }
+                  });
+                }
               }
             });
           }
@@ -1682,8 +1764,6 @@ Page({
       });
       return;
     }
-
-    const templateId = '6rHAfQw2A3WSw00LCaV9MUSop3OFVsRTAx4I-xgW5lw';
 
     wx.requestSubscribeMessage({
       tmplIds: [templateId],
@@ -1695,16 +1775,11 @@ Page({
           app.login((user) => {
             if (user && user.id) {
               wx.request({
-                url: `${app.globalData.baseUrl}/user/subscribe?userId=${user.id}&templateId=${templateId}&type=WATER&count=1`,
+                url: `${app.globalData.baseUrl}/user/subscribe?userId=${user.id}&templateId=${templateId}&type=WATER&count=3`,
                 method: 'POST',
                 success: () => {
                   this._loadWaterSubQuota();
-                  wx.showModal({
-                    title: '✅ 已开启饮水提醒',
-                    content: '💡 小贴士：授权弹窗中勾选「总是保持以上选择」后，每次打开小程序会自动续费额度，提醒永不断供！',
-                    showCancel: false,
-                    confirmText: '知道了'
-                  });
+                  wx.showToast({ title: '已开启微信饮水提醒 🥤', icon: 'success' });
                 }
               });
             }
@@ -1727,13 +1802,21 @@ Page({
       wx.showToast({ title: '该功能升级维护中，敬请期待！', icon: 'none' });
       return;
     }
-    this.setData({ showPlanModal: true });
+    const todayIdx = this.getTodayPlanDayIndex();
+    this.setData({ showPlanModal: true, todayPlanDayIndex: todayIdx });
     this.fetchPlanStatus(() => {
       // 如果已有计划缓存且本页面 planData 尚空，只读取不主动付费生成
       if (this.data.planStatus && this.data.planStatus.hasPlan && !this.data.planData) {
         this.fetchAiPlan(false, false);
       }
     });
+  },
+
+  // 获取今天对应计划中的 dayIndex（周一=0 ... 周日=6）
+  getTodayPlanDayIndex() {
+    const jsDay = new Date().getDay(); // 0=周日, 1=周一 ... 6=周六
+    // 计划数组顺序: 周一(0), 周二(1), 周三(2), 周四(3), 周五(4), 周六(5), 周日(6)
+    return jsDay === 0 ? 6 : jsDay - 1;
   },
 
   fetchFeatureToggles() {
@@ -1854,16 +1937,29 @@ Page({
           if (res.data && res.data.code === 200) {
             const planData = res.data.data;
             if (planData) {
-              const activeDietPlan = this.updateActiveDietPlan(planData, 0);
+              if (planData.workoutPlan) {
+                planData.workoutPlan.forEach(w => {
+                  if (w.items) {
+                    w.items.forEach(it => {
+                      it.cleanName = (it.name || '').replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
+                    });
+                  }
+                });
+              }
+              const todayIdx = this.getTodayPlanDayIndex();
+              const startIdx = (planData.workoutPlan && todayIdx < planData.workoutPlan.length) ? todayIdx : 0;
+              const activeDietPlan = this.updateActiveDietPlan(planData, startIdx);
               const userPoints = planData.userPoints !== undefined ? planData.userPoints : (this.data.planStatus ? this.data.planStatus.userPoints : 0);
               this.setData({
                 planData: planData,
-                planDayIndex: 0,
+                planDayIndex: startIdx,
+                todayPlanDayIndex: todayIdx,
                 activeDietPlan: activeDietPlan,
                 'planStatus.hasPlan': true,
                 'planStatus.isFirstTime': false,
                 'planStatus.userPoints': userPoints
               });
+              this.updateCheckedPlanExercisesMap();
               if (forceRefresh) {
                 wx.showToast({ title: 'AI 定制计划已更新！', icon: 'success' });
               }
@@ -1878,6 +1974,51 @@ Page({
         }
       });
     });
+  },
+
+  getExerciseMeta(rawName) {
+    if (!rawName) return { name: '运动打卡', emoji: '🏃', color: '#0EA5E9', bg: 'rgba(14, 165, 233, 0.1)' };
+    const cleanName = rawName.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
+    const name = cleanName || rawName;
+
+    if (/卧推|臂屈伸|推举|哑铃|杠铃|力量|深蹲|硬拉|划船|弯举|肌肉|胸大肌|背阔肌|腹肌/.test(name)) {
+      return { name, emoji: '💪', color: '#F97316', bg: 'rgba(249, 115, 22, 0.1)' };
+    }
+    if (/跑|Zone|有氧/.test(name)) {
+      return { name, emoji: '🏃‍♂️', color: '#10B981', bg: 'rgba(16, 185, 129, 0.1)' };
+    }
+    if (/走|散步/.test(name)) {
+      return { name, emoji: '🚶‍♂️', color: '#06B6D4', bg: 'rgba(6, 182, 212, 0.1)' };
+    }
+    if (/单车|骑行|骑车/.test(name)) {
+      return { name, emoji: '🚲', color: '#6366F1', bg: 'rgba(99, 102, 241, 0.1)' };
+    }
+    if (/泳|游泳/.test(name)) {
+      return { name, emoji: '🏊', color: '#3B82F6', bg: 'rgba(59, 130, 246, 0.1)' };
+    }
+    if (/瑜伽|普拉提|拉伸|柔韧/.test(name)) {
+      return { name, emoji: '🧘', color: '#EC4899', bg: 'rgba(236, 72, 153, 0.1)' };
+    }
+    if (/HIIT|跳绳|有氧操|燃脂/.test(name)) {
+      return { name, emoji: '⚡', color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.1)' };
+    }
+    if (/球|篮球|足球|羽毛球|网球|乒乓/.test(name)) {
+      return { name, emoji: '🏀', color: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.1)' };
+    }
+
+    return { name, emoji: '🏋️', color: '#0EA5E9', bg: 'rgba(14, 165, 233, 0.1)' };
+  },
+
+  updateCheckedPlanExercisesMap(exercisesList) {
+    const list = exercisesList || this.data.exercises || [];
+    const map = {};
+    list.forEach(ex => {
+      if (ex.activityName) {
+        const clean = ex.activityName.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
+        map[clean] = true;
+      }
+    });
+    this.setData({ checkedPlanExercisesMap: map });
   },
 
   onRefreshPlan() {
@@ -1896,25 +2037,37 @@ Page({
 
   onAddPlanExercise(e) {
     const { name, duration, calories } = e.currentTarget.dataset;
+    const cleanName = (name || '训练动作').replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
+    const todayStr = this.getTodayDateString();
+
     app.login((user) => {
       if (!user || !user.id) return;
+      wx.showLoading({ title: '打卡中...' });
       wx.request({
         url: `${app.globalData.baseUrl}/exercise/add`,
         method: 'POST',
-        header: { 'Content-Type': 'application/json' },
+        header: { 'content-type': 'application/x-www-form-urlencoded' },
         data: {
           userId: user.id,
-          exerciseType: name,
-          durationMinutes: parseInt(duration) || 30,
-          caloriesBurned: parseInt(calories) || 150
+          date: todayStr,
+          activityName: cleanName,
+          durationMinutes: parseInt(duration) || 15,
+          caloriesBurned: parseInt(calories) || 60
         },
         success: (res) => {
+          wx.hideLoading();
           if (res.data && res.data.code === 200) {
-            wx.showToast({ title: `已成功打卡 ${name}！`, icon: 'success' });
-            this.loadUserData(user); // 刷新首页进度条
+            wx.showToast({ title: `已成功打卡 ${cleanName}！`, icon: 'success' });
+            const map = { ...this.data.checkedPlanExercisesMap, [cleanName]: true };
+            this.setData({ checkedPlanExercisesMap: map });
+            this.loadUserData(user); // 刷新首页进度条与累计运动卡路里
           } else {
-            wx.showToast({ title: '打卡失败', icon: 'none' });
+            wx.showToast({ title: '打卡失败: ' + ((res.data && res.data.message) || ''), icon: 'none' });
           }
+        },
+        fail: () => {
+          wx.hideLoading();
+          wx.showToast({ title: '网络通信失败', icon: 'none' });
         }
       });
     });
@@ -2505,6 +2658,7 @@ Page({
   onShareAppMessage() {
     const user = app.globalData.userInfo;
     const nickname = user && user.nickname ? user.nickname : '自律达人';
+    this._rewardSharePoints('SHARE_FRIEND');
     return {
       title: `🥗 ${nickname}的今日卡路里膳食记录，拍照算卡，健康减脂！`,
       path: '/pages/index/index',
@@ -2515,11 +2669,35 @@ Page({
   onShareTimeline() {
     const user = app.globalData.userInfo;
     const nickname = user && user.nickname ? user.nickname : '自律达人';
+    this._rewardSharePoints('SHARE_TIMELINE');
     return {
       title: `🥗 ${nickname}的今日卡路里膳食打卡，AI 智能算卡，快来和我一起自律！`,
       query: '',
       imageUrl: this.data.tempPosterPath || ''
     };
+  },
+
+  _rewardSharePoints(shareType) {
+    const user = app.globalData.userInfo;
+    if (!user || !user.id) return;
+    wx.request({
+      url: `${app.globalData.baseUrl}/user/share-reward?userId=${user.id}&shareType=${shareType}`,
+      method: 'POST',
+      success: (res) => {
+        if (res.data && res.data.code === 200 && res.data.data) {
+          const { rewarded, points } = res.data.data;
+          if (rewarded) {
+            wx.showToast({ title: '分享成功 +10积分', icon: 'none', duration: 2000 });
+            if (app.globalData.userInfo) {
+              app.globalData.userInfo.points = points;
+            }
+            if (this.data.userInfo) {
+              this.setData({ 'userInfo.points': points });
+            }
+          }
+        }
+      }
+    });
   },
 
   onSharePosterClick() {

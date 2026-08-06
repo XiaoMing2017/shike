@@ -206,6 +206,7 @@ Page({
 
   onShareAppMessage() {
     const inviteCode = this.data.inviteCode ? `?inviteCode=${this.data.inviteCode}` : '';
+    this._rewardSharePoints('SHARE_FRIEND');
     return {
       title: `🔥 我在咔嚓算卡发起了[${this.data.teamName || '契约减脂队'}]对赌减脂，赢取 ${this.data.points || 500} 积分大池！加入我的队伍吧！`,
       path: `/pages/team/team${inviteCode}`,
@@ -215,11 +216,32 @@ Page({
 
   onShareTimeline() {
     const inviteCode = this.data.inviteCode ? `inviteCode=${this.data.inviteCode}` : '';
+    this._rewardSharePoints('SHARE_TIMELINE');
     return {
       title: `🔥 咔嚓算卡·契约减脂队[${this.data.teamName || '契约减脂队'}]开赛！邀你一起对赌自律，赢取 ${this.data.points || 500} 积分大池！`,
       query: inviteCode,
       imageUrl: this.data.tempPosterPath || ''
     };
+  },
+
+  _rewardSharePoints(shareType) {
+    const user = app.globalData.userInfo;
+    if (!user || !user.id) return;
+    wx.request({
+      url: `${app.globalData.baseUrl}/user/share-reward?userId=${user.id}&shareType=${shareType}`,
+      method: 'POST',
+      success: (res) => {
+        if (res.data && res.data.code === 200 && res.data.data) {
+          const { rewarded, points } = res.data.data;
+          if (rewarded) {
+            wx.showToast({ title: '分享成功 +10积分', icon: 'none', duration: 2000 });
+            if (app.globalData.userInfo) {
+              app.globalData.userInfo.points = points;
+            }
+          }
+        }
+      }
+    });
   },
 
   onGeneratePoster() {

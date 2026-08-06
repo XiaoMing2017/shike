@@ -276,8 +276,8 @@ public class TeamServiceImpl implements TeamService {
                         BigDecimal budget = (user != null && user.getTargetCalories() != null) 
                                 ? user.getTargetCalories() 
                                 : BigDecimal.valueOf(2000.0);
-                        
-                        checked = totalTodayCalories.compareTo(budget) <= 0;
+                        BigDecimal maxAllowed = budget.multiply(BigDecimal.valueOf(1.25));
+                        checked = totalTodayCalories.compareTo(maxAllowed) <= 0;
                     }
                     todayChecked = checked;
                 } else {
@@ -298,7 +298,8 @@ public class TeamServiceImpl implements TeamService {
                             BigDecimal budget = (user != null && user.getTargetCalories() != null) 
                                     ? user.getTargetCalories() 
                                     : BigDecimal.valueOf(2000.0);
-                            checked = totalPastCalories.compareTo(budget) <= 0;
+                            BigDecimal maxAllowed = budget.multiply(BigDecimal.valueOf(1.25));
+                            checked = totalPastCalories.compareTo(maxAllowed) <= 0;
                         }
                     }
                 }

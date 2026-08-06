@@ -66,23 +66,22 @@ public class TeamSettleScheduler {
                     .map(DietRecord::getTotalCalories)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            // Check-in is successful if the user logged their diet and did not exceed their calorie budget
+            // Check-in is successful if the user logged their diet and did not exceed their calorie budget (with 25% tolerance buffer)
             BigDecimal budget = user.getTargetCalories() != null ? user.getTargetCalories() : BigDecimal.valueOf(2000.0);
-            boolean isSuccess = !records.isEmpty() && totalCalories.compareTo(budget) <= 0;
+            BigDecimal maxAllowedCalories = budget.multiply(BigDecimal.valueOf(1.25));
+            boolean isSuccess = !records.isEmpty() && totalCalories.compareTo(maxAllowedCalories) <= 0;
 
-            // Remove existing checkin for this date to prevent duplicate records (useful for repeated testing)
+            // Update existing checkin or create new one for this date
             List<TeamCheckin> existing = teamCheckinRepository.findByTeamIdAndUserId(team.getId(), member.getUserId());
-            existing.stream()
+            TeamCheckin checkin = existing.stream()
                     .filter(c -> c.getCheckinDate().equals(date))
-                    .forEach(teamCheckinRepository::delete);
-
-            // Save new checkin record
-            TeamCheckin checkin = TeamCheckin.builder()
-                    .teamId(team.getId())
-                    .userId(member.getUserId())
-                    .checkinDate(date)
-                    .isSuccess(isSuccess)
-                    .build();
+                    .findFirst()
+                    .orElse(TeamCheckin.builder()
+                            .teamId(team.getId())
+                            .userId(member.getUserId())
+                            .checkinDate(date)
+                            .build());
+            checkin.setIsSuccess(isSuccess);
             teamCheckinRepository.save(checkin);
 
             if (isSuccess) {

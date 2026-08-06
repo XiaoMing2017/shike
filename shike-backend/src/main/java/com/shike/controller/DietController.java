@@ -107,4 +107,12 @@ public class DietController {
         java.util.Map<String, Object> diagnosis = dietService.diagnoseDiet(userId, date);
         return ResultDTO.success(diagnosis);
     }
+
+    @GetMapping("/week-dashboard")
+    public ResultDTO<com.shike.model.dto.WeekDashboardDTO> getWeekDashboard(
+            @RequestParam("userId") Long userId,
+            @RequestParam(value = "date", required = false) String dateStr) {
+        com.shike.model.dto.WeekDashboardDTO dashboard = dietService.getWeekDashboard(userId, dateStr);
+        return ResultDTO.success(dashboard);
+    }
 }

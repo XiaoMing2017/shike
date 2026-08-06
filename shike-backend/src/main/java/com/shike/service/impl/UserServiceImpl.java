@@ -298,7 +298,52 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
+    public java.util.Map<String, Object> rewardSharePoints(Long userId, String shareType) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BizException(404, "User not found"));
+
+        LocalDateTime startOfToday = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
+        boolean alreadyShared = pointsRecordRepository.existsByUserIdAndTypeAndCreatedAtAfter(
+                userId, shareType, startOfToday);
+
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+
+        if (alreadyShared) {
+            log.info("User {} already rewarded for share type {} today", userId, shareType);
+            result.put("user", user);
+            result.put("rewarded", false);
+            result.put("points", user.getPoints() != null ? user.getPoints() : 0);
+            return result;
+        }
+
+        int originalPoints = user.getPoints() != null ? user.getPoints() : 0;
+        int newPoints = originalPoints + 10;
+        user.setPoints(newPoints);
+        userRepository.save(user);
+
+        String remark = "SHARE_FRIEND".equals(shareType) ? "分享给好友奖励" :
+                       ("SHARE_TIMELINE".equals(shareType) ? "分享到朋友圈奖励" : "分享奖励");
+
+        PointsRecord record = PointsRecord.builder()
+                .userId(userId)
+                .amount(10)
+                .type(shareType)
+                .remark(remark)
+                .build();
+        pointsRecordRepository.save(record);
+
+        log.info("User {} shared with type {} and earned 10 points. New balance: {}", userId, shareType, user.getPoints());
+
+        result.put("user", user);
+        result.put("rewarded", true);
+        result.put("points", user.getPoints());
+        return result;
+    }
+
+    @Override
     public java.util.List<PointsRecord> getPointsRecords(Long userId) {
         return pointsRecordRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
 }
+

@@ -127,4 +127,15 @@ public class AdminController {
         adminService.updateFeatureToggle(featureKey, envMode, enabled, "admin");
         return ResultDTO.success();
     }
+
+    @GetMapping({"/announcement", "/api/v1/admin/announcement"})
+    public ResultDTO<com.shike.model.dto.AnnouncementConfigDTO> getAdminAnnouncementConfig() {
+        return ResultDTO.success(adminService.getAnnouncementConfig());
+    }
+
+    @PostMapping({"/announcement", "/api/v1/admin/announcement"})
+    public ResultDTO<Void> updateAnnouncementConfig(@RequestBody com.shike.model.dto.AnnouncementConfigDTO dto) {
+        adminService.updateAnnouncementConfig(dto, "admin");
+        return ResultDTO.success();
+    }
 }

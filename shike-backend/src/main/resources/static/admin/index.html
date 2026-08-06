@@ -232,6 +232,29 @@
       color: var(--text-muted);
     }
 
+    /* Global Form Input Styling */
+    .form-input {
+      width: 100%;
+      box-sizing: border-box;
+      background: rgba(15, 23, 42, 0.8) !important;
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      padding: 10px 14px;
+      border-radius: 10px;
+      color: #F8FAFC !important;
+      font-size: 13px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .form-input:focus {
+      border-color: #EC4899 !important;
+      box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.25) !important;
+      background: rgba(15, 23, 42, 0.95) !important;
+    }
+    .form-input option {
+      background: #0F172A;
+      color: #F8FAFC;
+    }
+
     /* Table Design */
     .table-responsive {
       overflow-x: auto;
@@ -712,9 +735,233 @@
       font-weight: 700;
       color: #A78BFA;
     }
-    .bar-label {
-      font-size: 11px;
-      color: var(--text-muted);
+    /* ==========================================================================
+       📱 移动端与手机屏幕全量响应式适配 CSS Rules (@media max-width: 768px & 480px)
+       ========================================================================== */
+    @media (max-width: 768px) {
+      body {
+        padding: 12px 10px;
+        padding-bottom: max(16px, env(safe-area-inset-bottom));
+      }
+
+      /* 1. 顶部 Header 移动端折行与间距优化 */
+      header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+        padding: 16px;
+        margin-bottom: 16px;
+        border-radius: 14px;
+      }
+
+      .brand-group {
+        gap: 12px;
+      }
+
+      .brand-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+      }
+
+      .brand-text h1 {
+        font-size: 18px;
+      }
+
+      .brand-text p {
+        font-size: 12px;
+      }
+
+      .header-status {
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 10px;
+        width: 100%;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .header-status > div {
+        flex-wrap: wrap;
+        gap: 6px !important;
+      }
+
+      .header-status button {
+        font-size: 11px !important;
+        padding: 6px 10px !important;
+      }
+
+      /* 2. KPI Metrics 卡片网格：手机端按 2 列排列 */
+      .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+
+      .metric-card {
+        padding: 14px 12px;
+        border-radius: 12px;
+      }
+
+      .metric-header {
+        font-size: 11px;
+        margin-bottom: 8px;
+      }
+
+      .metric-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 13px;
+        border-radius: 8px;
+      }
+
+      .metric-val {
+        font-size: 22px;
+      }
+
+      .click-hint-badge {
+        font-size: 9px;
+        padding: 2px 6px;
+      }
+
+      /* 3. Section 头部与搜索框适配 */
+      .section-card {
+        padding: 16px 12px;
+        border-radius: 14px;
+      }
+
+      .section-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .section-title {
+        font-size: 16px;
+      }
+
+      .search-box {
+        width: 100% !important;
+      }
+
+      .section-header > div {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px !important;
+      }
+
+      .section-header .btn-action {
+        flex: 1 1 auto;
+        justify-content: center;
+        font-size: 11px;
+        padding: 8px 10px;
+      }
+
+      /* 4. Filter Chips 手机拉伸滑动 */
+      .filter-chip {
+        padding: 6px 12px;
+        font-size: 11px;
+      }
+
+      /* 5. 表格设计适配：增强 Touch 滚动 */
+      .table-responsive {
+        -webkit-overflow-scrolling: touch;
+        border-radius: 10px;
+      }
+
+      table {
+        font-size: 12px;
+      }
+
+      th, td {
+        padding: 10px 8px;
+      }
+
+      .user-avatar {
+        width: 36px;
+        height: 36px;
+      }
+
+      .user-cell {
+        gap: 8px;
+      }
+
+      .user-name {
+        font-size: 13px;
+      }
+
+      /* 6. Modal 弹窗在手机屏上的全量适配 */
+      .modal-box {
+        width: 100% !important;
+        max-width: 98vw !important;
+        max-height: 92vh !important;
+        padding: 16px 12px !important;
+        border-radius: 16px !important;
+      }
+
+      .modal-header {
+        padding: 12px 14px !important;
+        margin-bottom: 12px !important;
+      }
+
+      .modal-header h2, .modal-header h3 {
+        font-size: 16px !important;
+      }
+
+      .modal-body {
+        padding: 12px 6px !important;
+      }
+
+      /* 针对公告编辑 Modal 手机屏由 2 列切换为 1 列纵向单列 */
+      #announcementModal .modal-box > div {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+      }
+
+      /* 针对功能开关 Modal 手机屏调整内边距 */
+      #featureToggleModal .modal-box {
+        padding: 16px 12px !important;
+      }
+
+      #featureToggleList > div {
+        padding: 14px 12px !important;
+      }
+
+      /* 针对 User Detail Modal 移动端双列变单列 */
+      .detail-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+      }
+
+      .detail-item {
+        padding: 10px 12px !important;
+      }
+
+      .detail-item span {
+        font-size: 13px !important;
+      }
+
+      .records-tabs {
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .tab-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+      .detail-grid {
+        grid-template-columns: 1fr !important;
+      }
     }
   </style>
 </head>
@@ -871,6 +1118,9 @@
         </button>
         <button class="btn-action" onclick="openFeatureToggleModal()" style="background: linear-gradient(135deg, #F59E0B, #D97706); font-size: 12px;">
           <i class="fa-solid fa-sliders"></i> 🎛️ 功能开关控制
+        </button>
+        <button class="btn-action" onclick="openAnnouncementModal()" style="background: linear-gradient(135deg, #EC4899, #BE185D); font-size: 12px;">
+          <i class="fa-solid fa-bullhorn"></i> 📢 版本弹窗管理
         </button>
         <button class="btn-action" id="btnOpenTeamModalHeader" onclick="openTeamModal()" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8); font-size: 12px;">
           <i class="fa-solid fa-trophy"></i> 查看减脂小队与成员
@@ -1114,6 +1364,101 @@
 
       <div style="margin-top: 20px; text-align: right;">
         <button class="btn-action" onclick="closeFeatureToggleModal()" style="background: var(--card-border); font-size: 13px;">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Announcement Config Control Modal -->
+  <div class="modal-overlay" id="announcementModal">
+    <div class="modal-box" style="width: 920px; max-width: 95vw; padding: 28px; overflow: hidden;">
+      <div class="modal-header" style="margin-bottom: 16px;">
+        <div>
+          <h2 style="font-size: 20px; font-weight: 700; color: #FFF; display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-bullhorn" style="color: #EC4899;"></i> 客户端版本公告与引导弹窗编辑
+          </h2>
+          <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">运营人员可在此配置小程序首页新版本升级弹窗的文案、亮点列表、跳转动作及显隐开关</p>
+        </div>
+        <button class="modal-close" onclick="closeAnnouncementModal()">&times;</button>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 340px; gap: 24px; max-height: 70vh; overflow-y: auto; overflow-x: hidden; padding-right: 4px;">
+        <!-- Left: Form Controls -->
+        <div style="display: flex; flex-direction: column; gap: 16px; min-width: 0;">
+          <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(30, 41, 59, 0.6); padding: 14px 18px; border-radius: 12px; border: 1px solid var(--card-border);">
+            <div>
+              <div style="font-weight: 600; font-size: 14px; color: #FFF;">弹窗全局开关状态</div>
+              <div style="font-size: 12px; color: var(--text-muted);">关闭后小程序首页将完全停用该版本引导弹窗</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="announcementEnabledCheck" onchange="updateAnnouncementPreview()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div>
+              <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 6px;">顶部 Badge 标签</label>
+              <input type="text" id="announcementBadgeText" class="form-input" placeholder="例: v2.0 重磅升级" oninput="updateAnnouncementPreview()">
+            </div>
+            <div>
+              <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 6px;">主按钮文案</label>
+              <input type="text" id="announcementButtonText" class="form-input" placeholder="例: ✨ 立即体验 AI 计划" oninput="updateAnnouncementPreview()">
+            </div>
+          </div>
+
+          <div>
+            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 6px;">弹窗主标题</label>
+            <input type="text" id="announcementTitle" class="form-input" placeholder="例: 🎉 专属 AI 助手全新上线" oninput="updateAnnouncementPreview()">
+          </div>
+
+          <div>
+            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 6px;">副标题 / 描述语</label>
+            <input type="text" id="announcementSubtitle" class="form-input" placeholder="例: 精细化膳食、运动打卡与诊断全面开启" oninput="updateAnnouncementPreview()">
+          </div>
+
+          <div>
+            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 6px;">点击主按钮目标动作</label>
+            <select id="announcementButtonAction" class="form-input" onchange="updateAnnouncementPreview()">
+              <option value="AI_PLAN">🚀 打开 7天 AI 专属运动与食谱计划</option>
+              <option value="HEALTH_DIAGNOSIS">💡 打开 AI 膳食深度诊断</option>
+              <option value="PHOTO_MEAL">📸 打开 AI 拍照算卡</option>
+              <option value="NONE">❌ 仅关闭弹窗，不做页面跳转</option>
+            </select>
+          </div>
+
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <label style="font-size: 13px; font-weight: 700; color: #FFF;">功能亮点列表 (可自由增删，最多4条)</label>
+              <button onclick="addAnnouncementItem()" style="background: rgba(236, 72, 153, 0.2); color: #F472B6; border: 1px solid rgba(236, 72, 153, 0.4); padding: 4px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: 600; transition: all 0.2s;">
+                <i class="fa-solid fa-plus"></i> 添加亮点
+              </button>
+            </div>
+            <div id="announcementItemsContainer" style="display: flex; flex-direction: column; gap: 10px;"></div>
+          </div>
+        </div>
+
+        <!-- Right: Real-time Mini Program Live Preview -->
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; align-items: center; position: relative;">
+          <div style="font-size: 11px; color: #94A3B8; margin-bottom: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">📱 小程序实时效果预览</div>
+          
+          <div style="width: 100%; background: #FFFFFF; border-radius: 24px; padding: 22px 18px; color: #1E293B; text-align: center; box-shadow: 0 16px 32px rgba(0,0,0,0.4); position: relative;">
+            <div id="prevBadge" style="display: inline-block; background: #EEF2FF; color: #4F46E5; font-size: 10px; font-weight: 700; padding: 3px 12px; border-radius: 12px; margin-bottom: 10px;">v2.0 重磅升级</div>
+            <div id="prevTitle" style="font-size: 15px; font-weight: 800; color: #0F172A; margin-bottom: 4px;">🎉 专属 AI 助手全新上线</div>
+            <div id="prevSubtitle" style="font-size: 11px; color: #64748B; margin-bottom: 14px; line-height: 1.4;">精细化膳食、运动打卡与诊断全面开启</div>
+
+            <div id="prevItems" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; text-align: left;"></div>
+
+            <button id="prevBtn" style="width: 100%; background: linear-gradient(135deg, #6366F1, #4F46E5); color: #FFF; border: none; padding: 11px; border-radius: 14px; font-size: 13px; font-weight: 700; box-shadow: 0 6px 16px rgba(79,70,229,0.35); cursor: pointer;">✨ 立即体验 AI 计划</button>
+            <div style="font-size: 11px; color: #94A3B8; margin-top: 10px; font-weight: 500;">知道了，先逛逛</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 12px;">
+        <button class="btn-action" onclick="closeAnnouncementModal()" style="background: var(--card-border); font-size: 13px;">取消</button>
+        <button class="btn-action" onclick="saveAnnouncementConfig()" style="background: linear-gradient(135deg, #EC4899, #BE185D); font-size: 13px; font-weight: 700; padding: 10px 20px;">
+          <i class="fa-solid fa-floppy-disk"></i> 保存并发布给客户端
+        </button>
       </div>
     </div>
   </div>
@@ -2407,12 +2752,148 @@
         });
     }
 
+    // Announcement Modal Manager
+    let currentAnnouncementItems = [];
+
+    function openAnnouncementModal() {
+      const token = getAdminToken();
+      if (!token) {
+        showLoginModal('请先登录管理后台授权凭证');
+        return;
+      }
+      const modal = document.getElementById('announcementModal');
+      if (modal) modal.classList.add('active');
+      loadAnnouncementConfig();
+    }
+
+    function closeAnnouncementModal() {
+      const modal = document.getElementById('announcementModal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function loadAnnouncementConfig() {
+      authFetch('/api/v1/admin/announcement')
+        .then(r => r.json())
+        .then(res => {
+          if (res.code === 200 && res.data) {
+            const data = res.data;
+            document.getElementById('announcementEnabledCheck').checked = !!data.enabled;
+            document.getElementById('announcementBadgeText').value = data.badgeText || '';
+            document.getElementById('announcementTitle').value = data.title || '';
+            document.getElementById('announcementSubtitle').value = data.subtitle || '';
+            document.getElementById('announcementButtonText').value = data.buttonText || '';
+            document.getElementById('announcementButtonAction').value = data.buttonAction || 'AI_PLAN';
+            currentAnnouncementItems = data.items || [];
+            renderAnnouncementItems();
+            updateAnnouncementPreview();
+          }
+        })
+        .catch(e => console.error(e));
+    }
+
+    function renderAnnouncementItems() {
+      const container = document.getElementById('announcementItemsContainer');
+      if (!container) return;
+      container.innerHTML = currentAnnouncementItems.map((item, idx) => `
+        <div style="display: flex; gap: 8px; align-items: center; background: rgba(15, 23, 42, 0.6); padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.12); width: 100%; box-sizing: border-box;">
+          <input type="text" value="${item.icon || '🚀'}" style="width: 44px; min-width: 44px; text-align: center; font-size: 16px;" class="form-input" oninput="currentAnnouncementItems[${idx}].icon=this.value; updateAnnouncementPreview();">
+          <input type="text" value="${item.title || ''}" placeholder="亮点标题" style="flex: 1; min-width: 0;" class="form-input" oninput="currentAnnouncementItems[${idx}].title=this.value; updateAnnouncementPreview();">
+          <input type="text" value="${item.desc || ''}" placeholder="描述说明" style="flex: 2; min-width: 0;" class="form-input" oninput="currentAnnouncementItems[${idx}].desc=this.value; updateAnnouncementPreview();">
+          <button onclick="removeAnnouncementItem(${idx})" style="background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 8px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: all 0.2s;" title="删除此项">
+            <i class="fa-solid fa-trash" style="font-size: 13px;"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function addAnnouncementItem() {
+      if (currentAnnouncementItems.length >= 4) {
+        alert('最多支持添加 4 条功能亮点');
+        return;
+      }
+      currentAnnouncementItems.push({ icon: '✨', title: '新功能亮点', desc: '简短的功能描述说明' });
+      renderAnnouncementItems();
+      updateAnnouncementPreview();
+    }
+
+    function removeAnnouncementItem(idx) {
+      currentAnnouncementItems.splice(idx, 1);
+      renderAnnouncementItems();
+      updateAnnouncementPreview();
+    }
+
+    function updateAnnouncementPreview() {
+      const badge = document.getElementById('announcementBadgeText').value || 'v2.0 重磅升级';
+      const title = document.getElementById('announcementTitle').value || '🎉 专属 AI 助手全新上线';
+      const subtitle = document.getElementById('announcementSubtitle').value || '精细化膳食与诊断全面开启';
+      const btnText = document.getElementById('announcementButtonText').value || '✨ 立即体验 AI 计划';
+
+      document.getElementById('prevBadge').innerText = badge;
+      document.getElementById('prevTitle').innerText = title;
+      document.getElementById('prevSubtitle').innerText = subtitle;
+      document.getElementById('prevBtn').innerText = btnText;
+
+      const bgColors = [
+        'linear-gradient(135deg, #EEF2FF, #E0E7FF)', 
+        'linear-gradient(135deg, #FEF3C7, #FDE68A)', 
+        'linear-gradient(135deg, #D1FAE5, #A7F3D0)',
+        'linear-gradient(135deg, #FCE7F3, #FBCFE8)'
+      ];
+
+      const prevItems = document.getElementById('prevItems');
+      if (prevItems) {
+        prevItems.innerHTML = currentAnnouncementItems.map((item, i) => `
+          <div style="display: flex; gap: 10px; align-items: center; background: #F8FAFC; padding: 10px 12px; border-radius: 14px; border: 1px solid #F1F5F9;">
+            <div style="width: 32px; height: 32px; background: ${bgColors[i % bgColors.length]}; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">${item.icon || '✨'}</div>
+            <div style="display: flex; flex-direction: column; min-width: 0; flex: 1;">
+              <div style="font-size: 11px; font-weight: 700; color: #0F172A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.title || ''}</div>
+              <div style="font-size: 10px; color: #64748B; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px;">${item.desc || ''}</div>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function saveAnnouncementConfig() {
+      const dto = {
+        enabled: document.getElementById('announcementEnabledCheck').checked,
+        badgeText: document.getElementById('announcementBadgeText').value,
+        title: document.getElementById('announcementTitle').value,
+        subtitle: document.getElementById('announcementSubtitle').value,
+        buttonText: document.getElementById('announcementButtonText').value,
+        buttonAction: document.getElementById('announcementButtonAction').value,
+        items: currentAnnouncementItems
+      };
+
+      authFetch('/api/v1/admin/announcement', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dto)
+      })
+      .then(r => r.json())
+      .then(res => {
+        if (res.code === 200) {
+          alert('✅ 客户端版本公告配置已成功发布！');
+          closeAnnouncementModal();
+        } else {
+          alert('保存失败: ' + (res.message || ''));
+        }
+      })
+      .catch(e => alert('网络通信失败: ' + e.message));
+    }
+
     // Expose functions globally to ensure onclick attributes work everywhere
     window.openTeamModal = openTeamModal;
     window.closeTeamModal = closeTeamModal;
     window.toggleTeamStatus = toggleTeamStatus;
     window.openFeatureToggleModal = openFeatureToggleModal;
     window.closeFeatureToggleModal = closeFeatureToggleModal;
+    window.openAnnouncementModal = openAnnouncementModal;
+    window.closeAnnouncementModal = closeAnnouncementModal;
+    window.addAnnouncementItem = addAnnouncementItem;
+    window.removeAnnouncementItem = removeAnnouncementItem;
+    window.updateAnnouncementPreview = updateAnnouncementPreview;
+    window.saveAnnouncementConfig = saveAnnouncementConfig;
     window.setFeatureMode = setFeatureMode;
     window.handleLogin = handleLogin;
     window.handleLogout = handleLogout;

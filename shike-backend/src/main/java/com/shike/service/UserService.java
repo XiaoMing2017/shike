@@ -14,4 +14,6 @@ public interface UserService {
     User getUserInfo(Long userId);
     User signIn(Long userId);
     java.util.List<com.shike.model.entity.PointsRecord> getPointsRecords(Long userId);
+    java.util.Map<String, Object> rewardSharePoints(Long userId, String shareType);
 }
+

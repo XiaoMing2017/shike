@@ -43,6 +43,7 @@ public class AdminServiceImpl implements AdminService {
     private final PointLogRepository pointLogRepository;
     private final AdminAuditLogRepository adminAuditLogRepository;
     private final com.shike.repository.FeatureToggleRepository featureToggleRepository;
+    private final com.shike.repository.AnnouncementConfigRepository announcementConfigRepository;
     private final StringRedisTemplate stringRedisTemplate;
 
     @Override
@@ -378,7 +379,8 @@ public class AdminServiceImpl implements AdminService {
                     java.math.BigDecimal budget = (u != null && u.getTargetCalories() != null) 
                             ? u.getTargetCalories() 
                             : java.math.BigDecimal.valueOf(2000.0);
-                    todayChecked = totalTodayCalories.compareTo(budget) <= 0;
+                    java.math.BigDecimal maxAllowed = budget.multiply(java.math.BigDecimal.valueOf(1.25));
+                    todayChecked = totalTodayCalories.compareTo(maxAllowed) <= 0;
                 }
 
                 List<TeamCheckin> checkins = teamCheckinRepository.findByTeamIdAndUserId(t.getId(), m.getUserId());
@@ -410,7 +412,8 @@ public class AdminServiceImpl implements AdminService {
                     java.math.BigDecimal budget = creator.getTargetCalories() != null 
                             ? creator.getTargetCalories() 
                             : java.math.BigDecimal.valueOf(2000.0);
-                    todayChecked = totalTodayCalories.compareTo(budget) <= 0;
+                    java.math.BigDecimal maxAllowed = budget.multiply(java.math.BigDecimal.valueOf(1.25));
+                    todayChecked = totalTodayCalories.compareTo(maxAllowed) <= 0;
                 }
 
                 List<TeamCheckin> checkins = teamCheckinRepository.findByTeamIdAndUserId(t.getId(), creator.getId());
@@ -584,6 +587,7 @@ public class AdminServiceImpl implements AdminService {
             initSingleToggle("poster_share", "晒餐/打卡海报生成", "社交与分享", "PROD_AND_TEST", true, "生成拍立得、大餐救急等精美海报与打卡图");
             initSingleToggle("team_challenge", "契约小队对赌打卡", "互动与挑战", "PROD_AND_TEST", true, "组队习惯养成打卡与积分对赌池");
             initSingleToggle("water_log", "饮水追踪与记录", "健康追踪", "PROD_AND_TEST", true, "每日饮水量实时目标进度追踪");
+            initSingleToggle("week_dashboard", "周看板视图与对比", "看板与分析", "PROD_AND_TEST", true, "支持切换到近7天热量/三大营养素趋势与周看板");
         } catch (Exception e) {
             log.warn("Failed to initialize feature toggles: {}", e.getMessage());
         }
@@ -702,6 +706,95 @@ public class AdminServiceImpl implements AdminService {
         }
 
         return res;
+    }
+
+    @Override
+    public com.shike.model.dto.AnnouncementConfigDTO getAnnouncementConfig() {
+        com.shike.model.entity.AnnouncementConfig config = announcementConfigRepository.findFirstByOrderByIdAsc().orElse(null);
+        if (config == null) {
+            // Default initial config matching the current onboarding modal
+            List<com.shike.model.dto.AnnouncementConfigDTO.Item> defaultItems = List.of(
+                    com.shike.model.dto.AnnouncementConfigDTO.Item.builder()
+                            .icon("🤖")
+                            .title("AI 专属运动与食谱")
+                            .desc("精准推荐每日3~4个动作与接地气食谱")
+                            .build(),
+                    com.shike.model.dto.AnnouncementConfigDTO.Item.builder()
+                            .icon("💡")
+                            .title("AI 专家级营养健康诊断")
+                            .desc("评估三大营养占比，针对性给出指导")
+                            .build(),
+                    com.shike.model.dto.AnnouncementConfigDTO.Item.builder()
+                            .icon("📸")
+                            .title("高颜值晒餐海报")
+                            .desc("一键生成精美饮食打卡图，分享朋友圈")
+                            .build()
+            );
+
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            String json = "[]";
+            try {
+                json = mapper.writeValueAsString(defaultItems);
+            } catch (Exception ignored) {}
+
+            config = com.shike.model.entity.AnnouncementConfig.builder()
+                    .enabled(true)
+                    .badgeText("v2.0 重磅升级")
+                    .title("🎉 专属 AI 助手全新上线")
+                    .subtitle("精细化膳食、运动打卡与诊断全面开启")
+                    .itemsJson(json)
+                    .buttonText("✨ 立即体验 AI 计划")
+                    .buttonAction("AI_PLAN")
+                    .build();
+            config = announcementConfigRepository.save(config);
+        }
+
+        List<com.shike.model.dto.AnnouncementConfigDTO.Item> items = new java.util.ArrayList<>();
+        if (config.getItemsJson() != null && !config.getItemsJson().isBlank()) {
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                items = mapper.readValue(config.getItemsJson(), new com.fasterxml.jackson.core.type.TypeReference<List<com.shike.model.dto.AnnouncementConfigDTO.Item>>() {});
+            } catch (Exception e) {
+                log.warn("Failed to parse itemsJson from AnnouncementConfig", e);
+            }
+        }
+
+        return com.shike.model.dto.AnnouncementConfigDTO.builder()
+                .enabled(config.getEnabled())
+                .badgeText(config.getBadgeText())
+                .title(config.getTitle())
+                .subtitle(config.getSubtitle())
+                .items(items)
+                .buttonText(config.getButtonText())
+                .buttonAction(config.getButtonAction())
+                .build();
+    }
+
+    @Override
+    public void updateAnnouncementConfig(com.shike.model.dto.AnnouncementConfigDTO dto, String adminUsername) {
+        if (dto == null) throw new BizException(400, "配置数据不能为空");
+
+        com.shike.model.entity.AnnouncementConfig config = announcementConfigRepository.findFirstByOrderByIdAsc()
+                .orElse(new com.shike.model.entity.AnnouncementConfig());
+
+        config.setEnabled(dto.getEnabled() != null ? dto.getEnabled() : true);
+        config.setBadgeText(dto.getBadgeText());
+        config.setTitle(dto.getTitle());
+        config.setSubtitle(dto.getSubtitle());
+        config.setButtonText(dto.getButtonText());
+        config.setButtonAction(dto.getButtonAction() != null ? dto.getButtonAction() : "AI_PLAN");
+
+        if (dto.getItems() != null) {
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                config.setItemsJson(mapper.writeValueAsString(dto.getItems()));
+            } catch (Exception e) {
+                throw new BizException(500, "序列化功能亮点列表失败: " + e.getMessage());
+            }
+        }
+
+        announcementConfigRepository.save(config);
+        logAudit(adminUsername, "UPDATE_ANNOUNCEMENT_CONFIG", "ANNOUNCEMENT", "更新了客户端版本公告与引导弹窗配置: " + config.getTitle());
     }
 
     private void logAudit(String adminUsername, String action, String target, String details) {

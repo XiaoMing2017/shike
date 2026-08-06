@@ -357,6 +357,7 @@ Page({
   },
 
   onShareAppMessage() {
+    this._rewardSharePoints('SHARE_FRIEND');
     return {
       title: '📅 我的咔嚓算卡健康膳食历程，一起来打卡减脂吧！',
       path: '/pages/index/index'
@@ -364,9 +365,30 @@ Page({
   },
 
   onShareTimeline() {
+    this._rewardSharePoints('SHARE_TIMELINE');
     return {
       title: '📅 咔嚓算卡 - 记录每一餐的精致与健康，自律从今天开始！',
       query: ''
     };
-  }
+  },
+
+  _rewardSharePoints(shareType) {
+    const user = app.globalData.userInfo;
+    if (!user || !user.id) return;
+    wx.request({
+      url: `${app.globalData.baseUrl}/user/share-reward?userId=${user.id}&shareType=${shareType}`,
+      method: 'POST',
+      success: (res) => {
+        if (res.data && res.data.code === 200 && res.data.data) {
+          const { rewarded, points } = res.data.data;
+          if (rewarded) {
+            wx.showToast({ title: '分享成功 +10积分', icon: 'none', duration: 2000 });
+            if (app.globalData.userInfo) {
+              app.globalData.userInfo.points = points;
+            }
+          }
+        }
+      }
+    });
+  },
 });

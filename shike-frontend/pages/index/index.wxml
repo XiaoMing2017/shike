@@ -34,149 +34,283 @@
     </view>
   </view>
 
-  <!-- 1. 今日热量大环形看板 -->
-  <view class="calorie-board-container align-center flex-col flex">
-    <view class="calorie-ring-wrapper">
-      <view class="ring-outer-glow"></view>
-      <view class="ring-glass-disc"></view>
-      <view class="ring-inner-disc"></view>
-      <canvas type="2d" id="calorieCanvas" class="calorie-canvas {{(showNewFeatureModal || showPlanModal || showNutritionModal || showAiResultModal || showExerciseModal || showMealOptionSheet || showOilOptionSheet || showWaterSheet || showViewModeSheet) ? 'canvas-hidden' : ''}}"></canvas>
-      <view class="ring-content flex-col align-center flex">
-        <text class="ring-label {{isOverLimit ? 'over-limit-lbl' : (progressPercent <= 15 ? 'danger-lbl' : (progressPercent <= 40 ? 'warning-lbl' : ''))}}">{{ringLabel}}</text>
-        <text class="ring-value {{isOverLimit ? 'over-limit-val' : (progressPercent <= 15 ? 'danger-val' : (progressPercent <= 40 ? 'warning-val' : ''))}}">{{remainingCal}}</text>
-        <text class="ring-unit">千卡</text>
-      </view>
-    </view>
-    <view class="calorie-detail-text">
-      已摄入 <text class="bold-text">{{consumedCal}}</text> / 目标 <text class="bold-text">{{targetCal}}</text> <block wx:if="{{exerciseCal > 0}}">/ 运动消耗 <text class="bold-text plus-text">+{{exerciseCal}}</text></block>
-    </view>
-  </view>
 
-  <!-- 新人引导完善档案横幅 -->
-  <view class="guide-banner flex justify-between align-center" wx:if="{{showProfileGuide}}" catchtap="goToProfile">
-    <view class="guide-text flex align-center">
-      <text class="guide-emoji">📋</text>
-      <view class="guide-desc flex flex-col">
-        <text class="guide-title">完善个人健康档案</text>
-        <text class="guide-subtitle">定制您专属的每日热量预算与营养素目标</text>
-      </view>
-    </view>
-    <text class="guide-arrow">立即去完善 ></text>
-  </view>
-
-  <!-- 2. 三大营养素并列占比条 -->
-  <view class="glass-card nutrients-card" catchtap="openNutritionDetailModal">
-    <view class="nutrients-header-row flex justify-between align-center">
-      <text class="nutrients-header-title">三大营养素分布</text>
-      <view class="nutrients-diag-trigger flex align-center" wx:if="{{features.diet_diagnosis !== false}}">
-        <text class="diag-trigger-icon">💡</text>
-        <text class="diag-trigger-text">AI 营养诊断 ></text>
-      </view>
-    </view>
-
-    <view class="macronutrient-bar">
-      <view class="bar-segment carbs" style="width: {{nutrients.carbsPercent}}%;"></view>
-      <view class="bar-segment protein" style="width: {{nutrients.proteinPercent}}%;"></view>
-      <view class="bar-segment fat" style="width: {{nutrients.fatPercent}}%;"></view>
-    </view>
-
-    <view class="macronutrient-labels flex justify-between">
-      <view class="label-item flex align-center">
-        <view class="bullet carbs"></view>
-        <view class="label-text flex-col flex">
-          <text class="lbl-title">碳水 (目标{{nutrients.targetCarbs}}g)</text>
-          <text class="lbl-val">{{nutrients.carbs}}g <text class="lbl-pct">({{nutrients.carbsPercent}}%)</text></text>
+  <block wx:if="{{viewModeIndex === 0}}">
+    <!-- 1. 今日热量大环形看板 -->
+    <view class="calorie-board-container align-center flex-col flex">
+      <view class="calorie-ring-wrapper">
+        <view class="ring-outer-glow"></view>
+        <view class="ring-glass-disc"></view>
+        <view class="ring-inner-disc"></view>
+        <canvas type="2d" id="calorieCanvas" class="calorie-canvas {{(showNewFeatureModal || showPlanModal || showNutritionModal || showAiResultModal || showExerciseModal || showMealOptionSheet || showOilOptionSheet || showWaterSheet || showViewModeSheet) ? 'canvas-hidden' : ''}}"></canvas>
+        <view class="ring-content flex-col align-center flex">
+          <text class="ring-label {{isOverLimit ? 'over-limit-lbl' : (progressPercent <= 15 ? 'danger-lbl' : (progressPercent <= 40 ? 'warning-lbl' : ''))}}">{{ringLabel}}</text>
+          <text class="ring-value {{isOverLimit ? 'over-limit-val' : (progressPercent <= 15 ? 'danger-val' : (progressPercent <= 40 ? 'warning-val' : ''))}}">{{remainingCal}}</text>
+          <text class="ring-unit">千卡</text>
         </view>
       </view>
-      <view class="label-item flex align-center">
-        <view class="bullet protein"></view>
-        <view class="label-text flex-col flex">
-          <text class="lbl-title">蛋白 (目标{{nutrients.targetProtein}}g)</text>
-          <text class="lbl-val">{{nutrients.protein}}g <text class="lbl-pct">({{nutrients.proteinPercent}}%)</text></text>
-        </view>
-      </view>
-      <view class="label-item flex align-center">
-        <view class="bullet fat"></view>
-        <view class="label-text flex-col flex">
-          <text class="lbl-title">脂肪 (目标{{nutrients.targetFat}}g)</text>
-          <text class="lbl-val">{{nutrients.fat}}g <text class="lbl-pct">({{nutrients.fatPercent}}%)</text></text>
-        </view>
+      <view class="calorie-detail-text">
+        已摄入 <text class="bold-text">{{consumedCal}}</text> / 目标 <text class="bold-text">{{targetCal}}</text> <block wx:if="{{exerciseCal > 0}}">/ 运动消耗 <text class="bold-text plus-text">+{{exerciseCal}}</text></block>
       </view>
     </view>
-  </view>
 
-  <!-- 🎯 专属 AI 运动与饮食计划快捷入口卡片 -->
-  <view class="glass-card ai-plan-entry-card flex justify-between align-center" catchtap="openPlanModal" wx:if="{{features.ai_plan !== false}}">
-    <view class="ai-plan-left flex align-center">
-      <view class="ai-plan-badge flex align-center justify-center">🎯</view>
-      <view class="ai-plan-info flex flex-col justify-center">
-        <view class="ai-plan-header-row flex align-center">
-          <text class="ai-plan-title">我的专属 AI 运动与膳食计划</text>
-          <text class="ai-plan-tag">RD/CSCS认证</text>
-          <text class="new-glow-badge">NEW</text>
+    <!-- 新人引导完善档案横幅 -->
+    <view class="guide-banner flex justify-between align-center" wx:if="{{showProfileGuide}}" catchtap="goToProfile">
+      <view class="guide-text flex align-center">
+        <text class="guide-emoji">📋</text>
+        <view class="guide-desc flex flex-col">
+          <text class="guide-title">完善个人健康档案</text>
+          <text class="guide-subtitle">定制您专属的每日热量预算与营养素目标</text>
         </view>
-        <text class="ai-plan-sub">基于您的身体档案与阶段目标精准推算</text>
       </view>
+      <text class="guide-arrow">立即去完善 ></text>
     </view>
-    <view class="ai-plan-arrow-btn flex align-center justify-center">
-      <text class="arrow-text">查看计划 ›</text>
-    </view>
-  </view>
 
-  <!-- 3. 横向滑动三餐打卡记录卡片 -->
-  <view class="meal-section">
-    <view class="section-header flex justify-between align-center">
-      <view class="flex align-center" style="gap: 12rpx;">
-        <text class="section-title">今日三餐记录</text>
-        <text class="poster-link-btn" catchtap="onGeneratePoster" wx:if="{{features.poster_share !== false}}">📸 晒餐海报</text>
-      </view>
-      <text class="history-link-btn" catchtap="onTapHistory">历史记录 ></text>
-    </view>
-    <scroll-view class="meal-scroll-row" scroll-x="true" enable-flex="true">
-      <view class="meal-card-item" wx:for="{{meals}}" wx:key="type" catchtap="onScanMeal" data-type="{{item.type}}">
-        <view class="meal-img-wrapper">
-          <image class="meal-card-img" src="{{item.image}}" mode="aspectFill" />
+    <!-- 2. 三大营养素并列占比条 -->
+    <view class="glass-card nutrients-card" catchtap="openNutritionDetailModal">
+      <view class="nutrients-header-row flex justify-between align-center">
+        <text class="nutrients-header-title">三大营养素分布</text>
+        <view class="nutrients-diag-trigger flex align-center" wx:if="{{features.diet_diagnosis !== false}}">
+          <text class="diag-trigger-icon">💡</text>
+          <text class="diag-trigger-text">AI 营养诊断 ></text>
         </view>
-        <text class="meal-card-name">{{item.name}}</text>
-        <text class="meal-card-time">{{item.time}}</text>
-        <text class="meal-card-cal {{item.recorded ? 'recorded' : ''}}">{{item.recorded ? item.calories + '千卡' : '点击记录'}}</text>
       </view>
-    </scroll-view>
-  </view>
 
-  <!-- 4. 今日运动打卡卡片 -->
-  <view class="exercise-section">
-    <view class="section-header flex justify-between align-center">
-      <text class="section-title">今日运动记录</text>
-      <text class="add-exercise-btn" catchtap="openAddExerciseModal">+ 记录运动</text>
-    </view>
-    
-    <view class="glass-card exercise-card">
-      <block wx:if="{{exercises.length > 0}}">
-        <view class="exercise-list">
-          <view class="exercise-item flex justify-between align-center" wx:for="{{exercises}}" wx:key="id">
-            <view class="exercise-info flex align-center">
-              <text class="exercise-icon">{{item.emoji}}</text>
-              <view class="exercise-details flex flex-col">
-                <text class="exercise-name">{{item.activityName}}</text>
-                <text class="exercise-time">{{item.durationMinutes}} 分钟</text>
-              </view>
-            </view>
-            <view class="exercise-right flex align-center">
-              <text class="exercise-cal">-{{item.caloriesBurned}} kcal</text>
-              <view class="exercise-delete-btn" catchtap="onDeleteExercise" data-id="{{item.id}}">✕</view>
-            </view>
+      <view class="macronutrient-bar">
+        <view class="bar-segment carbs" style="width: {{nutrients.carbsPercent}}%;"></view>
+        <view class="bar-segment protein" style="width: {{nutrients.proteinPercent}}%;"></view>
+        <view class="bar-segment fat" style="width: {{nutrients.fatPercent}}%;"></view>
+      </view>
+
+      <view class="macronutrient-labels flex justify-between">
+        <view class="label-item flex align-center">
+          <view class="bullet carbs"></view>
+          <view class="label-text flex-col flex">
+            <text class="lbl-title">碳水 (目标{{nutrients.targetCarbs}}g)</text>
+            <text class="lbl-val">{{nutrients.carbs}}g <text class="lbl-pct">({{nutrients.carbsPercent}}%)</text></text>
           </view>
         </view>
-      </block>
-      <block wx:else>
-        <view class="exercise-empty flex flex-col align-center justify-center" catchtap="openAddExerciseModal">
-          <text class="exercise-empty-icon">🏃‍♂️</text>
-          <text class="exercise-empty-text">今天还没有运动，点击记录开始抵扣热量</text>
+        <view class="label-item flex align-center">
+          <view class="bullet protein"></view>
+          <view class="label-text flex-col flex">
+            <text class="lbl-title">蛋白 (目标{{nutrients.targetProtein}}g)</text>
+            <text class="lbl-val">{{nutrients.protein}}g <text class="lbl-pct">({{nutrients.proteinPercent}}%)</text></text>
+          </view>
         </view>
-      </block>
+        <view class="label-item flex align-center">
+          <view class="bullet fat"></view>
+          <view class="label-text flex-col flex">
+            <text class="lbl-title">脂肪 (目标{{nutrients.targetFat}}g)</text>
+            <text class="lbl-val">{{nutrients.fat}}g <text class="lbl-pct">({{nutrients.fatPercent}}%)</text></text>
+          </view>
+        </view>
+      </view>
     </view>
-  </view>
+
+    <!-- 🎯 专属 AI 运动与饮食计划快捷入口卡片 -->
+    <view class="glass-card ai-plan-entry-card flex justify-between align-center" catchtap="openPlanModal" wx:if="{{features.ai_plan !== false}}">
+      <view class="ai-plan-left flex align-center">
+        <view class="ai-plan-badge flex align-center justify-center">🎯</view>
+        <view class="ai-plan-info flex flex-col justify-center">
+          <view class="ai-plan-header-row flex align-center">
+            <text class="ai-plan-title">我的专属 AI 运动与膳食计划</text>
+            <text class="ai-plan-tag">RD/CSCS认证</text>
+            <text class="new-glow-badge">NEW</text>
+          </view>
+          <text class="ai-plan-sub">基于您的身体档案与阶段目标精准推算</text>
+        </view>
+      </view>
+      <view class="ai-plan-arrow-btn flex align-center justify-center">
+        <text class="arrow-text">查看计划 ›</text>
+      </view>
+    </view>
+
+    <!-- 3. 横向滑动三餐打卡记录卡片 -->
+    <view class="meal-section">
+      <view class="section-header flex justify-between align-center">
+        <view class="flex align-center" style="gap: 12rpx;">
+          <text class="section-title">今日三餐记录</text>
+          <text class="poster-link-btn" catchtap="onGeneratePoster" wx:if="{{features.poster_share !== false}}">📸 晒餐海报</text>
+        </view>
+        <text class="history-link-btn" catchtap="onTapHistory">历史记录 ></text>
+      </view>
+      <scroll-view class="meal-scroll-row" scroll-x="true" enable-flex="true">
+        <view class="meal-card-item" wx:for="{{meals}}" wx:key="type" catchtap="onScanMeal" data-type="{{item.type}}">
+          <view class="meal-img-wrapper">
+            <image class="meal-card-img" src="{{item.image}}" mode="aspectFill" />
+          </view>
+          <text class="meal-card-name">{{item.name}}</text>
+          <text class="meal-card-time">{{item.time}}</text>
+          <text class="meal-card-cal {{item.recorded ? 'recorded' : ''}}">{{item.recorded ? item.calories + '千卡' : '点击记录'}}</text>
+        </view>
+      </scroll-view>
+    </view>
+
+    <!-- 4. 今日运动打卡卡片 -->
+    <view class="exercise-section">
+      <view class="section-header flex justify-between align-center">
+        <view class="flex align-center" style="gap: 12rpx;">
+          <text class="section-title">今日运动记录</text>
+          <text class="exercise-count-badge" wx:if="{{exercises.length > 0}}">{{exercises.length}} 项</text>
+        </view>
+        <text class="add-exercise-btn" catchtap="openAddExerciseModal">+ 记录运动</text>
+      </view>
+      
+      <view class="glass-card exercise-card">
+        <block wx:if="{{exercises.length > 0}}">
+          <scroll-view class="exercise-scroll-box" scroll-y="true" enhanced="true" show-scrollbar="false">
+            <view class="exercise-list">
+              <view class="exercise-item flex justify-between align-center" wx:for="{{exercises}}" wx:key="id">
+                <view class="exercise-info flex align-center">
+                  <text class="exercise-icon" style="background: {{item.bg || 'rgba(14, 165, 233, 0.1)'}};">{{item.emoji}}</text>
+                  <view class="exercise-details flex flex-col">
+                    <text class="exercise-name">{{item.cleanActivityName || item.activityName}}</text>
+                    <text class="exercise-time">{{item.durationMinutes}} 分钟</text>
+                  </view>
+                </view>
+                <view class="exercise-right flex align-center">
+                  <text class="exercise-cal" style="color: {{item.color || '#0EA5E9'}};">-{{item.caloriesBurned}} kcal</text>
+                  <view class="exercise-delete-btn" catchtap="onDeleteExercise" data-id="{{item.id}}">✕</view>
+                </view>
+              </view>
+            </view>
+          </scroll-view>
+        </block>
+        <block wx:else>
+          <view class="exercise-empty flex flex-col align-center justify-center" catchtap="openAddExerciseModal">
+            <text class="exercise-empty-icon">🏃‍♂️</text>
+            <text class="exercise-empty-text">今天还没有运动，点击记录开始抵扣热量</text>
+          </view>
+        </block>
+      </view>
+    </view>
+  </block>
+
+  <!-- 5. 近7天热量周看板 -->
+  <block wx:if="{{viewModeIndex === 1}}">
+    <!-- 顶部快捷返回导航条 -->
+    <view class="back-to-today-bar flex justify-between align-center" catchtap="switchToDayMode">
+      <view class="flex align-center" style="gap: 12rpx;">
+        <text class="back-icon">←</text>
+        <text class="back-title">返回今日热量大环</text>
+      </view>
+      <text class="back-badge">今日打卡 ></text>
+    </view>
+
+    <!-- Summary Card (本周概览总览卡片) -->
+    <view class="glass-card week-summary-card">
+      <view class="week-summary-header flex justify-between align-center">
+        <view class="week-period-box flex align-center">
+          <text class="week-period-icon">📅</text>
+          <text class="week-period-text">{{weekDashboardData.startDate || '本周'}} ~ {{weekDashboardData.endDate || '今天'}}</text>
+        </view>
+        <view class="health-rating-badge flex align-center">
+          <text class="rating-star">⭐</text>
+          <text class="rating-text">{{weekDashboardData.healthRating || 'A 保持良好'}}</text>
+        </view>
+      </view>
+
+      <!-- 4大关键指标网格 -->
+      <view class="week-metrics-grid flex flex-wrap justify-between">
+        <view class="metric-item flex flex-col align-center">
+          <text class="metric-val">{{weekDashboardData.avgDailyIntake || 0}} <text class="metric-unit">kcal</text></text>
+          <text class="metric-lbl">周日均摄入</text>
+        </view>
+        <view class="metric-item flex flex-col align-center">
+          <text class="metric-val">{{weekDashboardData.avgDailyBurned || 0}} <text class="metric-unit">kcal</text></text>
+          <text class="metric-lbl">周日均运动</text>
+        </view>
+        <view class="metric-item flex flex-col align-center">
+          <text class="metric-val deficit-val">{{weekDashboardData.accumulatedDeficit || 0}} <text class="metric-unit">kcal</text></text>
+          <text class="metric-lbl">本周创缺口</text>
+        </view>
+        <view class="metric-item flex flex-col align-center">
+          <text class="metric-val">{{weekDashboardData.checkinCount || 0}} <text class="metric-unit">天 / 7天</text></text>
+          <text class="metric-lbl">记录天数</text>
+        </view>
+      </view>
+
+      <!-- Evaluation message quote box -->
+      <view class="week-eval-box" wx:if="{{weekDashboardData.evaluationMessage}}">
+        <text class="eval-text">💡 {{weekDashboardData.evaluationMessage}}</text>
+      </view>
+    </view>
+
+    <!-- 7-Day Bar Chart Card (7天柱状对比图卡片) -->
+    <view class="glass-card week-chart-card">
+      <view class="week-card-title flex align-center">
+        <text class="card-title-text">📊 本周每日热量摄入与消耗对比</text>
+      </view>
+
+      <view class="chart-container flex justify-between align-end">
+        <block wx:for="{{weekDashboardData.dailyDetails}}" wx:key="date">
+          <view class="chart-col flex flex-col align-center flex-1">
+            <text class="bar-top-val">{{item.intake > 0 ? item.intake : '-'}}</text>
+            <view class="bar-track flex flex-col justify-end align-center">
+              <view class="bar-fill-intake {{item.intake > (item.target || 2000) ? 'surplus-bar' : 'deficit-bar'}}" 
+                    style="height: {{item.intake ? ((item.intake / 2600) * 100 > 100 ? 100 : (item.intake / 2600) * 100) : 0}}%;">
+              </view>
+            </view>
+            <view class="status-badge {{item.intake > (item.target || 2000) ? 'status-surplus' : (item.intake > 0 ? 'status-deficit' : 'status-normal')}}">
+              <text class="status-badge-text">{{item.intake > (item.target || 2000) ? '超标' : (item.intake > 0 ? '达标' : '未记录')}}</text>
+            </view>
+            <view class="day-label-box flex align-center">
+              <text class="day-label-text {{item.isToday ? 'today-text' : ''}}">{{item.dayOfWeek || item.dayName || item.day || '周'}}</text>
+              <text class="today-badge" wx:if="{{item.isToday}}">今天</text>
+            </view>
+          </view>
+        </block>
+      </view>
+      <view class="chart-legend flex justify-center align-center">
+        <view class="legend-item flex align-center">
+          <view class="legend-dot green-dot"></view>
+          <text class="legend-text">热量赤字/达标</text>
+        </view>
+        <view class="legend-item flex align-center">
+          <view class="legend-dot orange-dot"></view>
+          <text class="legend-text">热量盈余</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Macro Ratio Card (三大营养素占比卡片) -->
+    <view class="glass-card week-macro-card">
+      <view class="week-card-title flex align-center justify-between">
+        <text class="card-title-text">🥗 周平均三大营养素结构</text>
+      </view>
+
+      <view class="week-macro-bar flex">
+        <view class="macro-segment protein-seg" style="width: {{weekDashboardData.proteinRatio || 0}}%;"></view>
+        <view class="macro-segment carbs-seg" style="width: {{weekDashboardData.carbsRatio || 0}}%;"></view>
+        <view class="macro-segment fat-seg" style="width: {{weekDashboardData.fatRatio || 0}}%;"></view>
+      </view>
+
+      <view class="week-macro-details flex justify-between">
+        <view class="macro-detail-item flex align-center">
+          <view class="macro-bullet protein-bullet"></view>
+          <view class="macro-info flex flex-col">
+            <text class="macro-name">蛋白质</text>
+            <text class="macro-val">{{weekDashboardData.avgProtein || 0}}g <text class="macro-pct">({{weekDashboardData.proteinRatio || 0}}%)</text></text>
+          </view>
+        </view>
+        <view class="macro-detail-item flex align-center">
+          <view class="macro-bullet carbs-bullet"></view>
+          <view class="macro-info flex flex-col">
+            <text class="macro-name">碳水</text>
+            <text class="macro-val">{{weekDashboardData.avgCarbs || 0}}g <text class="macro-pct">({{weekDashboardData.carbsRatio || 0}}%)</text></text>
+          </view>
+        </view>
+        <view class="macro-detail-item flex align-center">
+          <view class="macro-bullet fat-bullet"></view>
+          <view class="macro-info flex flex-col">
+            <text class="macro-name">脂肪</text>
+            <text class="macro-val">{{weekDashboardData.avgFat || 0}}g <text class="macro-pct">({{weekDashboardData.fatRatio || 0}}%)</text></text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+  </block>
 
   <!-- 视图模式选择居中弹窗 -->
   <view class="modal-backdrop {{showViewModeSheet ? 'active' : ''}}" catchtap="hideViewModeModal" catchtouchmove="preventBubble">
@@ -649,9 +783,10 @@
           <view class="plan-tab-content" wx:if="{{planActiveTab === 'workout'}}">
             <!-- 星期选择横轴 -->
             <scroll-view class="days-scroll flex" scroll-x="true" enable-flex="true">
-              <view class="day-chip {{planDayIndex === index ? 'active' : ''}}" wx:for="{{planData.workoutPlan}}" wx:key="day" catchtap="switchPlanDay" data-index="{{index}}">
+              <view class="day-chip {{planDayIndex === index ? 'active' : ''}} {{todayPlanDayIndex === index ? 'today' : ''}}" wx:for="{{planData.workoutPlan}}" wx:key="day" catchtap="switchPlanDay" data-index="{{index}}">
                 <text class="day-chip-name">{{item.day}}</text>
-                <text class="day-chip-dot" wx:if="{{item.isRestDay}}">休息</text>
+                <text class="day-chip-today" wx:if="{{todayPlanDayIndex === index}}">今天</text>
+                <text class="day-chip-dot" wx:elif="{{item.isRestDay}}">休息</text>
               </view>
             </scroll-view>
 
@@ -671,8 +806,8 @@
                     </view>
                     <text class="workout-item-detail" wx:if="{{item.detail}}">💡 {{item.detail}}</text>
                   </view>
-                  <view class="btn-checkin-exercise" catchtap="onAddPlanExercise" data-name="{{item.name}}" data-duration="{{item.duration}}" data-calories="{{item.calories}}">
-                    ＋打卡
+                  <view class="btn-checkin-exercise {{checkedPlanExercisesMap[item.cleanName] ? 'checked' : ''}}" catchtap="{{checkedPlanExercisesMap[item.cleanName] ? '' : 'onAddPlanExercise'}}" data-name="{{item.name}}" data-duration="{{item.duration}}" data-calories="{{item.calories}}">
+                    {{checkedPlanExercisesMap[item.cleanName] ? '✓ 已打卡' : '＋打卡'}}
                   </view>
                 </view>
               </view>
@@ -683,8 +818,9 @@
           <view class="plan-tab-content" wx:if="{{planActiveTab === 'diet'}}">
             <!-- 7天膳食日期选择横轴 -->
             <scroll-view class="days-scroll flex" scroll-x="true" enable-flex="true">
-              <view class="day-chip {{planDayIndex === index ? 'active' : ''}}" wx:for="{{planData.workoutPlan}}" wx:key="day" catchtap="switchPlanDay" data-index="{{index}}">
+              <view class="day-chip {{planDayIndex === index ? 'active' : ''}} {{todayPlanDayIndex === index ? 'today' : ''}}" wx:for="{{planData.workoutPlan}}" wx:key="day" catchtap="switchPlanDay" data-index="{{index}}">
                 <text class="day-chip-name">{{item.day}}</text>
+                <text class="day-chip-today" wx:if="{{todayPlanDayIndex === index}}">今天</text>
               </view>
             </scroll-view>
 
@@ -748,43 +884,54 @@
     </view>
   </view>
 
-  <!-- 💥 全新升级：新功能上线重磅引导弹窗 -->
-  <view class="new-feature-mask flex justify-center align-center" wx:if="{{showNewFeatureModal}}" catchtap="closeNewFeatureModal">
+  <!-- 💥 全新升级：新功能上线重磅引导弹窗 (后台动态可调) -->
+  <view class="new-feature-mask flex justify-center align-center" wx:if="{{showNewFeatureModal && (announcementConfig ? announcementConfig.enabled !== false : true)}}" catchtap="closeNewFeatureModal">
     <view class="new-feature-card flex flex-col align-center" catchtap="preventBubble">
       <view class="new-feature-header flex flex-col align-center">
-        <view class="new-feature-badge-top">v2.0 重磅升级</view>
-        <text class="new-feature-title">🎉 专属 AI 助手全新上线</text>
-        <text class="new-feature-subtitle">精细化膳食、运动打卡与诊断全面开启</text>
+        <view class="new-feature-badge-top">{{announcementConfig.badgeText || 'v2.0 重磅升级'}}</view>
+        <text class="new-feature-title">{{announcementConfig.title || '🎉 专属 AI 助手全新上线'}}</text>
+        <text class="new-feature-subtitle">{{announcementConfig.subtitle || '精细化膳食、运动打卡与诊断全面开启'}}</text>
       </view>
 
       <view class="new-feature-list flex flex-col">
-        <view class="feature-item-row flex align-center">
-          <view class="feature-icon-box bg-purple flex align-center justify-center">🤖</view>
-          <view class="feature-item-info flex flex-col">
-            <text class="feature-item-title">7天 AI 专属运动与食谱</text>
-            <text class="feature-item-desc">精准推荐每日3~4个动作与接地气食谱</text>
+        <block wx:if="{{announcementConfig && announcementConfig.items && announcementConfig.items.length > 0}}">
+          <view class="feature-item-row flex align-center" wx:for="{{announcementConfig.items}}" wx:key="index">
+            <view class="feature-icon-box bg-purple flex align-center justify-center">{{item.icon || '🚀'}}</view>
+            <view class="feature-item-info flex flex-col">
+              <text class="feature-item-title">{{item.title}}</text>
+              <text class="feature-item-desc">{{item.desc}}</text>
+            </view>
           </view>
-        </view>
+        </block>
+        <block wx:else>
+          <view class="feature-item-row flex align-center">
+            <view class="feature-icon-box bg-purple flex align-center justify-center">🤖</view>
+            <view class="feature-item-info flex flex-col">
+              <text class="feature-item-title">7天 AI 专属运动与食谱</text>
+              <text class="feature-item-desc">精准推荐每日3~4个动作与接地气食谱</text>
+            </view>
+          </view>
 
-        <view class="feature-item-row flex align-center">
-          <view class="feature-icon-box bg-amber flex align-center justify-center">💡</view>
-          <view class="feature-item-info flex flex-col">
-            <text class="feature-item-title">AI 专家级营养健康诊断</text>
-            <text class="feature-item-desc">评估三大营养占比，针对性给出指导</text>
+          <view class="feature-item-row flex align-center">
+            <view class="feature-icon-box bg-amber flex align-center justify-center">💡</view>
+            <view class="feature-item-info flex flex-col">
+              <text class="feature-item-title">AI 专家级营养健康诊断</text>
+              <text class="feature-item-desc">评估三大营养占比，针对性给出指导</text>
+            </view>
           </view>
-        </view>
 
-        <view class="feature-item-row flex align-center">
-          <view class="feature-icon-box bg-green flex align-center justify-center">📸</view>
-          <view class="feature-item-info flex flex-col">
-            <text class="feature-item-title">高颜值晒餐海报</text>
-            <text class="feature-item-desc">一键生成精美饮食打卡图，分享朋友圈</text>
+          <view class="feature-item-row flex align-center">
+            <view class="feature-icon-box bg-green flex align-center justify-center">📸</view>
+            <view class="feature-item-info flex flex-col">
+              <text class="feature-item-title">高颜值晒餐海报</text>
+              <text class="feature-item-desc">一键生成精美饮食打卡图，分享朋友圈</text>
+            </view>
           </view>
-        </view>
+        </block>
       </view>
 
       <view class="new-feature-actions flex flex-col align-center">
-        <button class="btn-primary-launch" catchtap="onLaunchAiPlanFromModal">✨ 立即体验 AI 计划</button>
+        <button class="btn-primary-launch" catchtap="onLaunchAnnouncementAction">{{announcementConfig.buttonText || '✨ 立即体验 AI 计划'}}</button>
         <text class="btn-dismiss-text" catchtap="closeNewFeatureModal">知道了，先逛逛</text>
       </view>
     </view>

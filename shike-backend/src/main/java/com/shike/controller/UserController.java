@@ -107,7 +107,16 @@ public class UserController {
         return ResultDTO.success(user);
     }
 
+    @PostMapping("/share-reward")
+    public ResultDTO<java.util.Map<String, Object>> rewardShare(
+            @RequestParam("userId") Long userId,
+            @RequestParam("shareType") String shareType) {
+        java.util.Map<String, Object> result = userService.rewardSharePoints(userId, shareType);
+        return ResultDTO.success(result);
+    }
+
     @GetMapping("/{id}/points-records")
+
     public ResultDTO<java.util.List<com.shike.model.entity.PointsRecord>> getPointsRecords(@PathVariable("id") Long userId) {
         java.util.List<com.shike.model.entity.PointsRecord> records = userService.getPointsRecords(userId);
         return ResultDTO.success(records);

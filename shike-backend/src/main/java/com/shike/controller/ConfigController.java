@@ -23,4 +23,12 @@ public class ConfigController {
     public ResultDTO<Map<String, Boolean>> getPublicFeatureToggles(@org.springframework.web.bind.annotation.RequestParam(required = false, defaultValue = "release") String env) {
         return ResultDTO.success(adminService.getPublicFeatureToggles(env));
     }
+
+    /**
+     * 获取客户端版本公告与引导弹窗动态配置 (供小程序前端渲染)
+     */
+    @GetMapping("/announcement")
+    public ResultDTO<com.shike.model.dto.AnnouncementConfigDTO> getAnnouncementConfig() {
+        return ResultDTO.success(adminService.getAnnouncementConfig());
+    }
 }

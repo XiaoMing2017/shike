@@ -68,6 +68,7 @@ Page({
   },
 
   onShareAppMessage() {
+    this._rewardSharePoints('SHARE_FRIEND');
     return {
       title: '🥑 咔嚓算卡 - AI 智能拍照算卡与健康膳食助手',
       path: '/pages/index/index'
@@ -75,10 +76,34 @@ Page({
   },
 
   onShareTimeline() {
+    this._rewardSharePoints('SHARE_TIMELINE');
     return {
       title: '🥑 咔嚓算卡 - 拍照即可自动识别千种食物与卡路里，开启自律生活！',
       query: ''
     };
+  },
+
+  _rewardSharePoints(shareType) {
+    const user = app.globalData.userInfo;
+    if (!user || !user.id) return;
+    wx.request({
+      url: `${app.globalData.baseUrl}/user/share-reward?userId=${user.id}&shareType=${shareType}`,
+      method: 'POST',
+      success: (res) => {
+        if (res.data && res.data.code === 200 && res.data.data) {
+          const { rewarded, points } = res.data.data;
+          if (rewarded) {
+            wx.showToast({ title: '分享成功 +10积分', icon: 'none', duration: 2000 });
+            if (app.globalData.userInfo) {
+              app.globalData.userInfo.points = points;
+            }
+            if (this.data.userInfo) {
+              this.setData({ 'userInfo.points': points });
+            }
+          }
+        }
+      }
+    });
   },
 
   loginAndFetchProfile() {

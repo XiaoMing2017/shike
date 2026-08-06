@@ -3,10 +3,13 @@ package com.shike.service.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shike.common.BizException;
 import com.shike.model.dto.MonthSummaryDTO;
+import com.shike.model.dto.WeekDashboardDTO;
 import com.shike.model.entity.DietRecord;
+import com.shike.model.entity.ExerciseRecord;
 import com.shike.model.entity.User;
 import com.shike.model.entity.PointsRecord;
 import com.shike.repository.DietRecordRepository;
+import com.shike.repository.ExerciseRecordRepository;
 import com.shike.repository.UserRepository;
 import com.shike.repository.PointsRecordRepository;
 import com.shike.service.DietService;
@@ -38,6 +41,7 @@ import java.util.List;
 public class DietServiceImpl implements DietService {
 
     private final DietRecordRepository dietRecordRepository;
+    private final ExerciseRecordRepository exerciseRecordRepository;
     private final UserRepository userRepository;
     private final PointsRecordRepository pointsRecordRepository;
     private final ObjectMapper objectMapper;
@@ -720,7 +724,8 @@ public class DietServiceImpl implements DietService {
             BigDecimal totalCal = dailyCalories.get(date);
             String status;
             if (totalCal != null) {
-                if (totalCal.compareTo(budget) <= 0) {
+                BigDecimal maxAllowed = budget.multiply(BigDecimal.valueOf(1.25));
+                if (totalCal.compareTo(maxAllowed) <= 0) {
                     status = "SUCCESS";
                 } else {
                     status = "EXCEEDED";
@@ -1028,5 +1033,165 @@ public class DietServiceImpl implements DietService {
 
         resMap.put("userPoints", user.getPoints() != null ? user.getPoints() : 0);
         return resMap;
+    }
+
+    @Override
+    public WeekDashboardDTO getWeekDashboard(Long userId, String dateStr) {
+        LocalDate targetDate;
+        if (dateStr != null && !dateStr.isBlank()) {
+            try {
+                targetDate = LocalDate.parse(dateStr.trim());
+            } catch (Exception e) {
+                targetDate = LocalDate.now();
+            }
+        } else {
+            targetDate = LocalDate.now();
+        }
+
+        LocalDate monday = targetDate.with(java.time.DayOfWeek.MONDAY);
+        LocalDate sunday = monday.plusDays(6);
+
+        User user = userRepository.findById(userId).orElse(null);
+        BigDecimal targetCalories = (user != null && user.getTargetCalories() != null)
+                ? user.getTargetCalories()
+                : BigDecimal.valueOf(2000.0);
+        int targetInt = targetCalories.setScale(0, RoundingMode.HALF_UP).intValue();
+
+        List<DietRecord> dietRecords = dietRecordRepository.findByUserIdAndRecordDateBetween(userId, monday, sunday);
+        List<ExerciseRecord> exerciseRecords = exerciseRecordRepository.findByUserIdAndRecordDateBetween(userId, monday, sunday);
+
+        String[] dayNames = new String[]{"周一", "周二", "周三", "周四", "周五", "周六", "周日"};
+        List<WeekDashboardDTO.DailyItem> dailyDetails = new java.util.ArrayList<>();
+
+        int totalIntake = 0;
+        int totalBurned = 0;
+        int checkinCount = 0;
+
+        BigDecimal totalProtein = BigDecimal.ZERO;
+        BigDecimal totalCarbs = BigDecimal.ZERO;
+        BigDecimal totalFat = BigDecimal.ZERO;
+
+        LocalDate today = LocalDate.now();
+
+        for (int i = 0; i < 7; i++) {
+            LocalDate currentDate = monday.plusDays(i);
+            String dayName = dayNames[i];
+            boolean isToday = currentDate.equals(today);
+
+            int dayIntake = 0;
+            if (dietRecords != null) {
+                for (DietRecord r : dietRecords) {
+                    if (currentDate.equals(r.getRecordDate())) {
+                        if (r.getTotalCalories() != null) {
+                            dayIntake += r.getTotalCalories().setScale(0, RoundingMode.HALF_UP).intValue();
+                        }
+                        if (r.getTotalProtein() != null) {
+                            totalProtein = totalProtein.add(r.getTotalProtein());
+                        }
+                        if (r.getTotalCarbs() != null) {
+                            totalCarbs = totalCarbs.add(r.getTotalCarbs());
+                        }
+                        if (r.getTotalFat() != null) {
+                            totalFat = totalFat.add(r.getTotalFat());
+                        }
+                    }
+                }
+            }
+
+            int dayBurned = 0;
+            if (exerciseRecords != null) {
+                for (ExerciseRecord r : exerciseRecords) {
+                    if (currentDate.equals(r.getRecordDate())) {
+                        if (r.getCaloriesBurned() != null) {
+                            dayBurned += (int) Math.round(r.getCaloriesBurned());
+                        }
+                    }
+                }
+            }
+
+            totalIntake += dayIntake;
+            totalBurned += dayBurned;
+
+            if (dayIntake > 0) {
+                checkinCount++;
+            }
+
+            String status;
+            if (dayIntake > targetInt + dayBurned) {
+                status = "SURPLUS";
+            } else if (dayIntake > 0) {
+                status = "DEFICIT";
+            } else {
+                status = "NORMAL";
+            }
+
+            dailyDetails.add(WeekDashboardDTO.DailyItem.builder()
+                    .date(currentDate)
+                    .dayName(dayName)
+                    .isToday(isToday)
+                    .intake(dayIntake)
+                    .burned(dayBurned)
+                    .target(targetInt)
+                    .status(status)
+                    .build());
+        }
+
+        int avgDailyIntake = checkinCount > 0 ? totalIntake / checkinCount : 0;
+        int avgDailyBurned = checkinCount > 0 ? totalBurned / checkinCount : 0;
+
+        int activeDays = Math.max(1, checkinCount);
+        int targetActiveDays = targetCalories.multiply(BigDecimal.valueOf(activeDays)).setScale(0, RoundingMode.HALF_UP).intValue();
+        int accumulatedDeficit = targetActiveDays + totalBurned - totalIntake;
+
+        BigDecimal avgProtein = totalProtein.divide(BigDecimal.valueOf(7), 1, RoundingMode.HALF_UP);
+        BigDecimal avgCarbs = totalCarbs.divide(BigDecimal.valueOf(7), 1, RoundingMode.HALF_UP);
+        BigDecimal avgFat = totalFat.divide(BigDecimal.valueOf(7), 1, RoundingMode.HALF_UP);
+
+        double proteinKcal = avgProtein.doubleValue() * 4;
+        double carbsKcal = avgCarbs.doubleValue() * 4;
+        double fatKcal = avgFat.doubleValue() * 9;
+        double totalKcal = proteinKcal + carbsKcal + fatKcal;
+        if (totalKcal <= 0) {
+            totalKcal = 1.0;
+        }
+
+        int proteinRatio = (int) Math.round(proteinKcal / totalKcal * 100);
+        int carbsRatio = (int) Math.round(carbsKcal / totalKcal * 100);
+        int fatRatio = (int) Math.round(fatKcal / totalKcal * 100);
+
+        String healthRating;
+        String evaluationMessage;
+
+        if (accumulatedDeficit >= 1000) {
+            healthRating = "A+ 控卡先锋";
+            evaluationMessage = "本周累计成功打造热量缺口 " + accumulatedDeficit + " kcal！相当于减少纯脂肪约 " + String.format(java.util.Locale.US, "%.2f", accumulatedDeficit / 7700.0) + " kg，减脂成效斐然！";
+        } else if (accumulatedDeficit >= 0) {
+            healthRating = "A 热量平衡";
+            evaluationMessage = "本周热量维持平衡，累计创缺口 " + accumulatedDeficit + " kcal，保持得很好！";
+        } else {
+            healthRating = "B 盈余提醒";
+            evaluationMessage = "本周热量稍有超标（盈余 " + Math.abs(accumulatedDeficit) + " kcal），建议下周适当增加有氧运动或控制晚餐。加油！";
+        }
+
+        return WeekDashboardDTO.builder()
+                .startDate(monday)
+                .endDate(sunday)
+                .targetCalories(targetCalories)
+                .totalIntake(totalIntake)
+                .totalBurned(totalBurned)
+                .avgDailyIntake(avgDailyIntake)
+                .avgDailyBurned(avgDailyBurned)
+                .accumulatedDeficit(accumulatedDeficit)
+                .checkinCount(checkinCount)
+                .avgProtein(avgProtein)
+                .avgCarbs(avgCarbs)
+                .avgFat(avgFat)
+                .proteinRatio(proteinRatio)
+                .carbsRatio(carbsRatio)
+                .fatRatio(fatRatio)
+                .healthRating(healthRating)
+                .evaluationMessage(evaluationMessage)
+                .dailyDetails(dailyDetails)
+                .build();
     }
 }

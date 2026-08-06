@@ -1,6 +1,7 @@
 package com.shike.service;
 
 import com.shike.model.dto.MonthSummaryDTO;
+import com.shike.model.dto.WeekDashboardDTO;
 import com.shike.model.entity.DietRecord;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,4 +16,5 @@ public interface DietService {
     List<DietRecord> getDailyRecords(Long userId, LocalDate date);
     List<MonthSummaryDTO> getMonthSummary(Long userId, int year, int month);
     Map<String, Object> diagnoseDiet(Long userId, LocalDate date);
+    WeekDashboardDTO getWeekDashboard(Long userId, String dateStr);
 }

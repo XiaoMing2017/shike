@@ -11,6 +11,7 @@ import java.util.List;
 public interface ExerciseRecordRepository extends JpaRepository<ExerciseRecord, Long> {
     List<ExerciseRecord> findByRecordDate(LocalDate date);
     List<ExerciseRecord> findByUserIdAndRecordDate(Long userId, LocalDate date);
+    List<ExerciseRecord> findByUserIdAndRecordDateBetween(Long userId, LocalDate startDate, LocalDate endDate);
     List<ExerciseRecord> findByUserIdOrderByRecordDateDesc(Long userId);
     Long countByRecordDate(LocalDate date);
     Long countByUserId(Long userId);

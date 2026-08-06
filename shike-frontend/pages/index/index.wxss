@@ -1477,9 +1477,24 @@
   border-radius: 100rpx;
 }
 
+.exercise-count-badge {
+  font-size: 20rpx;
+  font-weight: 700;
+  color: #0EA5E9;
+  background: rgba(14, 165, 233, 0.1);
+  padding: 4rpx 16rpx;
+  border-radius: 20rpx;
+}
+
 .exercise-card {
   margin-top: 20rpx;
   padding: 24rpx 32rpx;
+}
+
+.exercise-scroll-box {
+  max-height: 480rpx;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .exercise-list {
@@ -1489,8 +1504,8 @@
 
 .exercise-item {
   display: flex;
-  padding: 16rpx 0;
-  border-bottom: 1rpx solid rgba(226, 232, 240, 0.4);
+  padding: 18rpx 0;
+  border-bottom: 1rpx solid rgba(226, 232, 240, 0.5);
 }
 
 .exercise-item:last-child {
@@ -2235,10 +2250,10 @@
 /* 🎯 计划弹窗样式 */
 .plan-modal-dialog {
   width: 90vw;
-  max-height: 80vh;
+  max-height: 82vh;
   background: #FFFFFF;
   border-radius: 36rpx;
-  padding: 32rpx 32rpx 20rpx 32rpx;
+  padding: 32rpx 32rpx 32rpx 32rpx;
   display: flex;
   flex-direction: column;
   box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.2);
@@ -2337,6 +2352,29 @@
   color: #FDE68A;
 }
 
+.day-chip.today {
+  border-color: #10B981;
+  position: relative;
+}
+
+.day-chip.today:not(.active) {
+  background: #ECFDF5;
+  color: #059669;
+  border-color: #10B981;
+}
+
+.day-chip-today {
+  font-size: 17rpx;
+  color: #10B981;
+  font-weight: 700;
+  margin-top: 2rpx;
+  letter-spacing: 1rpx;
+}
+
+.day-chip.active .day-chip-today {
+  color: #A7F3D0;
+}
+
 .day-workout-card {
   background: #F8FAFC;
   border-radius: 24rpx;
@@ -2399,6 +2437,13 @@
   transition: all 0.2s ease;
 }
 
+.btn-checkin-exercise.checked {
+  background: #F1F5F9 !important;
+  color: #94A3B8 !important;
+  border: 1rpx solid #E2E8F0 !important;
+  pointer-events: none;
+}
+
 .btn-checkin-exercise:active {
   background: rgba(16, 185, 129, 0.2);
   transform: scale(0.95);
@@ -2453,46 +2498,60 @@
 }
 
 .plan-footer-actions {
-  margin-top: 24rpx;
+  margin-top: 16rpx;
+  padding-top: 16rpx;
   gap: 16rpx;
   display: flex;
   align-items: center;
   width: 100%;
+  border-top: 1rpx solid #F1F5F9;
 }
 
 .btn-refresh-plan {
-  flex: 1.3;
-  background: #F1F5F9;
-  color: #475569;
+  flex: 1.2;
+  background: #F8FAFC;
+  color: #64748B;
   font-size: 22rpx;
   font-weight: 600;
-  border-radius: 24rpx;
-  border: none;
+  border-radius: 34rpx;
+  border: 1rpx solid #E2E8F0;
   padding: 0 12rpx;
-  height: 80rpx;
-  line-height: 80rpx;
+  height: 68rpx;
+  line-height: 68rpx;
   white-space: nowrap;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-refresh-plan:active {
+  background: #F1F5F9;
+  transform: scale(0.98);
 }
 
 .btn-close-plan {
   flex: 1;
   background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
   color: #FFFFFF;
-  font-size: 26rpx;
+  font-size: 25rpx;
   font-weight: 700;
-  border-radius: 24rpx;
+  border-radius: 34rpx;
   border: none;
   padding: 0 16rpx;
-  height: 80rpx;
-  line-height: 80rpx;
+  height: 68rpx;
+  line-height: 68rpx;
   white-space: nowrap;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6rpx 16rpx rgba(79, 70, 229, 0.3);
+  box-shadow: 0 4rpx 14rpx rgba(79, 70, 229, 0.25);
+  transition: all 0.2s ease;
+}
+
+.btn-close-plan:active {
+  transform: scale(0.98);
+  opacity: 0.9;
 }
 
 /* NEW 闪烁呼吸灯徽章 */
@@ -2666,4 +2725,393 @@
   color: #0F766E;
   line-height: 1.6;
   font-weight: 500;
+}
+
+/* ---------------------------------------------------- */
+/* 5. 近7天热量周看板 Styles */
+/* ---------------------------------------------------- */
+
+.dashboard-header .card-title {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #1E293B;
+  letter-spacing: 0.5rpx;
+}
+
+/* 概览总览卡片 Summary Card */
+.week-summary-card {
+  background: rgba(255, 255, 255, 0.75) !important;
+  border: 1rpx solid rgba(255, 255, 255, 0.8) !important;
+  border-radius: 32rpx !important;
+  padding: 28rpx 32rpx !important;
+  margin-bottom: 28rpx !important;
+  box-shadow: 0 12rpx 36rpx rgba(148, 163, 184, 0.08) !important;
+}
+
+.week-summary-header {
+  margin-bottom: 24rpx;
+}
+
+.week-period-box {
+  gap: 8rpx;
+}
+
+.week-period-icon {
+  font-size: 26rpx;
+}
+
+.week-period-text {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #475569;
+}
+
+.health-rating-badge {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  border-radius: 20rpx;
+  padding: 6rpx 18rpx;
+  gap: 6rpx;
+  box-shadow: 0 4rpx 12rpx rgba(16, 185, 129, 0.25);
+}
+
+.rating-star {
+  font-size: 22rpx;
+}
+
+.rating-text {
+  font-size: 22rpx;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+.week-metrics-grid {
+  gap: 16rpx;
+  margin-bottom: 10rpx;
+}
+
+.week-metrics-grid .metric-item {
+  width: 47%;
+  background: rgba(248, 250, 252, 0.85);
+  border: 1rpx solid rgba(226, 232, 240, 0.8);
+  border-radius: 24rpx;
+  padding: 20rpx 12rpx;
+  box-sizing: border-box;
+  margin-bottom: 12rpx;
+}
+
+.metric-val {
+  font-size: 36rpx;
+  font-weight: 800;
+  color: #0F172A;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+}
+
+.metric-val.deficit-val {
+  color: #10B981;
+}
+
+.metric-unit {
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #64748B;
+}
+
+.metric-lbl {
+  font-size: 22rpx;
+  color: #64748B;
+  margin-top: 6rpx;
+  font-weight: 600;
+}
+
+.week-eval-box {
+  background: rgba(245, 158, 11, 0.08);
+  border-left: 6rpx solid #F59E0B;
+  border-radius: 16rpx;
+  padding: 18rpx 22rpx;
+  margin-top: 14rpx;
+}
+
+.eval-text {
+  font-size: 24rpx;
+  color: #B45309;
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+/* 7天柱状图表卡片 Bar Chart Card */
+.week-chart-card {
+  background: rgba(255, 255, 255, 0.75) !important;
+  border: 1rpx solid rgba(255, 255, 255, 0.8) !important;
+  border-radius: 32rpx !important;
+  padding: 28rpx 24rpx 24rpx 24rpx !important;
+  margin-bottom: 28rpx !important;
+  box-shadow: 0 12rpx 36rpx rgba(148, 163, 184, 0.08) !important;
+}
+
+.week-card-title .card-title-text {
+  font-size: 28rpx;
+  font-weight: 800;
+  color: #1E293B;
+}
+
+.chart-container {
+  height: 270rpx;
+  margin-top: 24rpx;
+  padding-bottom: 8rpx;
+}
+
+.chart-col {
+  height: 100%;
+}
+
+.bar-top-val {
+  font-size: 18rpx;
+  font-weight: 700;
+  color: #64748B;
+  margin-bottom: 6rpx;
+}
+
+.bar-track {
+  width: 36rpx;
+  height: 150rpx;
+  background: rgba(226, 232, 240, 0.6);
+  border-radius: 18rpx;
+  position: relative;
+  overflow: hidden;
+}
+
+.bar-fill-intake {
+  width: 100%;
+  border-radius: 18rpx;
+  transition: height 0.4s ease;
+}
+
+.bar-fill-intake.deficit-bar {
+  background: linear-gradient(180deg, #34D399 0%, #10B981 100%);
+}
+
+.bar-fill-intake.surplus-bar {
+  background: linear-gradient(180deg, #FBBF24 0%, #F59E0B 100%);
+}
+
+.status-badge {
+  margin-top: 8rpx;
+  padding: 2rpx 10rpx;
+  border-radius: 10rpx;
+}
+
+.status-badge.status-deficit {
+  background: #ECFDF5;
+}
+
+.status-badge.status-deficit .status-badge-text {
+  color: #047857;
+}
+
+.status-badge.status-surplus {
+  background: #FFFBEB;
+}
+
+.status-badge.status-surplus .status-badge-text {
+  color: #B45309;
+}
+
+.status-badge-text {
+  font-size: 18rpx;
+  font-weight: 800;
+}
+
+.day-label-box {
+  margin-top: 8rpx;
+  gap: 4rpx;
+}
+
+.day-label-text {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #64748B;
+}
+
+.day-label-text.today-text {
+  color: #10B981;
+  font-weight: 800;
+}
+
+.today-badge {
+  background: #10B981;
+  color: #FFFFFF;
+  font-size: 16rpx;
+  font-weight: 700;
+  padding: 2rpx 6rpx;
+  border-radius: 6rpx;
+}
+
+.chart-legend {
+  margin-top: 24rpx;
+  gap: 36rpx;
+  border-top: 1rpx dashed rgba(203, 213, 225, 0.6);
+  padding-top: 18rpx;
+}
+
+.legend-item {
+  gap: 8rpx;
+}
+
+.legend-dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+}
+
+.legend-dot.green-dot {
+  background: #10B981;
+}
+
+.legend-dot.orange-dot {
+  background: #F59E0B;
+}
+
+.legend-text {
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #64748B;
+}
+
+/* 三大营养素占比卡片 Macro Card */
+.week-macro-card {
+  background: rgba(255, 255, 255, 0.75) !important;
+  border: 1rpx solid rgba(255, 255, 255, 0.8) !important;
+  border-radius: 32rpx !important;
+  padding: 28rpx 32rpx !important;
+  margin-bottom: 40rpx !important;
+  box-shadow: 0 12rpx 36rpx rgba(148, 163, 184, 0.08) !important;
+}
+
+.week-macro-bar {
+  height: 24rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+  background: #F1F5F9;
+  margin: 24rpx 0;
+  box-shadow: inset 0 2rpx 4rpx rgba(0, 0, 0, 0.05);
+}
+
+.macro-segment {
+  height: 100%;
+  transition: width 0.4s ease;
+}
+
+.macro-segment.protein-seg {
+  background: #3B82F6;
+}
+
+.macro-segment.carbs-seg {
+  background: #10B981;
+}
+
+.macro-segment.fat-seg {
+  background: #F59E0B;
+}
+
+.week-macro-details {
+  margin-top: 10rpx;
+}
+
+.macro-detail-item {
+  gap: 12rpx;
+}
+
+.macro-bullet {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+}
+
+.macro-bullet.protein-bullet {
+  background: #3B82F6;
+}
+
+.macro-bullet.carbs-bullet {
+  background: #10B981;
+}
+
+.macro-bullet.fat-bullet {
+  background: #F59E0B;
+}
+
+.macro-name {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #64748B;
+}
+
+.macro-val {
+  font-size: 24rpx;
+  font-weight: 800;
+  color: #0F172A;
+  margin-top: 2rpx;
+}
+
+.macro-pct {
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #64748B;
+}
+
+/* 快捷返回导航条 Back Bar */
+.back-to-today-bar {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1rpx solid rgba(16, 185, 129, 0.3);
+  border-radius: 24rpx;
+  padding: 20rpx 28rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 8rpx 24rpx rgba(16, 185, 129, 0.1);
+}
+
+.back-icon {
+  font-size: 28rpx;
+  font-weight: 900;
+  color: #10B981;
+}
+
+.back-title {
+  font-size: 26rpx;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.back-badge {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #10B981;
+}
+
+/* 修复未记录/正常状态标签 */
+.status-badge.status-normal {
+  background: #F1F5F9;
+}
+
+.status-badge.status-normal .status-badge-text {
+  color: #94A3B8;
+}
+
+/* 底部返回大按钮 Bottom Button */
+.back-to-day-bottom-btn {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  border-radius: 36rpx;
+  padding: 28rpx 0;
+  margin: 36rpx 10rpx 60rpx 10rpx;
+  box-shadow: 0 12rpx 36rpx rgba(16, 185, 129, 0.3);
+  gap: 12rpx;
+}
+
+.back-to-day-bottom-btn .btn-icon {
+  font-size: 32rpx;
+}
+
+.back-to-day-bottom-btn .btn-text {
+  font-size: 28rpx;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: 1rpx;
 }

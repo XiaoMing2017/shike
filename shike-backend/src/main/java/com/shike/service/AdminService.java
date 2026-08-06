@@ -28,4 +28,7 @@ public interface AdminService {
     List<com.shike.model.entity.FeatureToggle> getAllFeatureToggles();
     void updateFeatureToggle(String featureKey, String envMode, Boolean enabled, String adminUsername);
     java.util.Map<String, Boolean> getPublicFeatureToggles(String env);
+
+    com.shike.model.dto.AnnouncementConfigDTO getAnnouncementConfig();
+    void updateAnnouncementConfig(com.shike.model.dto.AnnouncementConfigDTO dto, String adminUsername);
 }
