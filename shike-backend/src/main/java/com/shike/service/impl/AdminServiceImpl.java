@@ -327,6 +327,12 @@ public class AdminServiceImpl implements AdminService {
             Long dietCount = dietRecordRepository.countByUserId(u.getId());
             Long exerciseCount = exerciseRecordRepository.countByUserId(u.getId());
 
+            // 数据库保底计算：如果 Redis 丢失或未计数，回落计算今日用户产生的膳食打卡记录
+            Long todayDbDietCount = dietRecordRepository.countByUserIdAndRecordDate(u.getId(), today);
+            if (todayDbDietCount != null && todayDbDietCount > aiCount) {
+                aiCount = todayDbDietCount.intValue();
+            }
+
             boolean isActiveToday = todayActiveIds.contains(u.getId()) || aiCount > 0;
 
             result.add(AdminUserDTO.builder()

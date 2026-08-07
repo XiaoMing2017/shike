@@ -15,4 +15,5 @@ public interface DietRecordRepository extends JpaRepository<DietRecord, Long> {
     List<DietRecord> findByUserIdOrderByRecordDateDesc(Long userId);
     Long countByRecordDate(LocalDate date);
     Long countByUserId(Long userId);
+    Long countByUserIdAndRecordDate(Long userId, LocalDate date);
 }

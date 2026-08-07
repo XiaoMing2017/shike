@@ -131,7 +131,7 @@ public class PlanServiceImpl implements PlanService {
             log.error("AI Generation failed for user {}, fallback to template plan: {}", userId, e.getMessage());
             planMap = generateScientificFallbackPlan(user);
         }
-        recordPlanAiUsage();
+        recordPlanAiUsage(userId);
 
         // 附带返回用户最新积分信息，方便前端实时同步
         planMap.put("userPoints", user.getPoints() != null ? user.getPoints() : 0);
@@ -694,11 +694,18 @@ public class PlanServiceImpl implements PlanService {
         return res;
     }
 
-    private void recordPlanAiUsage() {
+    private void recordPlanAiUsage(Long userId) {
         try {
             String todayStr = java.time.LocalDate.now().toString();
             stringRedisTemplate.opsForValue().increment("shike:ai:plan:count:" + todayStr);
             stringRedisTemplate.opsForValue().increment("shike:ai:plan:tokens:" + todayStr, 3500); // 平均约 3500 Tokens/次
+            if (userId != null) {
+                String limitKey = "shike:ai:limit:" + userId + ":" + todayStr;
+                Long count = stringRedisTemplate.opsForValue().increment(limitKey);
+                if (count != null && count == 1) {
+                    stringRedisTemplate.expire(limitKey, java.time.Duration.ofHours(24));
+                }
+            }
         } catch (Exception e) {
             log.warn("Failed to record plan AI usage in Redis: {}", e.getMessage());
         }
