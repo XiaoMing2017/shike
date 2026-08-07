@@ -115,4 +115,13 @@ public class DietController {
         com.shike.model.dto.WeekDashboardDTO dashboard = dietService.getWeekDashboard(userId, dateStr);
         return ResultDTO.success(dashboard);
     }
+
+    @GetMapping("/month-dashboard")
+    public ResultDTO<com.shike.model.dto.MonthDashboardDTO> getMonthDashboard(
+            @RequestParam("userId") Long userId,
+            @RequestParam(value = "year", required = false) Integer year,
+            @RequestParam(value = "month", required = false) Integer month) {
+        com.shike.model.dto.MonthDashboardDTO dashboard = dietService.getMonthDashboard(userId, year, month);
+        return ResultDTO.success(dashboard);
+    }
 }

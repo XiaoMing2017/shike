@@ -15,4 +15,6 @@ public interface PointsRecordRepository extends JpaRepository<PointsRecord, Long
     boolean existsByUserIdAndTypeAndCreatedAtAfter(Long userId, String type, LocalDateTime startOfDay);
     
     boolean existsByUserIdAndType(Long userId, String type);
+
+    long countByTypeAndCreatedAtBetween(String type, LocalDateTime start, LocalDateTime end);
 }

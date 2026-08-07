@@ -387,7 +387,7 @@
 .calorie-detail-text {
   font-size: 26rpx;
   color: #1F2937;
-  margin-top: 18rpx;
+  margin-top: 14rpx;
   font-weight: 500;
   letter-spacing: 1rpx;
 }
@@ -395,6 +395,60 @@
 .bold-text {
   color: #111827;
   font-weight: 700;
+}
+
+.calorie-inline-slash {
+  color: #94A3B8;
+  font-weight: 500;
+  font-size: 24rpx;
+}
+
+/* 🏃 同行单行运动胶囊样式 */
+.exercise-inline-capsule {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.12) 0%, rgba(56, 189, 248, 0.18) 100%);
+  border: 1.5rpx solid rgba(14, 165, 233, 0.35);
+  border-radius: 20rpx;
+  padding: 4rpx 14rpx 4rpx 10rpx;
+  gap: 6rpx;
+  box-shadow: 0 4rpx 12rpx rgba(14, 165, 233, 0.12);
+  transition: all 0.2s ease;
+  display: inline-flex;
+}
+
+.exercise-inline-capsule:active {
+  transform: scale(0.96);
+  opacity: 0.9;
+}
+
+.capsule-icon {
+  font-size: 24rpx;
+}
+
+.capsule-text {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #0284C7;
+}
+
+.capsule-val {
+  font-size: 24rpx;
+  font-weight: 800;
+  color: #0EA5E9;
+}
+
+.capsule-add-plus {
+  font-size: 22rpx;
+  font-weight: 900;
+  color: #FFFFFF;
+  background: #0EA5E9;
+  width: 28rpx;
+  height: 28rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4rpx;
+  line-height: 1;
 }
 
 /* 2. 三大营养素并列占比条 */
@@ -2160,12 +2214,12 @@
 
 /* 🎯 专属 AI 运动与饮食计划样式 */
 .ai-plan-entry-card {
-  margin: 24rpx 0 32rpx 0;
-  padding: 24rpx 24rpx;
-  background: linear-gradient(135deg, rgba(238, 242, 255, 0.95) 0%, rgba(243, 244, 246, 0.98) 100%);
-  border: 1rpx solid rgba(99, 102, 241, 0.28);
-  border-radius: 28rpx;
-  box-shadow: 0 10rpx 24rpx rgba(99, 102, 241, 0.08);
+  margin: 2rpx 0 12rpx 0;
+  padding: 16rpx 20rpx;
+  background: linear-gradient(135deg, rgba(238, 242, 255, 0.92) 0%, rgba(243, 244, 246, 0.95) 100%);
+  border: 1rpx solid rgba(99, 102, 241, 0.22);
+  border-radius: 24rpx;
+  box-shadow: 0 6rpx 18rpx rgba(99, 102, 241, 0.06);
   transition: all 0.2s ease;
   box-sizing: border-box;
 }
@@ -2178,18 +2232,18 @@
 .ai-plan-left {
   flex: 1;
   min-width: 0;
-  margin-right: 14rpx;
+  margin-right: 12rpx;
 }
 
 .ai-plan-badge {
-  width: 68rpx;
-  height: 68rpx;
+  width: 56rpx;
+  height: 56rpx;
   flex-shrink: 0;
   background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
-  border-radius: 20rpx;
-  font-size: 34rpx;
-  margin-right: 16rpx;
-  box-shadow: 0 6rpx 16rpx rgba(79, 70, 229, 0.3);
+  border-radius: 16rpx;
+  font-size: 28rpx;
+  margin-right: 14rpx;
+  box-shadow: 0 4rpx 12rpx rgba(79, 70, 229, 0.25);
 }
 
 .ai-plan-info {
@@ -2200,15 +2254,15 @@
 .ai-plan-header-row {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 8rpx;
+  flex-wrap: nowrap;
+  gap: 10rpx;
 }
 
 .ai-plan-title {
   font-size: 26rpx;
-  font-weight: 700;
+  font-weight: 800;
   color: #1E293B;
-  line-height: 1.3;
+  line-height: 1.2;
 }
 
 .ai-plan-tag {
@@ -2216,8 +2270,8 @@
   font-weight: 700;
   color: #4F46E5;
   background: rgba(99, 102, 241, 0.12);
-  padding: 4rpx 10rpx;
-  border-radius: 10rpx;
+  padding: 2rpx 10rpx;
+  border-radius: 8rpx;
   flex-shrink: 0;
   white-space: nowrap;
 }
@@ -2225,7 +2279,7 @@
 .ai-plan-sub {
   font-size: 20rpx;
   color: #64748B;
-  margin-top: 6rpx;
+  margin-top: 4rpx;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2234,13 +2288,13 @@
 .ai-plan-arrow-btn {
   flex-shrink: 0;
   white-space: nowrap;
-  padding: 12rpx 24rpx;
+  padding: 10rpx 20rpx;
   background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
   color: #FFFFFF;
-  border-radius: 28rpx;
+  border-radius: 24rpx;
   font-size: 22rpx;
   font-weight: 700;
-  box-shadow: 0 6rpx 16rpx rgba(79, 70, 229, 0.28);
+  box-shadow: 0 4rpx 12rpx rgba(79, 70, 229, 0.25);
 }
 
 .arrow-text {
@@ -2800,10 +2854,12 @@
 }
 
 .metric-val {
-  font-size: 36rpx;
+  font-size: 30rpx;
   font-weight: 800;
   color: #0F172A;
   font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  white-space: nowrap;
+  line-height: 1.2;
 }
 
 .metric-val.deficit-val {
@@ -2811,9 +2867,10 @@
 }
 
 .metric-unit {
-  font-size: 20rpx;
+  font-size: 18rpx;
   font-weight: 600;
   color: #64748B;
+  margin-left: 2rpx;
 }
 
 .metric-lbl {
@@ -3115,3 +3172,75 @@
   color: #FFFFFF;
   letter-spacing: 1rpx;
 }
+
+/* 月看板 Month Dashboard Specific Styles */
+.month-summary-card {
+  margin-bottom: 28rpx !important;
+}
+
+.month-chart-card {
+  margin-bottom: 28rpx !important;
+}
+
+.month-chart-card .chart-container {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: space-around !important;
+  align-items: flex-end !important;
+  box-sizing: border-box !important;
+  padding: 0 10rpx !important;
+}
+
+.month-chart-card .chart-col {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  min-width: 0 !important;
+}
+
+.month-chart-card .bar-track {
+  width: 44rpx !important;
+  height: 150rpx !important;
+  background: rgba(241, 245, 249, 0.95) !important;
+  border-radius: 22rpx !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.month-chart-card .bar-fill-intake {
+  width: 100% !important;
+  border-radius: 22rpx !important;
+}
+
+.month-macro-card {
+  margin-bottom: 28rpx !important;
+}
+
+.month-week-label-box {
+  margin-top: 10rpx;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.day-label-text {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #334155;
+}
+
+.week-period-sub {
+  font-size: 18rpx;
+  color: #94A3B8;
+  margin-top: 2rpx;
+  font-weight: 500;
+  white-space: nowrap;
+  letter-spacing: -0.5rpx;
+}
+
+.metric-val.surplus-val {
+  color: #F59E0B;
+}
+

@@ -138,4 +138,9 @@ public class AdminController {
         adminService.updateAnnouncementConfig(dto, "admin");
         return ResultDTO.success();
     }
+
+    @GetMapping({"/server-status", "/api/v1/admin/server-status"})
+    public ResultDTO<com.shike.model.dto.ServerStatusDTO> getServerStatus() {
+        return ResultDTO.success(adminService.getServerStatus());
+    }
 }

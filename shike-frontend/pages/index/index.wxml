@@ -49,8 +49,20 @@
           <text class="ring-unit">千卡</text>
         </view>
       </view>
-      <view class="calorie-detail-text">
-        已摄入 <text class="bold-text">{{consumedCal}}</text> / 目标 <text class="bold-text">{{targetCal}}</text> <block wx:if="{{exerciseCal > 0}}">/ 运动消耗 <text class="bold-text plus-text">+{{exerciseCal}}</text></block>
+      <!-- 同行并排：已摄入 / 目标 / 运动打卡胶囊 -->
+      <view class="calorie-detail-text flex align-center justify-center flex-wrap" style="gap: 10rpx;">
+        <text>已摄入 <text class="bold-text">{{consumedCal}}</text> / 目标 <text class="bold-text">{{targetCal}}</text></text>
+        <text class="calorie-inline-slash">/</text>
+        <view class="exercise-inline-capsule flex align-center" catchtap="openAddExerciseModal">
+          <text class="capsule-icon">🏃</text>
+          <block wx:if="{{exerciseCal > 0}}">
+            <text class="capsule-text">运动 <text class="capsule-val">+{{exerciseCal}}</text></text>
+          </block>
+          <block wx:else>
+            <text class="capsule-text">记运动</text>
+          </block>
+          <text class="capsule-add-plus">+</text>
+        </view>
       </view>
     </view>
 
@@ -113,9 +125,8 @@
         <view class="ai-plan-badge flex align-center justify-center">🎯</view>
         <view class="ai-plan-info flex flex-col justify-center">
           <view class="ai-plan-header-row flex align-center">
-            <text class="ai-plan-title">我的专属 AI 运动与膳食计划</text>
+            <text class="ai-plan-title">AI 专属定制计划</text>
             <text class="ai-plan-tag">RD/CSCS认证</text>
-            <text class="new-glow-badge">NEW</text>
           </view>
           <text class="ai-plan-sub">基于您的身体档案与阶段目标精准推算</text>
         </view>
@@ -310,6 +321,131 @@
       </view>
     </view>
 
+  </block>
+
+  <!-- 6. 30天月度健康战报看板 -->
+  <block wx:if="{{viewModeIndex === 2}}">
+    <!-- 顶部快捷返回导航条 -->
+    <view class="back-to-today-bar flex justify-between align-center" catchtap="switchToDayMode">
+      <view class="flex align-center" style="gap: 12rpx;">
+        <text class="back-icon">←</text>
+        <text class="back-title">返回今日热量大环</text>
+      </view>
+      <text class="back-badge">今日打卡 ></text>
+    </view>
+
+    <!-- Month Summary Card (月度概览总览卡片) -->
+    <view class="glass-card week-summary-card month-summary-card">
+      <view class="week-summary-header flex justify-between align-center">
+        <view class="week-period-box flex align-center">
+          <text class="week-period-icon">📅</text>
+          <text class="week-period-text">{{monthDashboardData.yearMonthStr || '2026年08月'}}·健康战报</text>
+        </view>
+        <view class="health-rating-badge flex align-center">
+          <text class="rating-star">⭐</text>
+          <text class="rating-text">{{monthDashboardData.healthRating || 'A+ 30天蜕变先锋'}}</text>
+        </view>
+      </view>
+
+      <!-- 4大关键指标网格 -->
+      <view class="week-metrics-grid flex flex-wrap justify-between">
+        <view class="metric-item flex flex-col align-center">
+          <text class="metric-val">{{monthDashboardData.avgDailyIntake || 0}} <text class="metric-unit">kcal</text></text>
+          <text class="metric-lbl">月日均摄入</text>
+        </view>
+        <view class="metric-item flex flex-col align-center">
+          <text class="metric-val">{{monthDashboardData.avgDailyBurned || 0}} <text class="metric-unit">kcal</text></text>
+          <text class="metric-lbl">月日均运动</text>
+        </view>
+        <view class="metric-item flex flex-col align-center">
+          <text class="metric-val {{monthDashboardData.accumulatedDeficit < 0 ? 'surplus-val' : 'deficit-val'}}">{{monthDashboardData.accumulatedDeficit || 0}} <text class="metric-unit">kcal</text></text>
+          <text class="metric-lbl">本月创缺口</text>
+        </view>
+        <view class="metric-item flex flex-col align-center">
+          <text class="metric-val">{{monthDashboardData.checkinCount || 0}} <text class="metric-unit">天 ({{monthDashboardData.checkinRate || 0}}%)</text></text>
+          <text class="metric-lbl">月打卡天数</text>
+        </view>
+      </view>
+
+      <!-- Evaluation message quote box -->
+      <view class="week-eval-box" wx:if="{{monthDashboardData.evaluationMessage}}">
+        <text class="eval-text">💡 {{monthDashboardData.evaluationMessage}}</text>
+      </view>
+    </view>
+
+    <!-- 4-Week Trend Bar Chart Card (4周趋势对比图卡片) -->
+    <view class="glass-card week-chart-card month-chart-card">
+      <view class="week-card-title flex align-center">
+        <text class="card-title-text">📊 月度周趋势对比 (按周洞察)</text>
+      </view>
+
+      <view class="chart-container flex justify-around align-end">
+        <block wx:for="{{monthDashboardData.weeklyTrends}}" wx:key="weekName">
+          <view class="chart-col flex flex-col align-center flex-1">
+            <text class="bar-top-val">{{(item.avgIntake || item.intake) > 0 ? (item.avgIntake || item.intake) : '-'}}</text>
+            <view class="bar-track flex flex-col justify-end align-center">
+              <view class="bar-fill-intake {{(item.avgIntake || item.intake) > (item.target || 2000) ? 'surplus-bar' : 'deficit-bar'}}" 
+                    style="height: {{(item.avgIntake || item.intake) ? (((item.avgIntake || item.intake) / 2600) * 100 > 100 ? 100 : ((item.avgIntake || item.intake) / 2600) * 100) : 0}}%;">
+              </view>
+            </view>
+            <view class="status-badge {{(item.avgIntake || item.intake) > (item.target || 2000) ? 'status-surplus' : ((item.avgIntake || item.intake) > 0 ? 'status-deficit' : 'status-normal')}}">
+              <text class="status-badge-text">{{(item.avgIntake || item.intake) > (item.target || 2000) ? '超标' : ((item.avgIntake || item.intake) > 0 ? '达标' : '未记录')}}</text>
+            </view>
+            <view class="day-label-box month-week-label-box flex flex-col align-center">
+              <text class="day-label-text">{{item.weekName}}</text>
+              <text class="week-period-sub" wx:if="{{item.weekPeriod}}">{{item.weekPeriod}}</text>
+            </view>
+          </view>
+        </block>
+      </view>
+      <view class="chart-legend flex justify-center align-center">
+        <view class="legend-item flex align-center">
+          <view class="legend-dot green-dot"></view>
+          <text class="legend-text">热量赤字/达标</text>
+        </view>
+        <view class="legend-item flex align-center">
+          <view class="legend-dot orange-dot"></view>
+          <text class="legend-text">热量盈余</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Monthly Macro Breakdown Card (月三大营养素占比卡片) -->
+    <view class="glass-card week-macro-card month-macro-card">
+      <view class="week-card-title flex align-center justify-between">
+        <text class="card-title-text">🥗 月平均三大营养素结构</text>
+      </view>
+
+      <view class="week-macro-bar flex">
+        <view class="macro-segment protein-seg" style="width: {{monthDashboardData.proteinRatio || 0}}%;"></view>
+        <view class="macro-segment carbs-seg" style="width: {{monthDashboardData.carbsRatio || 0}}%;"></view>
+        <view class="macro-segment fat-seg" style="width: {{monthDashboardData.fatRatio || 0}}%;"></view>
+      </view>
+
+      <view class="week-macro-details flex justify-between">
+        <view class="macro-detail-item flex align-center">
+          <view class="macro-bullet protein-bullet"></view>
+          <view class="macro-info flex flex-col">
+            <text class="macro-name">蛋白质</text>
+            <text class="macro-val">{{monthDashboardData.avgProtein || 0}}g <text class="macro-pct">({{monthDashboardData.proteinRatio || 0}}%)</text></text>
+          </view>
+        </view>
+        <view class="macro-detail-item flex align-center">
+          <view class="macro-bullet carbs-bullet"></view>
+          <view class="macro-info flex flex-col">
+            <text class="macro-name">碳水</text>
+            <text class="macro-val">{{monthDashboardData.avgCarbs || 0}}g <text class="macro-pct">({{monthDashboardData.carbsRatio || 0}}%)</text></text>
+          </view>
+        </view>
+        <view class="macro-detail-item flex align-center">
+          <view class="macro-bullet fat-bullet"></view>
+          <view class="macro-info flex flex-col">
+            <text class="macro-name">脂肪</text>
+            <text class="macro-val">{{monthDashboardData.avgFat || 0}}g <text class="macro-pct">({{monthDashboardData.fatRatio || 0}}%)</text></text>
+          </view>
+        </view>
+      </view>
+    </view>
   </block>
 
   <!-- 视图模式选择居中弹窗 -->

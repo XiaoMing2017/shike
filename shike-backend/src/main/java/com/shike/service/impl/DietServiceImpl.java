@@ -2,6 +2,7 @@ package com.shike.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shike.common.BizException;
+import com.shike.model.dto.MonthDashboardDTO;
 import com.shike.model.dto.MonthSummaryDTO;
 import com.shike.model.dto.WeekDashboardDTO;
 import com.shike.model.entity.DietRecord;
@@ -33,6 +34,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 @Service
@@ -1192,6 +1194,182 @@ public class DietServiceImpl implements DietService {
                 .healthRating(healthRating)
                 .evaluationMessage(evaluationMessage)
                 .dailyDetails(dailyDetails)
+                .build();
+    }
+
+    @Override
+    public MonthDashboardDTO getMonthDashboard(Long userId, Integer year, Integer month) {
+        LocalDate now = LocalDate.now();
+        if (year == null) {
+            year = now.getYear();
+        }
+        if (month == null) {
+            month = now.getMonthValue();
+        }
+
+        String yearMonthStr = String.format(java.util.Locale.US, "%d年%02d月", year, month);
+        LocalDate firstDay = LocalDate.of(year, month, 1);
+        LocalDate lastDay = firstDay.with(TemporalAdjusters.lastDayOfMonth());
+        int daysInMonth = lastDay.getDayOfMonth();
+
+        User user = userRepository.findById(userId).orElse(null);
+        BigDecimal targetCalories = (user != null && user.getTargetCalories() != null)
+                ? user.getTargetCalories()
+                : BigDecimal.valueOf(2000.0);
+        int targetInt = targetCalories.setScale(0, RoundingMode.HALF_UP).intValue();
+
+        List<DietRecord> dietRecords = dietRecordRepository.findByUserIdAndRecordDateBetween(userId, firstDay, lastDay);
+        List<ExerciseRecord> exerciseRecords = exerciseRecordRepository.findByUserIdAndRecordDateBetween(userId, firstDay, lastDay);
+
+        java.util.Map<LocalDate, Integer> dailyIntakeMap = new java.util.HashMap<>();
+        BigDecimal totalProteinBD = BigDecimal.ZERO;
+        BigDecimal totalCarbsBD = BigDecimal.ZERO;
+        BigDecimal totalFatBD = BigDecimal.ZERO;
+
+        if (dietRecords != null) {
+            for (DietRecord r : dietRecords) {
+                if (r.getRecordDate() != null) {
+                    if (r.getTotalCalories() != null) {
+                        int cal = r.getTotalCalories().setScale(0, RoundingMode.HALF_UP).intValue();
+                        dailyIntakeMap.merge(r.getRecordDate(), cal, Integer::sum);
+                    }
+                    if (r.getTotalProtein() != null) {
+                        totalProteinBD = totalProteinBD.add(r.getTotalProtein());
+                    }
+                    if (r.getTotalCarbs() != null) {
+                        totalCarbsBD = totalCarbsBD.add(r.getTotalCarbs());
+                    }
+                    if (r.getTotalFat() != null) {
+                        totalFatBD = totalFatBD.add(r.getTotalFat());
+                    }
+                }
+            }
+        }
+
+        java.util.Map<LocalDate, Integer> dailyBurnedMap = new java.util.HashMap<>();
+        if (exerciseRecords != null) {
+            for (ExerciseRecord r : exerciseRecords) {
+                if (r.getRecordDate() != null && r.getCaloriesBurned() != null) {
+                    int burned = (int) Math.round(r.getCaloriesBurned());
+                    dailyBurnedMap.merge(r.getRecordDate(), burned, Integer::sum);
+                }
+            }
+        }
+
+        int totalIntake = dailyIntakeMap.values().stream().mapToInt(Integer::intValue).sum();
+        int totalBurned = dailyBurnedMap.values().stream().mapToInt(Integer::intValue).sum();
+        int checkinCount = (int) dailyIntakeMap.entrySet().stream().filter(e -> e.getValue() > 0).count();
+        int checkinRate = (int) Math.round((double) checkinCount / daysInMonth * 100);
+
+        int avgDailyIntake = checkinCount > 0 ? totalIntake / checkinCount : 0;
+        int avgDailyBurned = checkinCount > 0 ? totalBurned / checkinCount : 0;
+
+        int activeDays = Math.max(1, checkinCount);
+        int targetActiveDays = targetCalories.multiply(BigDecimal.valueOf(activeDays)).setScale(0, RoundingMode.HALF_UP).intValue();
+        int accumulatedDeficit = targetActiveDays + totalBurned - totalIntake;
+
+        BigDecimal fatLossKg = BigDecimal.valueOf(accumulatedDeficit / 7700.0).setScale(2, RoundingMode.HALF_UP);
+
+        BigDecimal avgProtein = totalProteinBD.divide(BigDecimal.valueOf(daysInMonth), 1, RoundingMode.HALF_UP);
+        BigDecimal avgCarbs = totalCarbsBD.divide(BigDecimal.valueOf(daysInMonth), 1, RoundingMode.HALF_UP);
+        BigDecimal avgFat = totalFatBD.divide(BigDecimal.valueOf(daysInMonth), 1, RoundingMode.HALF_UP);
+
+        double proteinKcal = avgProtein.doubleValue() * 4;
+        double carbsKcal = avgCarbs.doubleValue() * 4;
+        double fatKcal = avgFat.doubleValue() * 9;
+        double totalKcal = proteinKcal + carbsKcal + fatKcal;
+        if (totalKcal <= 0) {
+            totalKcal = 1.0;
+        }
+
+        int proteinRatio = (int) Math.round(proteinKcal / totalKcal * 100);
+        int carbsRatio = (int) Math.round(carbsKcal / totalKcal * 100);
+        int fatRatio = (int) Math.round(fatKcal / totalKcal * 100);
+
+        List<MonthDashboardDTO.WeeklyTrendItem> weeklyTrends = new java.util.ArrayList<>();
+        java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("M.d");
+
+        int numWeeks = (daysInMonth + 6) / 7;
+        for (int w = 1; w <= numWeeks; w++) {
+            int startDayNum = (w - 1) * 7 + 1;
+            int endDayNum = Math.min(w * 7, daysInMonth);
+            LocalDate startOfWeek = LocalDate.of(year, month, startDayNum);
+            LocalDate endOfWeek = LocalDate.of(year, month, endDayNum);
+
+            int weekTotalIntake = 0;
+            int weekTotalBurned = 0;
+            int weekCheckinCount = 0;
+
+            for (int d = startDayNum; d <= endDayNum; d++) {
+                LocalDate date = LocalDate.of(year, month, d);
+                int dayIntake = dailyIntakeMap.getOrDefault(date, 0);
+                int dayBurned = dailyBurnedMap.getOrDefault(date, 0);
+                weekTotalIntake += dayIntake;
+                weekTotalBurned += dayBurned;
+                if (dayIntake > 0) {
+                    weekCheckinCount++;
+                }
+            }
+
+            int weekAvgIntake = weekCheckinCount > 0 ? weekTotalIntake / weekCheckinCount : 0;
+            int weekAvgBurned = weekCheckinCount > 0 ? weekTotalBurned / weekCheckinCount : 0;
+
+            String status;
+            if (weekAvgIntake > targetInt + weekAvgBurned) {
+                status = "SURPLUS";
+            } else if (weekAvgIntake > 0) {
+                status = "DEFICIT";
+            } else {
+                status = "NORMAL";
+            }
+
+            weeklyTrends.add(MonthDashboardDTO.WeeklyTrendItem.builder()
+                    .weekName("第" + w + "周")
+                    .weekPeriod(startOfWeek.format(fmt) + "-" + endOfWeek.format(fmt))
+                    .avgIntake(weekAvgIntake)
+                    .avgBurned(weekAvgBurned)
+                    .target(targetInt)
+                    .status(status)
+                    .build());
+        }
+
+        String healthRating;
+        String evaluationMessage;
+
+        if (accumulatedDeficit >= 4000) {
+            healthRating = "A+ 30天蜕变先锋";
+            evaluationMessage = "本月已坚持打卡 " + checkinCount + " 天，累计创热量缺口 " + accumulatedDeficit + " kcal！相当于减少纯脂肪约 " + String.format(java.util.Locale.US, "%.2f", fatLossKg) + " kg，坚持出肉眼可见的蜕变！";
+        } else if (accumulatedDeficit >= 0) {
+            healthRating = "A 月度控制优良";
+            evaluationMessage = "本月累计打卡 " + checkinCount + " 天，热量维持平衡，累计创缺口 " + accumulatedDeficit + " kcal，表现稳定！";
+        } else {
+            healthRating = "B 盈余预警";
+            evaluationMessage = "本月累计热量盈余 " + Math.abs(accumulatedDeficit) + " kcal，建议下个月适当控制高油高糖食物并增加有氧运动。";
+        }
+
+        return MonthDashboardDTO.builder()
+                .year(year)
+                .month(month)
+                .yearMonthStr(yearMonthStr)
+                .targetCalories(targetCalories)
+                .totalIntake(totalIntake)
+                .totalBurned(totalBurned)
+                .avgDailyIntake(avgDailyIntake)
+                .avgDailyBurned(avgDailyBurned)
+                .accumulatedDeficit(accumulatedDeficit)
+                .checkinCount(checkinCount)
+                .daysInMonth(daysInMonth)
+                .checkinRate(checkinRate)
+                .fatLossKg(fatLossKg)
+                .avgProtein(avgProtein)
+                .avgCarbs(avgCarbs)
+                .avgFat(avgFat)
+                .proteinRatio(proteinRatio)
+                .carbsRatio(carbsRatio)
+                .fatRatio(fatRatio)
+                .healthRating(healthRating)
+                .evaluationMessage(evaluationMessage)
+                .weeklyTrends(weeklyTrends)
                 .build();
     }
 }

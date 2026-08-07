@@ -1,5 +1,6 @@
 package com.shike.service;
 
+import com.shike.model.dto.MonthDashboardDTO;
 import com.shike.model.dto.MonthSummaryDTO;
 import com.shike.model.dto.WeekDashboardDTO;
 import com.shike.model.entity.DietRecord;
@@ -17,4 +18,5 @@ public interface DietService {
     List<MonthSummaryDTO> getMonthSummary(Long userId, int year, int month);
     Map<String, Object> diagnoseDiet(Long userId, LocalDate date);
     WeekDashboardDTO getWeekDashboard(Long userId, String dateStr);
+    MonthDashboardDTO getMonthDashboard(Long userId, Integer year, Integer month);
 }

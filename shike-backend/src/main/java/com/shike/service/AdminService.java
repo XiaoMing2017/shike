@@ -31,4 +31,6 @@ public interface AdminService {
 
     com.shike.model.dto.AnnouncementConfigDTO getAnnouncementConfig();
     void updateAnnouncementConfig(com.shike.model.dto.AnnouncementConfigDTO dto, String adminUsername);
+
+    com.shike.model.dto.ServerStatusDTO getServerStatus();
 }

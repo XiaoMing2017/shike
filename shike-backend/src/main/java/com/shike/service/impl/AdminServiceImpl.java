@@ -44,6 +44,7 @@ public class AdminServiceImpl implements AdminService {
     private final AdminAuditLogRepository adminAuditLogRepository;
     private final com.shike.repository.FeatureToggleRepository featureToggleRepository;
     private final com.shike.repository.AnnouncementConfigRepository announcementConfigRepository;
+    private final PointsRecordRepository pointsRecordRepository;
     private final StringRedisTemplate stringRedisTemplate;
 
     @Override
@@ -128,6 +129,17 @@ public class AdminServiceImpl implements AdminService {
                     dayPlanCount = Long.parseLong(planVal);
                 }
             } catch (Exception ignored) {}
+
+            try {
+                java.time.LocalDateTime startOfDay = date.atStartOfDay();
+                java.time.LocalDateTime endOfDay = date.atTime(23, 59, 59);
+                long dbPlanCount = pointsRecordRepository.countByTypeAndCreatedAtBetween("PLAN_GEN", startOfDay, endOfDay);
+                if (dbPlanCount > dayPlanCount) {
+                    dayPlanCount = dbPlanCount;
+                }
+            } catch (Exception e) {
+                log.warn("Failed to count PLAN_GEN in DB for {}: {}", dateStr, e.getMessage());
+            }
 
             if (dayMealCount == 0) {
                 dayMealCount = dietRecordRepository.countByRecordDate(date);
@@ -588,6 +600,7 @@ public class AdminServiceImpl implements AdminService {
             initSingleToggle("team_challenge", "契约小队对赌打卡", "互动与挑战", "PROD_AND_TEST", true, "组队习惯养成打卡与积分对赌池");
             initSingleToggle("water_log", "饮水追踪与记录", "健康追踪", "PROD_AND_TEST", true, "每日饮水量实时目标进度追踪");
             initSingleToggle("week_dashboard", "周看板视图与对比", "看板与分析", "PROD_AND_TEST", true, "支持切换到近7天热量/三大营养素趋势与周看板");
+            initSingleToggle("month_dashboard", "月看板视图与趋势", "看板与分析", "PROD_AND_TEST", true, "支持切换到月度热量赤字、4周趋势对比与月看板");
         } catch (Exception e) {
             log.warn("Failed to initialize feature toggles: {}", e.getMessage());
         }
@@ -795,6 +808,120 @@ public class AdminServiceImpl implements AdminService {
 
         announcementConfigRepository.save(config);
         logAudit(adminUsername, "UPDATE_ANNOUNCEMENT_CONFIG", "ANNOUNCEMENT", "更新了客户端版本公告与引导弹窗配置: " + config.getTitle());
+    }
+
+    @Override
+    public com.shike.model.dto.ServerStatusDTO getServerStatus() {
+        java.lang.management.OperatingSystemMXBean osBean = java.lang.management.ManagementFactory.getOperatingSystemMXBean();
+        java.lang.management.RuntimeMXBean runtimeBean = java.lang.management.ManagementFactory.getRuntimeMXBean();
+        java.lang.management.ThreadMXBean threadBean = java.lang.management.ManagementFactory.getThreadMXBean();
+
+        String osName = osBean.getName() + " " + osBean.getVersion();
+        String osArch = osBean.getArch();
+        int cpuCores = osBean.getAvailableProcessors();
+        String jvmVersion = System.getProperty("java.version");
+        String jvmVendor = System.getProperty("java.vendor");
+
+        long startMs = runtimeBean.getStartTime();
+        String startTime = java.time.Instant.ofEpochMilli(startMs)
+                .atZone(java.time.ZoneId.systemDefault())
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
+        long uptimeMs = runtimeBean.getUptime();
+        long hours = TimeUnit.MILLISECONDS.toHours(uptimeMs);
+        long minutes = TimeUnit.MILLISECONDS.toMinutes(uptimeMs) % 60;
+        long seconds = TimeUnit.MILLISECONDS.toSeconds(uptimeMs) % 60;
+        String uptimeStr = String.format("%d小时 %d分 %d秒", hours, minutes, seconds);
+
+        double cpuUsage = 0.0;
+        if (osBean instanceof com.sun.management.OperatingSystemMXBean sunOsBean) {
+            double load = sunOsBean.getCpuLoad();
+            if (load >= 0) {
+                cpuUsage = Math.round(load * 1000.0) / 10.0;
+            }
+        }
+
+        Runtime runtime = Runtime.getRuntime();
+        long maxMemMb = runtime.maxMemory() / (1024 * 1024);
+        long totalMemMb = runtime.totalMemory() / (1024 * 1024);
+        long freeMemMb = runtime.freeMemory() / (1024 * 1024);
+        long usedMemMb = totalMemMb - freeMemMb;
+        double memUsagePct = maxMemMb > 0 ? Math.round((usedMemMb * 100.0 / maxMemMb) * 10.0) / 10.0 : 0.0;
+
+        java.io.File rootFile = new java.io.File("/");
+        long totalDiskBytes = rootFile.getTotalSpace();
+        long freeDiskBytes = rootFile.getFreeSpace();
+        long usedDiskBytes = totalDiskBytes - freeDiskBytes;
+
+        double totalDiskGb = Math.round((totalDiskBytes / (1024.0 * 1024 * 1024)) * 10.0) / 10.0;
+        double usedDiskGb = Math.round((usedDiskBytes / (1024.0 * 1024 * 1024)) * 10.0) / 10.0;
+        double freeDiskGb = Math.round((freeDiskBytes / (1024.0 * 1024 * 1024)) * 10.0) / 10.0;
+        double diskUsagePct = totalDiskBytes > 0 ? Math.round((usedDiskBytes * 100.0 / totalDiskBytes) * 10.0) / 10.0 : 0.0;
+
+        com.shike.model.dto.ServerStatusDTO.ComponentStatus mysqlStatus;
+        long startMysql = System.currentTimeMillis();
+        try {
+            userRepository.count();
+            long costMysql = System.currentTimeMillis() - startMysql;
+            mysqlStatus = com.shike.model.dto.ServerStatusDTO.ComponentStatus.builder()
+                    .name("MySQL 8.0 数据库服务")
+                    .status("HEALTHY")
+                    .latencyMs(costMysql)
+                    .details("数据库通信正常 (SELECT 探针响应: " + costMysql + "ms)")
+                    .build();
+        } catch (Exception e) {
+            mysqlStatus = com.shike.model.dto.ServerStatusDTO.ComponentStatus.builder()
+                    .name("MySQL 8.0 数据库服务")
+                    .status("DOWN")
+                    .latencyMs(-1L)
+                    .details("通信异常: " + e.getMessage())
+                    .build();
+        }
+
+        com.shike.model.dto.ServerStatusDTO.ComponentStatus redisStatus;
+        long startRedis = System.currentTimeMillis();
+        try {
+            String pingResult = stringRedisTemplate.execute((org.springframework.data.redis.core.RedisCallback<String>) connection -> connection.ping());
+            long costRedis = System.currentTimeMillis() - startRedis;
+            redisStatus = com.shike.model.dto.ServerStatusDTO.ComponentStatus.builder()
+                    .name("Redis 7.0 内存数据库")
+                    .status("HEALTHY")
+                    .latencyMs(costRedis)
+                    .details("PING 响应正常: " + pingResult + " (" + costRedis + "ms)")
+                    .build();
+        } catch (Exception e) {
+            redisStatus = com.shike.model.dto.ServerStatusDTO.ComponentStatus.builder()
+                    .name("Redis 7.0 内存数据库")
+                    .status("DOWN")
+                    .latencyMs(-1L)
+                    .details("连接失败: " + e.getMessage())
+                    .build();
+        }
+
+        return com.shike.model.dto.ServerStatusDTO.builder()
+                .osName(osName)
+                .osArch(osArch)
+                .cpuCores(cpuCores)
+                .jvmVersion(jvmVersion)
+                .jvmVendor(jvmVendor)
+                .startTime(startTime)
+                .uptime(uptimeStr)
+                .cpuUsage(cpuUsage)
+                .jvmTotalMemoryMb(totalMemMb)
+                .jvmUsedMemoryMb(usedMemMb)
+                .jvmFreeMemoryMb(freeMemMb)
+                .jvmMaxMemoryMb(maxMemMb)
+                .jvmMemoryUsagePercent(memUsagePct)
+                .diskTotalGb(totalDiskGb)
+                .diskUsedGb(usedDiskGb)
+                .diskFreeGb(freeDiskGb)
+                .diskUsagePercent(diskUsagePct)
+                .threadCount(threadBean.getThreadCount())
+                .daemonThreadCount(threadBean.getDaemonThreadCount())
+                .peakThreadCount(threadBean.getPeakThreadCount())
+                .mysqlStatus(mysqlStatus)
+                .redisStatus(redisStatus)
+                .build();
     }
 
     private void logAudit(String adminUsername, String action, String target, String details) {

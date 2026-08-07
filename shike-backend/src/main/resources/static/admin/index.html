@@ -996,6 +996,103 @@
     </div>
   </header>
 
+  <!-- Server & Middleware Real-time Health Console -->
+  <div class="section-card" style="margin-bottom: 24px; padding: 20px; border: 1px solid rgba(59, 130, 246, 0.3); background: rgba(15, 23, 42, 0.75);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(59, 130, 246, 0.15); color: #60A5FA; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+          <i class="fa-solid fa-server"></i>
+        </div>
+        <div>
+          <h3 style="font-size: 16px; font-weight: 700; color: #FFF; margin: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            物理服务器与基础组件健康度
+            <span id="serverUptimeBadge" style="font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3);">运行时间: 探针检测中...</span>
+          </h3>
+          <span style="font-size: 12px; color: var(--text-muted);" id="serverOsInfoSub">宿主环境与 JVM 资源探针监控</span>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <button class="btn-action" onclick="openServerStatusModal()" style="background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); color: #C4B5FD; font-size: 12px; padding: 6px 12px;">
+          <i class="fa-solid fa-gauge-high"></i> 探针明细
+        </button>
+        <button class="btn-action" onclick="loadServerStatus()" style="background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: #60A5FA; font-size: 12px; padding: 6px 12px;">
+          <i class="fa-solid fa-rotate"></i> 刷新探针
+        </button>
+      </div>
+    </div>
+
+    <!-- 4 个核心硬件与健康进度条仪表盘 -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 16px;">
+      <!-- CPU 负载 -->
+      <div style="background: rgba(30, 41, 59, 0.6); padding: 14px 16px; border-radius: 12px; border: 1px solid var(--card-border);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;"><i class="fa-solid fa-microchip" style="color: #60A5FA;"></i> CPU 使用率</span>
+          <span style="font-size: 14px; font-weight: 800; color: #60A5FA;" id="serverCpuVal">0 %</span>
+        </div>
+        <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+          <div id="serverCpuBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #3B82F6, #60A5FA); border-radius: 4px; transition: width 0.5s ease;"></div>
+        </div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;" id="serverCpuSub">逻辑核心数: -</div>
+      </div>
+
+      <!-- JVM 内存 -->
+      <div style="background: rgba(30, 41, 59, 0.6); padding: 14px 16px; border-radius: 12px; border: 1px solid var(--card-border);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;"><i class="fa-solid fa-memory" style="color: #34D399;"></i> JVM 堆内存</span>
+          <span style="font-size: 14px; font-weight: 800; color: #34D399;" id="serverMemVal">0 %</span>
+        </div>
+        <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+          <div id="serverMemBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #10B981, #34D399); border-radius: 4px; transition: width 0.5s ease;"></div>
+        </div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;" id="serverMemSub">已用: - MB / 最大: - MB</div>
+      </div>
+
+      <!-- 磁盘 Capacity -->
+      <div style="background: rgba(30, 41, 59, 0.6); padding: 14px 16px; border-radius: 12px; border: 1px solid var(--card-border);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;"><i class="fa-solid fa-hard-drive" style="color: #F59E0B;"></i> 宿主磁盘存储</span>
+          <span style="font-size: 14px; font-weight: 800; color: #F59E0B;" id="serverDiskVal">0 %</span>
+        </div>
+        <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+          <div id="serverDiskBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #D97706, #F59E0B); border-radius: 4px; transition: width 0.5s ease;"></div>
+        </div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;" id="serverDiskSub">已用: - GB / 总计: - GB</div>
+      </div>
+
+      <!-- 线程 & GC -->
+      <div style="background: rgba(30, 41, 59, 0.6); padding: 14px 16px; border-radius: 12px; border: 1px solid var(--card-border);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;"><i class="fa-solid fa-network-wired" style="color: #A78BFA;"></i> JVM 线程总数</span>
+          <span style="font-size: 14px; font-weight: 800; color: #A78BFA;" id="serverThreadVal">0 个</span>
+        </div>
+        <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+          <div id="serverThreadBar" style="width: 45%; height: 100%; background: linear-gradient(90deg, #8B5CF6, #A78BFA); border-radius: 4px;"></div>
+        </div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;" id="serverThreadSub">守护线程: - | 峰值: -</div>
+      </div>
+    </div>
+
+    <!-- 中间件状态探针条 (MySQL & Redis) -->
+    <div style="display: flex; gap: 14px; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 240px; background: rgba(15, 23, 42, 0.5); padding: 10px 14px; border-radius: 10px; border: 1px solid var(--card-border); display: flex; align-items: center; justify-content: space-between;" id="mysqlProbeBox">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-database" style="color: #38BDF8;"></i>
+          <span style="font-size: 13px; font-weight: 600; color: #FFF;">MySQL 8.0 数据库</span>
+        </div>
+        <span id="mysqlProbeStatus" style="font-size: 11px; font-weight: 700; color: #34D399; background: rgba(16, 185, 129, 0.15); padding: 2px 8px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.3);">HEALTHY (0ms)</span>
+      </div>
+
+      <div style="flex: 1; min-width: 240px; background: rgba(15, 23, 42, 0.5); padding: 10px 14px; border-radius: 10px; border: 1px solid var(--card-border); display: flex; align-items: center; justify-content: space-between;" id="redisProbeBox">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-bolt-lightning" style="color: #F472B6;"></i>
+          <span style="font-size: 13px; font-weight: 600; color: #FFF;">Redis 7.0 内存库</span>
+        </div>
+        <span id="redisProbeStatus" style="font-size: 11px; font-weight: 700; color: #34D399; background: rgba(16, 185, 129, 0.15); padding: 2px 8px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.3);">HEALTHY (0ms)</span>
+      </div>
+    </div>
+  </div>
+
   <!-- Metrics Grid -->
   <div class="metrics-grid">
     <div class="metric-card">
@@ -1733,8 +1830,150 @@
       document.getElementById('imageLightbox').classList.remove('active');
     }
 
+    // Fetch Dashboard Stats & User List & Server Status
+    async function loadServerStatus() {
+      try {
+        const res = await authFetch('/api/v1/admin/server-status').then(r => r.json());
+        if (res.code === 200 && res.data) {
+          renderServerStatus(res.data);
+        }
+      } catch (err) {
+        console.warn('Failed to load server status:', err);
+      }
+    }
+
+    function renderServerStatus(s) {
+      if (!s) return;
+
+      if (document.getElementById('serverUptimeBadge')) {
+        document.getElementById('serverUptimeBadge').innerText = '连续稳定运行: ' + (s.uptime || '-');
+      }
+      if (document.getElementById('serverOsInfoSub')) {
+        document.getElementById('serverOsInfoSub').innerText = `${s.osName || 'Linux'} (${s.osArch || 'x86_64'}) | Java ${s.jvmVersion || '17'} | 启动于: ${s.startTime || '-'}`;
+      }
+
+      const cpuUsage = s.cpuUsage || 0;
+      document.getElementById('serverCpuVal').innerText = cpuUsage + ' %';
+      document.getElementById('serverCpuBar').style.width = Math.max(cpuUsage, 4) + '%';
+      document.getElementById('serverCpuSub').innerText = `逻辑 CPU 核心数: ${s.cpuCores || '-'} 核`;
+
+      const memPct = s.jvmMemoryUsagePercent || 0;
+      document.getElementById('serverMemVal').innerText = memPct + ' %';
+      document.getElementById('serverMemBar').style.width = Math.max(memPct, 4) + '%';
+      document.getElementById('serverMemSub').innerText = `已用: ${s.jvmUsedMemoryMb || 0} MB / 最大: ${s.jvmMaxMemoryMb || 0} MB (已分配 ${s.jvmTotalMemoryMb || 0}MB)`;
+
+      const diskPct = s.diskUsagePercent || 0;
+      document.getElementById('serverDiskVal').innerText = diskPct + ' %';
+      document.getElementById('serverDiskBar').style.width = Math.max(diskPct, 4) + '%';
+      document.getElementById('serverDiskSub').innerText = `已用: ${s.diskUsedGb || 0} GB / 总计: ${s.diskTotalGb || 0} GB (空闲 ${s.diskFreeGb || 0}GB)`;
+
+      document.getElementById('serverThreadVal').innerText = (s.threadCount || 0) + ' 个';
+      document.getElementById('serverThreadSub').innerText = `守护线程: ${s.daemonThreadCount || 0} | 历史峰值: ${s.peakThreadCount || 0}`;
+
+      if (s.mysqlStatus) {
+        const m = s.mysqlStatus;
+        const isOk = m.status === 'HEALTHY';
+        document.getElementById('mysqlProbeStatus').innerHTML = isOk
+          ? `<i class="fa-solid fa-circle-check"></i> 健康 (${m.latencyMs}ms)`
+          : `<i class="fa-solid fa-circle-exclamation"></i> 异常 (${m.details || ''})`;
+        document.getElementById('mysqlProbeStatus').style.color = isOk ? '#34D399' : '#F87171';
+        document.getElementById('mysqlProbeStatus').style.background = isOk ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)';
+        document.getElementById('mysqlProbeStatus').style.borderColor = isOk ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)';
+      }
+
+      if (s.redisStatus) {
+        const r = s.redisStatus;
+        const isOk = r.status === 'HEALTHY';
+        document.getElementById('redisProbeStatus').innerHTML = isOk
+          ? `<i class="fa-solid fa-circle-check"></i> 健康 (${r.latencyMs}ms)`
+          : `<i class="fa-solid fa-circle-exclamation"></i> 异常 (${r.details || ''})`;
+        document.getElementById('redisProbeStatus').style.color = isOk ? '#34D399' : '#F87171';
+        document.getElementById('redisProbeStatus').style.background = isOk ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)';
+        document.getElementById('redisProbeStatus').style.borderColor = isOk ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)';
+      }
+
+      const detailContainer = document.getElementById('serverStatusDetailBody');
+      const modal = document.getElementById('serverStatusModal');
+      if (detailContainer && modal && modal.classList.contains('active')) {
+        renderServerStatusModalDetail(s);
+      }
+    }
+
+    function openServerStatusModal() {
+      const modal = document.getElementById('serverStatusModal');
+      if (modal) modal.classList.add('active');
+      loadServerStatus();
+    }
+
+    function closeServerStatusModal() {
+      const modal = document.getElementById('serverStatusModal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function renderServerStatusModalDetail(s) {
+      const container = document.getElementById('serverStatusDetailBody');
+      if (!container) return;
+
+      container.innerHTML = `
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 14px; border-radius: 12px; border: 1px solid var(--card-border);">
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">🖥️ 操作系统环境</div>
+            <div style="font-size: 14px; font-weight: 700; color: #FFF;">${s.osName || '-'} (${s.osArch})</div>
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 14px; border-radius: 12px; border: 1px solid var(--card-border);">
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">⚡ JDK 运行环境</div>
+            <div style="font-size: 14px; font-weight: 700; color: #FFF;">Java ${s.jvmVersion || '-'} (${s.jvmVendor || ''})</div>
+          </div>
+          <div style="background: rgba(15, 23, 42, 0.6); padding: 14px; border-radius: 12px; border: 1px solid var(--card-border);">
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">⏱️ 系统启动时间</div>
+            <div style="font-size: 14px; font-weight: 700; color: #FFF;">${s.startTime || '-'}</div>
+          </div>
+        </div>
+
+        <div style="background: rgba(15, 23, 42, 0.6); padding: 16px; border-radius: 14px; border: 1px solid var(--card-border);">
+          <div style="font-size: 14px; font-weight: 700; color: #60A5FA; margin-bottom: 12px;"><i class="fa-solid fa-microchip"></i> CPU 与线程指标详细分量</div>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center;">
+            <div style="background: rgba(30, 41, 59, 0.5); padding: 10px; border-radius: 10px;">
+              <div style="font-size: 11px; color: var(--text-muted);">CPU 逻辑核心</div>
+              <div style="font-size: 18px; font-weight: 800; color: #FFF;">${s.cpuCores} 核</div>
+            </div>
+            <div style="background: rgba(30, 41, 59, 0.5); padding: 10px; border-radius: 10px;">
+              <div style="font-size: 11px; color: var(--text-muted);">当前使用率</div>
+              <div style="font-size: 18px; font-weight: 800; color: #60A5FA;">${s.cpuUsage}%</div>
+            </div>
+            <div style="background: rgba(30, 41, 59, 0.5); padding: 10px; border-radius: 10px;">
+              <div style="font-size: 11px; color: var(--text-muted);">JVM 活跃线程</div>
+              <div style="font-size: 18px; font-weight: 800; color: #A78BFA;">${s.threadCount} 个</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background: rgba(15, 23, 42, 0.6); padding: 16px; border-radius: 14px; border: 1px solid var(--card-border);">
+          <div style="font-size: 14px; font-weight: 700; color: #34D399; margin-bottom: 12px;"><i class="fa-solid fa-database"></i> 基础基础设施探针检测结果</div>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(30, 41, 59, 0.5); padding: 12px 14px; border-radius: 10px;">
+              <div>
+                <div style="font-size: 13px; font-weight: 700; color: #FFF;">${s.mysqlStatus ? s.mysqlStatus.name : 'MySQL 数据库'}</div>
+                <div style="font-size: 11px; color: var(--text-muted);">${s.mysqlStatus ? s.mysqlStatus.details : ''}</div>
+              </div>
+              <span style="font-size: 12px; font-weight: 700; color: #34D399;">探针延迟: ${s.mysqlStatus ? s.mysqlStatus.latencyMs : 0} ms</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(30, 41, 59, 0.5); padding: 12px 14px; border-radius: 10px;">
+              <div>
+                <div style="font-size: 13px; font-weight: 700; color: #FFF;">${s.redisStatus ? s.redisStatus.name : 'Redis 缓存'}</div>
+                <div style="font-size: 11px; color: var(--text-muted);">${s.redisStatus ? s.redisStatus.details : ''}</div>
+              </div>
+              <span style="font-size: 12px; font-weight: 700; color: #34D399;">PING 延迟: ${s.redisStatus ? s.redisStatus.latencyMs : 0} ms</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     // Fetch Dashboard Stats & User List
     async function loadDashboard() {
+      loadServerStatus();
       try {
         let statsRes = null;
         let usersRes = null;
@@ -2917,11 +3156,22 @@
       }
     });
 
-    // Auto-update clock
+    window.openServerStatusModal = openServerStatusModal;
+    window.closeServerStatusModal = closeServerStatusModal;
+    window.loadServerStatus = loadServerStatus;
+
+    // Auto-update clock & server status probe every 15s
     setInterval(() => {
       const now = new Date();
       document.getElementById('currentTime').innerText = now.toLocaleString('zh-CN');
     }, 1000);
+
+    setInterval(() => {
+      const token = getAdminToken();
+      if (token) {
+        loadServerStatus();
+      }
+    }, 15000);
   </script>
 </body>
 </html>

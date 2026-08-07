@@ -127,11 +127,11 @@ public class PlanServiceImpl implements PlanService {
             String prompt = buildExpertPrompt(user);
             String aiResponseJson = callTextLlm(prompt);
             planMap = parseAndCleanJson(aiResponseJson);
-            recordPlanAiUsage();
         } catch (Exception e) {
             log.error("AI Generation failed for user {}, fallback to template plan: {}", userId, e.getMessage());
             planMap = generateScientificFallbackPlan(user);
         }
+        recordPlanAiUsage();
 
         // 附带返回用户最新积分信息，方便前端实时同步
         planMap.put("userPoints", user.getPoints() != null ? user.getPoints() : 0);

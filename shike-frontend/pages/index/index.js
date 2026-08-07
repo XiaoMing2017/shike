@@ -78,10 +78,12 @@ Page({
       }
     ],
     viewModeIndex: 0,
-    viewModeOptions: ['日', '周'],
+    viewModeOptions: ['日', '周', '月'],
     showViewModeSheet: false,
     weekDashboardData: null,
     weekDashboardLoading: false,
+    monthDashboardData: null,
+    monthDashboardLoading: false,
     showMealOptionSheet: false,
     showOilOptionSheet: false,
     currentMealType: '',
@@ -124,7 +126,7 @@ Page({
     tempPosterPath: '',
     posterFoodImg: '', // 用户临时选择的食物照片 (仅本地 tempFilePath，不上传服务器)
     // 🎛️ 线上动态功能开关配置
-    features: { ai_plan: false, diet_diagnosis: true, photo_recognize: true, poster_share: true, team_challenge: true, water_log: true, week_dashboard: true },
+    features: { ai_plan: false, diet_diagnosis: true, photo_recognize: true, poster_share: true, team_challenge: true, water_log: true, week_dashboard: true, month_dashboard: true },
     // 🎯 专属 AI 运动与饮食计划
     showPlanModal: false,
     planData: null,
@@ -296,6 +298,15 @@ Page({
     this.setData({
       viewModeIndex: 0,
       showViewModeSheet: false
+    }, () => {
+      // 重新挂载日看板 DOM 后，延时重绘 Canvas 2D 炫彩大环
+      setTimeout(() => {
+        if (typeof this.updateCalorieProgress === 'function') {
+          this.updateCalorieProgress();
+        } else if (typeof this.drawCalorieRing === 'function') {
+          this.drawCalorieRing(this.data.progressPercent || 0, this.data.isOverLimit || false);
+        }
+      }, 60);
     });
     wx.pageScrollTo({
       scrollTop: 0,
@@ -305,7 +316,23 @@ Page({
 
   selectViewMode(e) {
     const index = parseInt(e.currentTarget.dataset.index);
-    if (index === 1) {
+    if (index === 2) {
+      // Check feature toggle
+      if (this.data.features && this.data.features.month_dashboard === false) {
+        wx.showToast({
+          title: '月看板功能暂未开启（后台已停用）',
+          icon: 'none',
+          duration: 2000
+        });
+        this.setData({ showViewModeSheet: false });
+        return;
+      }
+      this.setData({
+        viewModeIndex: 2,
+        showViewModeSheet: false
+      });
+      this.fetchMonthDashboard();
+    } else if (index === 1) {
       // Check feature toggle
       if (this.data.features && this.data.features.week_dashboard === false) {
         wx.showToast({
@@ -345,6 +372,29 @@ Page({
       },
       fail: () => {
         this.setData({ weekDashboardLoading: false });
+      }
+    });
+  },
+
+  fetchMonthDashboard() {
+    const user = app.globalData.userInfo;
+    if (!user || !user.id) return;
+    this.setData({ monthDashboardLoading: true });
+    wx.request({
+      url: `${app.globalData.baseUrl}/diet/month-dashboard?userId=${user.id}`,
+      method: 'GET',
+      success: (res) => {
+        if (res.data && res.data.code === 200 && res.data.data) {
+          this.setData({
+            monthDashboardData: res.data.data,
+            monthDashboardLoading: false
+          });
+        } else {
+          this.setData({ monthDashboardLoading: false });
+        }
+      },
+      fail: () => {
+        this.setData({ monthDashboardLoading: false });
       }
     });
   },
@@ -390,12 +440,16 @@ Page({
           }
           if (this.data.viewModeIndex === 1) {
             this.fetchWeekDashboard();
+          } else if (this.data.viewModeIndex === 2) {
+            this.fetchMonthDashboard();
           }
         },
         fail: () => {
           this.loadUserData(user);
           if (this.data.viewModeIndex === 1) {
             this.fetchWeekDashboard();
+          } else if (this.data.viewModeIndex === 2) {
+            this.fetchMonthDashboard();
           }
         }
       });
@@ -1528,6 +1582,7 @@ Page({
             showExerciseTypeSheet: false
           });
           this.checkUserAndLoadData(); // 重新加载数据刷新进度
+          this.scrollToExerciseSection(); // 自动跳转至运动记录区域
         } else {
           wx.showToast({ title: res.data.msg || '保存失败', icon: 'none' });
         }
@@ -1537,6 +1592,28 @@ Page({
         wx.showToast({ title: '网络请求失败', icon: 'none' });
       }
     });
+  },
+
+  scrollToExerciseSection() {
+    setTimeout(() => {
+      wx.createSelectorQuery().select('.exercise-section').boundingClientRect((rect) => {
+        if (rect) {
+          wx.createSelectorQuery().selectViewport().scrollOffset((res) => {
+            const currentScrollTop = res.scrollTop || 0;
+            const targetTop = currentScrollTop + rect.top - 80;
+            wx.pageScrollTo({
+              scrollTop: Math.max(0, targetTop),
+              duration: 400
+            });
+          }).exec();
+        } else {
+          wx.pageScrollTo({
+            scrollTop: 580,
+            duration: 400
+          });
+        }
+      }).exec();
+    }, 300);
   },
 
   onDeleteExercise(e) {
