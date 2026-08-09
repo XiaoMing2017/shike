@@ -187,38 +187,8 @@ public class AdminServiceImpl implements AdminService {
                     .count(dayRegistrations)
                     .build());
 
-            // 每日活跃用户数 (DAU) - 合并饮食/运动/饮水/打卡/AI使用
-            Set<Long> dayActiveIds = new HashSet<>();
-            // 当天注册
-            allUsers.stream()
-                    .filter(u -> u.getCreatedAt() != null && u.getCreatedAt().toLocalDate().equals(date))
-                    .forEach(u -> dayActiveIds.add(u.getId()));
-            // 当天更新
-            allUsers.stream()
-                    .filter(u -> u.getUpdatedAt() != null && u.getUpdatedAt().toLocalDate().equals(date))
-                    .forEach(u -> dayActiveIds.add(u.getId()));
-            // 饮食记录
-            dietRecordRepository.findByRecordDate(date).forEach(d -> dayActiveIds.add(d.getUserId()));
-            // 运动记录
-            exerciseRecordRepository.findByRecordDate(date).forEach(e -> dayActiveIds.add(e.getUserId()));
-            // 饮水记录
-            waterRecordRepository.findByRecordDate(date).forEach(w -> dayActiveIds.add(w.getUserId()));
-            // 小队打卡
-            teamCheckinRepository.findByCheckinDate(date).forEach(tc -> dayActiveIds.add(tc.getUserId()));
-            // Redis AI使用记录
-            try {
-                Set<String> aiKeys = stringRedisTemplate.keys("shike:ai:limit:*:" + dateFullStr);
-                if (aiKeys != null) {
-                    for (String key : aiKeys) {
-                        String[] parts = key.split(":");
-                        if (parts.length >= 4) {
-                            try {
-                                dayActiveIds.add(Long.parseLong(parts[3]));
-                            } catch (NumberFormatException ignored) {}
-                        }
-                    }
-                }
-            } catch (Exception ignored) {}
+            // 每日活跃用户数 (DAU) - 统一合并打卡/饮食/运动/饮水/注册/更新/AI使用
+            Set<Long> dayActiveIds = getActiveUserIdsForDate(date, allUsers);
 
             dauTrendList.add(AdminStatsDTO.AiTrendItem.builder()
                     .date(dateLabel)
@@ -259,12 +229,12 @@ public class AdminServiceImpl implements AdminService {
                 regUsers.forEach(u -> regUserIds.add(u.getId()));
 
                 if (!day1Date.isAfter(today)) {
-                    Set<Long> activeD1 = getActiveUserIdsForDate(day1Date);
+                    Set<Long> activeD1 = getActiveUserIdsForDate(day1Date, allUsers);
                     day1Count = regUserIds.stream().filter(activeD1::contains).count();
                 }
 
                 if (!day7Date.isAfter(today)) {
-                    Set<Long> activeD7 = getActiveUserIdsForDate(day7Date);
+                    Set<Long> activeD7 = getActiveUserIdsForDate(day7Date, allUsers);
                     day7Count = regUserIds.stream().filter(activeD7::contains).count();
                 }
             }
@@ -307,9 +277,8 @@ public class AdminServiceImpl implements AdminService {
     public List<AdminUserDTO> getAllUsers() {
         LocalDate today = LocalDate.now();
         String todayStr = today.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-        Set<Long> todayActiveIds = getActiveUserIdsForDate(today);
-
         List<User> users = userRepository.findAll(Sort.by(Sort.Direction.DESC, "id"));
+        Set<Long> todayActiveIds = getActiveUserIdsForDate(today, users);
         List<AdminUserDTO> result = new ArrayList<>();
 
         for (User u : users) {
@@ -542,12 +511,39 @@ public class AdminServiceImpl implements AdminService {
         return escaped;
     }
 
-    private Set<Long> getActiveUserIdsForDate(LocalDate date) {
+    private Set<Long> getActiveUserIdsForDate(LocalDate date, List<User> allUsers) {
         Set<Long> activeUserIds = new HashSet<>();
         dietRecordRepository.findByRecordDate(date).forEach(d -> activeUserIds.add(d.getUserId()));
         exerciseRecordRepository.findByRecordDate(date).forEach(e -> activeUserIds.add(e.getUserId()));
         waterRecordRepository.findByRecordDate(date).forEach(w -> activeUserIds.add(w.getUserId()));
         teamCheckinRepository.findByCheckinDate(date).forEach(tc -> activeUserIds.add(tc.getUserId()));
+
+        if (allUsers != null && !allUsers.isEmpty()) {
+            allUsers.stream()
+                    .filter(u -> u.getCreatedAt() != null && u.getCreatedAt().toLocalDate().equals(date))
+                    .forEach(u -> activeUserIds.add(u.getId()));
+            allUsers.stream()
+                    .filter(u -> u.getUpdatedAt() != null && u.getUpdatedAt().toLocalDate().equals(date))
+                    .forEach(u -> activeUserIds.add(u.getId()));
+        }
+
+        try {
+            String dateStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            Set<String> aiKeys = stringRedisTemplate.keys("shike:ai:limit:*:" + dateStr);
+            if (aiKeys != null) {
+                for (String key : aiKeys) {
+                    String[] parts = key.split(":");
+                    if (parts.length >= 4) {
+                        try {
+                            activeUserIds.add(Long.parseLong(parts[3]));
+                        } catch (NumberFormatException ignored) {}
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch Redis AI active keys for date {}: {}", date, e.getMessage());
+        }
+
         return activeUserIds;
     }
 

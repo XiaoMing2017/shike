@@ -228,7 +228,22 @@ Page({
       method: 'GET',
       success: (res) => {
         if (res.data && res.data.code === 200 && res.data.data) {
-          this.setData({ announcementConfig: res.data.data });
+          const config = res.data.data;
+          this.setData({ announcementConfig: config });
+
+          // 动态判断弹窗：如果后台开关开启，且用户尚未看过当前版本标识的弹窗，则自动弹出
+          if (config.enabled !== false) {
+            const verKey = 'shike_seen_announcement_' + (config.badgeText || 'v1.0');
+            const user = (app.globalData && app.globalData.userInfo) || wx.getStorageSync('userInfo');
+            const isUser2 = user && (user.id == 2 || user.id == '2');
+            const hasSeen = wx.getStorageSync(verKey);
+
+            if (isUser2 || !hasSeen) {
+              setTimeout(() => {
+                this.setData({ showNewFeatureModal: true });
+              }, 400);
+            }
+          }
         }
       },
       fail: (err) => {
@@ -240,10 +255,12 @@ Page({
   closeNewFeatureModal() {
     this.setData({ showNewFeatureModal: false });
     try {
+      const config = this.data.announcementConfig;
+      const verKey = 'shike_seen_announcement_' + (config && config.badgeText ? config.badgeText : 'v1.0');
       const user = (app.globalData && app.globalData.userInfo) || wx.getStorageSync('userInfo');
       const isUser2 = user && (user.id == 2 || user.id == '2');
       if (!isUser2) {
-        wx.setStorageSync('has_seen_v2_new_feature_modal', true);
+        wx.setStorageSync(verKey, true);
       }
     } catch (e) {}
   },
