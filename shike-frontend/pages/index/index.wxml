@@ -265,9 +265,7 @@
           <text class="w-val">{{weekDashboardData.weightStart ? weekDashboardData.weightStart + ' kg' : '--'}}</text>
         </view>
         <view class="weight-arrow-box flex flex-col align-center justify-center">
-          <text class="w-change-badge {{weekDashboardData.weightChange < 0 ? 'loss' : (weekDashboardData.weightChange > 0 ? 'gain' : 'flat')}}">
-            {{weekDashboardData.weightChange ? (weekDashboardData.weightChange > 0 ? '+' + weekDashboardData.weightChange : weekDashboardData.weightChange) + ' kg' : '持平'}}
-          </text>
+          <text class="w-change-badge {{weekDashboardData.weightChange < 0 ? 'loss' : (weekDashboardData.weightChange > 0 ? 'gain' : 'flat')}}">{{weekDashboardData.weightChange ? (weekDashboardData.weightChange > 0 ? '+' + weekDashboardData.weightChange : weekDashboardData.weightChange) + ' kg' : '持平'}}</text>
           <text class="w-arrow">➔</text>
         </view>
         <view class="weight-metric-box flex-1 text-right">
@@ -426,9 +424,7 @@
         </view>
         <view class="m-w-item flex-1 text-right">
           <text class="m-w-lbl">本月净减重</text>
-          <text class="m-w-val highlight-change {{monthDashboardData.totalWeightChange < 0 ? 'loss' : (monthDashboardData.totalWeightChange > 0 ? 'gain' : 'flat')}}">
-            {{monthDashboardData.totalWeightChange ? (monthDashboardData.totalWeightChange > 0 ? '+' + monthDashboardData.totalWeightChange : monthDashboardData.totalWeightChange) + ' kg' : '持平'}}
-          </text>
+          <text class="m-w-val highlight-change {{monthDashboardData.totalWeightChange < 0 ? 'loss' : (monthDashboardData.totalWeightChange > 0 ? 'gain' : 'flat')}}">{{monthDashboardData.totalWeightChange ? (monthDashboardData.totalWeightChange > 0 ? '+' + monthDashboardData.totalWeightChange : monthDashboardData.totalWeightChange) + ' kg' : '持平'}}</text>
         </view>
       </view>
     </view>

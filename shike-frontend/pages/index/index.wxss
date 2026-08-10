@@ -3269,22 +3269,24 @@
 .weight-metrics-row, .month-weight-summary-grid {
   background: #F8FAFC;
   border-radius: 20rpx;
-  padding: 20rpx 24rpx;
+  padding: 24rpx;
   box-shadow: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .weight-metric-box, .m-w-item {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
 }
 
 .weight-metric-box .w-lbl, .m-w-lbl {
   font-size: 22rpx;
   color: #64748B;
   display: block;
-  line-height: 32rpx;
-  height: 32rpx;
+  line-height: 1.2;
   margin-bottom: 8rpx;
 }
 
@@ -3293,8 +3295,7 @@
   font-weight: 800;
   color: #1E293B;
   display: block;
-  line-height: 44rpx;
-  height: 44rpx;
+  line-height: 1.2;
   margin: 0;
 }
 
@@ -3302,12 +3303,18 @@
   font-size: 24rpx;
   font-weight: 700;
   color: #334155;
-  line-height: 44rpx;
-  height: 44rpx;
+  line-height: 1.2;
 }
 
 .weight-metric-box .w-val.highlight {
   color: #10B981;
+}
+
+.weight-arrow-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .w-change-badge {
@@ -3316,7 +3323,8 @@
   padding: 4rpx 16rpx;
   border-radius: 20rpx;
   box-shadow: none;
-  line-height: 1.3;
+  line-height: 1.2;
+  display: inline-block;
 }
 
 .w-change-badge.loss {
@@ -3341,9 +3349,8 @@
 .highlight-change {
   font-size: 32rpx;
   font-weight: 800;
-  line-height: 44rpx;
-  height: 44rpx;
-  display: block;
+  line-height: 1.2;
+  display: inline-block;
   margin: 0;
 }
 
@@ -3366,6 +3373,7 @@
   font-size: 18rpx;
   color: #94A3B8;
   margin-top: 4rpx;
+  line-height: 1;
 }
 
 .month-weight-summary-grid {
