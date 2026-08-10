@@ -809,11 +809,9 @@ public class DietServiceImpl implements DietService {
             payload = java.util.Map.of(
                     "model", model,
                     "messages", java.util.List.of(userMessage),
-                    "temperature", 0.7,
+                    "temperature", 0.2,
                     "top_p", 0.8,
-                    "max_tokens", 2048,
-                    "enable_thinking", true,
-                    "thinking_budget", 4000
+                    "max_tokens", 2048
             );
         } else {
             payload = java.util.Map.of(
