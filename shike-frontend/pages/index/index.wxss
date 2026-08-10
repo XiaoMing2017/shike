@@ -3271,15 +3271,13 @@
   border-radius: 20rpx;
   padding: 20rpx 24rpx;
   box-shadow: none;
-  overflow: hidden;
 }
 
 .weight-metric-box .w-lbl, .m-w-lbl {
   font-size: 22rpx;
   color: #64748B;
   display: block;
-  line-height: 32rpx;
-  height: 32rpx;
+  line-height: 1.3;
 }
 
 .weight-metric-box .w-val, .m-w-val {
@@ -3288,8 +3286,7 @@
   color: #1E293B;
   margin-top: 8rpx;
   display: block;
-  line-height: 40rpx;
-  height: 40rpx;
+  line-height: 1.3;
 }
 
 .m-w-val.m-w-range {
