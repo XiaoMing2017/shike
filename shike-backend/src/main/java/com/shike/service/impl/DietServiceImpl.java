@@ -1215,16 +1215,26 @@ public class DietServiceImpl implements DietService {
         BigDecimal weightLatest = null;
 
         if (weekWeightRecords != null && !weekWeightRecords.isEmpty()) {
-            weightStart = weekWeightRecords.get(0).getWeight();
-            weightLatest = weekWeightRecords.get(weekWeightRecords.size() - 1).getWeight();
+            weightStart = weekWeightRecords.get(0).getWeight().setScale(1, RoundingMode.HALF_UP);
+            weightLatest = weekWeightRecords.get(weekWeightRecords.size() - 1).getWeight().setScale(1, RoundingMode.HALF_UP);
         }
 
-        // 最新体重优先同步展示用户档案的最实时当前体重 user.getWeight()
+        // 1. 最新体重优先同步展示用户档案的最实时当前体重 user.getWeight()
         if (user != null && user.getWeight() != null) {
             weightLatest = user.getWeight().setScale(1, RoundingMode.HALF_UP);
         }
 
-        // 若周初体重为空，则使用最新体重充当基准周初体重
+        // 2. 如果本周记录 <= 1 条，或者周初体重与最新体重重合，尝试查找本周目标日期之前更早的历史打卡记录作为真正的周初基准体重
+        if (weekWeightRecords == null || weekWeightRecords.size() <= 1 || (weightStart != null && weightStart.compareTo(weightLatest) == 0)) {
+            List<com.shike.model.entity.WeightRecord> prevRecords = weightRecordRepository.findByUserIdAndRecordDateBeforeOrderByRecordDateDesc(userId, monday);
+            if (prevRecords == null || prevRecords.isEmpty()) {
+                prevRecords = weightRecordRepository.findByUserIdAndRecordDateBeforeOrderByRecordDateDesc(userId, targetDate);
+            }
+            if (prevRecords != null && !prevRecords.isEmpty()) {
+                weightStart = prevRecords.get(0).getWeight().setScale(1, RoundingMode.HALF_UP);
+            }
+        }
+
         if (weightStart == null) {
             weightStart = weightLatest;
         }
@@ -1442,7 +1452,15 @@ public class DietServiceImpl implements DietService {
             weightLatest = user.getWeight().setScale(1, RoundingMode.HALF_UP);
         }
 
-        if (weightStart == null) weightStart = weightLatest;
+        // 月初体重：若本月初没有记录，取历史上今日之前的最临近打卡记录
+        if (weightStart == null) {
+            List<com.shike.model.entity.WeightRecord> prevRecords = weightRecordRepository.findByUserIdAndRecordDateBeforeOrderByRecordDateDesc(userId, LocalDate.now());
+            if (prevRecords != null && !prevRecords.isEmpty()) {
+                weightStart = prevRecords.get(0).getWeight();
+            } else {
+                weightStart = weightLatest;
+            }
+        }
         if (maxWeight == null) maxWeight = weightLatest;
         if (minWeight == null) minWeight = weightLatest;
 
@@ -1492,6 +1510,22 @@ public class DietServiceImpl implements DietService {
             date = LocalDate.now();
         }
 
+        User user = userRepository.findById(userId).orElse(null);
+
+        // 如果用户此前没有任何体重打卡历史记录，且当前打卡与原档案体重不同，自动存一条昨天的初始体重记录
+        List<com.shike.model.entity.WeightRecord> existingAll = weightRecordRepository.findByUserIdOrderByRecordDateAsc(userId);
+        if ((existingAll == null || existingAll.isEmpty()) && user != null && user.getWeight() != null) {
+            if (user.getWeight().compareTo(weight) != 0) {
+                LocalDate prevDate = date.minusDays(1);
+                weightRecordRepository.save(com.shike.model.entity.WeightRecord.builder()
+                        .userId(userId)
+                        .recordDate(prevDate)
+                        .weight(user.getWeight())
+                        .build());
+                log.info("Auto seeded initial baseline weight record {} kg for user {} on {}", user.getWeight(), userId, prevDate);
+            }
+        }
+
         com.shike.model.entity.WeightRecord record = weightRecordRepository.findByUserIdAndRecordDate(userId, date)
                 .orElse(com.shike.model.entity.WeightRecord.builder()
                         .userId(userId)
@@ -1501,7 +1535,6 @@ public class DietServiceImpl implements DietService {
         weightRecordRepository.save(record);
 
         // 始终同步刷新个人档案 User.weight 和目标卡路里
-        User user = userRepository.findById(userId).orElse(null);
         if (user != null) {
             user.setWeight(weight);
             // 重新推算 BMR 与 每日目标卡路里

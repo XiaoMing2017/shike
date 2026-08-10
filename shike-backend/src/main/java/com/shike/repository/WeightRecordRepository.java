@@ -15,5 +15,7 @@ public interface WeightRecordRepository extends JpaRepository<WeightRecord, Long
 
     List<WeightRecord> findByUserIdAndRecordDateBetweenOrderByRecordDateAsc(Long userId, LocalDate startDate, LocalDate endDate);
 
+    List<WeightRecord> findByUserIdAndRecordDateBeforeOrderByRecordDateDesc(Long userId, LocalDate recordDate);
+
     List<WeightRecord> findByUserIdOrderByRecordDateAsc(Long userId);
 }
