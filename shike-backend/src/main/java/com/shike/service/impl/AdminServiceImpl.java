@@ -926,6 +926,35 @@ public class AdminServiceImpl implements AdminService {
                 .build();
     }
 
+    @Override
+    public java.util.Map<String, String> getAiModelConfig() {
+        String planModel = stringRedisTemplate.opsForValue().get("shike:sys:config:ai_model_plan");
+        String dietModel = stringRedisTemplate.opsForValue().get("shike:sys:config:ai_model_diet");
+        
+        if (planModel == null || planModel.isBlank()) {
+            planModel = "qwen3.8-max";
+        }
+        if (dietModel == null || dietModel.isBlank()) {
+            dietModel = "qwen3.6-plus";
+        }
+        
+        java.util.Map<String, String> map = new java.util.HashMap<>();
+        map.put("planModel", planModel);
+        map.put("dietModel", dietModel);
+        return map;
+    }
+
+    @Override
+    public void updateAiModelConfig(String planModel, String dietModel, String adminUsername) {
+        if (planModel != null && !planModel.isBlank()) {
+            stringRedisTemplate.opsForValue().set("shike:sys:config:ai_model_plan", planModel.trim());
+        }
+        if (dietModel != null && !dietModel.isBlank()) {
+            stringRedisTemplate.opsForValue().set("shike:sys:config:ai_model_diet", dietModel.trim());
+        }
+        logAudit(adminUsername, "UPDATE_AI_MODELS", "GLOBAL", "独立修改 AI 调度模型 -> 7天计划: " + planModel + ", 识图诊断: " + dietModel);
+    }
+
     private void logAudit(String adminUsername, String action, String target, String details) {
         try {
             adminAuditLogRepository.save(com.shike.model.entity.AdminAuditLog.builder()

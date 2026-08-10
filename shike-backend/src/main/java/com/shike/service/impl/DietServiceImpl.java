@@ -389,9 +389,10 @@ public class DietServiceImpl implements DietService {
                 }
                 responseBody = textNode.asText();
             } else {
-                log.info("Calling OpenAI compatible vision API: {}, base model: {}", aiEndpoint, aiModel);
-                String visionModel = aiModel;
-                if (aiModel.contains("qwen") && !aiModel.contains("vl")) {
+                String activeDietModel = getActiveDietModel();
+                log.info("Calling OpenAI compatible vision API: {}, base model: {}", aiEndpoint, activeDietModel);
+                String visionModel = activeDietModel;
+                if (activeDietModel.contains("qwen") && !activeDietModel.contains("vl")) {
                     visionModel = "qwen-vl-max";
                 }
                 log.info("Using Vision LLM model for image analysis: {}", visionModel);
@@ -954,6 +955,21 @@ public class DietServiceImpl implements DietService {
         } catch (Exception e) {
             log.error("Failed to increment daily AI count in Redis", e);
         }
+    }
+
+    private String getActiveDietModel() {
+        String activeModel = aiModel;
+        try {
+            if (adminService != null && adminService.getAiModelConfig() != null) {
+                String dynamicModel = adminService.getAiModelConfig().get("dietModel");
+                if (dynamicModel != null && !dynamicModel.isBlank()) {
+                    activeModel = dynamicModel;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch dynamic diet model, using default: {}", e.getMessage());
+        }
+        return activeModel;
     }
 
     @Override

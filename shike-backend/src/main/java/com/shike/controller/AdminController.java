@@ -139,6 +139,19 @@ public class AdminController {
         return ResultDTO.success();
     }
 
+    @GetMapping({"/ai-models", "/api/v1/admin/ai-models"})
+    public ResultDTO<java.util.Map<String, String>> getAiModelConfig() {
+        return ResultDTO.success(adminService.getAiModelConfig());
+    }
+
+    @PostMapping({"/ai-models", "/api/v1/admin/ai-models"})
+    public ResultDTO<Void> updateAiModelConfig(
+            @RequestParam(value = "planModel", required = false) String planModel,
+            @RequestParam(value = "dietModel", required = false) String dietModel) {
+        adminService.updateAiModelConfig(planModel, dietModel, "admin");
+        return ResultDTO.success();
+    }
+
     @GetMapping({"/server-status", "/api/v1/admin/server-status"})
     public ResultDTO<com.shike.model.dto.ServerStatusDTO> getServerStatus() {
         return ResultDTO.success(adminService.getServerStatus());

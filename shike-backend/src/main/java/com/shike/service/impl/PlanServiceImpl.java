@@ -31,6 +31,7 @@ public class PlanServiceImpl implements PlanService {
     private final PointsRecordRepository pointsRecordRepository;
     private final StringRedisTemplate stringRedisTemplate;
     private final ObjectMapper objectMapper;
+    private final com.shike.service.AdminService adminService;
 
     @Value("${ai.provider:OPENAI}")
     private String aiProvider;
@@ -388,23 +389,34 @@ public class PlanServiceImpl implements PlanService {
     }
 
     private String callTextLlm(String prompt) throws Exception {
-        log.info("Calling Text LLM endpoint: {}, model: {}", aiEndpoint, aiModel);
+        String activeModel = aiModel;
+        try {
+            if (adminService != null && adminService.getAiModelConfig() != null) {
+                String dynamicModel = adminService.getAiModelConfig().get("planModel");
+                if (dynamicModel != null && !dynamicModel.isBlank()) {
+                    activeModel = dynamicModel;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch dynamic plan model, using default: {}", e.getMessage());
+        }
+
+        log.info("Calling Text LLM endpoint: {}, active model: {}", aiEndpoint, activeModel);
 
         Map<String, Object> systemMsg = Map.of("role", "system", "content", "你是一位严格输出标准JSON的专业营养师与健身教练AI。");
         Map<String, Object> userMsg = Map.of("role", "user", "content", prompt);
 
         Map<String, Object> payload;
-        if (aiModel.contains("qwen")) {
+        if (activeModel.contains("qwen")) {
             payload = Map.of(
-                    "model", aiModel,
+                    "model", activeModel,
                     "messages", List.of(systemMsg, userMsg),
                     "temperature", 0.5,
-                    "max_tokens", 3500,
-                    "enable_thinking", false
+                    "max_tokens", 3500
             );
         } else {
             payload = Map.of(
-                    "model", aiModel,
+                    "model", activeModel,
                     "messages", List.of(systemMsg, userMsg),
                     "temperature", 0.6,
                     "max_tokens", 3500
@@ -440,7 +452,7 @@ public class PlanServiceImpl implements PlanService {
             Object compTok = usage.get("completion_tokens");
             Object totalTok = usage.get("total_tokens");
             log.info("[AI Token Audit] Module: [专属AI运动与饮食计划生成] | Model: {} | Prompt Tokens: {} | Completion Tokens: {} | Total Tokens: {}",
-                    aiModel, promptTok, compTok, totalTok);
+                    activeModel, promptTok, compTok, totalTok);
         }
 
         List<Map<String, Object>> choices = (List<Map<String, Object>>) respMap.get("choices");

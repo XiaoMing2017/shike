@@ -33,4 +33,7 @@ public interface AdminService {
     void updateAnnouncementConfig(com.shike.model.dto.AnnouncementConfigDTO dto, String adminUsername);
 
     com.shike.model.dto.ServerStatusDTO getServerStatus();
+
+    java.util.Map<String, String> getAiModelConfig();
+    void updateAiModelConfig(String planModel, String dietModel, String adminUsername);
 }

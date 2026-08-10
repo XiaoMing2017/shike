@@ -1220,6 +1220,9 @@
         <button class="btn-action" onclick="openFeatureToggleModal()" style="background: linear-gradient(135deg, #F59E0B, #D97706); font-size: 12px;">
           <i class="fa-solid fa-sliders"></i> 🎛️ 功能开关控制
         </button>
+        <button class="btn-action" onclick="openAiModelControlModal()" style="background: linear-gradient(135deg, #6366F1, #4338CA); font-size: 12px;">
+          <i class="fa-solid fa-brain"></i> 🤖 AI 大模型独立调度
+        </button>
         <button class="btn-action" onclick="openAnnouncementModal()" style="background: linear-gradient(135deg, #EC4899, #BE185D); font-size: 12px;">
           <i class="fa-solid fa-bullhorn"></i> 📢 版本弹窗管理
         </button>
@@ -3289,5 +3292,120 @@
       </div>
     </div>
   </div>
+
+  <!-- AI 大模型独立调度管理弹窗 -->
+  <div class="modal-overlay" id="aiModelControlModal">
+    <div class="modal-container" style="max-width: 580px; width: 90%; background: #1E293B; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); padding: 24px;">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 16px;">
+        <h3 style="font-size: 18px; font-weight: 700; color: #F8FAFC; margin: 0;">
+          <i class="fa-solid fa-brain" style="color: #6366F1; margin-right: 8px;"></i> 🤖 AI 大模型独立调度管理
+        </h3>
+        <button class="modal-close-btn" onclick="closeAiModelControlModal()" style="background: none; border: none; color: #94A3B8; font-size: 24px; cursor: pointer;">&times;</button>
+      </div>
+
+      <div class="modal-body" style="margin-top: 20px;">
+        <div style="background: rgba(15, 23, 42, 0.6); padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 20px;">
+          <div style="font-size: 13px; color: #94A3B8; line-height: 1.6;">
+            💡 提示：管理员在此处可以分别独立调整<b>【7天运动与饮食计划生成】</b>与<b>【拍照识别&营养诊断】</b>两大核心业务模块底层的 AI 大模型，保存后<b>全站实时生效，无需重启服务</b>。
+          </div>
+        </div>
+
+        <!-- 1. 7天运动与饮食计划生成 -->
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; font-size: 14px; font-weight: 700; color: #F1F5F9; margin-bottom: 8px;">
+            🏋️‍♂️ 7天运动与饮食计划生成模型:
+          </label>
+          <select id="selectPlanModel" style="width: 100%; background: #0F172A; color: #F8FAFC; border: 1px solid #475569; padding: 10px 14px; border-radius: 10px; font-size: 14px; outline: none;">
+            <option value="qwen3.8-max">qwen3.8-max (推荐 ⚡ 通义千问超强逻辑推理旗舰大模型)</option>
+            <option value="qwen3.6-plus">qwen3.6-plus (通义千问全能均衡大模型)</option>
+            <option value="qwen3.6-flash">qwen3.6-flash (通义千问极速轻量大模型)</option>
+            <option value="qwen-max">qwen-max (通义千问经典Max版)</option>
+            <option value="gpt-4o">gpt-4o (OpenAI 旗舰全能)</option>
+          </select>
+        </div>
+
+        <!-- 2. 拍照识别 & 营养诊断 -->
+        <div style="margin-bottom: 24px;">
+          <label style="display: block; font-size: 14px; font-weight: 700; color: #F1F5F9; margin-bottom: 8px;">
+            📸 拍照识别 & 营养诊断模型:
+          </label>
+          <select id="selectDietModel" style="width: 100%; background: #0F172A; color: #F8FAFC; border: 1px solid #475569; padding: 10px 14px; border-radius: 10px; font-size: 14px; outline: none;">
+            <option value="qwen3.6-plus">qwen3.6-plus (推荐 🌟 原生支持图文辨识与精准营养分析)</option>
+            <option value="qwen3.6-flash">qwen3.6-flash (极速响应轻量型)</option>
+            <option value="qwen-vl-max">qwen-vl-max (阿里官方视觉专属多模态模型)</option>
+            <option value="qwen3.8-max">qwen3.8-max (超大参数深度理解)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px;">
+        <button onclick="closeAiModelControlModal()" style="background: #334155; color: #94A3B8; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 600; cursor: pointer;">取消</button>
+        <button onclick="saveAiModelConfig()" style="background: linear-gradient(135deg, #6366F1, #4338CA); color: #FFF; border: none; padding: 9px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);">
+          <i class="fa-solid fa-floppy-disk"></i> 💾 确认保存配置
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openAiModelControlModal() {
+      const token = getAdminToken();
+      fetch('/api/v1/admin/ai-models', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.code === 200 && res.data) {
+          if (res.data.planModel) {
+            document.getElementById('selectPlanModel').value = res.data.planModel;
+          }
+          if (res.data.dietModel) {
+            document.getElementById('selectDietModel').value = res.data.dietModel;
+          }
+        }
+        document.getElementById('aiModelControlModal').style.display = 'flex';
+      })
+      .catch(err => {
+        document.getElementById('aiModelControlModal').style.display = 'flex';
+      });
+    }
+
+    function closeAiModelControlModal() {
+      document.getElementById('aiModelControlModal').style.display = 'none';
+    }
+
+    function saveAiModelConfig() {
+      const planModel = document.getElementById('selectPlanModel').value;
+      const dietModel = document.getElementById('selectDietModel').value;
+      const token = getAdminToken();
+
+      fetch(`/api/v1/admin/ai-models?planModel=${encodeURIComponent(planModel)}&dietModel=${encodeURIComponent(dietModel)}`, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token }
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.code === 200) {
+          Swal.fire({
+            icon: 'success',
+            title: '配置已更新！',
+            text: `7天计划: ${planModel} | 识图诊断: ${dietModel}`,
+            timer: 2000,
+            showConfirmButton: false
+          });
+          closeAiModelControlModal();
+        } else {
+          Swal.fire('保存失败', res.message || '未知错误', 'error');
+        }
+      })
+      .catch(err => {
+        Swal.fire('保存失败', '网络请求异常', 'error');
+      });
+    }
+
+    window.openAiModelControlModal = openAiModelControlModal;
+    window.closeAiModelControlModal = closeAiModelControlModal;
+    window.saveAiModelConfig = saveAiModelConfig;
+  </script>
 </body>
 </html>
