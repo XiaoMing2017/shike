@@ -56,7 +56,7 @@ ai:
   provider: OPENAI
   model: qwen3.6-plus
   diet-model: qwen3.6-plus
-  plan-model: qwen3.6-plus
+  plan-model: qwen3.8-max
   endpoint: https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions
   api-key: sk-ws-H.EDLLDHH.13Vh.MEUCIQCd-Whyz9sUcrs2stiBRtDQmCdalFSF2Igm9p_OIF80tgIgTLbsTfpaWGgUcncGzCS7Dbsx5eEPy0mcT-wC5WMxApk
   timeout-ms: 120000
