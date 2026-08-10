@@ -433,6 +433,16 @@ public class PlanServiceImpl implements PlanService {
 
         String body = response.body();
         Map<String, Object> respMap = objectMapper.readValue(body, new TypeReference<Map<String, Object>>() {});
+
+        Map<String, Object> usage = (Map<String, Object>) respMap.get("usage");
+        if (usage != null) {
+            Object promptTok = usage.get("prompt_tokens");
+            Object compTok = usage.get("completion_tokens");
+            Object totalTok = usage.get("total_tokens");
+            log.info("[AI Token Audit] Module: [专属AI运动与饮食计划生成] | Model: {} | Prompt Tokens: {} | Completion Tokens: {} | Total Tokens: {}",
+                    aiModel, promptTok, compTok, totalTok);
+        }
+
         List<Map<String, Object>> choices = (List<Map<String, Object>>) respMap.get("choices");
         if (choices == null || choices.isEmpty()) {
             throw new RuntimeException("No choices returned in LLM response: " + body);

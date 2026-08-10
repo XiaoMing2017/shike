@@ -188,6 +188,15 @@ public class DietServiceImpl implements DietService {
                         java.net.http.HttpResponse<String> textResponse = textHttpClient.send(textRequest, java.net.http.HttpResponse.BodyHandlers.ofString(java.nio.charset.StandardCharsets.UTF_8));
                         if (textResponse.statusCode() == 200) {
                             com.fasterxml.jackson.databind.JsonNode textRootNode = objectMapper.readTree(textResponse.body());
+                            com.fasterxml.jackson.databind.JsonNode usageNode = textRootNode.path("usage");
+                            if (!usageNode.isMissingNode()) {
+                                int promptTok = usageNode.path("prompt_tokens").asInt(0);
+                                int compTok = usageNode.path("completion_tokens").asInt(0);
+                                int totalTok = usageNode.path("total_tokens").asInt(0);
+                                log.info("[AI Token Audit] Module: [膳食拍照/估算] | Model: {} | Prompt Tokens: {} | Completion Tokens: {} | Total Tokens: {}",
+                                        aiModel, promptTok, compTok, totalTok);
+                            }
+
                             String content = textRootNode.path("choices").path(0).path("message").path("content").asText().trim();
                             int startIdx = content.indexOf('[');
                             int endIdx = content.lastIndexOf(']');

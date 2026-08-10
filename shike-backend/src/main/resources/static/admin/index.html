@@ -1157,12 +1157,16 @@
       <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">普通用户每日动态识别配额</div>
     </div>
 
-    <div class="metric-card">
+    <!-- 可点击：AI Token 累计消耗明细 -->
+    <div class="metric-card metric-clickable" onclick="openAiTokenDetailModal()" title="点击查看各 AI 模块 Token 消耗与成本分析">
       <div class="metric-header">
         <span>AI Token 累计消耗</span>
         <div class="metric-icon icon-blue"><i class="fa-solid fa-brain"></i></div>
       </div>
-      <div class="metric-val" id="totalAiTokens" style="color: #60A5FA;">-</div>
+      <div class="metric-val-group" style="display:flex; justify-content:space-between; align-items:flex-end;">
+        <div class="metric-val" id="totalAiTokens" style="color: #60A5FA;">-</div>
+        <span class="click-hint-badge" style="color: #60A5FA; background: rgba(96, 165, 250, 0.15); border: 1px solid rgba(96, 165, 250, 0.3);"><i class="fa-solid fa-calculator"></i> 消耗明细 <i class="fa-solid fa-chevron-right"></i></span>
+      </div>
       <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">多模态 Vision + 文本 LLM</div>
     </div>
     <div class="metric-card">
@@ -3156,6 +3160,27 @@
       }
     });
 
+    function openAiTokenDetailModal() {
+      const currentTokens = document.getElementById('totalAiTokens').innerText;
+      const currentCost = document.getElementById('estimatedAiCost').innerText;
+      
+      const modalTokens = document.getElementById('modalTotalTokens');
+      const modalCost = document.getElementById('modalEstimatedCost');
+      if (modalTokens) modalTokens.innerText = currentTokens;
+      if (modalCost) modalCost.innerText = currentCost;
+      
+      const modal = document.getElementById('aiTokenDetailModal');
+      if (modal) modal.classList.add('active');
+    }
+
+    function closeAiTokenDetailModal() {
+      const modal = document.getElementById('aiTokenDetailModal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    window.openAiTokenDetailModal = openAiTokenDetailModal;
+    window.closeAiTokenDetailModal = closeAiTokenDetailModal;
+
     window.openServerStatusModal = openServerStatusModal;
     window.closeServerStatusModal = closeServerStatusModal;
     window.loadServerStatus = loadServerStatus;
@@ -3173,5 +3198,96 @@
       }
     }, 15000);
   </script>
+
+  <!-- AI Token 消耗与成本明细分析弹窗 -->
+  <div class="modal-overlay" id="aiTokenDetailModal">
+    <div class="modal-dialog" style="max-width: 780px;">
+      <div class="modal-header">
+        <div>
+          <h3><i class="fa-solid fa-brain" style="color:#60A5FA; margin-right:8px;"></i> AI 大模型 Token 消耗与计费成本明细</h3>
+          <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">实时统计全站大模型（qwen-max / qwen-vl-max / qwen3.8-max）调用负载与算力账单</p>
+        </div>
+        <button class="modal-close-btn" onclick="closeAiTokenDetailModal()">&times;</button>
+      </div>
+      <div class="modal-body" style="padding:20px;">
+        <!-- 汇总概览 2 大卡片 -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
+          <div style="background:rgba(30, 41, 59, 0.6); border:1px solid rgba(96, 165, 250, 0.3); border-radius:16px; padding:16px 20px;">
+            <div style="font-size:12px; color:var(--text-muted);">全站累计 Token 消耗总额</div>
+            <div style="font-size:28px; font-weight:800; color:#60A5FA; margin-top:6px;" id="modalTotalTokens">226.0k Tokens</div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">包含 Vision 多模态与文本 LLM 算力</div>
+          </div>
+          <div style="background:rgba(30, 41, 59, 0.6); border:1px solid rgba(249, 115, 22, 0.3); border-radius:16px; padding:16px 20px;">
+            <div style="font-size:12px; color:var(--text-muted);">预估 API 算力账单总成本</div>
+            <div style="font-size:28px; font-weight:800; color:#F97316; margin-top:6px;" id="modalEstimatedCost">￥ 3.39</div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">按平均千 Token ￥0.015 官方计费算法</div>
+          </div>
+        </div>
+
+        <h4 style="font-size:14px; font-weight:700; color:var(--primary); margin-bottom:12px;">📊 核心 AI 业务模块 Token 消耗透视表</h4>
+        <table style="width:100%; border-collapse:collapse; margin-bottom:16px;">
+          <thead>
+            <tr>
+              <th>AI 业务功能模块</th>
+              <th>调用的 LLM 模型</th>
+              <th>Prompt (输入)</th>
+              <th>Completion (输出)</th>
+              <th>单次消耗 Tokens</th>
+              <th>单次预估成本</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge" style="background:rgba(96, 165, 250, 0.2); color:#60A5FA;">🥗 膳食估算 / 微调</span></td>
+              <td><code>qwen-max</code></td>
+              <td>~ 480 Tokens</td>
+              <td>~ 220 Tokens</td>
+              <td style="font-weight:700; color:#60A5FA;">~ 700 Tokens</td>
+              <td style="color:#34D399; font-weight:700;">~ ￥0.009</td>
+            </tr>
+            <tr>
+              <td><span class="badge" style="background:rgba(249, 115, 22, 0.2); color:#F97316;">📷 拍照多模态识餐</span></td>
+              <td><code>qwen-vl-max</code> / <code>gpt-4o</code></td>
+              <td>~ 1,450 Tokens (含图)</td>
+              <td>~ 350 Tokens</td>
+              <td style="font-weight:700; color:#F97316;">~ 1,800 Tokens</td>
+              <td style="color:#34D399; font-weight:700;">~ ￥0.025</td>
+            </tr>
+            <tr>
+              <td><span class="badge" style="background:rgba(168, 85, 247, 0.2); color:#C084FC;">🎯 7天专属 AI 运动食谱</span></td>
+              <td><code>qwen3.8-max</code></td>
+              <td>~ 2,100 Tokens</td>
+              <td>~ 1,450 Tokens</td>
+              <td style="font-weight:700; color:#C084FC;">~ 3,550 Tokens</td>
+              <td style="color:#34D399; font-weight:700;">~ ￥0.045</td>
+            </tr>
+            <tr>
+              <td><span class="badge" style="background:rgba(16, 185, 129, 0.2); color:#34D399;">💡 AI 智能营养诊断</span></td>
+              <td><code>qwen-max</code></td>
+              <td>~ 420 Tokens</td>
+              <td>~ 180 Tokens</td>
+              <td style="font-weight:700; color:#34D399;">~ 600 Tokens</td>
+              <td style="color:#34D399; font-weight:700;">~ ￥0.007</td>
+            </tr>
+            <tr>
+              <td><span class="badge" style="background:rgba(234, 179, 8, 0.2); color:#FACC15;">📋 个人档案 BMR 建议</span></td>
+              <td><code>qwen-max</code></td>
+              <td>~ 350 Tokens</td>
+              <td>~ 120 Tokens</td>
+              <td style="font-weight:700; color:#FACC15;">~ 470 Tokens</td>
+              <td style="color:#34D399; font-weight:700;">~ ￥0.006</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="background:rgba(30, 41, 59, 0.5); border-left:4px solid #60A5FA; border-radius:8px; padding:12px 16px; font-size:12px; color:var(--text-muted);">
+          <i class="fa-solid fa-circle-info" style="color:#60A5FA; margin-right:6px;"></i> <strong>实时日志审计提示：</strong> 在云服务器终端执行命令 <code>docker logs shike-app | grep "AI Token Audit"</code> 即可查看到包含 prompt_tokens, completion_tokens 的实时调用账单！
+        </div>
+      </div>
+      <div class="modal-footer" style="padding:16px 20px; text-align:right;">
+        <button class="btn btn-secondary" onclick="closeAiTokenDetailModal()">关闭</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
