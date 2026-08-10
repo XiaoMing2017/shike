@@ -1421,6 +1421,102 @@
         </table>
       </div>
     </div>
+  <!-- 核心 AI 深度诊断与晒惨海报使用监控 Section -->
+  <div class="section-card" style="margin-top: 24px; padding: 24px; border: 1px solid rgba(16, 185, 129, 0.3); background: rgba(15, 23, 42, 0.85);">
+    <div class="section-header" style="margin-bottom: 20px;">
+      <div>
+        <div class="section-title" style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-chart-line" style="color: #10B981;"></i> 晒惨海报 & AI 深度诊断 功能监控
+        </div>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">运营监控：实时跟踪用户在小程序使用“晒惨/裂变海报”与“AI 膳食深度诊断”的活跃频次与明细</p>
+      </div>
+
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <input type="text" id="featureSearchInput" placeholder="搜索用户 ID / 昵称 / 手机号 / 备注..." onkeyup="filterFeatureUsageRecords()" style="background: rgba(30, 41, 59, 0.8); border: 1px solid var(--card-border); padding: 8px 14px; border-radius: 10px; color: #FFF; font-size: 13px; width: 260px; outline: none;">
+        <button class="btn-action" onclick="loadFeatureUsageOverview()" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #34D399; font-size: 13px;">
+          <i class="fa-solid fa-rotate"></i> 刷新数据
+        </button>
+      </div>
+    </div>
+
+    <!-- 4 个功能统计指标卡片 -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px;">
+      <div style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 14px; padding: 16px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-size: 13px; color: var(--text-muted); font-weight: 500;">AI 深度诊断 (总调用)</span>
+          <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(16, 185, 129, 0.15); color: #34D399; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-user-doctor"></i></div>
+        </div>
+        <div style="font-size: 26px; font-weight: 800; color: #34D399;" id="featureTotalDiagnosisCount">0</div>
+      </div>
+
+      <div style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 14px; padding: 16px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-size: 13px; color: var(--text-muted); font-weight: 500;">今日 AI 深度诊断</span>
+          <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(59, 130, 246, 0.15); color: #60A5FA; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-bolt"></i></div>
+        </div>
+        <div style="font-size: 26px; font-weight: 800; color: #60A5FA;" id="featureTodayDiagnosisCount">0</div>
+      </div>
+
+      <div style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(249, 115, 22, 0.2); border-radius: 14px; padding: 16px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-size: 13px; color: var(--text-muted); font-weight: 500;">晒惨 & 分享海报 (总生成)</span>
+          <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(249, 115, 22, 0.15); color: #FB923C; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-image"></i></div>
+        </div>
+        <div style="font-size: 26px; font-weight: 800; color: #FB923C;" id="featureTotalPosterCount">0</div>
+      </div>
+
+      <div style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(236, 72, 153, 0.2); border-radius: 14px; padding: 16px 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-size: 13px; color: var(--text-muted); font-weight: 500;">今日晒惨海报生成</span>
+          <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(236, 72, 153, 0.15); color: #F472B6; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-fire"></i></div>
+        </div>
+        <div style="font-size: 26px; font-weight: 800; color: #F472B6;" id="featureTodayPosterCount">0</div>
+      </div>
+    </div>
+
+    <!-- 选项卡切换（AI 诊断记录 / 晒惨海报记录） -->
+    <div class="records-tabs" style="margin-bottom: 16px;">
+      <button class="tab-btn active" id="btnFeatureTabDiagnosis" onclick="switchFeatureUsageTab('diagnosis')">🩺 AI 深度诊断使用记录 (<span id="countDiagnosisBadge">0</span>)</button>
+      <button class="tab-btn" id="btnFeatureTabPoster" onclick="switchFeatureUsageTab('poster')">📸 晒惨与营销海报生成记录 (<span id="countPosterBadge">0</span>)</button>
+    </div>
+
+    <!-- AI 诊断明细表格 -->
+    <div id="featureTabDiagnosisContent" class="table-responsive" style="max-height: 420px; overflow-y: auto; background: rgba(15, 23, 42, 0.5); border-radius: 12px; border: 1px solid var(--card-border);">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>用户</th>
+            <th>功能类型</th>
+            <th>积分变动</th>
+            <th>日志说明</th>
+            <th>使用时间</th>
+          </tr>
+        </thead>
+        <tbody id="diagnosisTableBody">
+          <tr><td colspan="6" class="empty-tip">加载中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 晒惨海报明细表格 -->
+    <div id="featureTabPosterContent" class="table-responsive" style="display: none; max-height: 420px; overflow-y: auto; background: rgba(15, 23, 42, 0.5); border-radius: 12px; border: 1px solid var(--card-border);">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>用户</th>
+            <th>海报/裂变类型</th>
+            <th>获得积分</th>
+            <th>日志说明</th>
+            <th>生成时间</th>
+          </tr>
+        </thead>
+        <tbody id="posterTableBody">
+          <tr><td colspan="6" class="empty-tip">加载中...</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <!-- Admin Login Modal -->
@@ -2033,6 +2129,9 @@
           document.getElementById('userTableBody').innerHTML = 
             '<tr><td colspan="9" class="empty-tip" style="color:var(--danger);"><i class="fa-solid fa-lock"></i> 未授权或登录凭证已过期，请完成身份验证。<button class="btn-action" onclick="showLoginModal(\'请先验证身份\')" style="margin-left:12px; font-size:12px;"><i class="fa-solid fa-key"></i> 弹出登录框</button></td></tr>';
         }
+
+        // 自动加载功能监控（AI 深度诊断 & 晒惨海报）
+        loadFeatureUsageOverview();
       } catch (err) {
         console.error('Failed to load admin data:', err);
       }
@@ -2351,6 +2450,113 @@
           </div>
         `;
       }).join('');
+    }
+
+    let rawFeatureData = null;
+    let currentFeatureTab = 'diagnosis';
+
+    async function loadFeatureUsageOverview() {
+      try {
+        const res = await authFetch('/api/v1/admin/feature-usage/overview').then(r => r.json());
+        if (res && res.code === 200 && res.data) {
+          rawFeatureData = res.data;
+          document.getElementById('featureTotalDiagnosisCount').innerText = rawFeatureData.totalDiagnosisCount || 0;
+          document.getElementById('featureTodayDiagnosisCount').innerText = rawFeatureData.todayDiagnosisCount || 0;
+          document.getElementById('featureTotalPosterCount').innerText = rawFeatureData.totalPosterCount || 0;
+          document.getElementById('featureTodayPosterCount').innerText = rawFeatureData.todayPosterCount || 0;
+
+          document.getElementById('countDiagnosisBadge').innerText = (rawFeatureData.diagnosisRecords || []).length;
+          document.getElementById('countPosterBadge').innerText = (rawFeatureData.posterRecords || []).length;
+
+          renderFeatureUsageTables();
+        }
+      } catch (e) {
+        console.error('Failed to load feature usage overview:', e);
+      }
+    }
+
+    function switchFeatureUsageTab(tab) {
+      currentFeatureTab = tab;
+      document.getElementById('btnFeatureTabDiagnosis').classList.toggle('active', tab === 'diagnosis');
+      document.getElementById('btnFeatureTabPoster').classList.toggle('active', tab === 'poster');
+
+      document.getElementById('featureTabDiagnosisContent').style.display = tab === 'diagnosis' ? 'block' : 'none';
+      document.getElementById('featureTabPosterContent').style.display = tab === 'poster' ? 'block' : 'none';
+    }
+
+    function filterFeatureUsageRecords() {
+      renderFeatureUsageTables();
+    }
+
+    function renderFeatureUsageTables() {
+      if (!rawFeatureData) return;
+      const kw = (document.getElementById('featureSearchInput').value || '').trim().toLowerCase();
+
+      // 1. Render Diagnosis Table
+      const diagList = (rawFeatureData.diagnosisRecords || []).filter(r => {
+        if (!kw) return true;
+        return (r.userId + '').includes(kw) ||
+               (r.nickname || '').toLowerCase().includes(kw) ||
+               (r.phone || '').toLowerCase().includes(kw) ||
+               (r.remark || '').toLowerCase().includes(kw);
+      });
+
+      const diagBody = document.getElementById('diagnosisTableBody');
+      if (diagList.length === 0) {
+        diagBody.innerHTML = '<tr><td colspan="6" class="empty-tip">暂无相关 AI 深度诊断使用记录</td></tr>';
+      } else {
+        diagBody.innerHTML = diagList.map(r => `
+          <tr>
+            <td>#${r.id}</td>
+            <td>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <img src="${resolveAvatarUrl(r.avatar)}" style="width:28px; height:28px; border-radius:50%; object-fit:cover;">
+                <div>
+                  <div style="font-weight:700;">${r.nickname}</div>
+                  <div style="font-size:11px; color:var(--text-muted);">UID: ${r.userId} ${r.phone ? ' | ' + r.phone : ''}</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="status-badge status-active"><i class="fa-solid fa-user-doctor"></i> ${r.typeName}</span></td>
+            <td><span style="color:${r.amount < 0 ? '#EF4444' : '#10B981'}; font-weight:800;">${r.amount} 积分</span></td>
+            <td style="font-size:12px; color:var(--text-muted);">${r.remark || '-'}</td>
+            <td style="font-size:12px;">${r.createdAt ? r.createdAt.replace('T', ' ') : '-'}</td>
+          </tr>
+        `).join('');
+      }
+
+      // 2. Render Poster Table
+      const posterList = (rawFeatureData.posterRecords || []).filter(r => {
+        if (!kw) return true;
+        return (r.userId + '').includes(kw) ||
+               (r.nickname || '').toLowerCase().includes(kw) ||
+               (r.phone || '').toLowerCase().includes(kw) ||
+               (r.remark || '').toLowerCase().includes(kw);
+      });
+
+      const posterBody = document.getElementById('posterTableBody');
+      if (posterList.length === 0) {
+        posterBody.innerHTML = '<tr><td colspan="6" class="empty-tip">暂无相关晒惨/裂变海报生成记录</td></tr>';
+      } else {
+        posterBody.innerHTML = posterList.map(r => `
+          <tr>
+            <td>#${r.id}</td>
+            <td>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <img src="${resolveAvatarUrl(r.avatar)}" style="width:28px; height:28px; border-radius:50%; object-fit:cover;">
+                <div>
+                  <div style="font-weight:700;">${r.nickname}</div>
+                  <div style="font-size:11px; color:var(--text-muted);">UID: ${r.userId} ${r.phone ? ' | ' + r.phone : ''}</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="status-badge status-target" style="background:rgba(249,115,22,0.15); color:#FB923C; border:1px solid rgba(249,115,22,0.3);"><i class="fa-solid fa-image"></i> ${r.typeName}</span></td>
+            <td><span style="color:#10B981; font-weight:800;">+${r.amount || 10} 积分</span></td>
+            <td style="font-size:12px; color:var(--text-muted);">${r.remark || '-'}</td>
+            <td style="font-size:12px;">${r.createdAt ? r.createdAt.replace('T', ' ') : '-'}</td>
+          </tr>
+        `).join('');
+      }
     }
 
     function renderExerciseRecords(exercises, waters) {

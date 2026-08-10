@@ -7,6 +7,7 @@ import com.shike.model.dto.AdminTeamDTO;
 import com.shike.model.dto.AdminUserDTO;
 import com.shike.model.dto.UserDetailRecordsDTO;
 import com.shike.model.entity.DietRecord;
+import com.shike.model.entity.PointsRecord;
 import com.shike.model.entity.Team;
 import com.shike.model.entity.TeamCheckin;
 import com.shike.model.entity.TeamMember;
@@ -20,13 +21,17 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -1000,6 +1005,71 @@ public class AdminServiceImpl implements AdminService {
         } else {
             throw new BizException(400, "模块参数类型不合法");
         }
+    }
+
+    @Override
+    public com.shike.model.dto.AdminFeatureUsageDTO getFeatureUsageOverview() {
+        LocalDateTime startOfToday = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
+
+        // 1. AI 诊断统计
+        long totalDiagnosisCount = pointsRecordRepository.countByType("DIET_DIAGNOSIS");
+        long todayDiagnosisCount = pointsRecordRepository.countByTypeAndCreatedAtAfter("DIET_DIAGNOSIS", startOfToday);
+
+        // 2. 晒惨海报/分享统计
+        List<String> posterTypes = List.of("SHARE_POSTER", "NUDGE_POSTER", "SHARE_FRIEND", "SHARE_TIMELINE");
+        long totalPosterCount = pointsRecordRepository.countByTypeIn(posterTypes);
+        long todayPosterCount = pointsRecordRepository.countByTypeInAndCreatedAtAfter(posterTypes, startOfToday);
+
+        // 3. AI 诊断明细流水
+        List<PointsRecord> rawDiagnosisRecords = pointsRecordRepository.findByTypeOrderByCreatedAtDesc("DIET_DIAGNOSIS");
+        List<com.shike.model.dto.AdminFeatureUsageDTO.UsageRecordItem> diagnosisRecords = mapToUsageRecordItems(rawDiagnosisRecords, "AI 深度营养诊断");
+
+        // 4. 海报/分享明细流水
+        List<PointsRecord> rawPosterRecords = pointsRecordRepository.findByTypeInOrderByCreatedAtDesc(posterTypes);
+        List<com.shike.model.dto.AdminFeatureUsageDTO.UsageRecordItem> posterRecords = mapToUsageRecordItems(rawPosterRecords, "晒惨/裂变海报");
+
+        return com.shike.model.dto.AdminFeatureUsageDTO.builder()
+                .totalDiagnosisCount(totalDiagnosisCount)
+                .todayDiagnosisCount(todayDiagnosisCount)
+                .totalPosterCount(totalPosterCount)
+                .todayPosterCount(todayPosterCount)
+                .diagnosisRecords(diagnosisRecords)
+                .posterRecords(posterRecords)
+                .build();
+    }
+
+    private List<com.shike.model.dto.AdminFeatureUsageDTO.UsageRecordItem> mapToUsageRecordItems(List<PointsRecord> records, String defaultTypeName) {
+        if (records == null || records.isEmpty()) return List.of();
+
+        List<Long> uids = records.stream().map(PointsRecord::getUserId).distinct().toList();
+        Map<Long, User> userMap = userRepository.findAllById(uids).stream()
+                .collect(Collectors.toMap(User::getId, u -> u));
+
+        return records.stream().map(r -> {
+            User u = userMap.get(r.getUserId());
+            String nickname = u != null && u.getNickname() != null ? u.getNickname() : "用户 " + r.getUserId();
+            String avatar = u != null ? u.getAvatarUrl() : null;
+            String phone = null;
+
+            String typeName = defaultTypeName;
+            if ("SHARE_FRIEND".equals(r.getType())) typeName = "分享好友海报";
+            else if ("SHARE_TIMELINE".equals(r.getType())) typeName = "朋友圈炫耀海报";
+            else if ("NUDGE_POSTER".equals(r.getType())) typeName = "晒惨督促海报";
+            else if ("SHARE_POSTER".equals(r.getType())) typeName = "打卡成绩海报";
+
+            return com.shike.model.dto.AdminFeatureUsageDTO.UsageRecordItem.builder()
+                    .id(r.getId())
+                    .userId(r.getUserId())
+                    .nickname(nickname)
+                    .avatar(avatar)
+                    .phone(phone)
+                    .type(r.getType())
+                    .typeName(typeName)
+                    .amount(r.getAmount())
+                    .remark(r.getRemark())
+                    .createdAt(r.getCreatedAt())
+                    .build();
+        }).toList();
     }
 
     private void logAudit(String adminUsername, String action, String target, String details) {

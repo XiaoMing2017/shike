@@ -169,4 +169,9 @@ public class AdminController {
     public ResultDTO<com.shike.model.dto.ServerStatusDTO> getServerStatus() {
         return ResultDTO.success(adminService.getServerStatus());
     }
+
+    @GetMapping({"/feature-usage/overview", "/api/v1/admin/feature-usage/overview"})
+    public ResultDTO<com.shike.model.dto.AdminFeatureUsageDTO> getFeatureUsageOverview() {
+        return ResultDTO.success(adminService.getFeatureUsageOverview());
+    }
 }

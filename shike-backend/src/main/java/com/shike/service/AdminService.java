@@ -38,4 +38,6 @@ public interface AdminService {
     java.util.Map<String, Object> getAiModelConfigDetails();
     void updateAiModelConfig(String planModel, String dietModel, String adminUsername);
     void addCustomAiModelOption(String moduleKey, String modelName, String adminUsername);
+
+    com.shike.model.dto.AdminFeatureUsageDTO getFeatureUsageOverview();
 }
