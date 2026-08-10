@@ -260,17 +260,17 @@
       </view>
       
       <view class="weight-metrics-row flex justify-between align-center" style="margin-top: 16rpx;">
-        <view class="weight-metric-box">
+        <view class="weight-metric-box flex-1">
           <text class="w-lbl">周初体重</text>
           <text class="w-val">{{weekDashboardData.weightStart ? weekDashboardData.weightStart + ' kg' : '--'}}</text>
         </view>
-        <view class="weight-arrow-box flex flex-col align-center">
+        <view class="weight-arrow-box flex flex-col align-center justify-center">
           <text class="w-change-badge {{weekDashboardData.weightChange < 0 ? 'loss' : (weekDashboardData.weightChange > 0 ? 'gain' : 'flat')}}">
             {{weekDashboardData.weightChange ? (weekDashboardData.weightChange > 0 ? '+' + weekDashboardData.weightChange : weekDashboardData.weightChange) + ' kg' : '持平'}}
           </text>
           <text class="w-arrow">➔</text>
         </view>
-        <view class="weight-metric-box text-right">
+        <view class="weight-metric-box flex-1 text-right">
           <text class="w-lbl">最新记录</text>
           <text class="w-val highlight">{{weekDashboardData.weightLatest ? weekDashboardData.weightLatest + ' kg' : '--'}}</text>
         </view>
@@ -416,15 +416,15 @@
       </view>
       
       <view class="month-weight-summary-grid flex justify-between align-center" style="margin-top: 16rpx;">
-        <view class="m-w-item">
+        <view class="m-w-item flex-1">
           <text class="m-w-lbl">月初体重</text>
           <text class="m-w-val">{{monthDashboardData.weightStart ? monthDashboardData.weightStart + ' kg' : '--'}}</text>
         </view>
-        <view class="m-w-item">
+        <view class="m-w-item flex-1 text-center">
           <text class="m-w-lbl">最高 / 最低</text>
-          <text class="m-w-val" style="font-size: 26rpx;">{{monthDashboardData.maxWeight ? monthDashboardData.maxWeight : '--'}} / {{monthDashboardData.minWeight ? monthDashboardData.minWeight + ' kg' : '--'}}</text>
+          <text class="m-w-val m-w-range">{{monthDashboardData.maxWeight ? monthDashboardData.maxWeight : '--'}} / {{monthDashboardData.minWeight ? monthDashboardData.minWeight + ' kg' : '--'}}</text>
         </view>
-        <view class="m-w-item text-right">
+        <view class="m-w-item flex-1 text-right">
           <text class="m-w-lbl">本月净减重</text>
           <text class="m-w-val highlight-change {{monthDashboardData.totalWeightChange < 0 ? 'loss' : (monthDashboardData.totalWeightChange > 0 ? 'gain' : 'flat')}}">
             {{monthDashboardData.totalWeightChange ? (monthDashboardData.totalWeightChange > 0 ? '+' + monthDashboardData.totalWeightChange : monthDashboardData.totalWeightChange) + ' kg' : '持平'}}

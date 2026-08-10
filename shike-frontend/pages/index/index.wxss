@@ -3266,7 +3266,7 @@
   border-radius: 20rpx;
 }
 
-.weight-metrics-row {
+.weight-metrics-row, .month-weight-summary-grid {
   background: #F8FAFC;
   border-radius: 20rpx;
   padding: 20rpx 24rpx;
@@ -3275,17 +3275,27 @@
 }
 
 .weight-metric-box .w-lbl, .m-w-lbl {
-  font-size: 20rpx;
+  font-size: 22rpx;
   color: #64748B;
   display: block;
+  line-height: 32rpx;
+  height: 32rpx;
 }
 
 .weight-metric-box .w-val, .m-w-val {
   font-size: 32rpx;
   font-weight: 800;
   color: #1E293B;
-  margin-top: 4rpx;
+  margin-top: 8rpx;
   display: block;
+  line-height: 40rpx;
+  height: 40rpx;
+}
+
+.m-w-val.m-w-range {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #334155;
 }
 
 .weight-metric-box .w-val.highlight {
@@ -3295,24 +3305,28 @@
 .w-change-badge {
   font-size: 22rpx;
   font-weight: 800;
-  padding: 4rpx 14rpx;
-  border-radius: 12rpx;
+  padding: 4rpx 16rpx;
+  border-radius: 20rpx;
   box-shadow: none;
+  line-height: 1.3;
 }
 
 .w-change-badge.loss {
   color: #10B981;
   background: #ECFDF5;
+  border: 1rpx solid #A7F3D0;
 }
 
 .w-change-badge.gain {
   color: #EF4444;
   background: #FEF2F2;
+  border: 1rpx solid #FECACA;
 }
 
 .w-change-badge.flat {
   color: #64748B;
   background: #F1F5F9;
+  border: 1rpx solid #E2E8F0;
   box-shadow: none;
 }
 
@@ -3332,9 +3346,9 @@
 }
 
 .w-arrow {
-  font-size: 20rpx;
+  font-size: 18rpx;
   color: #94A3B8;
-  margin-top: 2rpx;
+  margin-top: 4rpx;
 }
 
 .month-weight-summary-grid {
