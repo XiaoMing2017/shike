@@ -1500,43 +1500,31 @@ public class DietServiceImpl implements DietService {
         record.setWeight(weight);
         weightRecordRepository.save(record);
 
-        // 查出该用户所有体重记录里最晚的一条日期
-        List<com.shike.model.entity.WeightRecord> allRecords = weightRecordRepository.findByUserIdAndRecordDateBetweenOrderByRecordDateAsc(userId, LocalDate.of(2000, 1, 1), LocalDate.of(2099, 12, 31));
-        boolean isLatest = true;
-        if (allRecords != null && !allRecords.isEmpty()) {
-            LocalDate maxDate = allRecords.get(allRecords.size() - 1).getRecordDate();
-            if (date.isBefore(maxDate)) {
-                isLatest = false;
-            }
-        }
-
-        // 只要新录入的记录是最新的，或者等于今天，立刻同步刷新个人档案 User.weight 和目标卡路里！
-        if (isLatest || date.equals(LocalDate.now())) {
-            User user = userRepository.findById(userId).orElse(null);
-            if (user != null) {
-                user.setWeight(weight);
-                // 重新推算 BMR 与 每日目标卡路里
-                if (user.getGender() != null && user.getHeight() != null && user.getAge() != null) {
-                    double bmr;
-                    if ("男".equals(user.getGender())) {
-                        bmr = 88.362 + (13.397 * weight.doubleValue()) + (4.799 * user.getHeight().doubleValue()) - (5.677 * user.getAge());
-                    } else {
-                        bmr = 447.593 + (9.247 * weight.doubleValue()) + (3.098 * user.getHeight().doubleValue()) - (4.330 * user.getAge());
-                    }
-                    double activityMultiplier = 1.375;
-                    double tdee = bmr * activityMultiplier;
-                    double targetKcal = tdee;
-                    if ("减脂".equals(user.getGoal())) {
-                        targetKcal = tdee - 500;
-                    } else if ("增肌".equals(user.getGoal())) {
-                        targetKcal = tdee + 300;
-                    }
-                    user.setBmr(BigDecimal.valueOf(Math.round(bmr)));
-                    user.setTargetCalories(BigDecimal.valueOf(Math.round(targetKcal)));
+        // 始终同步刷新个人档案 User.weight 和目标卡路里
+        User user = userRepository.findById(userId).orElse(null);
+        if (user != null) {
+            user.setWeight(weight);
+            // 重新推算 BMR 与 每日目标卡路里
+            if (user.getGender() != null && user.getHeight() != null && user.getAge() != null) {
+                double bmr;
+                if ("男".equals(user.getGender())) {
+                    bmr = 88.362 + (13.397 * weight.doubleValue()) + (4.799 * user.getHeight().doubleValue()) - (5.677 * user.getAge());
+                } else {
+                    bmr = 447.593 + (9.247 * weight.doubleValue()) + (3.098 * user.getHeight().doubleValue()) - (4.330 * user.getAge());
                 }
-                userRepository.save(user);
-                log.info("Synced updated weight {} kg to User {} profile successfully", weight, userId);
+                double activityMultiplier = 1.375;
+                double tdee = bmr * activityMultiplier;
+                double targetKcal = tdee;
+                if ("减脂".equals(user.getGoal())) {
+                    targetKcal = tdee - 500;
+                } else if ("增肌".equals(user.getGoal())) {
+                    targetKcal = tdee + 300;
+                }
+                user.setBmr(BigDecimal.valueOf(Math.round(bmr)));
+                user.setTargetCalories(BigDecimal.valueOf(Math.round(targetKcal)));
             }
+            userRepository.save(user);
+            log.info("Synced updated weight {} kg to User {} profile successfully", weight, userId);
         }
     }
 }

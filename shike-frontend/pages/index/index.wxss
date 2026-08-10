@@ -3270,6 +3270,8 @@
   background: #F8FAFC;
   border-radius: 20rpx;
   padding: 20rpx 24rpx;
+  box-shadow: none;
+  overflow: hidden;
 }
 
 .weight-metric-box .w-lbl, .m-w-lbl {
@@ -3295,6 +3297,7 @@
   font-weight: 800;
   padding: 4rpx 14rpx;
   border-radius: 12rpx;
+  box-shadow: none;
 }
 
 .w-change-badge.loss, .highlight-change.loss {
@@ -3310,6 +3313,7 @@
 .w-change-badge.flat, .highlight-change.flat {
   color: #64748B;
   background: #F1F5F9;
+  box-shadow: none;
 }
 
 .w-arrow {
