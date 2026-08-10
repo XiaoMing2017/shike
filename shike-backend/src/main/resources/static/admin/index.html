@@ -3312,28 +3312,29 @@
 
         <!-- 1. 7天运动与饮食计划生成 -->
         <div style="margin-bottom: 20px;">
-          <label style="display: block; font-size: 14px; font-weight: 700; color: #F1F5F9; margin-bottom: 8px;">
-            🏋️‍♂️ 7天运动与饮食计划生成模型:
-          </label>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+            <label style="font-size: 14px; font-weight: 700; color: #F1F5F9;">
+              🏋️‍♂️ 7天运动与饮食计划生成模型:
+            </label>
+            <button onclick="promptAddCustomModel('plan')" style="background: rgba(99, 102, 241, 0.2); color: #818CF8; border: 1px solid rgba(99, 102, 241, 0.4); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">
+              <i class="fa-solid fa-plus"></i> ➕ 添加新模型
+            </button>
+          </div>
           <select id="selectPlanModel" style="width: 100%; background: #0F172A; color: #F8FAFC; border: 1px solid #475569; padding: 10px 14px; border-radius: 10px; font-size: 14px; outline: none;">
-            <option value="qwen3.8-max">qwen3.8-max (推荐 ⚡ 通义千问超强逻辑推理旗舰大模型)</option>
-            <option value="qwen3.6-plus">qwen3.6-plus (通义千问全能均衡大模型)</option>
-            <option value="qwen3.6-flash">qwen3.6-flash (通义千问极速轻量大模型)</option>
-            <option value="qwen-max">qwen-max (通义千问经典Max版)</option>
-            <option value="gpt-4o">gpt-4o (OpenAI 旗舰全能)</option>
           </select>
         </div>
 
         <!-- 2. 拍照识别 & 营养诊断 -->
         <div style="margin-bottom: 24px;">
-          <label style="display: block; font-size: 14px; font-weight: 700; color: #F1F5F9; margin-bottom: 8px;">
-            📸 拍照识别 & 营养诊断模型:
-          </label>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+            <label style="font-size: 14px; font-weight: 700; color: #F1F5F9;">
+              📸 拍照识别 & 营养诊断模型:
+            </label>
+            <button onclick="promptAddCustomModel('diet')" style="background: rgba(16, 185, 129, 0.2); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.4); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">
+              <i class="fa-solid fa-plus"></i> ➕ 添加新模型
+            </button>
+          </div>
           <select id="selectDietModel" style="width: 100%; background: #0F172A; color: #F8FAFC; border: 1px solid #475569; padding: 10px 14px; border-radius: 10px; font-size: 14px; outline: none;">
-            <option value="qwen3.6-plus">qwen3.6-plus (推荐 🌟 原生支持图文辨识与精准营养分析)</option>
-            <option value="qwen3.6-flash">qwen3.6-flash (极速响应轻量型)</option>
-            <option value="qwen-vl-max">qwen-vl-max (阿里官方视觉专属多模态模型)</option>
-            <option value="qwen3.8-max">qwen3.8-max (超大参数深度理解)</option>
           </select>
         </div>
       </div>
@@ -3350,23 +3351,71 @@
   <script>
     function openAiModelControlModal() {
       const token = getAdminToken();
-      fetch('/api/v1/admin/ai-models', {
+      fetch('/api/v1/admin/ai-models/details', {
         headers: { 'Authorization': 'Bearer ' + token }
       })
       .then(res => res.json())
       .then(res => {
         if (res.code === 200 && res.data) {
-          if (res.data.planModel) {
-            document.getElementById('selectPlanModel').value = res.data.planModel;
-          }
-          if (res.data.dietModel) {
-            document.getElementById('selectDietModel').value = res.data.dietModel;
-          }
+          const planSel = document.getElementById('selectPlanModel');
+          const dietSel = document.getElementById('selectDietModel');
+          
+          planSel.innerHTML = '';
+          dietSel.innerHTML = '';
+
+          const planOptions = res.data.planOptions || ["qwen3.8-max", "qwen3.6-plus", "qwen3.6-flash", "qwen-max", "gpt-4o"];
+          planOptions.forEach(opt => {
+            const optionEl = document.createElement('option');
+            optionEl.value = opt;
+            optionEl.innerText = opt;
+            if (opt === res.data.planModel) optionEl.selected = true;
+            planSel.appendChild(optionEl);
+          });
+
+          const dietOptions = res.data.dietOptions || ["qwen3.6-plus", "qwen3.6-flash", "qwen-vl-max", "qwen3.8-max"];
+          dietOptions.forEach(opt => {
+            const optionEl = document.createElement('option');
+            optionEl.value = opt;
+            optionEl.innerText = opt;
+            if (opt === res.data.dietModel) optionEl.selected = true;
+            dietSel.appendChild(optionEl);
+          });
         }
         document.getElementById('aiModelControlModal').style.display = 'flex';
       })
       .catch(err => {
         document.getElementById('aiModelControlModal').style.display = 'flex';
+      });
+    }
+
+    function promptAddCustomModel(moduleKey) {
+      const moduleName = moduleKey === 'plan' ? '7天计划生成' : '拍照识别与诊断';
+      Swal.fire({
+        title: `添加自定义 AI 模型`,
+        text: `请输入适用于【${moduleName}】的新大模型代号（如 deepseek-chat 或 qwen-max-latest）:`,
+        input: 'text',
+        inputPlaceholder: '例如: deepseek-v3 / qwen-max-latest',
+        showCancelButton: true,
+        confirmButtonText: '添加并设为当前',
+        cancelButtonText: '取消'
+      }).then((result) => {
+        if (result.isConfirmed && result.value && result.value.trim()) {
+          const modelName = result.value.trim();
+          const token = getAdminToken();
+          fetch(`/api/v1/admin/ai-models/add-option?moduleKey=${encodeURIComponent(moduleKey)}&modelName=${encodeURIComponent(modelName)}`, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token }
+          })
+          .then(res => res.json())
+          .then(res => {
+            if (res.code === 200) {
+              Swal.fire('添加成功！', `已为【${moduleName}】添加并选择新模型: ${modelName}`, 'success');
+              openAiModelControlModal();
+            } else {
+              Swal.fire('添加失败', res.message || '未知错误', 'error');
+            }
+          });
+        }
       });
     }
 
@@ -3406,6 +3455,7 @@
     window.openAiModelControlModal = openAiModelControlModal;
     window.closeAiModelControlModal = closeAiModelControlModal;
     window.saveAiModelConfig = saveAiModelConfig;
+    window.promptAddCustomModel = promptAddCustomModel;
   </script>
 </body>
 </html>

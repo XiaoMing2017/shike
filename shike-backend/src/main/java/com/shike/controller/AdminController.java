@@ -144,11 +144,24 @@ public class AdminController {
         return ResultDTO.success(adminService.getAiModelConfig());
     }
 
+    @GetMapping({"/ai-models/details", "/api/v1/admin/ai-models/details"})
+    public ResultDTO<java.util.Map<String, Object>> getAiModelConfigDetails() {
+        return ResultDTO.success(adminService.getAiModelConfigDetails());
+    }
+
     @PostMapping({"/ai-models", "/api/v1/admin/ai-models"})
     public ResultDTO<Void> updateAiModelConfig(
             @RequestParam(value = "planModel", required = false) String planModel,
             @RequestParam(value = "dietModel", required = false) String dietModel) {
         adminService.updateAiModelConfig(planModel, dietModel, "admin");
+        return ResultDTO.success();
+    }
+
+    @PostMapping({"/ai-models/add-option", "/api/v1/admin/ai-models/add-option"})
+    public ResultDTO<Void> addCustomAiModelOption(
+            @RequestParam("moduleKey") String moduleKey,
+            @RequestParam("modelName") String modelName) {
+        adminService.addCustomAiModelOption(moduleKey, modelName, "admin");
         return ResultDTO.success();
     }
 

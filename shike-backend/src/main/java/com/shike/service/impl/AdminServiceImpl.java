@@ -955,6 +955,53 @@ public class AdminServiceImpl implements AdminService {
         logAudit(adminUsername, "UPDATE_AI_MODELS", "GLOBAL", "独立修改 AI 调度模型 -> 7天计划: " + planModel + ", 识图诊断: " + dietModel);
     }
 
+    @Override
+    public java.util.Map<String, Object> getAiModelConfigDetails() {
+        java.util.Map<String, String> current = getAiModelConfig();
+        
+        java.util.Set<String> planOptions = stringRedisTemplate.opsForSet().members("shike:sys:config:ai_model_plan_options");
+        if (planOptions == null || planOptions.isEmpty()) {
+            planOptions = new java.util.LinkedHashSet<>(java.util.List.of("qwen3.8-max", "qwen3.6-plus", "qwen3.6-flash", "qwen-max", "gpt-4o", "deepseek-chat"));
+            for (String opt : planOptions) {
+                stringRedisTemplate.opsForSet().add("shike:sys:config:ai_model_plan_options", opt);
+            }
+        }
+        
+        java.util.Set<String> dietOptions = stringRedisTemplate.opsForSet().members("shike:sys:config:ai_model_diet_options");
+        if (dietOptions == null || dietOptions.isEmpty()) {
+            dietOptions = new java.util.LinkedHashSet<>(java.util.List.of("qwen3.6-plus", "qwen3.6-flash", "qwen-vl-max", "qwen3.8-max", "glm-4v-flash"));
+            for (String opt : dietOptions) {
+                stringRedisTemplate.opsForSet().add("shike:sys:config:ai_model_diet_options", opt);
+            }
+        }
+
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        result.put("planModel", current.get("planModel"));
+        result.put("dietModel", current.get("dietModel"));
+        result.put("planOptions", planOptions);
+        result.put("dietOptions", dietOptions);
+        return result;
+    }
+
+    @Override
+    public void addCustomAiModelOption(String moduleKey, String modelName, String adminUsername) {
+        if (modelName == null || modelName.isBlank()) {
+            throw new BizException(400, "模型名称不能为空");
+        }
+        String cleanName = modelName.trim();
+        if ("plan".equalsIgnoreCase(moduleKey)) {
+            stringRedisTemplate.opsForSet().add("shike:sys:config:ai_model_plan_options", cleanName);
+            stringRedisTemplate.opsForValue().set("shike:sys:config:ai_model_plan", cleanName);
+            logAudit(adminUsername, "ADD_AI_MODEL_OPTION", "PLAN", "新增并切至自定义计划生成模型: " + cleanName);
+        } else if ("diet".equalsIgnoreCase(moduleKey)) {
+            stringRedisTemplate.opsForSet().add("shike:sys:config:ai_model_diet_options", cleanName);
+            stringRedisTemplate.opsForValue().set("shike:sys:config:ai_model_diet", cleanName);
+            logAudit(adminUsername, "ADD_AI_MODEL_OPTION", "DIET", "新增并切至自定义识图诊断模型: " + cleanName);
+        } else {
+            throw new BizException(400, "模块参数类型不合法");
+        }
+    }
+
     private void logAudit(String adminUsername, String action, String target, String details) {
         try {
             adminAuditLogRepository.save(com.shike.model.entity.AdminAuditLog.builder()

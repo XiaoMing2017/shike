@@ -35,5 +35,7 @@ public interface AdminService {
     com.shike.model.dto.ServerStatusDTO getServerStatus();
 
     java.util.Map<String, String> getAiModelConfig();
+    java.util.Map<String, Object> getAiModelConfigDetails();
     void updateAiModelConfig(String planModel, String dietModel, String adminUsername);
+    void addCustomAiModelOption(String moduleKey, String modelName, String adminUsername);
 }
