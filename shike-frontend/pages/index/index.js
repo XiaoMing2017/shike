@@ -317,9 +317,19 @@ Page({
           wx.setStorageSync('userInfo', user);
           this.setData({ userInfo: user });
 
-          // 无论在什么 View 模式下，全量重新获取周/月看板以同步最新的周初、最新体重
-          if (this.fetchWeekDashboard) this.fetchWeekDashboard(this.data.currentSelectedDateStr);
-          if (this.fetchMonthDashboard) this.fetchMonthDashboard();
+          // 立即乐观更新 UI 中的最新体重显示
+          const currentWeekData = this.data.weekDashboardData || {};
+          currentWeekData.weightLatest = weightNum;
+          if (currentWeekData.weightStart) {
+            currentWeekData.weightChange = parseFloat((weightNum - currentWeekData.weightStart).toFixed(1));
+          }
+          this.setData({ weekDashboardData: currentWeekData });
+
+          // 延迟 500ms 后从后端全量刷新数据，确保事务已提交
+          setTimeout(() => {
+            if (this.fetchWeekDashboard) this.fetchWeekDashboard();
+            if (this.fetchMonthDashboard) this.fetchMonthDashboard();
+          }, 500);
         } else {
           wx.showToast({ title: (res.data && res.data.message) || '保存失败', icon: 'none' });
         }
