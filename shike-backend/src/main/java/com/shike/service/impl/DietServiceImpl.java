@@ -1213,22 +1213,25 @@ public class DietServiceImpl implements DietService {
         // 体重趋势计算与 fallback
         BigDecimal weightStart = null;
         BigDecimal weightLatest = null;
-        BigDecimal weightChange = BigDecimal.ZERO;
 
         if (weekWeightRecords != null && !weekWeightRecords.isEmpty()) {
             weightStart = weekWeightRecords.get(0).getWeight();
             weightLatest = weekWeightRecords.get(weekWeightRecords.size() - 1).getWeight();
-            if (weightStart != null && weightLatest != null) {
-                weightChange = weightLatest.subtract(weightStart).setScale(1, RoundingMode.HALF_UP);
-            }
         }
 
-        // 如果本周无体重记录，自动 fallback 回退到用户档案当前 weight
-        if (weightLatest == null && user != null && user.getWeight() != null) {
+        // 最新体重优先同步展示用户档案的最实时当前体重 user.getWeight()
+        if (user != null && user.getWeight() != null) {
             weightLatest = user.getWeight().setScale(1, RoundingMode.HALF_UP);
-            if (weightStart == null) {
-                weightStart = weightLatest;
-            }
+        }
+
+        // 若周初体重为空，则使用最新体重充当基准周初体重
+        if (weightStart == null) {
+            weightStart = weightLatest;
+        }
+
+        BigDecimal weightChange = BigDecimal.ZERO;
+        if (weightStart != null && weightLatest != null) {
+            weightChange = weightLatest.subtract(weightStart).setScale(1, RoundingMode.HALF_UP);
         }
 
         return WeekDashboardDTO.builder()
@@ -1432,19 +1435,19 @@ public class DietServiceImpl implements DietService {
                             .build());
                 }
             }
-
-            if (weightStart != null && weightLatest != null) {
-                totalWeightChange = weightLatest.subtract(weightStart).setScale(2, RoundingMode.HALF_UP);
-            }
         }
 
-        // 如果本月无体重记录，自动 fallback 回退到用户档案当前 weight
-        if (weightLatest == null && user != null && user.getWeight() != null) {
+        // 最新体重优先同步展示用户档案的最实时当前体重 user.getWeight()
+        if (user != null && user.getWeight() != null) {
             weightLatest = user.getWeight().setScale(1, RoundingMode.HALF_UP);
-            if (weightStart == null) weightStart = weightLatest;
-            if (maxWeight == null) maxWeight = weightLatest;
-            if (minWeight == null) minWeight = weightLatest;
-            if (totalWeightChange == null) totalWeightChange = BigDecimal.ZERO;
+        }
+
+        if (weightStart == null) weightStart = weightLatest;
+        if (maxWeight == null) maxWeight = weightLatest;
+        if (minWeight == null) minWeight = weightLatest;
+
+        if (weightStart != null && weightLatest != null) {
+            totalWeightChange = weightLatest.subtract(weightStart).setScale(2, RoundingMode.HALF_UP);
         }
 
         return MonthDashboardDTO.builder()
