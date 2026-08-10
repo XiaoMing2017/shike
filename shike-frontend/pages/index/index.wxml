@@ -422,7 +422,7 @@
         </view>
         <view class="m-w-item">
           <text class="m-w-lbl">最高 / 最低</text>
-          <text class="m-w-val" style="font-size: 24rpx;">{{monthDashboardData.maxWeight || '--'}} / {{monthDashboardData.minWeight || '--'}}</text>
+          <text class="m-w-val" style="font-size: 26rpx;">{{monthDashboardData.maxWeight ? monthDashboardData.maxWeight : '--'}} / {{monthDashboardData.minWeight ? monthDashboardData.minWeight + ' kg' : '--'}}</text>
         </view>
         <view class="m-w-item text-right">
           <text class="m-w-lbl">本月净减重</text>

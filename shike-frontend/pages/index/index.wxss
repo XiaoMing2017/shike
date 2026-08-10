@@ -3300,20 +3300,35 @@
   box-shadow: none;
 }
 
-.w-change-badge.loss, .highlight-change.loss {
+.w-change-badge.loss {
   color: #10B981;
   background: #ECFDF5;
 }
 
-.w-change-badge.gain, .highlight-change.gain {
+.w-change-badge.gain {
   color: #EF4444;
   background: #FEF2F2;
 }
 
-.w-change-badge.flat, .highlight-change.flat {
+.w-change-badge.flat {
   color: #64748B;
   background: #F1F5F9;
   box-shadow: none;
+}
+
+.highlight-change.loss {
+  color: #10B981;
+  background: transparent;
+}
+
+.highlight-change.gain {
+  color: #EF4444;
+  background: transparent;
+}
+
+.highlight-change.flat {
+  color: #64748B;
+  background: transparent;
 }
 
 .w-arrow {
