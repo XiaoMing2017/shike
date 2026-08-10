@@ -317,11 +317,9 @@ Page({
           wx.setStorageSync('userInfo', user);
           this.setData({ userInfo: user });
 
-          if (this.data.viewModeIndex === 1) {
-            this.fetchWeekDashboard(this.data.currentSelectedDateStr);
-          } else if (this.data.viewModeIndex === 2) {
-            this.fetchMonthDashboard();
-          }
+          // 无论在什么 View 模式下，全量重新获取周/月看板以同步最新的周初、最新体重
+          if (this.fetchWeekDashboard) this.fetchWeekDashboard(this.data.currentSelectedDateStr);
+          if (this.fetchMonthDashboard) this.fetchMonthDashboard();
         } else {
           wx.showToast({ title: (res.data && res.data.message) || '保存失败', icon: 'none' });
         }

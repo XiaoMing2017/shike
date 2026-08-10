@@ -67,6 +67,10 @@ Page({
     this.loginAndFetchProfile();
   },
 
+  onShow() {
+    this.loginAndFetchProfile();
+  },
+
   onShareAppMessage() {
     this._rewardSharePoints('SHARE_FRIEND');
     return {

@@ -1169,6 +1169,7 @@ public class DietServiceImpl implements DietService {
                     .burned(dayBurned)
                     .target(targetInt)
                     .status(status)
+                    .weight(weekWeightMap.get(currentDate))
                     .build());
         }
 
@@ -1209,6 +1210,27 @@ public class DietServiceImpl implements DietService {
             evaluationMessage = "本周热量稍有超标（盈余 " + Math.abs(accumulatedDeficit) + " kcal），建议下周适当增加有氧运动或控制晚餐。加油！";
         }
 
+        // 体重趋势计算与 fallback
+        BigDecimal weightStart = null;
+        BigDecimal weightLatest = null;
+        BigDecimal weightChange = BigDecimal.ZERO;
+
+        if (weekWeightRecords != null && !weekWeightRecords.isEmpty()) {
+            weightStart = weekWeightRecords.get(0).getWeight();
+            weightLatest = weekWeightRecords.get(weekWeightRecords.size() - 1).getWeight();
+            if (weightStart != null && weightLatest != null) {
+                weightChange = weightLatest.subtract(weightStart).setScale(1, RoundingMode.HALF_UP);
+            }
+        }
+
+        // 如果本周无体重记录，自动 fallback 回退到用户档案当前 weight
+        if (weightLatest == null && user != null && user.getWeight() != null) {
+            weightLatest = user.getWeight().setScale(1, RoundingMode.HALF_UP);
+            if (weightStart == null) {
+                weightStart = weightLatest;
+            }
+        }
+
         return WeekDashboardDTO.builder()
                 .startDate(monday)
                 .endDate(sunday)
@@ -1228,6 +1250,9 @@ public class DietServiceImpl implements DietService {
                 .healthRating(healthRating)
                 .evaluationMessage(evaluationMessage)
                 .dailyDetails(dailyDetails)
+                .weightStart(weightStart)
+                .weightLatest(weightLatest)
+                .weightChange(weightChange)
                 .build();
     }
 
@@ -1413,6 +1438,15 @@ public class DietServiceImpl implements DietService {
             }
         }
 
+        // 如果本月无体重记录，自动 fallback 回退到用户档案当前 weight
+        if (weightLatest == null && user != null && user.getWeight() != null) {
+            weightLatest = user.getWeight().setScale(1, RoundingMode.HALF_UP);
+            if (weightStart == null) weightStart = weightLatest;
+            if (maxWeight == null) maxWeight = weightLatest;
+            if (minWeight == null) minWeight = weightLatest;
+            if (totalWeightChange == null) totalWeightChange = BigDecimal.ZERO;
+        }
+
         return MonthDashboardDTO.builder()
                 .year(year)
                 .month(month)
@@ -1463,11 +1497,42 @@ public class DietServiceImpl implements DietService {
         record.setWeight(weight);
         weightRecordRepository.save(record);
 
-        if (date.equals(LocalDate.now())) {
+        // 查出该用户所有体重记录里最晚的一条日期
+        List<com.shike.model.entity.WeightRecord> allRecords = weightRecordRepository.findByUserIdAndRecordDateBetweenOrderByRecordDateAsc(userId, LocalDate.of(2000, 1, 1), LocalDate.of(2099, 12, 31));
+        boolean isLatest = true;
+        if (allRecords != null && !allRecords.isEmpty()) {
+            LocalDate maxDate = allRecords.get(allRecords.size() - 1).getRecordDate();
+            if (date.isBefore(maxDate)) {
+                isLatest = false;
+            }
+        }
+
+        // 只要新录入的记录是最新的，或者等于今天，立刻同步刷新个人档案 User.weight 和目标卡路里！
+        if (isLatest || date.equals(LocalDate.now())) {
             User user = userRepository.findById(userId).orElse(null);
             if (user != null) {
                 user.setWeight(weight);
+                // 重新推算 BMR 与 每日目标卡路里
+                if (user.getGender() != null && user.getHeight() != null && user.getAge() != null) {
+                    double bmr;
+                    if ("男".equals(user.getGender())) {
+                        bmr = 88.362 + (13.397 * weight.doubleValue()) + (4.799 * user.getHeight().doubleValue()) - (5.677 * user.getAge());
+                    } else {
+                        bmr = 447.593 + (9.247 * weight.doubleValue()) + (3.098 * user.getHeight().doubleValue()) - (4.330 * user.getAge());
+                    }
+                    double activityMultiplier = 1.375;
+                    double tdee = bmr * activityMultiplier;
+                    double targetKcal = tdee;
+                    if ("减脂".equals(user.getGoal())) {
+                        targetKcal = tdee - 500;
+                    } else if ("增肌".equals(user.getGoal())) {
+                        targetKcal = tdee + 300;
+                    }
+                    user.setBmr(BigDecimal.valueOf(Math.round(bmr)));
+                    user.setTargetCalories(BigDecimal.valueOf(Math.round(targetKcal)));
+                }
                 userRepository.save(user);
+                log.info("Synced updated weight {} kg to User {} profile successfully", weight, userId);
             }
         }
     }
