@@ -389,21 +389,22 @@ public class DietServiceImpl implements DietService {
                 }
                 responseBody = textNode.asText();
             } else {
-                log.info("Calling OpenAI compatible vision API: {}, model: {}", aiEndpoint, aiModel);
+                log.info("Calling OpenAI compatible vision API: {}, base model: {}", aiEndpoint, aiModel);
+                String visionModel = aiModel;
+                if (aiModel.contains("qwen") && !aiModel.contains("vl")) {
+                    visionModel = "qwen-vl-max";
+                }
+                log.info("Using Vision LLM model for image analysis: {}", visionModel);
                 try {
-                    responseBody = callOpenAiVision(aiModel, prompt, dataUrl, mimeType);
+                    responseBody = callOpenAiVision(visionModel, prompt, dataUrl, mimeType);
                 } catch (Exception e) {
-                    String fallbackModel = aiModel.contains("qwen") ? "qwen-vl-plus" : "glm-4v-flash";
-                    if (!fallbackModel.equalsIgnoreCase(aiModel)) {
-                        log.warn("Primary model {} failed: {}. Falling back to stable model {}...", aiModel, e.getMessage(), fallbackModel);
-                        try {
-                            responseBody = callOpenAiVision(fallbackModel, prompt, dataUrl, mimeType);
-                        } catch (Exception ex) {
-                            log.error("Fallback model " + fallbackModel + " also failed", ex);
-                            throw ex;
-                        }
-                    } else {
-                        throw e;
+                    String fallbackModel = "qwen-vl-plus";
+                    log.warn("Primary vision model {} failed: {}. Falling back to stable model {}...", visionModel, e.getMessage(), fallbackModel);
+                    try {
+                        responseBody = callOpenAiVision(fallbackModel, prompt, dataUrl, mimeType);
+                    } catch (Exception ex) {
+                        log.error("Fallback vision model " + fallbackModel + " also failed", ex);
+                        throw ex;
                     }
                 }
             }
