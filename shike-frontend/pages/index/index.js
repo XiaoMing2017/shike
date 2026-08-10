@@ -299,7 +299,9 @@ Page({
       return;
     }
 
-    const userId = app.globalData.userId || wx.getStorageSync('userId') || 1;
+    const user = (app.globalData && app.globalData.userInfo) || wx.getStorageSync('userInfo') || {};
+    const userId = user.id || app.globalData.userId || wx.getStorageSync('userId') || 1;
+
     wx.showLoading({ title: '正在保存体重...' });
 
     wx.request({
