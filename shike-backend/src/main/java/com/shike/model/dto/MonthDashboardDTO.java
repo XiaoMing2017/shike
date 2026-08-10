@@ -35,7 +35,23 @@ public class MonthDashboardDTO {
     private Integer fatRatio;
     private String healthRating;
     private String evaluationMessage;
+    private BigDecimal weightStart;
+    private BigDecimal weightLatest;
+    private BigDecimal maxWeight;
+    private BigDecimal minWeight;
+    private BigDecimal totalWeightChange;
+    private List<DailyWeightPoint> dailyWeightRecords;
     private List<WeeklyTrendItem> weeklyTrends;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DailyWeightPoint {
+        private LocalDate date;
+        private String dayStr; // "08.01"
+        private BigDecimal weight;
+    }
 
     @Data
     @Builder

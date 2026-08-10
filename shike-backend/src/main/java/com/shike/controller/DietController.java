@@ -124,4 +124,16 @@ public class DietController {
         com.shike.model.dto.MonthDashboardDTO dashboard = dietService.getMonthDashboard(userId, year, month);
         return ResultDTO.success(dashboard);
     }
+
+    @PostMapping("/record-weight")
+    public ResultDTO<Void> recordWeight(
+            @RequestParam("userId") Long userId,
+            @RequestParam("weight") java.math.BigDecimal weight,
+            @RequestParam(value = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        if (date == null) {
+            date = LocalDate.now();
+        }
+        dietService.recordWeight(userId, weight, date);
+        return ResultDTO.success(null);
+    }
 }

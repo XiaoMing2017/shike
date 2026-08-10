@@ -163,7 +163,9 @@ Page({
     announcementConfig: null,
     checkedPlanExercisesMap: {},
     isDiagnosing: false,
-    aiExpertComment: ''
+    aiExpertComment: '',
+    showWeightModal: false,
+    inputWeightValue: ''
   },
 
   onLoad(options) {
@@ -263,6 +265,72 @@ Page({
         wx.setStorageSync(verKey, true);
       }
     } catch (e) {}
+  },
+
+  openWeightModal() {
+    const user = (app.globalData && app.globalData.userInfo) || wx.getStorageSync('userInfo') || {};
+    const defaultWeight = user.weight || 60.0;
+    this.setData({
+      showWeightModal: true,
+      inputWeightValue: String(defaultWeight)
+    });
+  },
+
+  closeWeightModal() {
+    this.setData({ showWeightModal: false });
+  },
+
+  onWeightInput(e) {
+    this.setData({ inputWeightValue: e.detail.value });
+  },
+
+  quickAdjustWeight(e) {
+    const step = parseFloat(e.currentTarget.dataset.step || 0);
+    const curr = parseFloat(this.data.inputWeightValue || 60.0);
+    const nextVal = (curr + step).toFixed(1);
+    this.setData({ inputWeightValue: String(nextVal) });
+  },
+
+  submitWeightRecord() {
+    const valStr = this.data.inputWeightValue;
+    const weightNum = parseFloat(valStr);
+    if (isNaN(weightNum) || weightNum <= 0 || weightNum > 300) {
+      wx.showToast({ title: '请输入有效的体重数值', icon: 'none' });
+      return;
+    }
+
+    const userId = app.globalData.userId || wx.getStorageSync('userId') || 1;
+    wx.showLoading({ title: '正在保存体重...' });
+
+    wx.request({
+      url: `${app.globalData.baseUrl}/diet/record-weight?userId=${userId}&weight=${weightNum}`,
+      method: 'POST',
+      success: (res) => {
+        wx.hideLoading();
+        if (res.data && res.data.code === 200) {
+          wx.showToast({ title: '体重打卡成功！', icon: 'success' });
+          this.closeWeightModal();
+          
+          let user = (app.globalData && app.globalData.userInfo) || wx.getStorageSync('userInfo') || {};
+          user.weight = weightNum;
+          app.globalData.userInfo = user;
+          wx.setStorageSync('userInfo', user);
+          this.setData({ userInfo: user });
+
+          if (this.data.viewModeIndex === 1) {
+            this.fetchWeekDashboard(this.data.currentSelectedDateStr);
+          } else if (this.data.viewModeIndex === 2) {
+            this.fetchMonthDashboard();
+          }
+        } else {
+          wx.showToast({ title: (res.data && res.data.message) || '保存失败', icon: 'none' });
+        }
+      },
+      fail: (err) => {
+        wx.hideLoading();
+        wx.showToast({ title: '网络连接失败', icon: 'none' });
+      }
+    });
   },
 
   onLaunchAiPlanFromModal() {

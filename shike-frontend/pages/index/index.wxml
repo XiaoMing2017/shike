@@ -247,6 +247,36 @@
       </view>
     </view>
 
+    <!-- 本周体重变化小结卡片 -->
+    <view class="glass-card week-weight-card" bindtap="openWeightModal">
+      <view class="weight-card-header flex justify-between align-center">
+        <view class="flex align-center" style="gap: 10rpx;">
+          <text class="weight-icon">⚖️</text>
+          <text class="weight-card-title">本周体重记录与变动</text>
+        </view>
+        <view class="record-weight-btn flex align-center" catchtap="openWeightModal">
+          <text>+ 记录今天体重</text>
+        </view>
+      </view>
+      
+      <view class="weight-metrics-row flex justify-between align-center" style="margin-top: 16rpx;">
+        <view class="weight-metric-box">
+          <text class="w-lbl">周初体重</text>
+          <text class="w-val">{{weekDashboardData.weightStart ? weekDashboardData.weightStart + ' kg' : '--'}}</text>
+        </view>
+        <view class="weight-arrow-box flex flex-col align-center">
+          <text class="w-change-badge {{weekDashboardData.weightChange < 0 ? 'loss' : (weekDashboardData.weightChange > 0 ? 'gain' : 'flat')}}">
+            {{weekDashboardData.weightChange ? (weekDashboardData.weightChange > 0 ? '+' + weekDashboardData.weightChange : weekDashboardData.weightChange) + ' kg' : '持平'}}
+          </text>
+          <text class="w-arrow">➔</text>
+        </view>
+        <view class="weight-metric-box text-right">
+          <text class="w-lbl">最新记录</text>
+          <text class="w-val highlight">{{weekDashboardData.weightLatest ? weekDashboardData.weightLatest + ' kg' : '--'}}</text>
+        </view>
+      </view>
+    </view>
+
     <!-- 7-Day Bar Chart Card (7天柱状对比图卡片) -->
     <view class="glass-card week-chart-card">
       <view class="week-card-title flex align-center">
@@ -370,6 +400,36 @@
       <!-- Evaluation message quote box -->
       <view class="week-eval-box" wx:if="{{monthDashboardData.evaluationMessage}}">
         <text class="eval-text">💡 {{monthDashboardData.evaluationMessage}}</text>
+      </view>
+    </view>
+
+    <!-- 月度 30 天体重变化趋势卡片 -->
+    <view class="glass-card month-weight-card" bindtap="openWeightModal">
+      <view class="weight-card-header flex justify-between align-center">
+        <view class="flex align-center" style="gap: 10rpx;">
+          <text class="weight-icon">📈</text>
+          <text class="weight-card-title">30天体重变化趋势与成果</text>
+        </view>
+        <view class="record-weight-btn flex align-center" catchtap="openWeightModal">
+          <text>+ 记录体重</text>
+        </view>
+      </view>
+      
+      <view class="month-weight-summary-grid flex justify-between align-center" style="margin-top: 16rpx;">
+        <view class="m-w-item">
+          <text class="m-w-lbl">月初体重</text>
+          <text class="m-w-val">{{monthDashboardData.weightStart ? monthDashboardData.weightStart + ' kg' : '--'}}</text>
+        </view>
+        <view class="m-w-item">
+          <text class="m-w-lbl">最高 / 最低</text>
+          <text class="m-w-val" style="font-size: 24rpx;">{{monthDashboardData.maxWeight || '--'}} / {{monthDashboardData.minWeight || '--'}}</text>
+        </view>
+        <view class="m-w-item text-right">
+          <text class="m-w-lbl">本月净减重</text>
+          <text class="m-w-val highlight-change {{monthDashboardData.totalWeightChange < 0 ? 'loss' : (monthDashboardData.totalWeightChange > 0 ? 'gain' : 'flat')}}">
+            {{monthDashboardData.totalWeightChange ? (monthDashboardData.totalWeightChange > 0 ? '+' + monthDashboardData.totalWeightChange : monthDashboardData.totalWeightChange) + ' kg' : '持平'}}
+          </text>
+        </view>
       </view>
     </view>
 
@@ -1069,6 +1129,30 @@
       <view class="new-feature-actions flex flex-col align-center">
         <button class="btn-primary-launch" catchtap="onLaunchAnnouncementAction">{{announcementConfig.buttonText || '✨ 立即体验 AI 计划'}}</button>
         <text class="btn-dismiss-text" catchtap="closeNewFeatureModal">知道了，先逛逛</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 记录体重 Modal 弹窗 -->
+  <view class="weight-modal-mask flex justify-center align-center" wx:if="{{showWeightModal}}" catchtouchmove="preventTouchMove">
+    <view class="glass-card weight-modal-dialog">
+      <view class="weight-modal-header flex justify-between align-center">
+        <text class="weight-modal-title">⚖️ 记录当前体重</text>
+        <text class="weight-modal-close" bindtap="closeWeightModal">×</text>
+      </view>
+      <view class="weight-input-box flex align-center justify-center">
+        <input class="weight-input" type="digit" placeholder="50.0" value="{{inputWeightValue}}" bindinput="onWeightInput" focus />
+        <text class="weight-unit-lbl">kg</text>
+      </view>
+      <view class="weight-quick-tags flex justify-center flex-wrap" style="gap: 12rpx; margin-top: 16rpx;">
+        <view class="quick-tag" bindtap="quickAdjustWeight" data-step="-0.5">-0.5kg</view>
+        <view class="quick-tag" bindtap="quickAdjustWeight" data-step="-0.2">-0.2kg</view>
+        <view class="quick-tag" bindtap="quickAdjustWeight" data-step="0.2">+0.2kg</view>
+        <view class="quick-tag" bindtap="quickAdjustWeight" data-step="0.5">+0.5kg</view>
+      </view>
+      <view class="weight-modal-actions flex justify-between" style="gap: 20rpx; margin-top: 28rpx;">
+        <button class="btn-cancel" bindtap="closeWeightModal">取消</button>
+        <button class="btn-submit" bindtap="submitWeightRecord">确认保存</button>
       </view>
     </view>
   </view>

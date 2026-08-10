@@ -31,6 +31,9 @@ public class WeekDashboardDTO {
     private Integer fatRatio;
     private String healthRating;
     private String evaluationMessage;
+    private BigDecimal weightStart;
+    private BigDecimal weightLatest;
+    private BigDecimal weightChange;
     private List<DailyItem> dailyDetails;
 
     @Data
@@ -45,5 +48,6 @@ public class WeekDashboardDTO {
         private Integer burned;
         private Integer target;
         private String status; // DEFICIT (缺口/达标), SURPLUS (超标), NORMAL
+        private BigDecimal weight;
     }
 }

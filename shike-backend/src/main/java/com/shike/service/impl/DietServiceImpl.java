@@ -46,6 +46,7 @@ public class DietServiceImpl implements DietService {
     private final ExerciseRecordRepository exerciseRecordRepository;
     private final UserRepository userRepository;
     private final PointsRecordRepository pointsRecordRepository;
+    private final com.shike.repository.WeightRecordRepository weightRecordRepository;
     private final ObjectMapper objectMapper;
     private final StringRedisTemplate stringRedisTemplate;
     private final com.shike.service.AdminService adminService;
@@ -1084,12 +1085,22 @@ public class DietServiceImpl implements DietService {
 
         LocalDate today = LocalDate.now();
 
+        List<com.shike.model.entity.WeightRecord> weekWeightRecords = weightRecordRepository.findByUserIdAndRecordDateBetweenOrderByRecordDateAsc(userId, monday, sunday);
+        java.util.Map<LocalDate, BigDecimal> weekWeightMap = new java.util.HashMap<>();
+        if (weekWeightRecords != null) {
+            for (com.shike.model.entity.WeightRecord r : weekWeightRecords) {
+                weekWeightMap.put(r.getRecordDate(), r.getWeight());
+            }
+        }
+
         for (int i = 0; i < 7; i++) {
             LocalDate currentDate = monday.plusDays(i);
             String dayName = dayNames[i];
             boolean isToday = currentDate.equals(today);
 
             int dayIntake = 0;
+            int dayBurned = 0;
+
             if (dietRecords != null) {
                 for (DietRecord r : dietRecords) {
                     if (currentDate.equals(r.getRecordDate())) {
@@ -1109,7 +1120,6 @@ public class DietServiceImpl implements DietService {
                 }
             }
 
-            int dayBurned = 0;
             if (exerciseRecords != null) {
                 for (ExerciseRecord r : exerciseRecords) {
                     if (currentDate.equals(r.getRecordDate())) {
@@ -1356,6 +1366,38 @@ public class DietServiceImpl implements DietService {
             evaluationMessage = "本月累计热量盈余 " + Math.abs(accumulatedDeficit) + " kcal，建议下个月适当控制高油高糖食物并增加有氧运动。";
         }
 
+        List<com.shike.model.entity.WeightRecord> monthWeightRecords = weightRecordRepository.findByUserIdAndRecordDateBetweenOrderByRecordDateAsc(userId, firstDay, lastDay);
+        List<MonthDashboardDTO.DailyWeightPoint> dailyWeightPoints = new java.util.ArrayList<>();
+        BigDecimal weightStart = null;
+        BigDecimal weightLatest = null;
+        BigDecimal maxWeight = null;
+        BigDecimal minWeight = null;
+        BigDecimal totalWeightChange = null;
+
+        if (monthWeightRecords != null && !monthWeightRecords.isEmpty()) {
+            java.time.format.DateTimeFormatter dayFmt = java.time.format.DateTimeFormatter.ofPattern("MM.dd");
+            weightStart = monthWeightRecords.get(0).getWeight();
+            weightLatest = monthWeightRecords.get(monthWeightRecords.size() - 1).getWeight();
+
+            for (com.shike.model.entity.WeightRecord r : monthWeightRecords) {
+                BigDecimal w = r.getWeight();
+                if (w != null) {
+                    if (maxWeight == null || w.compareTo(maxWeight) > 0) maxWeight = w;
+                    if (minWeight == null || w.compareTo(minWeight) < 0) minWeight = w;
+
+                    dailyWeightPoints.add(MonthDashboardDTO.DailyWeightPoint.builder()
+                            .date(r.getRecordDate())
+                            .dayStr(r.getRecordDate().format(dayFmt))
+                            .weight(w)
+                            .build());
+                }
+            }
+
+            if (weightStart != null && weightLatest != null) {
+                totalWeightChange = weightLatest.subtract(weightStart).setScale(2, RoundingMode.HALF_UP);
+            }
+        }
+
         return MonthDashboardDTO.builder()
                 .year(year)
                 .month(month)
@@ -1378,7 +1420,40 @@ public class DietServiceImpl implements DietService {
                 .fatRatio(fatRatio)
                 .healthRating(healthRating)
                 .evaluationMessage(evaluationMessage)
+                .weightStart(weightStart)
+                .weightLatest(weightLatest)
+                .maxWeight(maxWeight)
+                .minWeight(minWeight)
+                .totalWeightChange(totalWeightChange)
+                .dailyWeightRecords(dailyWeightPoints)
                 .weeklyTrends(weeklyTrends)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public void recordWeight(Long userId, BigDecimal weight, LocalDate date) {
+        if (weight == null || weight.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BizException(400, "体重数值不合法");
+        }
+        if (date == null) {
+            date = LocalDate.now();
+        }
+
+        com.shike.model.entity.WeightRecord record = weightRecordRepository.findByUserIdAndRecordDate(userId, date)
+                .orElse(com.shike.model.entity.WeightRecord.builder()
+                        .userId(userId)
+                        .recordDate(date)
+                        .build());
+        record.setWeight(weight);
+        weightRecordRepository.save(record);
+
+        if (date.equals(LocalDate.now())) {
+            User user = userRepository.findById(userId).orElse(null);
+            if (user != null) {
+                user.setWeight(weight);
+                userRepository.save(user);
+            }
+        }
     }
 }
