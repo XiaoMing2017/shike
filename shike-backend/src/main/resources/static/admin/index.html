@@ -1217,6 +1217,9 @@
         <button class="btn-action" onclick="exportCsv('diets')" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9); font-size: 12px;">
           <i class="fa-solid fa-file-excel"></i> 导出饮食明细 CSV
         </button>
+        <button class="btn-action" onclick="openFeatureUsageModal()" style="background: linear-gradient(135deg, #10B981, #047857); font-size: 12px;">
+          <i class="fa-solid fa-chart-line"></i> 🩺 晒惨与AI诊断监控
+        </button>
         <button class="btn-action" onclick="openFeatureToggleModal()" style="background: linear-gradient(135deg, #F59E0B, #D97706); font-size: 12px;">
           <i class="fa-solid fa-sliders"></i> 🎛️ 功能开关控制
         </button>
@@ -1423,101 +1426,108 @@
     </div>
   </div>
 
-  <!-- 核心 AI 深度诊断与晒惨海报使用监控 Section -->
-  <div class="section-card" style="margin-top: 24px; padding: 24px; border: 1px solid rgba(16, 185, 129, 0.3); background: rgba(15, 23, 42, 0.85);">
-    <div class="section-header" style="margin-bottom: 20px;">
-      <div>
-        <div class="section-title" style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-chart-line" style="color: #10B981;"></i> 晒惨海报 & AI 深度诊断 功能监控
+  <!-- 核心 AI 深度诊断与晒惨海报使用监控 Modal 弹窗 -->
+  <div class="modal-overlay" id="featureUsageModal">
+    <div class="modal-box" style="width: 1040px; max-width: 95vw; padding: 28px;">
+      <div class="modal-header" style="margin-bottom: 20px;">
+        <div>
+          <h2 style="font-size: 20px; font-weight: 700; color: #FFF; display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-chart-line" style="color: #10B981;"></i> 晒惨海报 & AI 深度诊断 功能监控
+          </h2>
+          <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">运营监控：实时跟踪用户在小程序使用“晒惨/裂变海报”与“AI 膳食深度诊断”的活跃频次与明细</p>
         </div>
-        <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">运营监控：实时跟踪用户在小程序使用“晒惨/裂变海报”与“AI 膳食深度诊断”的活跃频次与明细</p>
+        <button class="modal-close" onclick="closeFeatureUsageModal()"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
-      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-        <input type="text" id="featureSearchInput" placeholder="搜索用户 ID / 昵称 / 手机号 / 备注..." onkeyup="filterFeatureUsageRecords()" style="background: rgba(30, 41, 59, 0.8); border: 1px solid var(--card-border); padding: 8px 14px; border-radius: 10px; color: #FFF; font-size: 13px; width: 260px; outline: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+        <input type="text" id="featureSearchInput" placeholder="搜索用户 ID / 昵称 / 手机号 / 备注..." onkeyup="filterFeatureUsageRecords()" style="background: rgba(30, 41, 59, 0.8); border: 1px solid var(--card-border); padding: 8px 14px; border-radius: 10px; color: #FFF; font-size: 13px; width: 280px; outline: none;">
         <button class="btn-action" onclick="loadFeatureUsageOverview()" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #34D399; font-size: 13px;">
           <i class="fa-solid fa-rotate"></i> 刷新数据
         </button>
       </div>
-    </div>
 
-    <!-- 4 个功能统计指标卡片 -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px;">
-      <div style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 14px; padding: 16px 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <span style="font-size: 13px; color: var(--text-muted); font-weight: 500;">AI 深度诊断 (总调用)</span>
-          <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(16, 185, 129, 0.15); color: #34D399; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-user-doctor"></i></div>
+      <!-- 4 个功能统计指标卡片 -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 16px;">
+        <div style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 14px 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">AI 深度诊断 (总调用)</span>
+            <div style="width: 28px; height: 28px; border-radius: 6px; background: rgba(16, 185, 129, 0.15); color: #34D399; display: flex; align-items: center; justify-content: center; font-size: 13px;"><i class="fa-solid fa-user-doctor"></i></div>
+          </div>
+          <div style="font-size: 24px; font-weight: 800; color: #34D399;" id="featureTotalDiagnosisCount">0</div>
         </div>
-        <div style="font-size: 26px; font-weight: 800; color: #34D399;" id="featureTotalDiagnosisCount">0</div>
+
+        <div style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 12px; padding: 14px 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">今日 AI 深度诊断</span>
+            <div style="width: 28px; height: 28px; border-radius: 6px; background: rgba(59, 130, 246, 0.15); color: #60A5FA; display: flex; align-items: center; justify-content: center; font-size: 13px;"><i class="fa-solid fa-bolt"></i></div>
+          </div>
+          <div style="font-size: 24px; font-weight: 800; color: #60A5FA;" id="featureTodayDiagnosisCount">0</div>
+        </div>
+
+        <div style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(249, 115, 22, 0.2); border-radius: 12px; padding: 14px 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">晒惨 & 分享海报 (总生成)</span>
+            <div style="width: 28px; height: 28px; border-radius: 6px; background: rgba(249, 115, 22, 0.15); color: #FB923C; display: flex; align-items: center; justify-content: center; font-size: 13px;"><i class="fa-solid fa-image"></i></div>
+          </div>
+          <div style="font-size: 24px; font-weight: 800; color: #FB923C;" id="featureTotalPosterCount">0</div>
+        </div>
+
+        <div style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(236, 72, 153, 0.2); border-radius: 14px; padding: 14px 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">今日晒惨海报生成</span>
+            <div style="width: 28px; height: 28px; border-radius: 6px; background: rgba(236, 72, 153, 0.15); color: #F472B6; display: flex; align-items: center; justify-content: center; font-size: 13px;"><i class="fa-solid fa-fire"></i></div>
+          </div>
+          <div style="font-size: 24px; font-weight: 800; color: #F472B6;" id="featureTodayPosterCount">0</div>
+        </div>
       </div>
 
-      <div style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 14px; padding: 16px 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <span style="font-size: 13px; color: var(--text-muted); font-weight: 500;">今日 AI 深度诊断</span>
-          <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(59, 130, 246, 0.15); color: #60A5FA; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-bolt"></i></div>
-        </div>
-        <div style="font-size: 26px; font-weight: 800; color: #60A5FA;" id="featureTodayDiagnosisCount">0</div>
+      <!-- 选项卡切换（AI 诊断记录 / 晒惨海报记录） -->
+      <div class="records-tabs" style="margin-bottom: 14px;">
+        <button class="tab-btn active" id="btnFeatureTabDiagnosis" onclick="switchFeatureUsageTab('diagnosis')">🩺 AI 深度诊断使用记录 (<span id="countDiagnosisBadge">0</span>)</button>
+        <button class="tab-btn" id="btnFeatureTabPoster" onclick="switchFeatureUsageTab('poster')">📸 晒惨与营销海报生成记录 (<span id="countPosterBadge">0</span>)</button>
       </div>
 
-      <div style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(249, 115, 22, 0.2); border-radius: 14px; padding: 16px 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <span style="font-size: 13px; color: var(--text-muted); font-weight: 500;">晒惨 & 分享海报 (总生成)</span>
-          <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(249, 115, 22, 0.15); color: #FB923C; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-image"></i></div>
-        </div>
-        <div style="font-size: 26px; font-weight: 800; color: #FB923C;" id="featureTotalPosterCount">0</div>
+      <!-- AI 诊断明细表格 -->
+      <div id="featureTabDiagnosisContent" class="table-responsive" style="max-height: 48vh; overflow-y: auto; background: rgba(15, 23, 42, 0.5); border-radius: 12px; border: 1px solid var(--card-border);">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>用户</th>
+              <th>功能类型</th>
+              <th>积分变动</th>
+              <th>日志说明</th>
+              <th>使用时间</th>
+            </tr>
+          </thead>
+          <tbody id="diagnosisTableBody">
+            <tr><td colspan="6" class="empty-tip">加载中...</td></tr>
+          </tbody>
+        </table>
       </div>
 
-      <div style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(236, 72, 153, 0.2); border-radius: 14px; padding: 16px 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <span style="font-size: 13px; color: var(--text-muted); font-weight: 500;">今日晒惨海报生成</span>
-          <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(236, 72, 153, 0.15); color: #F472B6; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-fire"></i></div>
-        </div>
-        <div style="font-size: 26px; font-weight: 800; color: #F472B6;" id="featureTodayPosterCount">0</div>
+      <!-- 晒惨海报明细表格 -->
+      <div id="featureTabPosterContent" class="table-responsive" style="display: none; max-height: 48vh; overflow-y: auto; background: rgba(15, 23, 42, 0.5); border-radius: 12px; border: 1px solid var(--card-border);">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>用户</th>
+              <th>海报/裂变类型</th>
+              <th>获得积分</th>
+              <th>日志说明</th>
+              <th>生成时间</th>
+            </tr>
+          </thead>
+          <tbody id="posterTableBody">
+            <tr><td colspan="6" class="empty-tip">加载中...</td></tr>
+          </tbody>
+        </table>
       </div>
-    </div>
 
-    <!-- 选项卡切换（AI 诊断记录 / 晒惨海报记录） -->
-    <div class="records-tabs" style="margin-bottom: 16px;">
-      <button class="tab-btn active" id="btnFeatureTabDiagnosis" onclick="switchFeatureUsageTab('diagnosis')">🩺 AI 深度诊断使用记录 (<span id="countDiagnosisBadge">0</span>)</button>
-      <button class="tab-btn" id="btnFeatureTabPoster" onclick="switchFeatureUsageTab('poster')">📸 晒惨与营销海报生成记录 (<span id="countPosterBadge">0</span>)</button>
-    </div>
-
-    <!-- AI 诊断明细表格 -->
-    <div id="featureTabDiagnosisContent" class="table-responsive" style="max-height: 420px; overflow-y: auto; background: rgba(15, 23, 42, 0.5); border-radius: 12px; border: 1px solid var(--card-border);">
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>用户</th>
-            <th>功能类型</th>
-            <th>积分变动</th>
-            <th>日志说明</th>
-            <th>使用时间</th>
-          </tr>
-        </thead>
-        <tbody id="diagnosisTableBody">
-          <tr><td colspan="6" class="empty-tip">加载中...</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- 晒惨海报明细表格 -->
-    <div id="featureTabPosterContent" class="table-responsive" style="display: none; max-height: 420px; overflow-y: auto; background: rgba(15, 23, 42, 0.5); border-radius: 12px; border: 1px solid var(--card-border);">
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>用户</th>
-            <th>海报/裂变类型</th>
-            <th>获得积分</th>
-            <th>日志说明</th>
-            <th>生成时间</th>
-          </tr>
-        </thead>
-        <tbody id="posterTableBody">
-          <tr><td colspan="6" class="empty-tip">加载中...</td></tr>
-        </tbody>
-      </table>
+      <div style="margin-top: 18px; text-align: right;">
+        <button class="btn-action" onclick="closeFeatureUsageModal()" style="background: var(--card-border); font-size: 13px; padding: 6px 16px;">关闭</button>
+      </div>
     </div>
   </div>
 
@@ -2456,6 +2466,15 @@
 
     let rawFeatureData = null;
     let currentFeatureTab = 'diagnosis';
+
+    function openFeatureUsageModal() {
+      document.getElementById('featureUsageModal').classList.add('active');
+      loadFeatureUsageOverview();
+    }
+
+    function closeFeatureUsageModal() {
+      document.getElementById('featureUsageModal').classList.remove('active');
+    }
 
     async function loadFeatureUsageOverview() {
       try {
