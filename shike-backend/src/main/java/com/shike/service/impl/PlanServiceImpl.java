@@ -347,6 +347,9 @@ public class PlanServiceImpl implements PlanService {
         sb.append("- 手掌估算: 蛋白质 1-2掌心，碳水 1手心，蔬菜 1拳头\n");
         sb.append("- 禁止连续 7 天出现相同主食和蛋白质；每餐在说明中给出食材替换方案 (如 鸡蛋=虾仁=牛肉=鸡胸肉; 米饭=红薯=紫米饭=燕麦)\n\n");
 
+        sb.append("【5. 健康与安全免责特别要求】:\n");
+        sb.append("- 请在 summary (专家诊断与建议) 末尾明确附带合规说明: '注：本计划基于算法拟合生成，仅供健康人群膳食与运动参考。患慢病、孕期或特殊过敏者请遵医嘱。'\n\n");
+
         sb.append("【请严格按以下固定 JSON 格式输出，不允许输出任何解释文字或 markdown 标记】:\n");
         sb.append("{\n");
         sb.append("  \"user_summary\": {\n");

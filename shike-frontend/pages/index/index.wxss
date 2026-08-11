@@ -2551,6 +2551,37 @@
   border-radius: 16rpx;
 }
 
+/* ⚠️ 健康参考与免责声明样式 */
+.plan-disclaimer-box {
+  background: rgba(245, 158, 11, 0.06);
+  border: 1rpx solid rgba(245, 158, 11, 0.2);
+  border-radius: 20rpx;
+  padding: 14rpx 20rpx;
+  margin-top: 10rpx;
+}
+
+.plan-disclaimer-card {
+  background: #FFFBEB;
+  border: 1rpx solid #FDE68A;
+  border-radius: 20rpx;
+  padding: 18rpx 24rpx;
+  margin-top: 24rpx;
+  margin-bottom: 10rpx;
+}
+
+.disclaimer-title {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #B45309;
+}
+
+.disclaimer-text {
+  font-size: 20rpx;
+  color: #92400E;
+  line-height: 1.5;
+  display: block;
+}
+
 .plan-footer-actions {
   margin-top: 16rpx;
   padding-top: 16rpx;
