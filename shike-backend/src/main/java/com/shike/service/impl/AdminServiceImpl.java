@@ -118,6 +118,7 @@ public class AdminServiceImpl implements AdminService {
                 Set<String> keys = stringRedisTemplate.keys("shike:ai:limit:*:" + dateStr);
                 if (keys != null && !keys.isEmpty()) {
                     for (String key : keys) {
+                        if (key.contains(":2:")) continue; // 排除测试账号 ID 2
                         String val = stringRedisTemplate.opsForValue().get(key);
                         if (val != null) {
                             dayMealCount += Long.parseLong(val);
@@ -138,7 +139,7 @@ public class AdminServiceImpl implements AdminService {
             try {
                 java.time.LocalDateTime startOfDay = date.atStartOfDay();
                 java.time.LocalDateTime endOfDay = date.atTime(23, 59, 59);
-                long dbPlanCount = pointsRecordRepository.countByTypeAndCreatedAtBetween("PLAN_GEN", startOfDay, endOfDay);
+                long dbPlanCount = pointsRecordRepository.countByTypeAndUserIdNotAndCreatedAtBetween("PLAN_GEN", 2L, startOfDay, endOfDay);
                 if (dbPlanCount > dayPlanCount) {
                     dayPlanCount = dbPlanCount;
                 }
@@ -147,7 +148,7 @@ public class AdminServiceImpl implements AdminService {
             }
 
             if (dayMealCount == 0) {
-                dayMealCount = dietRecordRepository.countByRecordDate(date);
+                dayMealCount = dietRecordRepository.countByRecordDateAndUserIdNot(date, 2L);
             }
 
             if (i == 0) {
@@ -1010,28 +1011,29 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public com.shike.model.dto.AdminFeatureUsageDTO getFeatureUsageOverview() {
         LocalDateTime startOfToday = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
+        Long testUserId = 2L;
 
-        // 1. AI 诊断统计
-        long totalDiagnosisCount = pointsRecordRepository.countByType("DIET_DIAGNOSIS");
-        long todayDiagnosisCount = pointsRecordRepository.countByTypeAndCreatedAtAfter("DIET_DIAGNOSIS", startOfToday);
+        // 1. AI 诊断统计 (排除测试账号 ID 2)
+        long totalDiagnosisCount = pointsRecordRepository.countByTypeAndUserIdNot("DIET_DIAGNOSIS", testUserId);
+        long todayDiagnosisCount = pointsRecordRepository.countByTypeAndUserIdNotAndCreatedAtAfter("DIET_DIAGNOSIS", testUserId, startOfToday);
 
-        // 2. 晒惨海报/分享统计
+        // 2. 晒惨海报/分享统计 (排除测试账号 ID 2)
         List<String> posterTypes = List.of("SHARE_POSTER", "NUDGE_POSTER", "SHARE_FRIEND", "SHARE_TIMELINE");
-        long totalPosterCount = pointsRecordRepository.countByTypeIn(posterTypes);
-        long todayPosterCount = pointsRecordRepository.countByTypeInAndCreatedAtAfter(posterTypes, startOfToday);
+        long totalPosterCount = pointsRecordRepository.countByTypeInAndUserIdNot(posterTypes, testUserId);
+        long todayPosterCount = pointsRecordRepository.countByTypeInAndUserIdNotAndCreatedAtAfter(posterTypes, testUserId, startOfToday);
 
-        // 3. AI 运动与饮食计划生成统计
-        long totalPlanCount = pointsRecordRepository.countByType("PLAN_GEN");
-        long todayPlanCount = pointsRecordRepository.countByTypeAndCreatedAtAfter("PLAN_GEN", startOfToday);
+        // 3. AI 运动与饮食计划生成统计 (排除测试账号 ID 2)
+        long totalPlanCount = pointsRecordRepository.countByTypeAndUserIdNot("PLAN_GEN", testUserId);
+        long todayPlanCount = pointsRecordRepository.countByTypeAndUserIdNotAndCreatedAtAfter("PLAN_GEN", testUserId, startOfToday);
 
-        // 4. 明细流水
-        List<PointsRecord> rawDiagnosisRecords = pointsRecordRepository.findByTypeOrderByCreatedAtDesc("DIET_DIAGNOSIS");
+        // 4. 明细流水 (排除测试账号 ID 2)
+        List<PointsRecord> rawDiagnosisRecords = pointsRecordRepository.findByTypeAndUserIdNotOrderByCreatedAtDesc("DIET_DIAGNOSIS", testUserId);
         List<com.shike.model.dto.AdminFeatureUsageDTO.UsageRecordItem> diagnosisRecords = mapToUsageRecordItems(rawDiagnosisRecords, "AI 深度营养诊断");
 
-        List<PointsRecord> rawPosterRecords = pointsRecordRepository.findByTypeInOrderByCreatedAtDesc(posterTypes);
+        List<PointsRecord> rawPosterRecords = pointsRecordRepository.findByTypeInAndUserIdNotOrderByCreatedAtDesc(posterTypes, testUserId);
         List<com.shike.model.dto.AdminFeatureUsageDTO.UsageRecordItem> posterRecords = mapToUsageRecordItems(rawPosterRecords, "晒惨/裂变海报");
 
-        List<PointsRecord> rawPlanRecords = pointsRecordRepository.findByTypeOrderByCreatedAtDesc("PLAN_GEN");
+        List<PointsRecord> rawPlanRecords = pointsRecordRepository.findByTypeAndUserIdNotOrderByCreatedAtDesc("PLAN_GEN", testUserId);
         List<com.shike.model.dto.AdminFeatureUsageDTO.UsageRecordItem> planRecords = mapToUsageRecordItems(rawPlanRecords, "AI 专属运动与膳食计划");
 
         return com.shike.model.dto.AdminFeatureUsageDTO.builder()

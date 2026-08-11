@@ -29,4 +29,19 @@ public interface PointsRecordRepository extends JpaRepository<PointsRecord, Long
     long countByTypeInAndCreatedAtAfter(List<String> types, LocalDateTime startOfDay);
 
     List<PointsRecord> findByTypeInOrderByCreatedAtDesc(List<String> types);
+
+    // 排除测试账号 (如 userId=2) 的统计与列表方法
+    long countByTypeAndUserIdNot(String type, Long excludeUserId);
+
+    long countByTypeAndUserIdNotAndCreatedAtAfter(String type, Long excludeUserId, LocalDateTime startOfDay);
+
+    long countByTypeAndUserIdNotAndCreatedAtBetween(String type, Long excludeUserId, LocalDateTime start, LocalDateTime end);
+
+    long countByTypeInAndUserIdNot(List<String> types, Long excludeUserId);
+
+    long countByTypeInAndUserIdNotAndCreatedAtAfter(List<String> types, Long excludeUserId, LocalDateTime startOfDay);
+
+    List<PointsRecord> findByTypeAndUserIdNotOrderByCreatedAtDesc(String type, Long excludeUserId);
+
+    List<PointsRecord> findByTypeInAndUserIdNotOrderByCreatedAtDesc(List<String> types, Long excludeUserId);
 }
