@@ -2112,6 +2112,7 @@ Page({
       wx.request({
         url: `${app.globalData.baseUrl}/plan/generate?userId=${user.id}&forceRefresh=${forceRefresh ? 'true' : 'false'}&createIfAbsent=${createIfAbsent ? 'true' : 'false'}&location=${loc}`,
         method: 'GET',
+        timeout: 120000,
         success: (res) => {
           this.setData({ planLoading: false });
           if (res.data && res.data.code === 200) {
