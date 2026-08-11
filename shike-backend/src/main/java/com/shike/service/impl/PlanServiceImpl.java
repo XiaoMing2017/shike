@@ -308,7 +308,8 @@ public class PlanServiceImpl implements PlanService {
 
         StringBuilder sb = new StringBuilder();
         sb.append("请作为CSCS/RD专家为用户定制7天运动与膳食JSON计划。\n");
-        sb.append("【用户】: ").append(genderStr).append(", ").append(age).append("岁, ").append(height).append("cm, ").append(weight).append("kg, 目标: ").append(goalLabel).append(", 目标热量: ").append((int)targetCal).append("kcal (蛋白").append(proteinG).append("g, 碳水").append(carbsG).append("g, 脂肪").append(fatG).append("g)。\n");
+        sb.append("【用户】: ").append(genderStr).append(", ").append(age).append("岁, ").append(height).append("cm, ").append(weight).append("kg, 经验: ").append(trainingLevelLabel).append(", 目标: ").append(goalLabel).append(", 目标热量: ").append((int)targetCal).append("kcal (蛋白").append(proteinG).append("g, 碳水").append(carbsG).append("g, 脂肪").append(fatG).append("g)。\n");
+        sb.append("【指导】: ").append(trainingLevelGuidance).append("\n");
         sb.append("【场地】: ").append(isHome ? "🏠居家训练(限定徒手自重、家用哑铃/弹力带，严禁出现杠铃/高位下拉/龙门架/倒蹬机等大型健身房器械)" : "🏋️健身房训练(充分利用杠哑铃/器械)").append("。\n");
         sb.append("【要求】: 运动每天3-4个动作(含名称+Emoji/组数/时长/卡路里)；膳食每天4餐(早餐/午餐/加餐/晚餐，含食物与替代建议)。在summary末尾带合规说明'注：基于算法拟合生成，仅供参考。'\n\n");
 
