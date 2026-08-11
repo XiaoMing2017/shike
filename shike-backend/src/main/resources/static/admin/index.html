@@ -2347,17 +2347,35 @@
             monthCode: mKey.replace('月', ''),
             isMonth: true
           }));
-          footerTip.innerHTML = `💡 近 90 天按月汇总看板（共 ${displayList.reduce((s, x) => s + x.count, 0)} ${unit}）。<b style="color:var(--primary);">点击下方任意“月柱”可下钻查看该月逐日明细 ></b>`;
+
+          if (currentTrendType === 'dau') {
+            const avgDau = displayList.length > 0 ? (displayList.reduce((s, x) => s + x.count, 0) / rawTrendList.length).toFixed(1) : 0;
+            footerTip.innerHTML = `💡 近 90 天按月汇总（全区间日均 DAU 约 <b style="color:#60A5FA;">${avgDau}</b> 人）。<b style="color:var(--primary);">点击下方任意“月柱”可下钻查看该月逐日明细 ></b>`;
+          } else {
+            footerTip.innerHTML = `💡 近 90 天按月汇总看板（共 ${displayList.reduce((s, x) => s + x.count, 0)} ${unit}）。<b style="color:var(--primary);">点击下方任意“月柱”可下钻查看该月逐日明细 ></b>`;
+          }
         } else {
           // 逐日显示
           if (selectedDrillMonth) {
             displayList = rawTrendList.filter(t => t.date.startsWith(selectedDrillMonth + '-'));
-            const monthTotal = displayList.reduce((s, x) => s + (x.count || 0), 0);
-            footerTip.innerHTML = `📌 2026年${selectedDrillMonth}月 逐日明细（全月累计 ${monthTotal} ${unit}）`;
+            if (currentTrendType === 'dau') {
+              const avgDau = displayList.length > 0 ? (displayList.reduce((s, x) => s + (x.count || 0), 0) / displayList.length).toFixed(1) : 0;
+              const maxDau = Math.max(...displayList.map(x => x.count || 0));
+              footerTip.innerHTML = `📌 2026年${selectedDrillMonth}月 逐日明细（全月日均 DAU 约 <b style="color:#60A5FA;">${avgDau}</b> 人，单日最高 ${maxDau} 人）`;
+            } else {
+              const monthTotal = displayList.reduce((s, x) => s + (x.count || 0), 0);
+              footerTip.innerHTML = `📌 2026年${selectedDrillMonth}月 逐日明细（全月累计 ${monthTotal} ${unit}）`;
+            }
           } else {
             displayList = rawTrendList;
-            const periodTotal = displayList.reduce((s, x) => s + (x.count || 0), 0);
-            footerTip.innerHTML = `💡 ${rangeLabel}累计总计 ${periodTotal} ${unit}（所有柱子顶部均标明当日精确数值）`;
+            if (currentTrendType === 'dau') {
+              const avgDau = displayList.length > 0 ? (displayList.reduce((s, x) => s + (x.count || 0), 0) / displayList.length).toFixed(1) : 0;
+              const maxDau = Math.max(...displayList.map(x => x.count || 0));
+              footerTip.innerHTML = `💡 ${rangeLabel} 日均活跃用户 (DAU) 约 <b style="color:#60A5FA; font-size:13px;">${avgDau}</b> 人（单日最高峰值 <b style="color:#F59E0B;">${maxDau}</b> 人）`;
+            } else {
+              const periodTotal = displayList.reduce((s, x) => s + (x.count || 0), 0);
+              footerTip.innerHTML = `💡 ${rangeLabel} 累计总计 ${periodTotal} ${unit}（所有柱子顶部均标明当日精确数值）`;
+            }
           }
         }
 
