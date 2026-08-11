@@ -135,7 +135,7 @@ public class PlanServiceImpl implements PlanService {
             planMap = parseAndCleanJson(aiResponseJson);
         } catch (Exception e) {
             log.error("AI Generation failed for user {}, fallback to template plan: {}", userId, e.getMessage());
-            planMap = generateScientificFallbackPlan(user);
+            planMap = generateScientificFallbackPlan(user, location);
         }
         recordPlanAiUsage(userId);
 
@@ -304,100 +304,22 @@ public class PlanServiceImpl implements PlanService {
         int carbsG = (int) Math.round((targetCal - (proteinG * 4) - (fatG * 9)) / 4.0);
         if (carbsG < 80) carbsG = 80; // 碳水最低安全线
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("你是一位拥有 15 年经验的资深注册营养师 (RD) 和国际体能训练专家 (CSCS)，同时精通 Renaissance Periodization 容量管理体系。\n");
-        sb.append("请根据以下用户的身体数据、人群分层标签及专家知识库准则，生成高度个性化的【7天运动周计划】与【每日4餐膳食建议】。\n\n");
-
-        sb.append("【用户基本档案】:\n");
-        sb.append("- 性别: ").append(genderStr).append(", 年龄: ").append(age).append("岁, 身高: ").append(height).append("cm, 体重: ").append(weight).append("kg, 体脂率: ").append(bodyFat).append("%, BMI: ").append(String.format("%.1f", bmi)).append("\n");
-        sb.append("- 训练经验等级: ").append(trainingLevelLabel).append("\n");
-        sb.append("- 当前活动水平: ").append(activityLabel).append("\n");
-        // 训练场地限定
         boolean isHome = "HOME".equalsIgnoreCase(location);
-        String locationLabel = isHome ? "🏠 居家训练 (限定徒手自重、家用哑铃/弹力带)" : "🏋️ 健身房训练 (充分利用器械、龙门架拉索、杠铃/哑铃)";
 
-        sb.append("- 指定训练场景: ").append(locationLabel).append("\n");
-        sb.append("- 基础代谢 BMR: ").append(bmr).append(" kcal, 每日消耗 TDEE: ").append(tdee).append(" kcal\n");
-        sb.append("- 设定目标: ").append(goalLabel).append("\n");
-        sb.append("- 每日目标摄入热量: ").append((int) targetCal).append(" kcal (推荐三大营养素: 蛋白质 ").append(proteinG).append("g [").append(proteinCoeff).append("g/kg], 碳水 ").append(carbsG).append("g, 脂肪 ").append(fatG).append("g)\n\n");
+        StringBuilder sb = new StringBuilder();
+        sb.append("请作为CSCS/RD专家为用户定制7天运动与膳食JSON计划。\n");
+        sb.append("【用户】: ").append(genderStr).append(", ").append(age).append("岁, ").append(height).append("cm, ").append(weight).append("kg, 目标: ").append(goalLabel).append(", 目标热量: ").append((int)targetCal).append("kcal (蛋白").append(proteinG).append("g, 碳水").append(carbsG).append("g, 脂肪").append(fatG).append("g)。\n");
+        sb.append("【场地】: ").append(isHome ? "🏠居家训练(限定徒手自重、家用哑铃/弹力带，严禁出现杠铃/高位下拉/龙门架/倒蹬机等大型健身房器械)" : "🏋️健身房训练(充分利用杠哑铃/器械)").append("。\n");
+        sb.append("【要求】: 运动每天3-4个动作(含名称+Emoji/组数/时长/卡路里)；膳食每天4餐(早餐/午餐/加餐/晚餐，含食物与替代建议)。在summary末尾带合规说明'注：基于算法拟合生成，仅供参考。'\n\n");
 
-        sb.append("【用户人群分层标签 (已由系统自动判定)】:\n");
-        sb.append("- 训练经验准则: ").append(trainingLevelGuidance).append("\n");
-        sb.append("- 体脂分群: ").append(bodyFatTier).append("\n");
-        sb.append("- 训练分化建议: ").append(trainingSplitGuidance).append("\n");
-        sb.append("- 训练容量指导: ").append(trainingVolumeGuidance).append("\n");
-        sb.append("- 有氧配比指导: ").append(cardioGuidance).append("\n");
-        sb.append("- 年龄段注意事项: ").append(ageGuidance).append("\n");
-        sb.append(skinnyFatOverride);
-        sb.append(genderAdjustment);
-        sb.append("\n\n");
-
-        sb.append("【目标专项规则 (必须严格遵守)】:\n");
-        sb.append(goalSpecificRules).append("\n\n");
-
-        sb.append("【1. 统一减脂期训练容量与强度规则 (RP Volume Landmarks)】:\n");
-        sb.append("- 大肌群容量: 每周 10-14 个有效训练组 (控制在 MAV 内保肌与保证恢复)\n");
-        sb.append("- 小肌群容量: 每周 6-10 个有效训练组\n");
-        sb.append("- 训练强度: 70%-85% 1RM，力量训练保持重量不主动降低\n");
-        sb.append("- RIR (保留次数): 复合动作 RIR 2 (保留2次)，孤立动作 RIR 1-2 (保留1-2次)\n\n");
-
-        sb.append("【2. 训练动作生成与场地器械约束】:\n");
-        if (isHome) {
-            sb.append("- 场地限定: 🏠【居家训练模式】。必须100%选用户内/居家动作(如哑铃高杯深蹲、保加利亚单腿蹲、哑铃划船、俯卧撑、平板支撑等)！严禁出现杠铃深蹲、倒蹬机、龙门架等大型健身房器械！\n");
-        } else {
-            sb.append("- 场地限定: 🏋️【健身房训练模式】。充分利用杠铃深蹲/卧推、龙门架拉索、高位下拉等专业器械。\n");
-        }
-        sb.append("- 每个训练日拆分为 3-5 个带 Emoji 的具体动作，包含名称、组数次数、RIR、时长与卡路里。\n\n");
-
-        sb.append("【3. 渐进超负荷与恢复管理规则】:\n");
-        sb.append("- 渐进超负荷: 完成目标次数且 RIR≥2 时，上肢下次 +1-2kg，下肢 +2.5-5kg；若未完成最低次数，保持重量或降低 5%\n");
-        sb.append("- 恢复管理: 力量训练 4-5天/周，Zone2 有氧 3-4次/周 (单次25-35min)，安排 1-2天 休息/主动恢复\n");
-        sb.append("- 训练时长控制: 力量训练 45-70min，Zone2 25-35min，单次总时长 ≤ 90分钟\n");
-        sb.append("- 减脂速度控制: 每周减重目标 0.5%-1%，每日热量缺口控制在 500-700kcal\n\n");
-
-        sb.append("【4. 饮食与食材替换规则】:\n");
-        sb.append("- 每日 4 餐: 早餐、午餐、下午加餐、晚餐，每餐包含 蛋白+碳水+蔬菜+热量\n");
-        sb.append("- 手掌估算: 蛋白质 1-2掌心，碳水 1手心，蔬菜 1拳头\n");
-        sb.append("- 禁止连续 7 天出现相同主食和蛋白质；每餐在说明中给出食材替换方案 (如 鸡蛋=虾仁=牛肉=鸡胸肉; 米饭=红薯=紫米饭=燕麦)\n\n");
-
-        sb.append("【5. 健康与安全免责特别要求】:\n");
-        sb.append("- 请在 summary (专家诊断与建议) 末尾明确附带合规说明: '注：本计划基于算法拟合生成，仅供健康人群膳食与运动参考。患慢病、孕期或特殊过敏者请遵医嘱。'\n\n");
-
-        sb.append("【请严格按以下固定 JSON 格式输出，不允许输出任何解释文字或 markdown 标记】:\n");
+        sb.append("【按固定 JSON 格式直接输出，严禁任何解释文字或 markdown 标记】:\n");
         sb.append("{\n");
-        sb.append("  \"user_summary\": {\n");
-        sb.append("    \"goal\": \"").append(goalLabel).append("\",\n");
-        sb.append("    \"target_calories\": ").append((int) targetCal).append(",\n");
-        sb.append("    \"protein\": ").append(proteinG).append(",\n");
-        sb.append("    \"carbs\": ").append(carbsG).append(",\n");
-        sb.append("    \"fat\": ").append(fatG).append("\n");
-        sb.append("  },\n");
+        sb.append("  \"user_summary\": { \"summary\": \"专家诊断与建议... (含注:...)\" },\n");
         sb.append("  \"weekly_training\": [\n");
-        sb.append("    {\n");
-        sb.append("      \"day\": \"周一\",\n");
-        sb.append("      \"training_type\": \"胸大肌与三头力量 + Zone2慢跑\",\n");
-        sb.append("      \"total_duration\": 60,\n");
-        sb.append("      \"items\": [\n");
-        sb.append("        { \"name\": \"哑铃卧推 💪\", \"duration_min\": 15, \"calorie_kcal\": 90, \"sets_reps_rir\": \"4组x12次 (RIR 2)\" },\n");
-        sb.append("        { \"name\": \"上斜哑铃推举 💪\", \"duration_min\": 12, \"calorie_kcal\": 70, \"sets_reps_rir\": \"3组x12次 (RIR 2)\" },\n");
-        sb.append("        { \"name\": \"双杠臂屈伸 💪\", \"duration_min\": 10, \"calorie_kcal\": 60, \"sets_reps_rir\": \"3组x10次 (RIR 1-2)\" },\n");
-        sb.append("        { \"name\": \"Zone 2 慢跑 🏃‍♂️\", \"duration_min\": 25, \"calorie_kcal\": 180, \"sets_reps_rir\": \"心率维持 60-70% 最大心率\" }\n");
-        sb.append("      ]\n");
-        sb.append("    }\n");
-        sb.append("    // ... 周二至周日共7天\n");
+        sb.append("    { \"day\": \"周一\", \"training_type\": \"胸/三头力量+有氧\", \"total_duration\": 50, \"items\": [{ \"name\": \"哑铃卧推 💪\", \"duration_min\": 15, \"calorie_kcal\": 90, \"sets_reps_rir\": \"4组x12次(RIR2)\" }] }\n");
         sb.append("  ],\n");
         sb.append("  \"weekly_diet\": [\n");
-        sb.append("    {\n");
-        sb.append("      \"day\": \"周一\",\n");
-        sb.append("      \"total_calories\": ").append((int) targetCal).append(",\n");
-        sb.append("      \"meals\": [\n");
-        sb.append("        { \"meal\": \"早餐\", \"foods\": \"小黄米粥 1碗 + 水煮蛋 1个 + 凉拌黄瓜 100g (替换: 燕麦/黑豆浆)\", \"hand_size_reference\": \"1掌心蛋白+1手心碳水\" },\n");
-        sb.append("        { \"meal\": \"午餐\", \"foods\": \"芹菜炒牛肉 150g + 杂粮饭 150g + 蒜蓉西兰花 150g (替换: 清蒸鲈鱼/鸡胸肉)\", \"hand_size_reference\": \"1.5掌心蛋白+1拳头蔬菜+1手心碳水\" },\n");
-        sb.append("        { \"meal\": \"下午加餐\", \"foods\": \"无糖酸奶 150g + 香蕉 1根\", \"hand_size_reference\": \"1根香蕉或100g酸奶\" },\n");
-        sb.append("        { \"meal\": \"晚餐\", \"foods\": \"清蒸鲈鱼 150g + 蒸红薯 100g + 番茄豆腐汤 1碗 (替换: 豆腐/虾仁)\", \"hand_size_reference\": \"1掌心蛋白+1.5拳头蔬菜\" }\n");
-        sb.append("      ]\n");
-        sb.append("    }\n");
-        sb.append("    // ... 周二至周日共7天，主食与蛋白不重样\n");
+        sb.append("    { \"day\": \"周一\", \"total_calories\": ").append((int)targetCal).append(", \"meals\": [{ \"meal\": \"早餐\", \"foods\": \"燕麦粥1碗+水煮蛋1个(或无糖酸奶)\", \"hand_size_reference\": \"1掌蛋白+1手心碳水\" }] }\n");
         sb.append("  ]\n");
         sb.append("}\n");
 
@@ -428,14 +350,14 @@ public class PlanServiceImpl implements PlanService {
                     "model", activeModel,
                     "messages", List.of(systemMsg, userMsg),
                     "temperature", 0.5,
-                    "max_tokens", 3500
+                    "max_tokens", 6000
             );
         } else {
             payload = Map.of(
                     "model", activeModel,
                     "messages", List.of(systemMsg, userMsg),
                     "temperature", 0.6,
-                    "max_tokens", 3500
+                    "max_tokens", 6000
             );
         }
 
@@ -590,7 +512,8 @@ public class PlanServiceImpl implements PlanService {
     /**
      * 当 AI 接口超时或不可用时的保底科学计划，确保功能永不断供 (全7天中式不重样食谱)
      */
-    private Map<String, Object> generateScientificFallbackPlan(User user) {
+    private Map<String, Object> generateScientificFallbackPlan(User user, String location) {
+        boolean isHome = "HOME".equalsIgnoreCase(location);
         double weight = (user.getWeight() != null) ? user.getWeight().doubleValue() : 70.0;
         double targetCal = (user.getTargetCalories() != null) ? user.getTargetCalories().doubleValue() : 2000.0;
         String goal = (user.getGoal() != null) ? user.getGoal() : "MAINTAIN";
@@ -600,7 +523,7 @@ public class PlanServiceImpl implements PlanService {
         int carbsG = (int) Math.round((targetCal - (proteinG * 4) - (fatG * 9)) / 4.0);
 
         Map<String, Object> res = new HashMap<>();
-        res.put("summary", "根据您的档案与RD/CSCS专家知识库，为您制订了7天接地气中式家常健身膳食与运动方案。");
+        res.put("summary", "根据您的档案与RD/CSCS专家知识库，为您制订了7天" + (isHome ? "居家训练" : "健身房训练") + "与中式家常健身膳食方案。");
 
         Map<String, Object> overview = new HashMap<>();
         overview.put("targetCal", (int) targetCal);
@@ -613,9 +536,9 @@ public class PlanServiceImpl implements PlanService {
         String[] days = {"周一", "周二", "周三", "周四", "周五", "周六", "周日"};
         String[] focuses = {
                 "胸大肌与三头力量 + Zone2慢跑",
-                "下肢力量 (深蹲腿举) + 拉伸",
+                "下肢力量 (" + (isHome ? "高杯深蹲" : "深蹲腿举") + ") + 拉伸",
                 "主动恢复与轻度散步",
-                "背肌与二头力量 + 动感单车",
+                "背肌与二头力量 + " + (isHome ? "跳绳/开合跳" : "动感单车"),
                 "肩部与核心力量 + 快走",
                 "全身 HIIT 燃脂 / 游泳",
                 "完全休息日 (神经恢复)"
@@ -629,23 +552,23 @@ public class PlanServiceImpl implements PlanService {
 
             List<Map<String, Object>> items = new ArrayList<>();
             if (i == 0) {
-                items.add(Map.of("name", "哑铃卧推 💪", "duration", 12, "calories", 70, "detail", "4组x12次 (RIR 2) 目标胸大肌"));
-                items.add(Map.of("name", "上斜哑铃推举 💪", "duration", 10, "calories", 60, "detail", "3组x12次 专注上胸"));
-                items.add(Map.of("name", "双杠臂屈伸 💪", "duration", 10, "calories", 50, "detail", "3组x10次 下胸与三头"));
+                items.add(Map.of("name", isHome ? "哑铃卧推/俯卧撑 💪" : "哑铃卧推 💪", "duration", 12, "calories", 70, "detail", "4组x12次 (RIR 2) 目标胸大肌"));
+                items.add(Map.of("name", isHome ? "哑铃推举 💪" : "上斜哑铃推举 💪", "duration", 10, "calories", 60, "detail", "3组x12次 专注上胸/肩部"));
+                items.add(Map.of("name", isHome ? "椅后臂屈伸 💪" : "双杠臂屈伸 💪", "duration", 10, "calories", 50, "detail", "3组x10次 下胸与三头"));
                 items.add(Map.of("name", "慢跑 🏃‍♂️", "duration", 25, "calories", 180, "detail", "心率维持 Zone 2 稳态"));
             } else if (i == 1) {
-                items.add(Map.of("name", "杠铃深蹲 💪", "duration", 15, "calories", 90, "detail", "4组x10次 股四头肌与臀肌"));
-                items.add(Map.of("name", "罗马尼亚硬拉 💪", "duration", 12, "calories", 80, "detail", "3组x12次 腘绳肌与臀部"));
-                items.add(Map.of("name", "坐姿腿屈伸 💪", "duration", 10, "calories", 50, "detail", "3组x15次 目标股四孤立"));
+                items.add(Map.of("name", isHome ? "哑铃高杯深蹲 🦵" : "杠铃深蹲 💪", "duration", 15, "calories", 90, "detail", "4组x10次 股四头肌与臀肌"));
+                items.add(Map.of("name", isHome ? "保加利亚单腿蹲 🦵" : "罗马尼亚硬拉 💪", "duration", 12, "calories", 80, "detail", "3组x12次 腘绳肌与臀部"));
+                items.add(Map.of("name", isHome ? "哑铃罗马尼亚硬拉 🦵" : "坐姿腿屈伸 💪", "duration", 10, "calories", 50, "detail", "3组x15次 目标股四孤立"));
                 items.add(Map.of("name", "下肢拉伸 🧘", "duration", 10, "calories", 30, "detail", "静态放松腘绳肌与髂胫束"));
             } else if (i == 2) {
                 items.add(Map.of("name", "户外散步 🚶", "duration", 30, "calories", 100, "detail", "低速散步，促进血液循环与恢复"));
                 items.add(Map.of("name", "筋膜松解 🧘", "duration", 15, "calories", 40, "detail", "泡沫轴滚压全身大肌群"));
             } else if (i == 3) {
-                items.add(Map.of("name", "高位下拉 💪", "duration", 12, "calories", 70, "detail", "4组x10-12次 背阔肌上束"));
-                items.add(Map.of("name", "坐姿划船 💪", "duration", 12, "calories", 60, "detail", "3组x12次 中背厚度"));
+                items.add(Map.of("name", isHome ? "哑铃单臂划船 强背" : "高位下拉 💪", "duration", 12, "calories", 70, "detail", "4组x10-12次 背阔肌上束"));
+                items.add(Map.of("name", isHome ? "俯身哑铃划船 💪" : "坐姿划船 💪", "duration", 12, "calories", 60, "detail", "3组x12次 中背厚度"));
                 items.add(Map.of("name", "哑铃弯举 💪", "duration", 10, "calories", 50, "detail", "3组x12次 肱二头肌"));
-                items.add(Map.of("name", "动感单车 🚲", "duration", 20, "calories", 160, "detail", "中等阻力稳态骑行"));
+                items.add(Map.of("name", isHome ? "原地跳绳/开合跳 🏃" : "动感单车 🚲", "duration", 20, "calories", 160, "detail", "中等阻力稳态有氧"));
             } else if (i == 4) {
                 items.add(Map.of("name", "哑铃推举 💪", "duration", 12, "calories", 60, "detail", "4组x10-12次 三角肌前中束"));
                 items.add(Map.of("name", "哑铃侧平举 💪", "duration", 10, "calories", 50, "detail", "4组x15次 打造肩宽"));
