@@ -339,32 +339,24 @@ public class PlanServiceImpl implements PlanService {
             log.warn("Failed to fetch dynamic plan model, using default: {}", e.getMessage());
         }
 
-        log.info("Calling Text LLM endpoint: {}, active model: {}", aiEndpoint, activeModel);
+        log.info("Calling Text LLM (streaming) endpoint: {}, active model: {}", aiEndpoint, activeModel);
 
         Map<String, Object> systemMsg = Map.of("role", "system", "content", "你是一位严格输出标准JSON的专业营养师与健身教练AI。");
         Map<String, Object> userMsg = Map.of("role", "user", "content", prompt);
 
-        Map<String, Object> payload;
-        if (activeModel.contains("qwen")) {
-            payload = Map.of(
-                    "model", activeModel,
-                    "messages", List.of(systemMsg, userMsg),
-                    "temperature", 0.5,
-                    "max_tokens", 6000
-            );
-        } else {
-            payload = Map.of(
-                    "model", activeModel,
-                    "messages", List.of(systemMsg, userMsg),
-                    "temperature", 0.6,
-                    "max_tokens", 6000
-            );
-        }
+        // Build payload with stream: true and stream_options for usage stats
+        Map<String, Object> payload = new java.util.LinkedHashMap<>();
+        payload.put("model", activeModel);
+        payload.put("messages", List.of(systemMsg, userMsg));
+        payload.put("temperature", activeModel.contains("qwen") ? 0.5 : 0.6);
+        payload.put("max_tokens", 6000);
+        payload.put("stream", true);
+        payload.put("stream_options", Map.of("include_usage", true));
 
         String requestBodyJson = objectMapper.writeValueAsString(payload);
 
         HttpClient client = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(15))
+                .connectTimeout(Duration.ofSeconds(30))
                 .build();
 
         HttpRequest request = HttpRequest.newBuilder()
@@ -372,35 +364,76 @@ public class PlanServiceImpl implements PlanService {
                 .header("Content-Type", "application/json")
                 .header("Authorization", "Bearer " + aiApiKey)
                 .POST(HttpRequest.BodyPublishers.ofString(requestBodyJson))
-                .timeout(Duration.ofMillis(aiTimeoutMs != null ? aiTimeoutMs : 60000))
+                .timeout(Duration.ofMinutes(10))
                 .build();
 
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        // Use streaming (SSE) to read tokens incrementally — avoids HTTP timeout
+        HttpResponse<java.io.InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
 
         if (response.statusCode() != 200) {
-            throw new RuntimeException("LLM API returned code " + response.statusCode() + ": " + response.body());
+            String errorBody = new String(response.body().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            throw new RuntimeException("LLM API returned code " + response.statusCode() + ": " + errorBody);
         }
 
-        String body = response.body();
-        Map<String, Object> respMap = objectMapper.readValue(body, new TypeReference<Map<String, Object>>() {});
+        StringBuilder contentBuilder = new StringBuilder();
+        String usageLine = null;
 
-        Map<String, Object> usage = (Map<String, Object>) respMap.get("usage");
-        if (usage != null) {
-            Object promptTok = usage.get("prompt_tokens");
-            Object compTok = usage.get("completion_tokens");
-            Object totalTok = usage.get("total_tokens");
-            log.info("[AI Token Audit] Module: [专属AI运动与饮食计划生成] | Model: {} | Prompt Tokens: {} | Completion Tokens: {} | Total Tokens: {}",
-                    activeModel, promptTok, compTok, totalTok);
+        try (java.io.BufferedReader reader = new java.io.BufferedReader(
+                new java.io.InputStreamReader(response.body(), java.nio.charset.StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                if (line.isEmpty() || line.startsWith(":")) continue; // skip SSE comments/keepalive
+                if (line.startsWith("data: ")) {
+                    String data = line.substring(6).trim();
+                    if ("[DONE]".equals(data)) break;
+                    try {
+                        Map<String, Object> chunk = objectMapper.readValue(data, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
+
+                        // Extract usage from the final chunk (when stream_options.include_usage=true)
+                        Map<String, Object> usage = (Map<String, Object>) chunk.get("usage");
+                        if (usage != null) {
+                            usageLine = data; // save for logging after loop
+                        }
+
+                        List<Map<String, Object>> choices = (List<Map<String, Object>>) chunk.get("choices");
+                        if (choices != null && !choices.isEmpty()) {
+                            Map<String, Object> delta = (Map<String, Object>) choices.get(0).get("delta");
+                            if (delta != null && delta.get("content") != null) {
+                                contentBuilder.append(delta.get("content"));
+                            }
+                        }
+                    } catch (Exception parseEx) {
+                        log.warn("Failed to parse SSE chunk: {}", data, parseEx);
+                    }
+                }
+            }
         }
 
-        List<Map<String, Object>> choices = (List<Map<String, Object>>) respMap.get("choices");
-        if (choices == null || choices.isEmpty()) {
-            throw new RuntimeException("No choices returned in LLM response: " + body);
+        // Log token usage
+        if (usageLine != null) {
+            try {
+                Map<String, Object> lastChunk = objectMapper.readValue(usageLine, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
+                Map<String, Object> usage = (Map<String, Object>) lastChunk.get("usage");
+                if (usage != null) {
+                    Object promptTok = usage.get("prompt_tokens");
+                    Object compTok = usage.get("completion_tokens");
+                    Object totalTok = usage.get("total_tokens");
+                    log.info("[AI Token Audit] Module: [专属AI运动与饮食计划生成] | Model: {} | Prompt Tokens: {} | Completion Tokens: {} | Total Tokens: {}",
+                            activeModel, promptTok, compTok, totalTok);
+                }
+            } catch (Exception e) {
+                log.warn("Failed to parse usage from final SSE chunk", e);
+            }
         }
 
-        Map<String, Object> choice0 = choices.get(0);
-        Map<String, Object> message = (Map<String, Object>) choice0.get("message");
-        return (String) message.get("content");
+        String result = contentBuilder.toString();
+        if (result.isEmpty()) {
+            throw new RuntimeException("Streaming response returned empty content");
+        }
+
+        log.info("Streaming LLM call completed, received {} chars", result.length());
+        return result;
     }
 
     private Map<String, Object> parseAndCleanJson(String rawText) throws Exception {
