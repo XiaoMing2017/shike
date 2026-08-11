@@ -937,7 +937,7 @@ public class AdminServiceImpl implements AdminService {
         String dietModel = stringRedisTemplate.opsForValue().get("shike:sys:config:ai_model_diet");
         
         if (planModel == null || planModel.isBlank()) {
-            planModel = "qwen-plus";
+            planModel = "qwen3.8-max";
         }
         if (dietModel == null || dietModel.isBlank()) {
             dietModel = "qwen3.6-plus";
