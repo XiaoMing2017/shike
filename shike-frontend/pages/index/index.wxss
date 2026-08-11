@@ -2582,6 +2582,68 @@
   display: block;
 }
 
+/* 🏠/🏋️ 训练场景选择卡片样式 */
+.location-card {
+  flex: 1;
+  background: #F8FAFC;
+  border: 2rpx solid #E2E8F0;
+  border-radius: 24rpx;
+  padding: 20rpx 20rpx;
+  text-align: left;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.location-card.active {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: #10B981;
+  box-shadow: 0 8rpx 20rpx rgba(16, 185, 129, 0.15);
+}
+
+.location-card-header {
+  margin-bottom: 8rpx;
+}
+
+.loc-icon {
+  font-size: 40rpx;
+}
+
+.loc-check {
+  font-size: 20rpx;
+  font-weight: 800;
+  color: #FFFFFF;
+  background: #10B981;
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loc-title {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #0F172A;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.location-card.active .loc-title {
+  color: #047857;
+}
+
+.loc-subtitle {
+  font-size: 20rpx;
+  color: #94A3B8;
+  display: block;
+}
+
+.location-card.active .loc-subtitle {
+  color: #059669;
+}
+
 .plan-footer-actions {
   margin-top: 16rpx;
   padding-top: 16rpx;

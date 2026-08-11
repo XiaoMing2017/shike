@@ -67,6 +67,11 @@ public class PlanServiceImpl implements PlanService {
 
     @Override
     public Map<String, Object> generateOrGetPlan(Long userId, Boolean forceRefresh, Boolean createIfAbsent) {
+        return generateOrGetPlan(userId, forceRefresh, createIfAbsent, "HOME");
+    }
+
+    @Override
+    public Map<String, Object> generateOrGetPlan(Long userId, Boolean forceRefresh, Boolean createIfAbsent, String location) {
         String cacheKey = REDIS_PLAN_KEY_PREFIX + userId;
 
         // 1. 检查 Redis 缓存
@@ -125,7 +130,7 @@ public class PlanServiceImpl implements PlanService {
         // 4. 构建专属 AI Prompt (融合专家知识库准则)
         Map<String, Object> planMap;
         try {
-            String prompt = buildExpertPrompt(user);
+            String prompt = buildExpertPrompt(user, location);
             String aiResponseJson = callTextLlm(prompt);
             planMap = parseAndCleanJson(aiResponseJson);
         } catch (Exception e) {
@@ -148,7 +153,7 @@ public class PlanServiceImpl implements PlanService {
         return planMap;
     }
 
-    private String buildExpertPrompt(User user) {
+    private String buildExpertPrompt(User user, String location) {
         String genderStr = (user.getGender() != null && user.getGender() == 2) ? "女" : "男";
         boolean isFemale = genderStr.equals("女");
         int age = (user.getAge() != null) ? user.getAge() : 25;
@@ -307,6 +312,11 @@ public class PlanServiceImpl implements PlanService {
         sb.append("- 性别: ").append(genderStr).append(", 年龄: ").append(age).append("岁, 身高: ").append(height).append("cm, 体重: ").append(weight).append("kg, 体脂率: ").append(bodyFat).append("%, BMI: ").append(String.format("%.1f", bmi)).append("\n");
         sb.append("- 训练经验等级: ").append(trainingLevelLabel).append("\n");
         sb.append("- 当前活动水平: ").append(activityLabel).append("\n");
+        // 训练场地限定
+        boolean isHome = "HOME".equalsIgnoreCase(location);
+        String locationLabel = isHome ? "🏠 居家训练 (限定徒手自重、家用哑铃/弹力带)" : "🏋️ 健身房训练 (充分利用器械、龙门架拉索、杠铃/哑铃)";
+
+        sb.append("- 指定训练场景: ").append(locationLabel).append("\n");
         sb.append("- 基础代谢 BMR: ").append(bmr).append(" kcal, 每日消耗 TDEE: ").append(tdee).append(" kcal\n");
         sb.append("- 设定目标: ").append(goalLabel).append("\n");
         sb.append("- 每日目标摄入热量: ").append((int) targetCal).append(" kcal (推荐三大营养素: 蛋白质 ").append(proteinG).append("g [").append(proteinCoeff).append("g/kg], 碳水 ").append(carbsG).append("g, 脂肪 ").append(fatG).append("g)\n\n");
@@ -331,10 +341,18 @@ public class PlanServiceImpl implements PlanService {
         sb.append("- 训练强度: 70%-85% 1RM，力量训练保持重量不主动降低\n");
         sb.append("- RIR (保留次数): 复合动作 RIR 2 (保留2次)，孤立动作 RIR 1-2 (保留1-2次)\n\n");
 
-        sb.append("【2. 训练动作生成规则 (严禁笼统描述)】:\n");
-        sb.append("- 每个训练日必须拆分为 3-5 个具体动作\n");
+        sb.append("【2. 训练动作生成与场地器械约束 (核心最高硬性指令)】:\n");
+        if (isHome) {
+            sb.append("- 场地设定: 🏠【居家训练模式】。必须 100% 选用户内/居家可执行动作！\n");
+            sb.append("- 严禁出现的器械: 严禁出现杠铃深蹲、杠铃卧推、高位下拉机、龙门架绳索下压、倒蹬机、坐姿腿屈伸等大型健身房器械！\n");
+            sb.append("- 推荐居家动作库: 哑铃高杯深蹲、保加利亚单腿蹲、哑铃罗马尼亚硬拉、标准/跪姿俯卧撑、哑铃单臂划船、哑铃推举、哑铃侧平举、平板支撑、死虫式、哑铃弯举、颈后哑铃臂屈伸等。\n");
+        } else {
+            sb.append("- 场地设定: 🏋️【健身房训练模式】。充分发挥健身房专业器械优势！\n");
+            sb.append("- 推荐健身房动作库: 杠铃深蹲、罗马尼亚硬拉、杠铃/哑铃卧推、龙门架绳索下压、高位下拉、坐姿腿屈伸、倒蹬机、史密斯机推举等专业杠哑铃与器械动作。\n");
+        }
+        sb.append("- 每个训练日必须拆分为 3-5 个具体动作，动作名称带有清晰直观Emoji (如 哑铃高杯深蹲 🦵)\n");
         sb.append("- 每个动作必须明确: 1.动作名称 2.训练组数 3.次数范围 4.RIR 5.时长(分钟) 6.热量消耗(kcal)\n");
-        sb.append("- 严禁出现 '力量训练'、'胸部训练'、'腿部训练' 等笼统文字，必须具体到如 '哑铃卧推 💪 4组x12次 (RIR 2)'！\n\n");
+        sb.append("- 严禁出现 '力量训练'、'胸部训练'、'腿部训练' 等笼统文字，必须具体到具体动作！\n\n");
 
         sb.append("【3. 渐进超负荷与恢复管理规则】:\n");
         sb.append("- 渐进超负荷: 完成目标次数且 RIR≥2 时，上肢下次 +1-2kg，下肢 +2.5-5kg；若未完成最低次数，保持重量或降低 5%\n");

@@ -129,6 +129,7 @@ Page({
     features: { ai_plan: false, diet_diagnosis: true, photo_recognize: true, poster_share: true, team_challenge: true, water_log: true, week_dashboard: true, month_dashboard: true },
     // 🎯 专属 AI 运动与饮食计划
     showPlanModal: false,
+    selectedPlanLocation: 'HOME', // HOME: 居家训练, GYM: 健身房训练
     planData: null,
     activeDietPlan: null,
     planActiveTab: 'workout',
@@ -2090,6 +2091,11 @@ Page({
     });
   },
 
+  onSelectPlanLocation(e) {
+    const loc = e.currentTarget.dataset.location || 'HOME';
+    this.setData({ selectedPlanLocation: loc });
+  },
+
   onRefreshPlan() {
     this.onGeneratePlanClick();
   },
@@ -2101,8 +2107,9 @@ Page({
         this.setData({ planLoading: false });
         return;
       }
+      const loc = this.data.selectedPlanLocation || 'HOME';
       wx.request({
-        url: `${app.globalData.baseUrl}/plan/generate?userId=${user.id}&forceRefresh=${forceRefresh ? 'true' : 'false'}&createIfAbsent=${createIfAbsent ? 'true' : 'false'}`,
+        url: `${app.globalData.baseUrl}/plan/generate?userId=${user.id}&forceRefresh=${forceRefresh ? 'true' : 'false'}&createIfAbsent=${createIfAbsent ? 'true' : 'false'}&location=${loc}`,
         method: 'GET',
         success: (res) => {
           this.setData({ planLoading: false });
