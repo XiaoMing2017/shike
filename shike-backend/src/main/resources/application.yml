@@ -59,7 +59,7 @@ ai:
   plan-model: qwen3.8-max
   endpoint: https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions
   api-key: sk-ws-H.EDLLDHH.13Vh.MEUCIQCd-Whyz9sUcrs2stiBRtDQmCdalFSF2Igm9p_OIF80tgIgTLbsTfpaWGgUcncGzCS7Dbsx5eEPy0mcT-wC5WMxApk
-  timeout-ms: 120000
+  timeout-ms: 180000
 
 baidu:
   app-id: 7544108
