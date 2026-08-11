@@ -18,9 +18,12 @@ public class AdminFeatureUsageDTO {
     private Long todayDiagnosisCount;
     private Long totalPosterCount;
     private Long todayPosterCount;
+    private Long totalPlanCount;
+    private Long todayPlanCount;
 
     private List<UsageRecordItem> diagnosisRecords;
     private List<UsageRecordItem> posterRecords;
+    private List<UsageRecordItem> planRecords;
 
     @Data
     @Builder

@@ -1020,21 +1020,30 @@ public class AdminServiceImpl implements AdminService {
         long totalPosterCount = pointsRecordRepository.countByTypeIn(posterTypes);
         long todayPosterCount = pointsRecordRepository.countByTypeInAndCreatedAtAfter(posterTypes, startOfToday);
 
-        // 3. AI 诊断明细流水
+        // 3. AI 运动与饮食计划生成统计
+        long totalPlanCount = pointsRecordRepository.countByType("PLAN_GEN");
+        long todayPlanCount = pointsRecordRepository.countByTypeAndCreatedAtAfter("PLAN_GEN", startOfToday);
+
+        // 4. 明细流水
         List<PointsRecord> rawDiagnosisRecords = pointsRecordRepository.findByTypeOrderByCreatedAtDesc("DIET_DIAGNOSIS");
         List<com.shike.model.dto.AdminFeatureUsageDTO.UsageRecordItem> diagnosisRecords = mapToUsageRecordItems(rawDiagnosisRecords, "AI 深度营养诊断");
 
-        // 4. 海报/分享明细流水
         List<PointsRecord> rawPosterRecords = pointsRecordRepository.findByTypeInOrderByCreatedAtDesc(posterTypes);
         List<com.shike.model.dto.AdminFeatureUsageDTO.UsageRecordItem> posterRecords = mapToUsageRecordItems(rawPosterRecords, "晒惨/裂变海报");
+
+        List<PointsRecord> rawPlanRecords = pointsRecordRepository.findByTypeOrderByCreatedAtDesc("PLAN_GEN");
+        List<com.shike.model.dto.AdminFeatureUsageDTO.UsageRecordItem> planRecords = mapToUsageRecordItems(rawPlanRecords, "AI 专属运动与膳食计划");
 
         return com.shike.model.dto.AdminFeatureUsageDTO.builder()
                 .totalDiagnosisCount(totalDiagnosisCount)
                 .todayDiagnosisCount(todayDiagnosisCount)
                 .totalPosterCount(totalPosterCount)
                 .todayPosterCount(todayPosterCount)
+                .totalPlanCount(totalPlanCount)
+                .todayPlanCount(todayPlanCount)
                 .diagnosisRecords(diagnosisRecords)
                 .posterRecords(posterRecords)
+                .planRecords(planRecords)
                 .build();
     }
 
@@ -1056,6 +1065,7 @@ public class AdminServiceImpl implements AdminService {
             else if ("SHARE_TIMELINE".equals(r.getType())) typeName = "朋友圈炫耀海报";
             else if ("NUDGE_POSTER".equals(r.getType())) typeName = "晒惨督促海报";
             else if ("SHARE_POSTER".equals(r.getType())) typeName = "打卡成绩海报";
+            else if ("PLAN_GEN".equals(r.getType())) typeName = "AI 专属运动与膳食计划";
 
             return com.shike.model.dto.AdminFeatureUsageDTO.UsageRecordItem.builder()
                     .id(r.getId())

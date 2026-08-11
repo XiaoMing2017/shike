@@ -1481,10 +1481,11 @@
         </div>
       </div>
 
-      <!-- 选项卡切换（AI 诊断记录 / 晒惨海报记录） -->
+      <!-- 选项卡切换（AI 诊断记录 / 晒惨海报记录 / AI 计划生成记录） -->
       <div class="records-tabs" style="margin-bottom: 14px;">
-        <button class="tab-btn active" id="btnFeatureTabDiagnosis" onclick="switchFeatureUsageTab('diagnosis')">🩺 AI 深度诊断使用记录 (<span id="countDiagnosisBadge">0</span>)</button>
-        <button class="tab-btn" id="btnFeatureTabPoster" onclick="switchFeatureUsageTab('poster')">📸 晒惨与营销海报生成记录 (<span id="countPosterBadge">0</span>)</button>
+        <button class="tab-btn active" id="btnFeatureTabDiagnosis" onclick="switchFeatureUsageTab('diagnosis')">🩺 AI 深度诊断 (<span id="countDiagnosisBadge">0</span>)</button>
+        <button class="tab-btn" id="btnFeatureTabPoster" onclick="switchFeatureUsageTab('poster')">📸 晒惨与营销海报 (<span id="countPosterBadge">0</span>)</button>
+        <button class="tab-btn" id="btnFeatureTabPlan" onclick="switchFeatureUsageTab('plan')">🎯 专属 AI 运动与饮食计划生成 (<span id="countPlanBadge">0</span>)</button>
       </div>
 
       <!-- AI 诊断明细表格 -->
@@ -1520,6 +1521,25 @@
             </tr>
           </thead>
           <tbody id="posterTableBody">
+            <tr><td colspan="6" class="empty-tip">加载中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- AI 运动与饮食计划生成明细表格 -->
+      <div id="featureTabPlanContent" class="table-responsive" style="display: none; max-height: 48vh; overflow-y: auto; background: rgba(15, 23, 42, 0.5); border-radius: 12px; border: 1px solid var(--card-border);">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>生成用户</th>
+              <th>功能类型</th>
+              <th>积分变动</th>
+              <th>日志说明</th>
+              <th>生成时间</th>
+            </tr>
+          </thead>
+          <tbody id="planTableBody">
             <tr><td colspan="6" class="empty-tip">加载中...</td></tr>
           </tbody>
         </table>
@@ -2488,6 +2508,7 @@
 
           document.getElementById('countDiagnosisBadge').innerText = (rawFeatureData.diagnosisRecords || []).length;
           document.getElementById('countPosterBadge').innerText = (rawFeatureData.posterRecords || []).length;
+          document.getElementById('countPlanBadge').innerText = (rawFeatureData.planRecords || []).length;
 
           renderFeatureUsageTables();
         }
@@ -2500,9 +2521,11 @@
       currentFeatureTab = tab;
       document.getElementById('btnFeatureTabDiagnosis').classList.toggle('active', tab === 'diagnosis');
       document.getElementById('btnFeatureTabPoster').classList.toggle('active', tab === 'poster');
+      document.getElementById('btnFeatureTabPlan').classList.toggle('active', tab === 'plan');
 
       document.getElementById('featureTabDiagnosisContent').style.display = tab === 'diagnosis' ? 'block' : 'none';
       document.getElementById('featureTabPosterContent').style.display = tab === 'poster' ? 'block' : 'none';
+      document.getElementById('featureTabPlanContent').style.display = tab === 'plan' ? 'block' : 'none';
     }
 
     function filterFeatureUsageRecords() {
@@ -2573,6 +2596,39 @@
             </td>
             <td><span class="status-badge status-target" style="background:rgba(249,115,22,0.15); color:#FB923C; border:1px solid rgba(249,115,22,0.3);"><i class="fa-solid fa-image"></i> ${r.typeName}</span></td>
             <td><span style="color:#10B981; font-weight:800;">+${r.amount || 10} 积分</span></td>
+            <td style="font-size:12px; color:var(--text-muted);">${r.remark || '-'}</td>
+            <td style="font-size:12px;">${r.createdAt ? r.createdAt.replace('T', ' ') : '-'}</td>
+          </tr>
+        `).join('');
+      }
+
+      // 3. Render Plan Table
+      const planList = (rawFeatureData.planRecords || []).filter(r => {
+        if (!kw) return true;
+        return (r.userId + '').includes(kw) ||
+               (r.nickname || '').toLowerCase().includes(kw) ||
+               (r.phone || '').toLowerCase().includes(kw) ||
+               (r.remark || '').toLowerCase().includes(kw);
+      });
+
+      const planBody = document.getElementById('planTableBody');
+      if (planList.length === 0) {
+        planBody.innerHTML = '<tr><td colspan="6" class="empty-tip">暂无相关专属 AI 运动与饮食计划生成记录</td></tr>';
+      } else {
+        planBody.innerHTML = planList.map(r => `
+          <tr>
+            <td>#${r.id}</td>
+            <td>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <img src="${resolveAvatarUrl(r.avatar)}" style="width:28px; height:28px; border-radius:50%; object-fit:cover;">
+                <div>
+                  <div style="font-weight:700;">${r.nickname}</div>
+                  <div style="font-size:11px; color:var(--text-muted);">UID: ${r.userId} ${r.phone ? ' | ' + r.phone : ''}</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="status-badge status-target" style="background:rgba(99,102,241,0.15); color:#818CF8; border:1px solid rgba(99,102,241,0.3);"><i class="fa-solid fa-bullseye"></i> ${r.typeName}</span></td>
+            <td><span style="color:${r.amount < 0 ? '#EF4444' : '#10B981'}; font-weight:800;">${r.amount === 0 ? '首次免费' : r.amount + ' 积分'}</span></td>
             <td style="font-size:12px; color:var(--text-muted);">${r.remark || '-'}</td>
             <td style="font-size:12px;">${r.createdAt ? r.createdAt.replace('T', ' ') : '-'}</td>
           </tr>
