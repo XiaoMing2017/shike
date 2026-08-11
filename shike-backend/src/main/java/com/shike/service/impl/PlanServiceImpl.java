@@ -133,6 +133,19 @@ public class PlanServiceImpl implements PlanService {
             String prompt = buildExpertPrompt(user, location);
             String aiResponseJson = callTextLlm(prompt);
             planMap = parseAndCleanJson(aiResponseJson);
+            if (!planMap.containsKey("nutritionOverview") || planMap.get("nutritionOverview") == null) {
+                double targetCal = (user.getTargetCalories() != null) ? user.getTargetCalories().doubleValue() : 2000.0;
+                double weight = (user.getWeight() != null) ? user.getWeight().doubleValue() : 70.0;
+                int proteinG = (int) Math.round(weight * 1.8);
+                int fatG = (int) Math.round((targetCal * 0.25) / 9.0);
+                int carbsG = (int) Math.round((targetCal - (proteinG * 4) - (fatG * 9)) / 4.0);
+                Map<String, Object> overview = new HashMap<>();
+                overview.put("targetCal", (int) targetCal);
+                overview.put("proteinG", proteinG);
+                overview.put("carbsG", carbsG);
+                overview.put("fatG", fatG);
+                planMap.put("nutritionOverview", overview);
+            }
         } catch (Exception e) {
             log.error("AI Generation failed for user {}, fallback to template plan: {}", userId, e.getMessage());
             planMap = generateScientificFallbackPlan(user, location);
@@ -456,15 +469,19 @@ public class PlanServiceImpl implements PlanService {
         Map<String, Object> map = objectMapper.readValue(jsonText, new TypeReference<Map<String, Object>>() {});
         
         // 自动适配固定 JSON 输出结构与前端字段映射
-        if (map.containsKey("user_summary") && !map.containsKey("nutritionOverview")) {
-            Map<String, Object> userSum = (Map<String, Object>) map.get("user_summary");
-            Map<String, Object> overview = new HashMap<>();
-            overview.put("targetCal", userSum.get("target_calories"));
-            overview.put("proteinG", userSum.get("protein"));
-            overview.put("carbsG", userSum.get("carbs"));
-            overview.put("fatG", userSum.get("fat"));
-            map.put("nutritionOverview", overview);
-            map.put("summary", "【" + userSum.get("goal") + "】每日目标热量 " + userSum.get("target_calories") + " kcal (蛋白质 " + userSum.get("protein") + "g, 碳水 " + userSum.get("carbs") + "g, 脂肪 " + userSum.get("fat") + "g)");
+        if (map.containsKey("user_summary")) {
+            Object userSumObj = map.get("user_summary");
+            if (userSumObj instanceof Map) {
+                Map<String, Object> userSum = (Map<String, Object>) userSumObj;
+                if (userSum.containsKey("summary") && userSum.get("summary") != null) {
+                    map.put("summary", String.valueOf(userSum.get("summary")));
+                }
+            } else if (userSumObj instanceof String) {
+                map.put("summary", String.valueOf(userSumObj));
+            }
+        }
+        if (!map.containsKey("summary") || map.get("summary") == null || String.valueOf(map.get("summary")).contains("null")) {
+            map.put("summary", "基于算法拟合与专家知识库定制的专属运动与饮食计划。注：基于算法拟合生成，仅供参考。");
         }
         
         if (map.containsKey("weekly_training") && !map.containsKey("workoutPlan")) {
