@@ -262,6 +262,16 @@
       box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
     }
 
+    .bar-item:hover .bar-fill {
+      filter: brightness(1.25);
+      transform: scaleY(1.05);
+      transform-origin: bottom;
+    }
+    .bar-item:hover .bar-label {
+      color: #FFF !important;
+      font-weight: 600;
+    }
+
     /* Global Form Input Styling */
     .form-input {
       width: 100%;
@@ -2306,18 +2316,33 @@
           container.innerHTML = '<div class="empty-tip" style="width:100%;">暂无趋势数据</div>';
         } else {
           const maxVal = Math.max(...trendList.map(t => t.count || 0), 1);
-          // Adjust bar width and font based on rangeDays
-          const barWidthPct = currentTrendDays > 30 ? '90%' : (currentTrendDays > 14 ? '80%' : '70%');
-          const fontSize = currentTrendDays > 30 ? '10px' : '11px';
-          const showVal = currentTrendDays <= 30;
+          const totalLen = trendList.length;
 
-          container.innerHTML = trendList.map(t => {
+          // 动态决定 Label 显示步长，彻底解决 30/90 天日期叠字重叠问题
+          let labelStep = 1;
+          if (totalLen > 45) {
+            labelStep = 7; // 90 天视图：每 7 天显示一个 Label
+          } else if (totalLen > 14) {
+            labelStep = 4; // 30 天月度视图：每 4 天显示一个 Label
+          }
+
+          container.innerHTML = trendList.map((t, idx) => {
             const pct = Math.max(Math.round((t.count / maxVal) * 100), 6);
+            const isMax = t.count === maxVal && maxVal > 0;
+            
+            // 决定是否显示底部日期 Label (首项、末项或按 step 步长抽样)
+            const showLabel = (idx === 0) || (idx === totalLen - 1) || (idx % labelStep === 0);
+            
+            // 数值显示规则：7天内全显，30天只在最高点或大于0且抽样点显示，防止顶部文字挤压
+            const showValueText = totalLen <= 7 || isMax;
+
             return `
-              <div class="bar-item" style="flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end;">
-                ${showVal ? `<span class="bar-val" style="font-size:11px; font-weight:700; color:#FFF; margin-bottom:4px; white-space:nowrap;">${t.count}</span>` : ''}
-                <div class="bar-fill" title="${t.date}: ${t.count}${unit}" style="width:${barWidthPct}; max-width:32px; height:${pct}%; background:linear-gradient(180deg, ${color}, ${color}88); border-radius:4px 4px 0 0; transition:all 0.3s ease;"></div>
-                <span class="bar-label" style="font-size:${fontSize}; color:var(--text-muted); margin-top:6px; white-space:nowrap; transform:${currentTrendDays > 14 ? 'scale(0.85)' : 'none'};">${t.date}</span>
+              <div class="bar-item" title="${t.date}: ${t.count} ${unit}" style="flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end; cursor:pointer; position:relative;">
+                ${showValueText ? `<span class="bar-val" style="font-size:${isMax ? '12px' : '10px'}; font-weight:${isMax ? '800' : '600'}; color:${isMax ? '#F59E0B' : '#FFF'}; margin-bottom:4px; white-space:nowrap;">${t.count}</span>` : '<span style="height:14px;"></span>'}
+                <div class="bar-fill" style="width:${totalLen > 30 ? '85%' : '75%'}; max-width:28px; height:${pct}%; background:${isMax ? `linear-gradient(180deg, #F59E0B, ${color})` : `linear-gradient(180deg, ${color}, ${color}77)`}; border-radius:4px 4px 0 0; transition:all 0.25s ease; box-shadow:${isMax ? '0 0 10px rgba(245, 158, 11, 0.5)' : 'none'};"></div>
+                <span class="bar-label" style="font-size:10px; color:${showLabel ? 'var(--text-muted)' : 'transparent'}; margin-top:6px; white-space:nowrap; transform:scale(0.9); height:14px; line-height:14px;">
+                  ${showLabel ? t.date : ''}
+                </span>
               </div>
             `;
           }).join('');
