@@ -1334,8 +1334,8 @@
         <!-- 📅 时间范围维度切换 Pills -->
         <div class="trend-range-selector" style="margin-left: auto;">
           <button class="btn-range-pill active" id="btnRange7" onclick="switchTrendDays(7)">近 7 天(周)</button>
-          <button class="btn-range-pill" id="btnRange30" onclick="switchTrendDays(30)">近 30 天(月)</button>
-          <button class="btn-range-pill" id="btnRange90" onclick="switchTrendDays(90)">近 90 天</button>
+          <button class="btn-range-pill" id="btnRange30" onclick="switchTrendDays(30)">近 30 天(日明细)</button>
+          <button class="btn-range-pill" id="btnRange90" onclick="switchTrendDays(90)">近 90 天(按月)</button>
         </div>
 
         <button class="btn-action" onclick="closeTrendModal()" style="background: rgba(255,255,255,0.06); border: 1px solid var(--card-border); padding: 6px 12px; font-size: 13px;">
@@ -2219,6 +2219,7 @@
 
     let currentTrendType = 'registration';
     let currentTrendDays = 7;
+    let selectedDrillMonth = null; // 下钻选中的月份，如 '08'
 
     function openTrendModal(type) {
       if (type === 'retention') {
@@ -2228,6 +2229,7 @@
 
       currentTrendType = type || 'registration';
       currentTrendDays = 7;
+      selectedDrillMonth = null;
 
       const modal = document.getElementById('trendModal');
       modal.classList.add('active');
@@ -2238,7 +2240,18 @@
 
     function switchTrendDays(days) {
       currentTrendDays = days;
+      selectedDrillMonth = null;
       renderTrendDaysPills(days);
+      renderCurrentTrend();
+    }
+
+    function drilldownMonth(monthKey) {
+      selectedDrillMonth = monthKey;
+      renderCurrentTrend();
+    }
+
+    function clearDrilldown() {
+      selectedDrillMonth = null;
       renderCurrentTrend();
     }
 
@@ -2260,7 +2273,10 @@
       const container = document.getElementById('modalTrendContainer');
       const footerTip = document.getElementById('trendModalFooterTip');
 
-      const rangeLabel = currentTrendDays === 7 ? '近 7 天(周)' : (currentTrendDays === 30 ? '近 30 天(月)' : `近 ${currentTrendDays} 天`);
+      let rangeLabel = currentTrendDays === 7 ? '近 7 天(周)' : (currentTrendDays === 30 ? '近 30 天(日明细)' : '近 90 天(按月)');
+      if (selectedDrillMonth) {
+        rangeLabel = `${selectedDrillMonth}月 逐日明细`;
+      }
 
       container.innerHTML = '<div class="empty-tip" style="width:100%;"><i class="fa-solid fa-spinner fa-spin"></i> 加载趋势数据中...</div>';
 
@@ -2273,83 +2289,127 @@
           }
         }
 
-        let trendList = [];
+        let rawTrendList = [];
         let unit = '人';
         let color = '#3B82F6';
 
         if (currentTrendType === 'registration') {
-          title.innerText = `${rangeLabel}新增注册用户趋势`;
-          subtitle.innerText = '平台每日新注册用户增长曲线统计';
+          title.innerHTML = `${rangeLabel}新增注册趋势 ${selectedDrillMonth ? `<button class="btn-action" onclick="clearDrilldown()" style="font-size:11px; padding:2px 8px; margin-left:8px; background:rgba(255,255,255,0.1);"><i class="fa-solid fa-arrow-left"></i> 返回90天月汇总</button>` : ''}`;
+          subtitle.innerText = selectedDrillMonth ? `2026年${selectedDrillMonth}月每日新注册用户趋势下钻` : '平台新注册用户增长趋势统计';
           icon.className = 'fa-solid fa-user-plus';
           iconBox.style.background = 'rgba(16, 185, 129, 0.15)';
           iconBox.style.color = '#10B981';
-          trendList = statsData.userRegistrationTrend || [];
+          rawTrendList = statsData.userRegistrationTrend || [];
           color = '#10B981';
           unit = '人';
-          const totalNew = trendList.reduce((sum, item) => sum + (item.count || 0), 0);
-          footerTip.innerText = `💡 ${rangeLabel}累计新增注册用户 ${totalNew} 人`;
         } else if (currentTrendType === 'dau') {
-          title.innerText = `${rangeLabel}每日活跃用户 (DAU) 趋势`;
-          subtitle.innerText = '包含饮食/运动/饮水/打卡/AI使用等行为的综合活跃度';
+          title.innerHTML = `${rangeLabel}每日活跃用户 (DAU) 趋势 ${selectedDrillMonth ? `<button class="btn-action" onclick="clearDrilldown()" style="font-size:11px; padding:2px 8px; margin-left:8px; background:rgba(255,255,255,0.1);"><i class="fa-solid fa-arrow-left"></i> 返回90天月汇总</button>` : ''}`;
+          subtitle.innerText = selectedDrillMonth ? `2026年${selectedDrillMonth}月每日活跃用户 (DAU) 趋势下钻` : '包含打卡/饮食/运动/打卡/AI使用等行为的综合活跃度';
           icon.className = 'fa-solid fa-bolt';
           iconBox.style.background = 'rgba(59, 130, 246, 0.15)';
           iconBox.style.color = '#3B82F6';
-          trendList = statsData.dauTrend || [];
+          rawTrendList = statsData.dauTrend || [];
           color = '#3B82F6';
           unit = '人';
-          const avgDau = trendList.length > 0 ? (trendList.reduce((sum, item) => sum + (item.count || 0), 0) / trendList.length).toFixed(1) : 0;
-          footerTip.innerText = `💡 ${rangeLabel}日均活跃用户 (DAU) 约 ${avgDau} 人`;
         } else if (currentTrendType === 'ai') {
-          title.innerText = `${rangeLabel} AI 模型调用总频次趋势`;
-          subtitle.innerText = '包含膳食拍照多模态识别与 AI 专属计划生成';
+          title.innerHTML = `${rangeLabel} AI 模型调用总频次趋势 ${selectedDrillMonth ? `<button class="btn-action" onclick="clearDrilldown()" style="font-size:11px; padding:2px 8px; margin-left:8px; background:rgba(255,255,255,0.1);"><i class="fa-solid fa-arrow-left"></i> 返回90天月汇总</button>` : ''}`;
+          subtitle.innerText = selectedDrillMonth ? `2026年${selectedDrillMonth}月每日 AI 模型服务调用趋势下钻` : '包含膳食拍照识别与 AI 专属计划生成';
           icon.className = 'fa-solid fa-wand-magic-sparkles';
           iconBox.style.background = 'rgba(139, 92, 246, 0.15)';
           iconBox.style.color = '#8B5CF6';
-          trendList = statsData.aiTrend || [];
+          rawTrendList = statsData.aiTrend || [];
           color = '#8B5CF6';
           unit = '次';
-          const totalAiCalls = trendList.reduce((sum, item) => sum + (item.count || 0), 0);
-          footerTip.innerText = `💡 ${rangeLabel}全站累计 AI 模型服务调用 ${totalAiCalls} 次`;
         }
 
-        if (!trendList || trendList.length === 0) {
+        if (!rawTrendList || rawTrendList.length === 0) {
           container.innerHTML = '<div class="empty-tip" style="width:100%;">暂无趋势数据</div>';
-        } else {
-          const maxVal = Math.max(...trendList.map(t => t.count || 0), 1);
-          const totalLen = trendList.length;
-
-          // 动态决定 Label 显示步长，彻底解决 30/90 天日期叠字重叠问题
-          let labelStep = 1;
-          if (totalLen > 45) {
-            labelStep = 7; // 90 天视图：每 7 天显示一个 Label
-          } else if (totalLen > 14) {
-            labelStep = 4; // 30 天月度视图：每 4 天显示一个 Label
-          }
-
-          container.innerHTML = trendList.map((t, idx) => {
-            const pct = Math.max(Math.round((t.count / maxVal) * 100), 6);
-            const isMax = t.count === maxVal && maxVal > 0;
-            
-            // 决定是否显示底部日期 Label (首项、末项或按 step 步长抽样)
-            const showLabel = (idx === 0) || (idx === totalLen - 1) || (idx % labelStep === 0);
-            
-            // 数值显示规则：7天内全显，30天只在最高点或大于0且抽样点显示，防止顶部文字挤压
-            const showValueText = totalLen <= 7 || isMax;
-
-            return `
-              <div class="bar-item" title="${t.date}: ${t.count} ${unit}" style="flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end; cursor:pointer; position:relative;">
-                ${showValueText ? `<span class="bar-val" style="font-size:${isMax ? '12px' : '10px'}; font-weight:${isMax ? '800' : '600'}; color:${isMax ? '#F59E0B' : '#FFF'}; margin-bottom:4px; white-space:nowrap;">${t.count}</span>` : '<span style="height:14px;"></span>'}
-                <div class="bar-fill" style="width:${totalLen > 30 ? '85%' : '75%'}; max-width:28px; height:${pct}%; background:${isMax ? `linear-gradient(180deg, #F59E0B, ${color})` : `linear-gradient(180deg, ${color}, ${color}77)`}; border-radius:4px 4px 0 0; transition:all 0.25s ease; box-shadow:${isMax ? '0 0 10px rgba(245, 158, 11, 0.5)' : 'none'};"></div>
-                <span class="bar-label" style="font-size:10px; color:${showLabel ? 'var(--text-muted)' : 'transparent'}; margin-top:6px; white-space:nowrap; transform:scale(0.9); height:14px; line-height:14px;">
-                  ${showLabel ? t.date : ''}
-                </span>
-              </div>
-            `;
-          }).join('');
+          return;
         }
+
+        // === 判定展示维度模式 ===
+        // 模式 A: 近 90 天且未选中具体月份 -> 按【月份】汇总聚合
+        // 模式 B: 近 30 天 / 近 7 天 / 或 90 天选定了具体月份下钻 -> 按【日】逐日展现 (所有数字全显示)
+        
+        let displayList = [];
+        let isMonthlyView = (currentTrendDays === 90 && !selectedDrillMonth);
+
+        if (isMonthlyView) {
+          // 按月份 (MM) 进行 GroupBy 归并
+          const monthMap = {};
+          rawTrendList.forEach(item => {
+            const mKey = item.date.split('-')[0] + '月'; // 例如 '07月', '08月'
+            monthMap[mKey] = (monthMap[mKey] || 0) + (item.count || 0);
+          });
+          displayList = Object.keys(monthMap).map(mKey => ({
+            date: mKey,
+            count: monthMap[mKey],
+            monthCode: mKey.replace('月', ''),
+            isMonth: true
+          }));
+          footerTip.innerHTML = `💡 近 90 天按月汇总看板（共 ${displayList.reduce((s, x) => s + x.count, 0)} ${unit}）。<b style="color:var(--primary);">点击下方任意“月柱”可下钻查看该月逐日明细 ></b>`;
+        } else {
+          // 逐日显示
+          if (selectedDrillMonth) {
+            displayList = rawTrendList.filter(t => t.date.startsWith(selectedDrillMonth + '-'));
+            const monthTotal = displayList.reduce((s, x) => s + (x.count || 0), 0);
+            footerTip.innerHTML = `📌 2026年${selectedDrillMonth}月 逐日明细（全月累计 ${monthTotal} ${unit}）`;
+          } else {
+            displayList = rawTrendList;
+            const periodTotal = displayList.reduce((s, x) => s + (x.count || 0), 0);
+            footerTip.innerHTML = `💡 ${rangeLabel}累计总计 ${periodTotal} ${unit}（所有柱子顶部均标明当日精确数值）`;
+          }
+        }
+
+        if (!displayList || displayList.length === 0) {
+          container.innerHTML = '<div class="empty-tip" style="width:100%;">未筛选到该范围明细数据</div>';
+          return;
+        }
+
+        const maxVal = Math.max(...displayList.map(t => t.count || 0), 1);
+        const totalLen = displayList.length;
+
+        // 标签步长：如果是按月(3-4根柱)或7天内 -> 100%全显；如果是30天日明细 -> 每4天抽样显日期，但【数字全显】
+        let labelStep = 1;
+        if (!isMonthlyView && totalLen > 14) {
+          labelStep = 3; // 30 天视图：每 3-4 天显示一个日期 Label
+        }
+
+        container.innerHTML = displayList.map((t, idx) => {
+          const pct = Math.max(Math.round((t.count / maxVal) * 100), 8);
+          const isMax = t.count === maxVal && maxVal > 0;
+          const showLabel = isMonthlyView || (idx === 0) || (idx === totalLen - 1) || (idx % labelStep === 0);
+          
+          // 用户特别要求：“其他时间人数也要显示”，因此逐日/按月【顶部数字全部显示】！
+          // 数字字体：如果是30天(柱子多)，设为 9px 紧凑美观；如果是按月/7天，设为 11px 加粗
+          const valFontSize = isMonthlyView ? '12px' : (totalLen > 20 ? '9px' : '11px');
+          const valColor = isMax ? '#F59E0B' : (t.count === 0 ? 'rgba(255,255,255,0.3)' : '#FFF');
+
+          const clickHandler = isMonthlyView ? `onclick="drilldownMonth('${t.monthCode}')"` : `onclick="selectTrendBar('${t.date}', ${t.count}, '${unit}')"`;
+
+          return `
+            <div class="bar-item" ${clickHandler} title="${t.isMonth ? `点击展开 ${t.date} 逐日明细 (${t.count}${unit})` : `${t.date}: ${t.count} ${unit}`}" style="flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end; cursor:pointer; position:relative;">
+              <span class="bar-val" style="font-size:${valFontSize}; font-weight:${isMax ? '800' : '600'}; color:${valColor}; margin-bottom:4px; white-space:nowrap; transform:${totalLen > 20 ? 'scale(0.95)' : 'none'};">
+                ${t.count}
+              </span>
+              <div class="bar-fill" style="width:${isMonthlyView ? '45%' : (totalLen > 20 ? '80%' : '70%')}; max-width:${isMonthlyView ? '56px' : '26px'}; height:${pct}%; background:${isMax ? `linear-gradient(180deg, #F59E0B, ${color})` : `linear-gradient(180deg, ${color}, ${color}77)`}; border-radius:4px 4px 0 0; transition:all 0.25s ease; box-shadow:${isMax ? '0 0 12px rgba(245, 158, 11, 0.6)' : 'none'};"></div>
+              <span class="bar-label" style="font-size:${isMonthlyView ? '12px' : '10px'}; font-weight:${isMonthlyView ? '700' : 'normal'}; color:${showLabel ? '#F8FAFC' : 'transparent'}; margin-top:6px; white-space:nowrap; transform:${!isMonthlyView && totalLen > 20 ? 'scale(0.85)' : 'none'}; height:14px; line-height:14px;">
+                ${showLabel ? t.date : ''}
+              </span>
+            </div>
+          `;
+        }).join('');
+
       } catch (e) {
         console.error('Failed to render current trend:', e);
         container.innerHTML = '<div class="empty-tip" style="width:100%; color:var(--danger);">加载趋势数据失败</div>';
+      }
+    }
+
+    function selectTrendBar(dateStr, countVal, unitStr) {
+      const footerTip = document.getElementById('trendModalFooterTip');
+      if (footerTip) {
+        footerTip.innerHTML = `📌 <b>2026-${dateStr} 明细数值</b>: <span style="color:#FFF; font-size:14px; font-weight:700;">${countVal}</span> ${unitStr}`;
       }
     }
 
