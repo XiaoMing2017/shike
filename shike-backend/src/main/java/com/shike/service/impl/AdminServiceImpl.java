@@ -74,6 +74,12 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public AdminStatsDTO getDashboardStats() {
+        return getDashboardStats(7);
+    }
+
+    @Override
+    public AdminStatsDTO getDashboardStats(Integer days) {
+        int rangeDays = (days != null && days > 0) ? Math.min(days, 180) : 7;
         LocalDate today = LocalDate.now();
         String todayStr = today.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
@@ -101,14 +107,14 @@ public class AdminServiceImpl implements AdminService {
         }
         Long activeTeams = teamRepository.countByStatus("ACTIVE");
 
-        // Sum AI recognitions across all users today & compute last 7 days trend
+        // Sum AI recognitions across all users today & compute trend over rangeDays
         long todayMealAiCount = 0;
         long todayPlanAiCount = 0;
         long totalHistoricalMealCount = 0;
         long totalHistoricalPlanCount = 0;
         List<AdminStatsDTO.AiTrendItem> aiTrendList = new ArrayList<>();
 
-        for (int i = 6; i >= 0; i--) {
+        for (int i = rangeDays - 1; i >= 0; i--) {
             LocalDate date = today.minusDays(i);
             long dayMealCount = 0;
             long dayPlanCount = 0;
@@ -147,14 +153,13 @@ public class AdminServiceImpl implements AdminService {
             estimatedCost = Math.round(totalHistoricalAiCount * 0.02 * 100.0) / 100.0;
         }
 
-        // ========== 近7天注册用户趋势 & DAU趋势 ==========
+        // ========== 动态时间范围注册用户趋势 & DAU趋势 ==========
         List<AdminStatsDTO.AiTrendItem> registrationTrendList = new ArrayList<>();
         List<AdminStatsDTO.AiTrendItem> dauTrendList = new ArrayList<>();
 
-        for (int i = 6; i >= 0; i--) {
+        for (int i = rangeDays - 1; i >= 0; i--) {
             LocalDate date = today.minusDays(i);
             String dateLabel = date.format(DateTimeFormatter.ofPattern("MM-dd"));
-            String dateFullStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
             // 每日注册用户数
             long dayRegistrations = allUsers.stream()
@@ -165,7 +170,7 @@ public class AdminServiceImpl implements AdminService {
                     .count(dayRegistrations)
                     .build());
 
-            // 每日活跃用户数 (DAU) - 统一合并打卡/饮食/运动/饮水/注册/更新/AI使用
+            // 每日活跃用户数 (DAU)
             Set<Long> dayActiveIds = getActiveUserIdsForDate(date, allUsers);
 
             dauTrendList.add(AdminStatsDTO.AiTrendItem.builder()

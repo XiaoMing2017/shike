@@ -232,6 +232,36 @@
       color: var(--text-muted);
     }
 
+    /* Trend Chart Time Range Selector Pills */
+    .trend-range-selector {
+      display: flex;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 3px;
+      gap: 4px;
+    }
+    .btn-range-pill {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-range-pill:hover {
+      color: #FFF;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .btn-range-pill.active {
+      background: var(--primary);
+      color: #FFF;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+    }
+
     /* Global Form Input Styling */
     .form-input {
       width: 100%;
@@ -1279,17 +1309,25 @@
 
   <!-- Trend Chart Modal -->
   <div class="modal-overlay" id="trendModal">
-    <div class="modal-box" style="width: 600px; max-width: 92vw; padding: 24px;">
-      <div class="modal-header" style="margin-bottom: 20px;">
+    <div class="modal-box" style="width: 760px; max-width: 95vw; padding: 24px;">
+      <div class="modal-header" style="margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
         <div style="display: flex; align-items: center; gap: 12px;">
           <div id="trendModalIconBox" style="width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; background: rgba(59, 130, 246, 0.15); color: #3B82F6;">
             <i class="fa-solid fa-chart-line" id="trendModalIcon"></i>
           </div>
           <div>
-            <h3 id="trendModalTitle" style="font-size: 17px; font-weight: 700; color: #FFF; margin: 0;">近 7 天趋势图</h3>
+            <h3 id="trendModalTitle" style="font-size: 17px; font-weight: 700; color: #FFF; margin: 0;">新增注册用户趋势</h3>
             <span id="trendModalSubtitle" style="font-size: 12px; color: var(--text-muted);">历史数据可视化分析</span>
           </div>
         </div>
+
+        <!-- 📅 时间范围维度切换 Pills -->
+        <div class="trend-range-selector" style="margin-left: auto;">
+          <button class="btn-range-pill active" id="btnRange7" onclick="switchTrendDays(7)">近 7 天(周)</button>
+          <button class="btn-range-pill" id="btnRange30" onclick="switchTrendDays(30)">近 30 天(月)</button>
+          <button class="btn-range-pill" id="btnRange90" onclick="switchTrendDays(90)">近 90 天</button>
+        </div>
+
         <button class="btn-action" onclick="closeTrendModal()" style="background: rgba(255,255,255,0.06); border: 1px solid var(--card-border); padding: 6px 12px; font-size: 13px;">
           <i class="fa-solid fa-xmark"></i> 关闭
         </button>
@@ -2169,8 +2207,42 @@
       }
     }
 
+    let currentTrendType = 'registration';
+    let currentTrendDays = 7;
+
     function openTrendModal(type) {
+      if (type === 'retention') {
+        openRetentionModal();
+        return;
+      }
+
+      currentTrendType = type || 'registration';
+      currentTrendDays = 7;
+
       const modal = document.getElementById('trendModal');
+      modal.classList.add('active');
+
+      renderTrendDaysPills(7);
+      renderCurrentTrend();
+    }
+
+    function switchTrendDays(days) {
+      currentTrendDays = days;
+      renderTrendDaysPills(days);
+      renderCurrentTrend();
+    }
+
+    function renderTrendDaysPills(activeDays) {
+      [7, 30, 90].forEach(d => {
+        const btn = document.getElementById(`btnRange${d}`);
+        if (btn) {
+          if (d === activeDays) btn.classList.add('active');
+          else btn.classList.remove('active');
+        }
+      });
+    }
+
+    async function renderCurrentTrend() {
       const title = document.getElementById('trendModalTitle');
       const subtitle = document.getElementById('trendModalSubtitle');
       const icon = document.getElementById('trendModalIcon');
@@ -2178,66 +2250,83 @@
       const container = document.getElementById('modalTrendContainer');
       const footerTip = document.getElementById('trendModalFooterTip');
 
-      if (!cachedStats) {
-        alert('基础数据加载中，请稍后再试');
-        return;
+      const rangeLabel = currentTrendDays === 7 ? '近 7 天(周)' : (currentTrendDays === 30 ? '近 30 天(月)' : `近 ${currentTrendDays} 天`);
+
+      container.innerHTML = '<div class="empty-tip" style="width:100%;"><i class="fa-solid fa-spinner fa-spin"></i> 加载趋势数据中...</div>';
+
+      try {
+        let statsData = cachedStats;
+        if (currentTrendDays !== 7 || !cachedStats) {
+          const res = await authFetch(`/api/v1/admin/stats?days=${currentTrendDays}`).then(r => r.json());
+          if (res && res.code === 200 && res.data) {
+            statsData = res.data;
+          }
+        }
+
+        let trendList = [];
+        let unit = '人';
+        let color = '#3B82F6';
+
+        if (currentTrendType === 'registration') {
+          title.innerText = `${rangeLabel}新增注册用户趋势`;
+          subtitle.innerText = '平台每日新注册用户增长曲线统计';
+          icon.className = 'fa-solid fa-user-plus';
+          iconBox.style.background = 'rgba(16, 185, 129, 0.15)';
+          iconBox.style.color = '#10B981';
+          trendList = statsData.userRegistrationTrend || [];
+          color = '#10B981';
+          unit = '人';
+          const totalNew = trendList.reduce((sum, item) => sum + (item.count || 0), 0);
+          footerTip.innerText = `💡 ${rangeLabel}累计新增注册用户 ${totalNew} 人`;
+        } else if (currentTrendType === 'dau') {
+          title.innerText = `${rangeLabel}每日活跃用户 (DAU) 趋势`;
+          subtitle.innerText = '包含饮食/运动/饮水/打卡/AI使用等行为的综合活跃度';
+          icon.className = 'fa-solid fa-bolt';
+          iconBox.style.background = 'rgba(59, 130, 246, 0.15)';
+          iconBox.style.color = '#3B82F6';
+          trendList = statsData.dauTrend || [];
+          color = '#3B82F6';
+          unit = '人';
+          const avgDau = trendList.length > 0 ? (trendList.reduce((sum, item) => sum + (item.count || 0), 0) / trendList.length).toFixed(1) : 0;
+          footerTip.innerText = `💡 ${rangeLabel}日均活跃用户 (DAU) 约 ${avgDau} 人`;
+        } else if (currentTrendType === 'ai') {
+          title.innerText = `${rangeLabel} AI 模型调用总频次趋势`;
+          subtitle.innerText = '包含膳食拍照多模态识别与 AI 专属计划生成';
+          icon.className = 'fa-solid fa-wand-magic-sparkles';
+          iconBox.style.background = 'rgba(139, 92, 246, 0.15)';
+          iconBox.style.color = '#8B5CF6';
+          trendList = statsData.aiTrend || [];
+          color = '#8B5CF6';
+          unit = '次';
+          const totalAiCalls = trendList.reduce((sum, item) => sum + (item.count || 0), 0);
+          footerTip.innerText = `💡 ${rangeLabel}全站累计 AI 模型服务调用 ${totalAiCalls} 次`;
+        }
+
+        if (!trendList || trendList.length === 0) {
+          container.innerHTML = '<div class="empty-tip" style="width:100%;">暂无趋势数据</div>';
+        } else {
+          const maxVal = Math.max(...trendList.map(t => t.count || 0), 1);
+          // Adjust bar width and font based on rangeDays
+          const barWidthPct = currentTrendDays > 30 ? '90%' : (currentTrendDays > 14 ? '80%' : '70%');
+          const fontSize = currentTrendDays > 30 ? '10px' : '11px';
+          const showVal = currentTrendDays <= 30;
+
+          container.innerHTML = trendList.map(t => {
+            const pct = Math.max(Math.round((t.count / maxVal) * 100), 6);
+            return `
+              <div class="bar-item" style="flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end;">
+                ${showVal ? `<span class="bar-val" style="font-size:11px; font-weight:700; color:#FFF; margin-bottom:4px; white-space:nowrap;">${t.count}</span>` : ''}
+                <div class="bar-fill" title="${t.date}: ${t.count}${unit}" style="width:${barWidthPct}; max-width:32px; height:${pct}%; background:linear-gradient(180deg, ${color}, ${color}88); border-radius:4px 4px 0 0; transition:all 0.3s ease;"></div>
+                <span class="bar-label" style="font-size:${fontSize}; color:var(--text-muted); margin-top:6px; white-space:nowrap; transform:${currentTrendDays > 14 ? 'scale(0.85)' : 'none'};">${t.date}</span>
+              </div>
+            `;
+          }).join('');
+        }
+      } catch (e) {
+        console.error('Failed to render current trend:', e);
+        container.innerHTML = '<div class="empty-tip" style="width:100%; color:var(--danger);">加载趋势数据失败</div>';
       }
-
-      let trendList = [];
-      let unit = '人';
-      let color = '#3B82F6';
-
-      if (type === 'registration') {
-        title.innerText = '近 7 天新增注册用户趋势';
-        subtitle.innerText = '平台每日新注册用户增长曲线统计';
-        icon.className = 'fa-solid fa-user-plus';
-        iconBox.style.background = 'rgba(16, 185, 129, 0.15)';
-        iconBox.style.color = '#10B981';
-        trendList = cachedStats.userRegistrationTrend || [];
-        color = '#10B981';
-        unit = '人';
-        const totalNew = trendList.reduce((sum, item) => sum + (item.count || 0), 0);
-        footerTip.innerText = `💡 近 7 天累计新增注册用户 ${totalNew} 人`;
-      } else if (type === 'dau') {
-        title.innerText = '近 7 天每日活跃用户 (DAU) 趋势';
-        subtitle.innerText = '包含饮食/运动/饮水/打卡/AI使用等行为的综合活跃度';
-        icon.className = 'fa-solid fa-bolt';
-        iconBox.style.background = 'rgba(59, 130, 246, 0.15)';
-        iconBox.style.color = '#3B82F6';
-        trendList = cachedStats.dauTrend || [];
-        color = '#3B82F6';
-        unit = '人';
-        const avgDau = trendList.length > 0 ? (trendList.reduce((sum, item) => sum + (item.count || 0), 0) / trendList.length).toFixed(1) : 0;
-        footerTip.innerText = `💡 近 7 天日均活跃用户 (DAU) 约 ${avgDau} 人`;
-      } else if (type === 'ai') {
-        title.innerText = '近 7 天 AI 模型调用总频次趋势';
-        subtitle.innerText = '包含膳食拍照多模态识别与 AI 专属计划生成';
-        icon.className = 'fa-solid fa-wand-magic-sparkles';
-        iconBox.style.background = 'rgba(139, 92, 246, 0.15)';
-        iconBox.style.color = '#8B5CF6';
-        trendList = cachedStats.aiTrend || [];
-        color = '#8B5CF6';
-        unit = '次';
-        const totalAiCalls = trendList.reduce((sum, item) => sum + (item.count || 0), 0);
-        footerTip.innerText = `💡 近 7 天全站累计 AI 模型服务调用 ${totalAiCalls} 次`;
-      } else if (type === 'retention') {
-        openRetentionModal();
-        return;
-      }
-
-      if (!trendList || trendList.length === 0) {
-        container.innerHTML = '<div class="empty-tip" style="width:100%;">暂无趋势数据</div>';
-      } else {
-        const maxVal = Math.max(...trendList.map(t => t.count || 0), 1);
-        container.innerHTML = trendList.map(t => {
-          const pct = Math.max(Math.round((t.count / maxVal) * 100), 8);
-          return `
-            <div class="bar-item" style="flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end;">
-              <span class="bar-val" style="font-size:12px; font-weight:700; color:#FFF; margin-bottom:6px;">${t.count} ${unit}</span>
-              <div class="bar-fill" style="width:70%; max-width:36px; height:${pct}%; background:linear-gradient(180deg, ${color}, ${color}88); border-radius:6px 6px 0 0; transition:all 0.3s ease;"></div>
-              <span class="bar-label" style="font-size:11px; color:var(--text-muted); margin-top:8px;">${t.date}</span>
-            </div>
-          `;
+    }
         }).join('');
       }
 

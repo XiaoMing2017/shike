@@ -39,8 +39,8 @@ public class AdminController {
     }
 
     @GetMapping({"/stats", "/api/v1/admin/stats"})
-    public ResultDTO<AdminStatsDTO> getDashboardStats() {
-        return ResultDTO.success(adminService.getDashboardStats());
+    public ResultDTO<AdminStatsDTO> getDashboardStats(@RequestParam(value = "days", required = false) Integer days) {
+        return ResultDTO.success(adminService.getDashboardStats(days));
     }
 
     @GetMapping({"/users", "/api/v1/admin/users"})

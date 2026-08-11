@@ -10,6 +10,7 @@ import java.util.List;
 
 public interface AdminService {
     AdminStatsDTO getDashboardStats();
+    AdminStatsDTO getDashboardStats(Integer days);
     List<AdminUserDTO> getAllUsers();
     UserDetailRecordsDTO getUserDetailRecords(Long userId);
     List<AdminTeamDTO> getAllTeams();
