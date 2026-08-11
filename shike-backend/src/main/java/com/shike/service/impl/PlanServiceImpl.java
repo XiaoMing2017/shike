@@ -352,6 +352,10 @@ public class PlanServiceImpl implements PlanService {
         payload.put("max_tokens", 6000);
         payload.put("stream", true);
         payload.put("stream_options", Map.of("include_usage", true));
+        // Disable thinking/reasoning mode for qwen3 thinking models to avoid 11k+ extra thinking tokens
+        if (activeModel.contains("qwen3")) {
+            payload.put("enable_thinking", false);
+        }
 
         String requestBodyJson = objectMapper.writeValueAsString(payload);
 
