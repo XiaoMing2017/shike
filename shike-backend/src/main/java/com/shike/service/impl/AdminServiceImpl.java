@@ -110,46 +110,18 @@ public class AdminServiceImpl implements AdminService {
 
         for (int i = 6; i >= 0; i--) {
             LocalDate date = today.minusDays(i);
-            String dateStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
             long dayMealCount = 0;
             long dayPlanCount = 0;
+            java.time.LocalDateTime startOfDay = date.atStartOfDay();
+            java.time.LocalDateTime endOfDay = date.atTime(23, 59, 59);
 
-            try {
-                Set<String> keys = stringRedisTemplate.keys("shike:ai:limit:*:" + dateStr);
-                if (keys != null && !keys.isEmpty()) {
-                    for (String key : keys) {
-                        if (key.contains(":2:")) continue; // 排除测试账号 ID 2
-                        String val = stringRedisTemplate.opsForValue().get(key);
-                        if (val != null) {
-                            dayMealCount += Long.parseLong(val);
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                log.warn("Failed to query Redis AI recognition keys for {}: {}", dateStr, e.getMessage());
-            }
+            // 1. 精准查询 DB 中非测试账号 (userId!=2) 的计划生成数
+            dayPlanCount = pointsRecordRepository.countByTypeAndUserIdNotAndCreatedAtBetween("PLAN_GEN", 2L, startOfDay, endOfDay);
 
-            try {
-                String planVal = stringRedisTemplate.opsForValue().get("shike:ai:plan:count:" + dateStr);
-                if (planVal != null) {
-                    dayPlanCount = Long.parseLong(planVal);
-                }
-            } catch (Exception ignored) {}
-
-            try {
-                java.time.LocalDateTime startOfDay = date.atStartOfDay();
-                java.time.LocalDateTime endOfDay = date.atTime(23, 59, 59);
-                long dbPlanCount = pointsRecordRepository.countByTypeAndUserIdNotAndCreatedAtBetween("PLAN_GEN", 2L, startOfDay, endOfDay);
-                if (dbPlanCount > dayPlanCount) {
-                    dayPlanCount = dbPlanCount;
-                }
-            } catch (Exception e) {
-                log.warn("Failed to count PLAN_GEN in DB for {}: {}", dateStr, e.getMessage());
-            }
-
-            if (dayMealCount == 0) {
-                dayMealCount = dietRecordRepository.countByRecordDateAndUserIdNot(date, 2L);
-            }
+            // 2. 精准查询 DB 中非测试账号 (userId!=2) 的膳食识别数 (结合扣积分诊断与餐饮日志)
+            long dbDiagnosisCount = pointsRecordRepository.countByTypeAndUserIdNotAndCreatedAtBetween("DIET_DIAGNOSIS", 2L, startOfDay, endOfDay);
+            long dbDietRecordCount = dietRecordRepository.countByRecordDateAndUserIdNot(date, 2L);
+            dayMealCount = Math.max(dbDiagnosisCount, dbDietRecordCount);
 
             if (i == 0) {
                 todayMealAiCount = dayMealCount;
