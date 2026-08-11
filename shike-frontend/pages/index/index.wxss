@@ -2644,6 +2644,34 @@
   color: #059669;
 }
 
+/* 📍 重新定制训练场景 mini 切换条样式 */
+.plan-location-bar {
+  background: #F8FAFC;
+  border: 1rpx solid #E2E8F0;
+  border-radius: 24rpx;
+  padding: 14rpx 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.mini-loc-tag {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #64748B;
+  background: #FFFFFF;
+  border: 1rpx solid #CBD5E1;
+  padding: 8rpx 20rpx;
+  border-radius: 24rpx;
+  transition: all 0.2s ease;
+}
+
+.mini-loc-tag.active {
+  color: #047857;
+  background: rgba(16, 185, 129, 0.12);
+  border-color: #10B981;
+  font-weight: 700;
+  box-shadow: 0 4rpx 12rpx rgba(16, 185, 129, 0.15);
+}
+
 .plan-footer-actions {
   margin-top: 16rpx;
   padding-top: 16rpx;

@@ -981,6 +981,22 @@
         </block>
 
         <block wx:else>
+          <!-- 📍 训练场景快速切换栏 -->
+          <view class="plan-location-bar flex justify-between align-center">
+            <view class="flex align-center" style="gap: 6rpx;">
+              <text style="font-size: 24rpx;">📍</text>
+              <text style="font-size: 24rpx; font-weight: 700; color: #334155;">重新定制场地：</text>
+            </view>
+            <view class="flex" style="gap: 10rpx;">
+              <view class="mini-loc-tag {{selectedPlanLocation === 'HOME' ? 'active' : ''}}" catchtap="onSelectPlanLocation" data-location="HOME">
+                🏠 居家
+              </view>
+              <view class="mini-loc-tag {{selectedPlanLocation === 'GYM' ? 'active' : ''}}" catchtap="onSelectPlanLocation" data-location="GYM">
+                🏋️ 健身房
+              </view>
+            </view>
+          </view>
+
           <!-- 专家点评 Summary Card -->
           <view class="plan-summary-card" wx:if="{{planData.summary}}">
             <view class="flex align-center" style="gap: 8rpx; margin-bottom: 8rpx;">

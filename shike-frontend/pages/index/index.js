@@ -2072,10 +2072,11 @@ Page({
       return;
     }
 
+    const locLabel = (this.data.selectedPlanLocation === 'HOME') ? '🏠 居家训练' : '🏋️ 健身房训练';
     const title = isFirstTime ? '✨ 首次生成免费' : '🤖 重新定制计划';
     const content = isFirstTime
-      ? '首次生成专属 7 天运动与膳食食谱【免费】！是否立即让 AI 为您推算？'
-      : `本次重新定制将消耗 100 积分（当前可用 ${userPoints} 积分），是否确定生成？`;
+      ? `首次生成专属 7 天运动与膳食食谱【免费】！将根据【${locLabel}】场景为您推算，是否确定生成？`
+      : `本次重新定制将消耗 100 积分（当前可用 ${userPoints} 积分），将为您生成【${locLabel}】下的 7 天专属计划，是否确定生成？`;
 
     wx.showModal({
       title,
