@@ -54,7 +54,8 @@ Page({
     customGoalDays: '',
     customGoalWeight: '',
     currentBodyFat: '',
-    customGoalWarning: ''
+    customGoalWarning: '',
+    features: { user_feedback: true }
   },
 
   onLoad() {
@@ -65,10 +66,24 @@ Page({
       });
     }
     this.loginAndFetchProfile();
+    this.fetchFeatureToggles();
   },
 
   onShow() {
     this.loginAndFetchProfile();
+    this.fetchFeatureToggles();
+  },
+
+  fetchFeatureToggles() {
+    wx.request({
+      url: `${app.globalData.baseUrl}/config/features?env=release`,
+      method: 'GET',
+      success: (res) => {
+        if (res.data && res.data.code === 200 && res.data.data) {
+          this.setData({ features: res.data.data });
+        }
+      }
+    });
   },
 
   onShareAppMessage() {

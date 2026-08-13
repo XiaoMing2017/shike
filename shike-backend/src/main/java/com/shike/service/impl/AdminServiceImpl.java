@@ -586,6 +586,7 @@ public class AdminServiceImpl implements AdminService {
             initSingleToggle("water_log", "饮水追踪与记录", "健康追踪", "PROD_AND_TEST", true, "每日饮水量实时目标进度追踪");
             initSingleToggle("week_dashboard", "周看板视图与对比", "看板与分析", "PROD_AND_TEST", true, "支持切换到近7天热量/三大营养素趋势与周看板");
             initSingleToggle("month_dashboard", "月看板视图与趋势", "看板与分析", "PROD_AND_TEST", true, "支持切换到月度热量赤字、4周趋势对比与月看板");
+            initSingleToggle("user_feedback", "用户意见与BUG反馈", "互动与反馈", "PROD_AND_TEST", true, "小程序端悬浮反馈胶囊按钮与意见/BUG提报入口");
         } catch (Exception e) {
             log.warn("Failed to initialize feature toggles: {}", e.getMessage());
         }

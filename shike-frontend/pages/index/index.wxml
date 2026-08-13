@@ -1208,7 +1208,7 @@
   </view>
 
   <!-- 💬 右侧贴边悬浮反馈胶囊按钮 -->
-  <view class="feedback-floating-fab flex align-center" catchtap="openFeedbackModal">
+  <view class="feedback-floating-fab flex align-center" catchtap="openFeedbackModal" wx:if="{{features.user_feedback !== false}}">
     <text class="fab-icon">💬</text>
     <text class="fab-text">反馈</text>
   </view>

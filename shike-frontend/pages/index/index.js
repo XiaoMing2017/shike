@@ -126,7 +126,7 @@ Page({
     tempPosterPath: '',
     posterFoodImg: '', // 用户临时选择的食物照片 (仅本地 tempFilePath，不上传服务器)
     // 🎛️ 线上动态功能开关配置
-    features: { ai_plan: false, diet_diagnosis: true, photo_recognize: true, poster_share: true, team_challenge: true, water_log: true, week_dashboard: true, month_dashboard: true },
+    features: { ai_plan: false, diet_diagnosis: true, photo_recognize: true, poster_share: true, team_challenge: true, water_log: true, week_dashboard: true, month_dashboard: true, user_feedback: true },
     // 🎯 专属 AI 运动与饮食计划
     showPlanModal: false,
     selectedPlanLocation: 'HOME', // HOME: 居家训练, GYM: 健身房训练

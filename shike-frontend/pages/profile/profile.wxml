@@ -174,7 +174,7 @@
   </view>
 
   <!-- 4. 帮助与反馈 Card -->
-  <view class="glass-card menu-card" style="margin-top: 24rpx; margin-bottom: 40rpx;">
+  <view class="glass-card menu-card" style="margin-top: 24rpx; margin-bottom: 40rpx;" wx:if="{{features.user_feedback !== false}}">
     <view class="menu-item flex justify-between align-center" bindtap="openFeedbackModal">
       <view class="flex align-center" style="gap: 16rpx;">
         <text style="font-size: 32rpx;">💡</text>
