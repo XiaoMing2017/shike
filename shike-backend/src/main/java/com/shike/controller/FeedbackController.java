@@ -1,7 +1,7 @@
 package com.shike.controller;
 
+import com.shike.common.ResultDTO;
 import com.shike.model.dto.FeedbackDTO;
-import com.shike.model.dto.ResultDTO;
 import com.shike.service.FeedbackService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +19,7 @@ public class FeedbackController {
     public ResultDTO<FeedbackDTO> submitFeedback(@RequestHeader(value = "X-User-Id", defaultValue = "2") Long userId,
                                                 @RequestBody FeedbackDTO dto) {
         FeedbackDTO result = feedbackService.submitFeedback(userId, dto);
-        return ResultDTO.success("提交成功，感谢您的反馈！", result);
+        return ResultDTO.success(result);
     }
 
     @GetMapping("/my")
