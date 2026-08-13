@@ -1207,4 +1207,42 @@
     </view>
   </view>
 
+  <!-- 💬 右侧贴边悬浮反馈胶囊按钮 -->
+  <view class="feedback-floating-fab flex align-center" catchtap="openFeedbackModal">
+    <text class="fab-icon">💬</text>
+    <text class="fab-text">反馈</text>
+  </view>
+
+  <!-- 💬 用户意见与 BUG 反馈 Modal 弹窗 -->
+  <view class="feedback-modal-mask flex justify-center align-center" wx:if="{{showFeedbackModal}}" catchtouchmove="preventTouchMove">
+    <view class="glass-card feedback-modal-dialog">
+      <view class="feedback-modal-header flex justify-between align-center">
+        <view class="flex align-center" style="gap: 12rpx;">
+          <text style="font-size: 34rpx;">💬</text>
+          <text class="feedback-modal-title">意见与 BUG 反馈</text>
+        </view>
+        <text class="feedback-modal-close" bindtap="closeFeedbackModal">×</text>
+      </view>
+
+      <!-- 反馈类型 Tabs -->
+      <view class="feedback-type-tabs flex justify-between">
+        <view class="fb-type-item {{fbType === 'BUG' ? 'active' : ''}}" bindtap="selectFbType" data-type="BUG">🐛 BUG 报错</view>
+        <view class="fb-type-item {{fbType === 'SUGGESTION' ? 'active' : ''}}" bindtap="selectFbType" data-type="SUGGESTION">💡 功能建议</view>
+        <view class="fb-type-item {{fbType === 'QUESTION' ? 'active' : ''}}" bindtap="selectFbType" data-type="QUESTION">❓ 使用疑问</view>
+      </view>
+
+      <!-- 反馈内容文本框 -->
+      <textarea class="feedback-textarea" placeholder="请详细描述您遇到的报错问题或宝贵建议..." value="{{fbContent}}" bindinput="onFbContentInput" max-length="500"></textarea>
+
+      <!-- 联系方式（可选） -->
+      <input class="feedback-contact-input" placeholder="联系方式 (微信号/手机号，方便回复奖励)" value="{{fbContact}}" bindinput="onFbContactInput" />
+
+      <!-- 操作按钮 -->
+      <view class="feedback-actions flex justify-between" style="gap: 20rpx; margin-top: 24rpx;">
+        <button class="btn-cancel-fb" bindtap="closeFeedbackModal">取消</button>
+        <button class="btn-submit-fb" bindtap="submitFeedbackAction">确认提交反馈</button>
+      </view>
+    </view>
+  </view>
+
 </view>

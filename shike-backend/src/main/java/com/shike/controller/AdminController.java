@@ -170,8 +170,28 @@ public class AdminController {
         return ResultDTO.success(adminService.getServerStatus());
     }
 
-    @GetMapping({"/feature-usage/overview", "/api/v1/admin/feature-usage/overview"})
-    public ResultDTO<com.shike.model.dto.AdminFeatureUsageDTO> getFeatureUsageOverview() {
-        return ResultDTO.success(adminService.getFeatureUsageOverview());
+    private final com.shike.service.FeedbackService feedbackService;
+
+    @GetMapping({"/feedback/list", "/api/v1/admin/feedback/list"})
+    public ResultDTO<com.shike.model.dto.AdminFeedbackPageDTO> getAdminFeedbackList(
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "type", required = false) String type,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
+        return ResultDTO.success(feedbackService.getAdminFeedbacks(status, type, page, size));
+    }
+
+    @PostMapping({"/feedback/{id}/process", "/api/v1/admin/feedback/{id}/process"})
+    public ResultDTO<com.shike.model.dto.FeedbackDTO> processFeedback(
+            @PathVariable("id") Long id,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "adminReply", required = false) String adminReply,
+            @RequestParam(value = "rewardPoints", required = false) Integer rewardPoints) {
+        return ResultDTO.success(feedbackService.processFeedback(id, status, adminReply, rewardPoints));
+    }
+
+    @GetMapping({"/feedback/stats", "/api/v1/admin/feedback/stats"})
+    public ResultDTO<java.util.Map<String, Object>> getFeedbackStatsWidget() {
+        return ResultDTO.success(feedbackService.getFeedbackStatsWidget());
     }
 }

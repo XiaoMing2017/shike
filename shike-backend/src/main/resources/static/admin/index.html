@@ -1023,6 +1023,10 @@
       </div>
       <div style="font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
         <span>管理员：<strong id="adminNameDisplay" style="color: #FFF;">未登录</strong></span>
+        <button class="btn-action" onclick="openFeedbackAdminModal()" style="background: rgba(236, 72, 153, 0.2); border: 1px solid rgba(236, 72, 153, 0.4); color: #F472B6; padding: 5px 10px; font-size: 12px; position: relative;">
+          <i class="fa-solid fa-comment-dots"></i> 用户反馈与BUG
+          <span id="headerFeedbackBadge" style="display:none; position: absolute; top: -6px; right: -6px; background: #EF4444; color: #FFF; font-size: 10px; font-weight: 800; border-radius: 10px; padding: 1px 6px; box-shadow: 0 0 8px rgba(239,68,68,0.6);">0</span>
+        </button>
         <button class="btn-action" onclick="openAuditLogModal()" style="background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); color: #C4B5FD; padding: 5px 10px; font-size: 12px;">
           <i class="fa-solid fa-clipboard-list"></i> 安全审计日志
         </button>
@@ -3927,5 +3931,452 @@
     window.saveAiModelConfig = saveAiModelConfig;
     window.promptAddCustomModel = promptAddCustomModel;
   </script>
+
+  <!-- 💬 1. 首页右下角常驻【未读 BUG/反馈 动态悬浮窗卡片 (Floating Widget)】 -->
+  <div id="feedbackFloatingWidget" style="position: fixed; right: 24px; bottom: 24px; z-index: 9990; font-family: system-ui, -apple-system, sans-serif;">
+    <!-- 收起胶囊态 -->
+    <div id="widgetCapsule" onclick="toggleFeedbackWidgetDrawer()" style="display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95)); border: 1px solid rgba(236, 72, 153, 0.5); border-radius: 30px; color: #FFF; cursor: pointer; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
+      <div style="width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #EC4899, #8B5CF6); display: flex; align-items: center; justify-content: center; font-size: 14px; color: #FFF; box-shadow: 0 0 10px rgba(236, 72, 153, 0.5);">
+        <i class="fa-solid fa-bug"></i>
+      </div>
+      <span style="font-size: 13px; font-weight: 700; letter-spacing: 0.5px;">BUG & 意见反馈</span>
+      <span id="widgetBadge" style="background: #EF4444; color: #FFF; font-size: 11px; font-weight: 800; border-radius: 12px; padding: 2px 8px; box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);">0</span>
+      <i class="fa-solid fa-chevron-up" id="widgetChevron" style="font-size: 12px; color: var(--text-muted); margin-left: 4px; transition: transform 0.3s ease;"></i>
+    </div>
+
+    <!-- 展开抽屉态 -->
+    <div id="widgetDrawer" style="display: none; width: 340px; margin-bottom: 12px; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(236, 72, 153, 0.4); border-radius: 16px; padding: 16px; box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6); backdrop-filter: blur(12px); animation: fadeInUp 0.3s ease;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--card-border);">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-bell" style="color: #EC4899;"></i>
+          <span style="font-size: 14px; font-weight: 700; color: #FFF;">最新用户 BUG 与建议</span>
+        </div>
+        <button onclick="openFeedbackAdminModal()" style="background: rgba(236, 72, 153, 0.15); border: 1px solid rgba(236, 72, 153, 0.3); color: #F472B6; padding: 4px 10px; border-radius: 8px; font-size: 11px; cursor: pointer;">
+          查看全量看板 <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+
+      <div id="widgetFeedbackList" style="max-height: 260px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px;">
+        <div class="empty-tip" style="font-size: 12px; padding: 20px 0;">加载反馈记录中...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 📢 2. 【意见与BUG反馈全功能管理弹窗】 -->
+  <div class="modal-overlay" id="feedbackAdminModal">
+    <div class="modal-box" style="width: 960px; max-width: 95vw; padding: 24px; max-height: 90vh; display: flex; flex-direction: column;">
+      <div class="modal-header" style="margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; background: rgba(236, 72, 153, 0.15); color: #EC4899; border: 1px solid rgba(236, 72, 153, 0.3);">
+            <i class="fa-solid fa-comment-dots"></i>
+          </div>
+          <div>
+            <h3 style="font-size: 18px; font-weight: 700; color: #FFF; margin: 0;">📢 用户 BUG 报错与意见反馈看板</h3>
+            <span style="font-size: 12px; color: var(--text-muted);">实时倾听用户声音，快速响应缺陷与需求，一键发放鼓励积分</span>
+          </div>
+        </div>
+        <button class="btn-action" onclick="closeFeedbackAdminModal()" style="background: rgba(255,255,255,0.06); border: 1px solid var(--card-border); padding: 6px 12px; font-size: 13px;">
+          <i class="fa-solid fa-xmark"></i> 关闭
+        </button>
+      </div>
+
+      <!-- 数据指标小概览 -->
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px;">
+        <div style="background: rgba(15, 23, 42, 0.6); padding: 12px; border-radius: 10px; border: 1px solid var(--card-border); text-align: center;">
+          <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">待处理 BUG / 反馈</div>
+          <div style="font-size: 20px; font-weight: 800; color: #EF4444;" id="statPendingCount">0</div>
+        </div>
+        <div style="background: rgba(15, 23, 42, 0.6); padding: 12px; border-radius: 10px; border: 1px solid var(--card-border); text-align: center;">
+          <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Bug 报错总数</div>
+          <div style="font-size: 20px; font-weight: 800; color: #F59E0B;" id="statBugCount">0</div>
+        </div>
+        <div style="background: rgba(15, 23, 42, 0.6); padding: 12px; border-radius: 10px; border: 1px solid var(--card-border); text-align: center;">
+          <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">功能建议数</div>
+          <div style="font-size: 20px; font-weight: 800; color: #3B82F6;" id="statSuggestionCount">0</div>
+        </div>
+        <div style="background: rgba(15, 23, 42, 0.6); padding: 12px; border-radius: 10px; border: 1px solid var(--card-border); text-align: center;">
+          <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">已解决反馈</div>
+          <div style="font-size: 20px; font-weight: 800; color: #10B981;" id="statResolvedCount">0</div>
+        </div>
+      </div>
+
+      <!-- 筛选 Chips -->
+      <div style="display: flex; gap: 8px; margin-bottom: 14px; align-items: center; background: rgba(15, 23, 42, 0.4); padding: 10px 14px; border-radius: 10px; border: 1px solid var(--card-border); flex-wrap: wrap;">
+        <span style="font-size: 12px; color: var(--text-muted);"><i class="fa-solid fa-filter"></i> 状态过滤:</span>
+        <button class="filter-chip active" id="fbChipAllStatus" onclick="filterFeedbackStatus('ALL')">全部状态</button>
+        <button class="filter-chip" id="fbChipPending" onclick="filterFeedbackStatus('PENDING')" style="color:#EF4444;">⏳ 待处理</button>
+        <button class="filter-chip" id="fbChipResolved" onclick="filterFeedbackStatus('RESOLVED')" style="color:#10B981;">✅ 已解决</button>
+        <button class="filter-chip" id="fbChipRejected" onclick="filterFeedbackStatus('REJECTED')" style="color:#9CA3AF;">🚫 已忽略</button>
+
+        <span style="font-size: 12px; color: var(--text-muted); margin-left: 12px;"><i class="fa-solid fa-tag"></i> 分类:</span>
+        <button class="filter-chip active" id="fbChipAllType" onclick="filterFeedbackType('ALL')">全部分类</button>
+        <button class="filter-chip" id="fbChipBug" onclick="filterFeedbackType('BUG')" style="color:#F59E0B;">🐛 BUG报错</button>
+        <button class="filter-chip" id="fbChipSuggestion" onclick="filterFeedbackType('SUGGESTION')" style="color:#60A5FA;">💡 功能建议</button>
+      </div>
+
+      <!-- 反馈表格 -->
+      <div class="table-responsive" style="flex: 1; overflow-y: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr>
+              <th style="width: 60px;">ID</th>
+              <th style="width: 130px;">用户</th>
+              <th style="width: 90px;">类型</th>
+              <th>反馈内容 / 错误截图</th>
+              <th style="width: 110px;">联系方式</th>
+              <th style="width: 90px;">状态</th>
+              <th style="width: 120px;">提交时间</th>
+              <th style="width: 110px; text-align: right;">操作</th>
+            </tr>
+          </thead>
+          <tbody id="feedbackTableBody">
+            <tr><td colspan="8" class="empty-tip">数据加载中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 底栏分页 -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--card-border); font-size: 12px;">
+        <span style="color: var(--text-muted);" id="feedbackPaginationTip">显示第 1 页</span>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-action" onclick="changeFeedbackPage(-1)" style="padding: 4px 12px;">上一页</button>
+          <button class="btn-action" onclick="changeFeedbackPage(1)" style="padding: 4px 12px;">下一页</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⚙️ 3. 【反馈处理 & 发放奖励积分 Modal】 -->
+  <div class="modal-overlay" id="processFeedbackModal" style="z-index: 10000;">
+    <div class="modal-box" style="width: 480px; max-width: 92vw; padding: 24px;">
+      <div class="modal-header" style="margin-bottom: 16px;">
+        <h3 style="font-size: 16px; font-weight: 700; color: #FFF; margin: 0;">处理用户反馈 & 奖励积分</h3>
+        <button class="btn-action" onclick="closeProcessFeedbackModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <input type="hidden" id="pfFeedbackId" />
+      
+      <div style="margin-bottom: 14px;">
+        <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">处理状态</label>
+        <select id="pfStatusSelect" class="form-input">
+          <option value="RESOLVED">✅ 标记为已解决 (RESOLVED)</option>
+          <option value="PROCESSING">⏳ 标记为处理中 (PROCESSING)</option>
+          <option value="REJECTED">🚫 标记为已忽略 (REJECTED)</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom: 14px;">
+        <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">管理员回复/解决方案说明</label>
+        <textarea id="pfAdminReply" class="form-input" rows="3" placeholder="例如：该 Bug 已在 v1.8 版本修复，感谢您的热心提报！"></textarea>
+      </div>
+
+      <div style="margin-bottom: 20px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); padding: 12px; border-radius: 10px;">
+        <label style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 700; color: #F59E0B; margin-bottom: 6px;">
+          <span>🎁 奖励契约积分 (鼓励机制)</span>
+          <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">可选输入，留空或0不赠送</span>
+        </label>
+        <input type="number" id="pfRewardPoints" class="form-input" placeholder="建议输入 20 ~ 50 积分" style="border-color: rgba(245, 158, 11, 0.4) !important;" />
+        <span style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block;">💡 奖励积分将自动充入该用户账户，并记录系统赠送流水</span>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn-action" onclick="closeProcessFeedbackModal()" style="padding: 8px 16px;">取消</button>
+        <button class="btn-action" onclick="doProcessFeedback()" style="padding: 8px 20px; background: var(--primary);">确认保存并提交</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🖼️ 4. 【图片大图放大 Modal】 -->
+  <div class="modal-overlay" id="imagePreviewModal" style="z-index: 10010;" onclick="closeImagePreviewModal()">
+    <div style="max-width: 90vw; max-height: 90vh; position: relative;" onclick="event.stopPropagation()">
+      <img id="previewImgElement" src="" style="max-width: 90vw; max-height: 85vh; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); border: 1px solid var(--card-border);" />
+      <button onclick="closeImagePreviewModal()" style="position: absolute; top: -14px; right: -14px; width: 32px; height: 32px; border-radius: 50%; background: #EF4444; color: #FFF; border: none; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- 📜 5. Feedback JavaScript 控制器 -->
+  <script>
+    let currentFeedbackStatus = 'ALL';
+    let currentFeedbackType = 'ALL';
+    let currentFeedbackPage = 1;
+
+    // 自动轮询/加载首页悬浮卡片未读统计
+    document.addEventListener('DOMContentLoaded', () => {
+      loadFeedbackWidgetStats();
+      setInterval(loadFeedbackWidgetStats, 30000); // 30s 自动刷新悬浮窗
+    });
+
+    async function loadFeedbackWidgetStats() {
+      try {
+        const res = await authFetch('/api/v1/admin/feedback/stats').then(r => r.json());
+        if (res && res.code === 200 && res.data) {
+          const count = res.data.pendingCount || 0;
+          const badge = document.getElementById('widgetBadge');
+          const headerBadge = document.getElementById('headerFeedbackBadge');
+          
+          if (badge) {
+            badge.innerText = count;
+            badge.style.display = count > 0 ? 'inline-block' : 'none';
+          }
+          if (headerBadge) {
+            headerBadge.innerText = count;
+            headerBadge.style.display = count > 0 ? 'inline-block' : 'none';
+          }
+
+          // 渲染小卡片列表
+          const items = res.data.latestItems || [];
+          const listContainer = document.getElementById('widgetFeedbackList');
+          if (listContainer) {
+            if (items.length === 0) {
+              listContainer.innerHTML = '<div class="empty-tip" style="font-size:12px; padding:15px 0;">暂无未处理的 BUG/反馈</div>';
+            } else {
+              listContainer.innerHTML = items.map(item => {
+                const isBug = item.type === 'BUG';
+                const statusColor = item.status === 'PENDING' ? '#EF4444' : (item.status === 'RESOLVED' ? '#10B981' : '#9CA3AF');
+                const firstImg = (item.images && item.images.length > 0) ? item.images[0] : null;
+
+                return `
+                  <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid var(--card-border); border-radius: 10px; padding: 10px; font-size: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                      <span style="font-weight: 700; color: ${isBug ? '#F59E0B' : '#60A5FA'}; background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px;">
+                        ${isBug ? '🐛 BUG' : '💡 建议'}
+                      </span>
+                      <span style="font-size: 11px; color: ${statusColor}; font-weight: 600;">
+                        ${item.status === 'PENDING' ? '⏳ 待处理' : (item.status === 'RESOLVED' ? '✅ 已解决' : item.status)}
+                      </span>
+                    </div>
+                    <div style="color: #F8FAFC; margin-bottom: 6px; line-height: 1.4; word-break: break-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                      ${item.content}
+                    </div>
+                    ${firstImg ? `<img src="${firstImg}" onclick="previewImage('${firstImg}')" style="width: 48px; height: 48px; object-fit: cover; border-radius: 6px; margin-bottom: 6px; cursor: pointer; border: 1px solid var(--card-border);" />` : ''}
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-muted);">
+                      <span>来自: ${item.userNickname || '用户#'+item.userId}</span>
+                      <button onclick="openProcessFeedbackModal(${item.id}, '${item.status}', '${(item.adminReply||'').replace(/'/g, "\\'")}')" style="background: rgba(236, 72, 153, 0.2); border: 1px solid rgba(236, 72, 153, 0.4); color: #F472B6; padding: 2px 8px; border-radius: 6px; cursor: pointer;">
+                        处理 <i class="fa-solid fa-wrench"></i>
+                      </button>
+                    </div>
+                  </div>
+                `;
+              }).join('');
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load feedback widget stats:', e);
+      }
+    }
+
+    function toggleFeedbackWidgetDrawer() {
+      const drawer = document.getElementById('widgetDrawer');
+      const chevron = document.getElementById('widgetChevron');
+      if (drawer) {
+        const isHidden = drawer.style.display === 'none';
+        drawer.style.display = isHidden ? 'block' : 'none';
+        if (chevron) {
+          chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+        if (isHidden) {
+          loadFeedbackWidgetStats();
+        }
+      }
+    }
+
+    // 展开【意见与BUG反馈全功能看板 Modal】
+    function openFeedbackAdminModal() {
+      const modal = document.getElementById('feedbackAdminModal');
+      if (modal) {
+        modal.classList.add('active');
+        fetchAdminFeedbackList();
+      }
+    }
+
+    function closeFeedbackAdminModal() {
+      const modal = document.getElementById('feedbackAdminModal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function filterFeedbackStatus(status) {
+      currentFeedbackStatus = status;
+      currentFeedbackPage = 1;
+      ['AllStatus', 'Pending', 'Resolved', 'Rejected'].forEach(s => {
+        const btn = document.getElementById(`fbChip${s}`);
+        if (btn) btn.classList.remove('active');
+      });
+      const activeBtn = document.getElementById(`fbChip${status === 'ALL' ? 'AllStatus' : status.charAt(0) + status.slice(1).toLowerCase()}`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      fetchAdminFeedbackList();
+    }
+
+    function filterFeedbackType(type) {
+      currentFeedbackType = type;
+      currentFeedbackPage = 1;
+      ['AllType', 'Bug', 'Suggestion'].forEach(t => {
+        const btn = document.getElementById(`fbChip${t}`);
+        if (btn) btn.classList.remove('active');
+      });
+      const activeBtn = document.getElementById(`fbChip${type === 'ALL' ? 'AllType' : type.charAt(0) + type.slice(1).toLowerCase()}`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      fetchAdminFeedbackList();
+    }
+
+    function changeFeedbackPage(delta) {
+      currentFeedbackPage = Math.max(1, currentFeedbackPage + delta);
+      fetchAdminFeedbackList();
+    }
+
+    async function fetchAdminFeedbackList() {
+      const tbody = document.getElementById('feedbackTableBody');
+      if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="empty-tip"><i class="fa-solid fa-spinner fa-spin"></i> 加载反馈列表...</td></tr>';
+
+      try {
+        const url = `/api/v1/admin/feedback/list?status=${currentFeedbackStatus}&type=${currentFeedbackType}&page=${currentFeedbackPage}&size=10`;
+        const res = await authFetch(url).then(r => r.json());
+        if (res && res.code === 200 && res.data) {
+          const data = res.data;
+          
+          document.getElementById('statPendingCount').innerText = data.pendingCount || 0;
+          document.getElementById('statBugCount').innerText = data.bugCount || 0;
+          document.getElementById('statSuggestionCount').innerText = data.suggestionCount || 0;
+          document.getElementById('statResolvedCount').innerText = data.resolvedCount || 0;
+
+          document.getElementById('feedbackPaginationTip').innerText = `第 ${currentFeedbackPage} 页 / 共 ${data.total || 0} 条记录`;
+
+          const items = data.items || [];
+          if (items.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="empty-tip">未查询到符合条件的反馈记录</td></tr>';
+            return;
+          }
+
+          tbody.innerHTML = items.map(item => {
+            const isBug = item.type === 'BUG';
+            const statusBadge = item.status === 'PENDING' ? '<span class="status-badge" style="background:rgba(239,68,68,0.15); color:#EF4444; border:1px solid rgba(239,68,68,0.3);">⏳ 待处理</span>' :
+                               (item.status === 'RESOLVED' ? '<span class="status-badge" style="background:rgba(16,185,129,0.15); color:#10B981; border:1px solid rgba(16,185,129,0.3);">✅ 已解决</span>' :
+                               '<span class="status-badge" style="background:rgba(156,163,175,0.15); color:#9CA3AF; border:1px solid rgba(156,163,175,0.3);">🚫 已忽略</span>');
+
+            const imgsHtml = (item.images && item.images.length > 0) ? `
+              <div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">
+                ${item.images.map(img => `<img src="${img}" onclick="previewImage('${img}')" style="width:42px; height:42px; object-fit:cover; border-radius:6px; border:1px solid var(--card-border); cursor:pointer;" />`).join('')}
+              </div>
+            ` : '';
+
+            const replyHtml = item.adminReply ? `
+              <div style="margin-top:6px; padding:6px 10px; background:rgba(59,130,246,0.1); border-radius:6px; border-left:3px solid #3B82F6; font-size:11px; color:#93C5FD;">
+                💬 答复: ${item.adminReply}
+                ${item.pointsRewarded > 0 ? `<span style="margin-left:8px; color:#F59E0B; font-weight:700;">🎁 奖 ${item.pointsRewarded} 积分</span>` : ''}
+              </div>
+            ` : '';
+
+            return `
+              <tr>
+                <td><strong>#${item.id}</strong></td>
+                <td>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    ${item.userAvatar ? `<img src="${item.userAvatar}" style="width:24px; height:24px; border-radius:50%;" />` : '<i class="fa-solid fa-user-circle" style="font-size:20px; color:var(--text-muted);"></i>'}
+                    <span style="font-size:12px; font-weight:600;">${item.userNickname}</span>
+                  </div>
+                </td>
+                <td>
+                  <span style="font-size:11px; font-weight:700; color:${isBug ? '#F59E0B' : '#60A5FA'}; background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px;">
+                    ${isBug ? '🐛 BUG' : (item.type === 'SUGGESTION' ? '💡 建议' : item.type)}
+                  </span>
+                </td>
+                <td style="line-height:1.5;">
+                  <div style="color:#FFF; word-break:break-all;">${item.content}</div>
+                  ${imgsHtml}
+                  ${replyHtml}
+                </td>
+                <td><span style="font-size:11px; color:var(--text-muted);">${item.contactInfo || '未填写'}</span></td>
+                <td>${statusBadge}</td>
+                <td><span style="font-size:11px; color:var(--text-muted);">${(item.createdAt||'').replace('T', ' ').substring(0, 16)}</span></td>
+                <td style="text-align:right;">
+                  <button class="btn-action" onclick="openProcessFeedbackModal(${item.id}, '${item.status}', '${(item.adminReply||'').replace(/'/g, "\\'")}')" style="padding:4px 10px; font-size:11px; background:rgba(236,72,153,0.15); color:#F472B6; border:1px solid rgba(236,72,153,0.3);">
+                    <i class="fa-solid fa-wrench"></i> 处理
+                  </button>
+                </td>
+              </tr>
+            `;
+          }).join('');
+        }
+      } catch (e) {
+        console.error('Failed to fetch admin feedback list:', e);
+        if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="empty-tip" style="color:var(--danger);">加载列表失败</td></tr>';
+      }
+    }
+
+    function openProcessFeedbackModal(id, status, oldReply) {
+      document.getElementById('pfFeedbackId').value = id;
+      document.getElementById('pfStatusSelect').value = status || 'RESOLVED';
+      document.getElementById('pfAdminReply').value = oldReply || '';
+      document.getElementById('pfRewardPoints').value = '';
+
+      const modal = document.getElementById('processFeedbackModal');
+      if (modal) modal.classList.add('active');
+    }
+
+    function closeProcessFeedbackModal() {
+      const modal = document.getElementById('processFeedbackModal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    async function doProcessFeedback() {
+      const id = document.getElementById('pfFeedbackId').value;
+      const status = document.getElementById('pfStatusSelect').value;
+      const adminReply = document.getElementById('pfAdminReply').value;
+      const rewardPoints = document.getElementById('pfRewardPoints').value;
+
+      try {
+        const url = `/api/v1/admin/feedback/${id}/process?status=${status}&adminReply=${encodeURIComponent(adminReply)}&rewardPoints=${rewardPoints || 0}`;
+        const res = await authFetch(url, { method: 'POST' }).then(r => r.json());
+
+        if (res && res.code === 200) {
+          Swal.fire({
+            icon: 'success',
+            title: '处理已提交！',
+            text: rewardPoints > 0 ? `已同时为该用户充入 ${rewardPoints} 契约奖励积分` : '状态与回复更新成功',
+            timer: 2000,
+            showConfirmButton: false
+          });
+          closeProcessFeedbackModal();
+          fetchAdminFeedbackList();
+          loadFeedbackWidgetStats();
+        } else {
+          Swal.fire('提交失败', res.message || '未知错误', 'error');
+        }
+      } catch (e) {
+        Swal.fire('提交失败', '网络异常', 'error');
+      }
+    }
+
+    function previewImage(url) {
+      const img = document.getElementById('previewImgElement');
+      const modal = document.getElementById('imagePreviewModal');
+      if (img && modal) {
+        img.src = url;
+        modal.classList.add('active');
+      }
+    }
+
+    function closeImagePreviewModal() {
+      const modal = document.getElementById('imagePreviewModal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    window.toggleFeedbackWidgetDrawer = toggleFeedbackWidgetDrawer;
+    window.openFeedbackAdminModal = openFeedbackAdminModal;
+    window.closeFeedbackAdminModal = closeFeedbackAdminModal;
+    window.filterFeedbackStatus = filterFeedbackStatus;
+    window.filterFeedbackType = filterFeedbackType;
+    window.changeFeedbackPage = changeFeedbackPage;
+    window.openProcessFeedbackModal = openProcessFeedbackModal;
+    window.closeProcessFeedbackModal = closeProcessFeedbackModal;
+    window.doProcessFeedback = doProcessFeedback;
+    window.previewImage = previewImage;
+    window.closeImagePreviewModal = closeImagePreviewModal;
+  </script>
 </body>
 </html>
+

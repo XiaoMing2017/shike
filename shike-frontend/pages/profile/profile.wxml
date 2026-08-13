@@ -173,6 +173,20 @@
     </view>
   </view>
 
+  <!-- 4. 帮助与反馈 Card -->
+  <view class="glass-card menu-card" style="margin-top: 24rpx; margin-bottom: 40rpx;">
+    <view class="menu-item flex justify-between align-center" bindtap="openFeedbackModal">
+      <view class="flex align-center" style="gap: 16rpx;">
+        <text style="font-size: 32rpx;">💡</text>
+        <view class="flex-col">
+          <text style="font-size: 28rpx; color: #1E293B; font-weight: 600;">意见与 BUG 反馈</text>
+          <text style="font-size: 22rpx; color: #94A3B8;">提交吐槽或报错，采纳可获得契约积分奖励</text>
+        </view>
+      </view>
+      <text style="font-size: 28rpx; color: #EC4899; font-weight: 700;">反馈 ❯</text>
+    </view>
+  </view>
+
   <!-- 日常活动系数居中弹窗 -->
   <view class="modal-backdrop {{showActivitySheet ? 'active' : ''}}" catchtap="hideActivityModal" catchtouchmove="preventBubble">
     <view class="modal-dialog" catchtap="preventBubble">
