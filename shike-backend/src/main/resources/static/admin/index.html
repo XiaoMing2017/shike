@@ -3408,6 +3408,13 @@
         return;
       }
 
+      // 向上置顶 user_feedback，方便管理员优先查看与操控
+      toggles.sort((a, b) => {
+        if (a.featureKey === 'user_feedback') return -1;
+        if (b.featureKey === 'user_feedback') return 1;
+        return a.id - b.id;
+      });
+
       container.innerHTML = toggles.map(t => {
         const mode = t.envMode || (t.enabled ? 'PROD_AND_TEST' : 'DISABLED');
         
