@@ -132,12 +132,11 @@ public class FeedbackServiceImpl implements FeedbackService {
                 user.setPoints(newPoints);
                 userRepository.save(user);
 
-                // 写入积分明细日志
+                // 写入积分明细日志 (使用 amount 字段)
                 PointsRecord record = PointsRecord.builder()
                         .userId(user.getId())
                         .type("SYSTEM_GRANT")
-                        .points(rewardPoints)
-                        .balance(newPoints)
+                        .amount(rewardPoints)
                         .remark("采纳意见/BUG反馈奖励积分 (" + feedback.getType() + " #" + feedback.getId() + ")")
                         .build();
                 pointsRecordRepository.save(record);
@@ -178,7 +177,7 @@ public class FeedbackServiceImpl implements FeedbackService {
         User user = userRepository.findById(feedback.getUserId()).orElse(null);
         if (user != null) {
             nickname = StringUtils.hasText(user.getNickname()) ? user.getNickname() : "用户 " + user.getId();
-            avatar = user.getAvatar();
+            avatar = user.getAvatarUrl();
         }
 
         return FeedbackDTO.builder()
