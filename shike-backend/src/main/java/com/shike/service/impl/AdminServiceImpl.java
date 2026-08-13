@@ -577,7 +577,9 @@ public class AdminServiceImpl implements AdminService {
 
     @jakarta.annotation.PostConstruct
     public void initFeatureToggles() {
+        // 🎛️ 初始化全站功能开关 (包含反馈系统)
         try {
+            initSingleToggle("user_feedback", "用户意见与BUG反馈", "互动与反馈", "PROD_AND_TEST", true, "小程序端悬浮反馈胶囊按钮与意见/BUG提报入口");
             initSingleToggle("ai_plan", "AI 专属定制计划", "AI大模型功能", "TEST_ONLY", false, "基于档案由 AI 推算周运动与 28 餐食谱");
             initSingleToggle("diet_diagnosis", "AI 膳食深度诊断", "AI大模型功能", "PROD_AND_TEST", true, "Qwen 大模型每日三餐深度复盘点评 (15积分/次)");
             initSingleToggle("photo_recognize", "AI 拍照识图算卡", "AI大模型功能", "PROD_AND_TEST", true, "Qwen-VL 多模态识别食物照片热量、重量与三大营养素");
@@ -586,7 +588,14 @@ public class AdminServiceImpl implements AdminService {
             initSingleToggle("water_log", "饮水追踪与记录", "健康追踪", "PROD_AND_TEST", true, "每日饮水量实时目标进度追踪");
             initSingleToggle("week_dashboard", "周看板视图与对比", "看板与分析", "PROD_AND_TEST", true, "支持切换到近7天热量/三大营养素趋势与周看板");
             initSingleToggle("month_dashboard", "月看板视图与趋势", "看板与分析", "PROD_AND_TEST", true, "支持切换到月度热量赤字、4周趋势对比与月看板");
-            initSingleToggle("user_feedback", "用户意见与BUG反馈", "互动与反馈", "PROD_AND_TEST", true, "小程序端悬浮反馈胶囊按钮与意见/BUG提报入口");
+            
+            // 清理 Redis 缓存，防止旧乱码缓存驻留
+            if (stringRedisTemplate != null) {
+                stringRedisTemplate.delete("shike:sys:feature_toggles");
+                stringRedisTemplate.delete("shike:sys:feature_toggles:test");
+                stringRedisTemplate.delete("shike:sys:feature_toggles:prod");
+                stringRedisTemplate.delete("shike:sys:feature_toggles:release");
+            }
         } catch (Exception e) {
             log.warn("Failed to initialize feature toggles: {}", e.getMessage());
         }
@@ -606,6 +615,7 @@ public class AdminServiceImpl implements AdminService {
             log.info("Initialized default feature toggle [{}]: envMode={}, enabled={}", key, defaultEnvMode, defaultEnabled);
         } else {
             toggle.setFeatureName(name);
+            toggle.setCategory(category);
             toggle.setDescription(desc);
             featureToggleRepository.save(toggle);
         }
@@ -619,8 +629,60 @@ public class AdminServiceImpl implements AdminService {
             if (ft.getEnvMode() == null || ft.getEnvMode().isBlank()) {
                 ft.setEnvMode(Boolean.TRUE.equals(ft.getEnabled()) ? "PROD_AND_TEST" : "DISABLED");
             }
+            sanitizeFeatureToggleText(ft);
         }
         return list;
+    }
+
+    private void sanitizeFeatureToggleText(com.shike.model.entity.FeatureToggle ft) {
+        if (ft == null || ft.getFeatureKey() == null) return;
+        switch (ft.getFeatureKey()) {
+            case "user_feedback":
+                ft.setFeatureName("用户意见与BUG反馈");
+                ft.setCategory("互动与反馈");
+                ft.setDescription("小程序端悬浮反馈胶囊按钮与意见/BUG提报入口");
+                break;
+            case "ai_plan":
+                ft.setFeatureName("AI 专属定制计划");
+                ft.setCategory("AI大模型功能");
+                ft.setDescription("基于档案由 AI 推算周运动与 28 餐食谱");
+                break;
+            case "diet_diagnosis":
+                ft.setFeatureName("AI 膳食深度诊断");
+                ft.setCategory("AI大模型功能");
+                ft.setDescription("Qwen 大模型每日三餐深度复盘点评 (15积分/次)");
+                break;
+            case "photo_recognize":
+                ft.setFeatureName("AI 拍照识图算卡");
+                ft.setCategory("AI大模型功能");
+                ft.setDescription("Qwen-VL 多模态识别食物照片热量、重量与三大营养素");
+                break;
+            case "poster_share":
+                ft.setFeatureName("晒餐/打卡海报生成");
+                ft.setCategory("社交与分享");
+                ft.setDescription("生成拍立得、大餐救急等精美海报与打卡图");
+                break;
+            case "team_challenge":
+                ft.setFeatureName("契约小队对赌打卡");
+                ft.setCategory("互动与挑战");
+                ft.setDescription("组队习惯养成打卡与积分对赌池");
+                break;
+            case "water_log":
+                ft.setFeatureName("饮水追踪与记录");
+                ft.setCategory("健康追踪");
+                ft.setDescription("每日饮水量实时目标进度追踪");
+                break;
+            case "week_dashboard":
+                ft.setFeatureName("周看板视图与对比");
+                ft.setCategory("看板与分析");
+                ft.setDescription("支持切换到近7天热量/三大营养素趋势与周看板");
+                break;
+            case "month_dashboard":
+                ft.setFeatureName("月看板视图与趋势");
+                ft.setCategory("看板与分析");
+                ft.setDescription("支持切换到月度热量赤字、4周趋势对比与月看板");
+                break;
+        }
     }
 
     @Override

@@ -3418,6 +3418,44 @@
       container.innerHTML = toggles.map(t => {
         const mode = t.envMode || (t.enabled ? 'PROD_AND_TEST' : 'DISABLED');
         
+        const featureNameMap = {
+          'user_feedback': '用户意见与BUG反馈',
+          'ai_plan': 'AI 专属定制计划',
+          'diet_diagnosis': 'AI 膳食深度诊断',
+          'photo_recognize': 'AI 拍照识图算卡',
+          'poster_share': '晒餐/打卡海报生成',
+          'team_challenge': '契约小队对赌打卡',
+          'water_log': '饮水追踪与记录',
+          'week_dashboard': '周看板视图与对比',
+          'month_dashboard': '月看板视图与趋势'
+        };
+        const categoryMap = {
+          'user_feedback': '互动与反馈',
+          'ai_plan': 'AI大模型功能',
+          'diet_diagnosis': 'AI大模型功能',
+          'photo_recognize': 'AI大模型功能',
+          'poster_share': '社交与分享',
+          'team_challenge': '互动与挑战',
+          'water_log': '健康追踪',
+          'week_dashboard': '看板与分析',
+          'month_dashboard': '看板与分析'
+        };
+        const descMap = {
+          'user_feedback': '小程序端悬浮反馈胶囊按钮与意见/BUG提报入口',
+          'ai_plan': '基于档案由 AI 推算周运动与 28 餐食谱',
+          'diet_diagnosis': 'Qwen 大模型每日三餐深度复盘点评 (15积分/次)',
+          'photo_recognize': 'Qwen-VL 多模态识别食物照片热量、重量与三大营养素',
+          'poster_share': '生成拍立得、大餐救急等精美海报与打卡图',
+          'team_challenge': '组队习惯养成打卡与积分对赌池',
+          'water_log': '每日饮水量实时目标进度追踪',
+          'week_dashboard': '支持切换到近7天热量/三大营养素趋势与周看板',
+          'month_dashboard': '支持切换到月度热量赤字、4周趋势对比与月看板'
+        };
+
+        const displayName = featureNameMap[t.featureKey] || t.featureName;
+        const displayCategory = categoryMap[t.featureKey] || t.category || '核心功能';
+        const displayDesc = descMap[t.featureKey] || t.description || '';
+
         let badgeHtml = '';
         if (mode === 'PROD_AND_TEST') {
           badgeHtml = '<span style="font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 700; background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.4);">🚀 全量线上 (正式+测试均显示)</span>';
@@ -3432,11 +3470,11 @@
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
               <div>
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap;">
-                  <span style="font-size: 16px; font-weight: 700; color: #F8FAFC;">${t.featureName}</span>
-                  <span style="font-size: 11px; background: rgba(59, 130, 246, 0.15); color: #60A5FA; padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(59, 130, 246, 0.3); font-weight: 500;">${t.category || '核心功能'}</span>
+                  <span style="font-size: 16px; font-weight: 700; color: #F8FAFC;">${displayName}</span>
+                  <span style="font-size: 11px; background: rgba(59, 130, 246, 0.15); color: #60A5FA; padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(59, 130, 246, 0.3); font-weight: 500;">${displayCategory}</span>
                   ${badgeHtml}
                 </div>
-                <div style="font-size: 13px; color: #94A3B8; line-height: 1.5;">${t.description || ''}</div>
+                <div style="font-size: 13px; color: #94A3B8; line-height: 1.5;">${displayDesc}</div>
               </div>
               <div style="font-size: 11px; color: #64748B; font-family: monospace;">key: ${t.featureKey}</div>
             </div>
