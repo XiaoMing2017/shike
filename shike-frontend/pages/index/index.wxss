@@ -3583,30 +3583,39 @@
   box-shadow: 0 6rpx 16rpx rgba(16, 185, 129, 0.3);
 }
 
-/* 💬 首页右下角常驻悬浮反馈胶囊按钮 */
+/* 💬 首页右下角常驻悬浮客服胶囊 (适配食刻翡翠绿毛玻璃画风，避让上方查看计划按钮) */
 .feedback-floating-fab {
   position: fixed !important;
-  right: 30rpx !important;
-  bottom: 160rpx !important;
-  z-index: 999 !important;
-  background: linear-gradient(135deg, #EC4899, #8B5CF6) !important;
-  padding: 16rpx 28rpx !important;
-  border-radius: 40rpx !important;
-  box-shadow: 0 10rpx 28rpx rgba(236, 72, 153, 0.45) !important;
+  right: 24rpx !important;
+  bottom: 100rpx !important;
+  z-index: 99 !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1.5rpx solid rgba(16, 185, 129, 0.4) !important;
+  padding: 12rpx 24rpx !important;
+  border-radius: 36rpx !important;
+  box-shadow: 0 8rpx 24rpx rgba(16, 185, 129, 0.2), 0 2rpx 8rpx rgba(0, 0, 0, 0.05) !important;
   display: flex !important;
   align-items: center !important;
-  gap: 10rpx !important;
+  gap: 8rpx !important;
+  transition: all 0.2s ease !important;
+}
+
+.feedback-floating-fab:active {
+  transform: scale(0.95) !important;
+  background: rgba(236, 253, 245, 0.98) !important;
 }
 
 .fab-icon {
-  font-size: 30rpx !important;
+  font-size: 26rpx !important;
+  line-height: 1 !important;
 }
 
 .fab-text {
-  font-size: 26rpx !important;
-  font-weight: 800 !important;
-  color: #FFFFFF !important;
-  letter-spacing: 1rpx !important;
+  font-size: 23rpx !important;
+  font-weight: 700 !important;
+  color: #047857 !important;
+  letter-spacing: 0.5rpx !important;
 }
 
 /* 反馈 Modal 样式 */
