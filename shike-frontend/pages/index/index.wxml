@@ -1226,7 +1226,7 @@
     <view class="glass-card feedback-modal-dialog">
       <view class="feedback-modal-header flex justify-between align-center">
         <view class="flex align-center" style="gap: 12rpx;">
-          <text style="font-size: 36rpx;">💬</text>
+          <text style="font-size: 36rpx;">🎧</text>
           <text class="feedback-modal-title">{{contactConfig.title || '联系客服 & 意见反馈'}}</text>
         </view>
         <text class="feedback-modal-close" bindtap="closeContactModal">×</text>
