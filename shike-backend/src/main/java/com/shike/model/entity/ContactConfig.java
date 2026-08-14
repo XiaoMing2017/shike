@@ -39,6 +39,9 @@ public class ContactConfig {
     @Column(name = "open_type", length = 20)
     private String openType; // MODAL (联系弹窗) 或 CONTACT (微信原生客服)
 
+    @Column(name = "items_json", columnDefinition = "TEXT")
+    private String itemsJson; // 动态联系方式列表 JSON 字符串
+
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;

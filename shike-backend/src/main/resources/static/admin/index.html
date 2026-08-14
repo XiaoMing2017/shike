@@ -1784,20 +1784,21 @@
           <input type="text" id="contactTitle" placeholder="例如: 💬 联系客服 & 意见反馈" style="width: 100%; background: var(--bg-dark); border: 1px solid var(--card-border); color: #FFF; padding: 10px 14px; border-radius: 8px; font-size: 13px;">
         </div>
 
-        <div style="display: flex; gap: 12px;">
-          <div style="flex: 1;">
-            <label style="font-size: 12px; color: #94A3B8; display: block; margin-bottom: 6px; font-weight: 600;">客服微信号 (支持点击一键复制)</label>
-            <input type="text" id="contactWxId" placeholder="例如: shike_helper" style="width: 100%; background: var(--bg-dark); border: 1px solid var(--card-border); color: #FFF; padding: 10px 14px; border-radius: 8px; font-size: 13px;">
-          </div>
-          <div style="flex: 1;">
-            <label style="font-size: 12px; color: #94A3B8; display: block; margin-bottom: 6px; font-weight: 600;">客服联系电话 (支持直接点击拨打)</label>
-            <input type="text" id="contactPhone" placeholder="例如: 13800138000" style="width: 100%; background: var(--bg-dark); border: 1px solid var(--card-border); color: #FFF; padding: 10px 14px; border-radius: 8px; font-size: 13px;">
-          </div>
+        <div>
+          <label style="font-size: 12px; color: #94A3B8; display: block; margin-bottom: 6px; font-weight: 600;">反馈与提示说明文案</label>
+          <textarea id="contactNotice" rows="2" placeholder="例如: 遇到 Bug 或有改进建议？添加客服微信号反映，采纳有契约积分奖励哦！" style="width: 100%; background: var(--bg-dark); border: 1px solid var(--card-border); color: #FFF; padding: 8px 12px; border-radius: 8px; font-size: 13px; line-height: 1.5; resize: vertical;"></textarea>
         </div>
 
         <div>
-          <label style="font-size: 12px; color: #94A3B8; display: block; margin-bottom: 6px; font-weight: 600;">反馈与提示说明文案</label>
-          <textarea id="contactNotice" rows="3" placeholder="例如: 遇到 Bug 或有改进建议？添加客服微信号反映，采纳有契约积分奖励哦！" style="width: 100%; background: var(--bg-dark); border: 1px solid var(--card-border); color: #FFF; padding: 10px 14px; border-radius: 8px; font-size: 13px; line-height: 1.5; resize: vertical;"></textarea>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <label style="font-size: 13px; color: #F8FAFC; font-weight: 700;">联系卡片与动作项目 (支持自由增删排版)</label>
+            <button type="button" onclick="addContactItem()" style="background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.4); padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">
+              <i class="fa-solid fa-plus"></i> ➕ 添加联系方式/动作卡片
+            </button>
+          </div>
+          <div id="contactItemListContainer" style="display: flex; flex-direction: column; gap: 10px; max-height: 260px; overflow-y: auto; padding-right: 4px;">
+            <!-- 动态渲染 Item 容器 -->
+          </div>
         </div>
       </div>
 
@@ -3719,15 +3720,15 @@
       document.getElementById('modalContactConfig').classList.remove('active');
     }
 
+    let currentContactItems = [];
+
     function loadContactConfig() {
       fetch('/api/v1/admin/config/contact')
         .then(r => r.json())
         .then(res => {
           if (res.code === 200 && res.data) {
             const d = res.data;
-            document.getElementById('contactTitle').value = d.title || '💬 联系客服 & 意见反馈';
-            document.getElementById('contactWxId').value = d.wxId || 'shike_helper';
-            document.getElementById('contactPhone').value = d.phone || '';
+            document.getElementById('contactTitle').value = d.title || '联系客服 & 意见反馈';
             document.getElementById('contactNotice').value = d.notice || '';
             
             const radios = document.getElementsByName('contactOpenType');
@@ -3736,15 +3737,75 @@
                 r.checked = true;
               }
             }
+
+            currentContactItems = d.items || [];
+            if (currentContactItems.length === 0) {
+              currentContactItems = [
+                { id: 'item_1', label: '客服微信号', value: 'shike_helper', actionType: 'COPY', btnText: '复制微信号' },
+                { id: 'item_2', label: '客服电话', value: '13800138000', actionType: 'CALL', btnText: '拨打电话' }
+              ];
+            }
+            renderContactItems();
           }
         })
         .catch(e => console.warn('Failed to load contact config', e));
     }
 
+    function renderContactItems() {
+      const container = document.getElementById('contactItemListContainer');
+      if (!container) return;
+
+      if (currentContactItems.length === 0) {
+        container.innerHTML = '<div style="color: #94A3B8; font-size: 12px; text-align: center; padding: 12px; background: rgba(15,23,42,0.4); border-radius: 8px;">暂无联系项目，请点击右上角添加</div>';
+        return;
+      }
+
+      container.innerHTML = currentContactItems.map((item, index) => `
+        <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid var(--card-border); padding: 12px; border-radius: 10px; display: flex; flex-direction: column; gap: 8px; position: relative;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="text" value="${item.label || ''}" oninput="updateContactItem(${index}, 'label', this.value)" placeholder="标签 (如: 客服微信号)" style="flex: 1; background: var(--bg-dark); border: 1px solid var(--card-border); color: #FFF; padding: 6px 10px; border-radius: 6px; font-size: 12px;">
+            <select onchange="updateContactItem(${index}, 'actionType', this.value)" style="background: var(--bg-dark); border: 1px solid var(--card-border); color: #60A5FA; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">
+              <option value="COPY" ${item.actionType === 'COPY' ? 'selected' : ''}>📋 复制文本</option>
+              <option value="CALL" ${item.actionType === 'CALL' ? 'selected' : ''}>📞 拨打电话</option>
+              <option value="NONE" ${item.actionType === 'NONE' ? 'selected' : ''}>👀 仅展示</option>
+            </select>
+            <button type="button" onclick="removeContactItem(${index})" style="background: rgba(239, 68, 68, 0.2); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.4); padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="text" value="${item.value || ''}" oninput="updateContactItem(${index}, 'value', this.value)" placeholder="具体内容 (如: shike_helper 或 13800...)" style="flex: 2; background: var(--bg-dark); border: 1px solid var(--card-border); color: #FFF; padding: 6px 10px; border-radius: 6px; font-size: 12px;">
+            <input type="text" value="${item.btnText || ''}" oninput="updateContactItem(${index}, 'btnText', this.value)" placeholder="按钮文案 (如: 复制微信号)" style="flex: 1; background: var(--bg-dark); border: 1px solid var(--card-border); color: #10B981; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addContactItem() {
+      currentContactItems.push({
+        id: 'item_' + Date.now(),
+        label: '客服联系方式',
+        value: '',
+        actionType: 'COPY',
+        btnText: '一键复制'
+      });
+      renderContactItems();
+    }
+
+    function removeContactItem(index) {
+      currentContactItems.splice(index, 1);
+      renderContactItems();
+    }
+
+    function updateContactItem(index, key, val) {
+      if (currentContactItems[index]) {
+        currentContactItems[index][key] = val;
+      }
+    }
+
     function saveContactConfig() {
       const title = document.getElementById('contactTitle').value.trim();
-      const wxId = document.getElementById('contactWxId').value.trim();
-      const phone = document.getElementById('contactPhone').value.trim();
       const notice = document.getElementById('contactNotice').value.trim();
       
       let openType = 'MODAL';
@@ -3753,15 +3814,28 @@
         if (r.checked) openType = r.value;
       }
 
+      const wxItem = currentContactItems.find(i => i.actionType === 'COPY');
+      const phoneItem = currentContactItems.find(i => i.actionType === 'CALL');
+
+      const body = {
+        enabled: true,
+        title,
+        wxId: wxItem ? wxItem.value : '',
+        phone: phoneItem ? phoneItem.value : '',
+        notice,
+        openType,
+        items: currentContactItems
+      };
+
       fetch('/api/v1/admin/config/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enabled: true, title, wxId, phone, notice, openType })
+        body: JSON.stringify(body)
       })
       .then(r => r.json())
       .then(res => {
         if (res.code === 200) {
-          alert('✅ 客服与联系方式配置已成功保存！');
+          alert('✅ 动态客服与联系卡片配置已成功保存发布！');
           closeContactConfigModal();
         } else {
           alert('保存失败: ' + (res.message || ''));
@@ -3774,6 +3848,9 @@
     window.openContactConfigModal = openContactConfigModal;
     window.closeContactConfigModal = closeContactConfigModal;
     window.saveContactConfig = saveContactConfig;
+    window.addContactItem = addContactItem;
+    window.removeContactItem = removeContactItem;
+    window.updateContactItem = updateContactItem;
     window.openTeamModal = openTeamModal;
     window.closeTeamModal = closeTeamModal;
     window.toggleTeamStatus = toggleTeamStatus;

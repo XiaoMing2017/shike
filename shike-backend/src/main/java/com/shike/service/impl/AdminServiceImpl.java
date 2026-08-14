@@ -1142,13 +1142,38 @@ public class AdminServiceImpl implements AdminService {
     public com.shike.model.dto.ContactConfigDTO getContactConfig() {
         com.shike.model.entity.ContactConfig config = contactConfigRepository.findFirstByOrderByIdAsc().orElse(null);
         if (config == null) {
+            List<com.shike.model.dto.ContactConfigDTO.ContactItem> defaultItems = List.of(
+                    com.shike.model.dto.ContactConfigDTO.ContactItem.builder()
+                            .id("item_wx")
+                            .label("客服微信号")
+                            .value("shike_helper")
+                            .actionType("COPY")
+                            .btnText("复制微信号")
+                            .build(),
+                    com.shike.model.dto.ContactConfigDTO.ContactItem.builder()
+                            .id("item_phone")
+                            .label("客服电话")
+                            .value("13800138000")
+                            .actionType("CALL")
+                            .btnText("拨打电话")
+                            .build()
+            );
+
+            String defaultJson = "";
+            try {
+                defaultJson = mapper.writeValueAsString(defaultItems);
+            } catch (Exception e) {
+                log.warn("Failed to serialize default contact items", e);
+            }
+
             config = com.shike.model.entity.ContactConfig.builder()
                     .enabled(true)
-                    .title("💬 联系客服 & 意见反馈")
+                    .title("联系客服 & 意见反馈")
                     .wxId("shike_helper")
                     .phone("13800138000")
                     .notice("遇到 Bug 或有改进建议？长按复制微信号添加客服，采纳有契约积分奖励哦！")
                     .openType("MODAL")
+                    .itemsJson(defaultJson)
                     .build();
             config = contactConfigRepository.save(config);
         }
@@ -1161,6 +1186,36 @@ public class AdminServiceImpl implements AdminService {
             cleanTitle = "联系客服 & 意见反馈";
         }
 
+        List<com.shike.model.dto.ContactConfigDTO.ContactItem> items = new java.util.ArrayList<>();
+        if (config.getItemsJson() != null && !config.getItemsJson().isBlank()) {
+            try {
+                items = mapper.readValue(config.getItemsJson(), new com.fasterxml.jackson.core.type.TypeReference<List<com.shike.model.dto.ContactConfigDTO.ContactItem>>() {});
+            } catch (Exception e) {
+                log.warn("Failed to parse itemsJson from ContactConfig", e);
+            }
+        }
+
+        if (items.isEmpty()) {
+            if (config.getWxId() != null && !config.getWxId().isBlank()) {
+                items.add(com.shike.model.dto.ContactConfigDTO.ContactItem.builder()
+                        .id("item_wx")
+                        .label("客服微信号")
+                        .value(config.getWxId())
+                        .actionType("COPY")
+                        .btnText("复制微信号")
+                        .build());
+            }
+            if (config.getPhone() != null && !config.getPhone().isBlank()) {
+                items.add(com.shike.model.dto.ContactConfigDTO.ContactItem.builder()
+                        .id("item_phone")
+                        .label("客服电话")
+                        .value(config.getPhone())
+                        .actionType("CALL")
+                        .btnText("拨打电话")
+                        .build());
+            }
+        }
+
         return com.shike.model.dto.ContactConfigDTO.builder()
                 .enabled(config.getEnabled() != null ? config.getEnabled() : true)
                 .title(cleanTitle)
@@ -1168,6 +1223,7 @@ public class AdminServiceImpl implements AdminService {
                 .phone(config.getPhone())
                 .notice(config.getNotice())
                 .openType(config.getOpenType() != null ? config.getOpenType() : "MODAL")
+                .items(items)
                 .build();
     }
 
@@ -1185,7 +1241,15 @@ public class AdminServiceImpl implements AdminService {
         if (dto.getNotice() != null) config.setNotice(dto.getNotice().trim());
         if (dto.getOpenType() != null) config.setOpenType(dto.getOpenType().trim());
 
+        if (dto.getItems() != null) {
+            try {
+                config.setItemsJson(mapper.writeValueAsString(dto.getItems()));
+            } catch (Exception e) {
+                log.warn("Failed to serialize ContactItem list", e);
+            }
+        }
+
         contactConfigRepository.save(config);
-        logAudit(adminUsername, "UPDATE_CONTACT_CONFIG", "GLOBAL", "更新客服与联系方式配置: wxId=" + dto.getWxId() + ", openType=" + dto.getOpenType());
+        logAudit(adminUsername, "UPDATE_CONTACT_CONFIG", "GLOBAL", "更新动态客服与联系方式配置: item_count=" + (dto.getItems() != null ? dto.getItems().size() : 0));
     }
 }

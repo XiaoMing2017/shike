@@ -2948,5 +2948,23 @@ Page({
     } else {
       wx.showToast({ title: '已自动保存相册，可直接在微信中发送朋友圈', icon: 'none' });
     }
+  },
+
+  handleContactItemAction(e) {
+    const { action, val } = e.currentTarget.dataset;
+    if (!val) return;
+    if (action === 'COPY') {
+      wx.setClipboardData({
+        data: val,
+        success: () => {
+          wx.showToast({ title: '内容已复制到剪贴板', icon: 'success' });
+        }
+      });
+    } else if (action === 'CALL') {
+      wx.makePhoneCall({
+        phoneNumber: val,
+        fail: () => {}
+      });
+    }
   }
 })

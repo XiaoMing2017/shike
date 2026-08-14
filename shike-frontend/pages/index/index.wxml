@@ -1237,23 +1237,19 @@
         <text class="notice-text">{{contactConfig.notice}}</text>
       </view>
 
-      <!-- 微信号复制卡片 -->
-      <view class="contact-card-item flex justify-between align-center" wx:if="{{contactConfig.wxId}}">
-        <view class="flex flex-col">
-          <text class="contact-label">客服微信号</text>
-          <text class="contact-value">{{contactConfig.wxId}}</text>
-        </view>
-        <button class="btn-copy-contact flex align-center justify-center" catchtap="copyWxId" data-wx="{{contactConfig.wxId}}">📋 复制微信号</button>
-      </view>
+      <!-- 动态联系卡片列表 (像版本弹窗一样，支持后台自由配置多条项目与动作) -->
+      <block wx:if="{{contactConfig.items && contactConfig.items.length > 0}}">
+        <view class="contact-card-item flex justify-between align-center" wx:for="{{contactConfig.items}}" wx:key="id" wx:for-item="item">
+          <view class="flex flex-col" style="flex: 1; padding-right: 16rpx;">
+            <text class="contact-label">{{item.label}}</text>
+            <text class="contact-value">{{item.value}}</text>
+          </view>
+          
+          <button class="btn-copy-contact flex align-center justify-center" catchtap="handleContactItemAction" data-action="{{item.actionType}}" data-val="{{item.value}}" wx:if="{{item.actionType === 'COPY'}}">{{item.btnText || '复制'}}</button>
 
-      <!-- 电话拨打卡片 -->
-      <view class="contact-card-item flex justify-between align-center" wx:if="{{contactConfig.phone}}">
-        <view class="flex flex-col">
-          <text class="contact-label">客服电话</text>
-          <text class="contact-value">{{contactConfig.phone}}</text>
+          <button class="btn-call-contact flex align-center justify-center" catchtap="handleContactItemAction" data-action="{{item.actionType}}" data-val="{{item.value}}" wx:elif="{{item.actionType === 'CALL'}}">{{item.btnText || '拨打'}}</button>
         </view>
-        <button class="btn-call-contact flex align-center justify-center" catchtap="callPhone" data-phone="{{contactConfig.phone}}">📞 拨打电话</button>
-      </view>
+      </block>
 
       <!-- 关闭按钮 -->
       <view class="contact-actions" style="margin-top: 28rpx;">
