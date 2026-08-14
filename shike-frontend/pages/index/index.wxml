@@ -1243,7 +1243,7 @@
           <text class="contact-label">客服微信号</text>
           <text class="contact-value">{{contactConfig.wxId}}</text>
         </view>
-        <button class="btn-copy-contact" catchtap="copyWxId" data-wx="{{contactConfig.wxId}}">复制微信号</button>
+        <button class="btn-copy-contact flex align-center justify-center" catchtap="copyWxId" data-wx="{{contactConfig.wxId}}">📋 复制微信号</button>
       </view>
 
       <!-- 电话拨打卡片 -->
@@ -1252,12 +1252,12 @@
           <text class="contact-label">客服电话</text>
           <text class="contact-value">{{contactConfig.phone}}</text>
         </view>
-        <button class="btn-call-contact" catchtap="callPhone" data-phone="{{contactConfig.phone}}">拨打电话</button>
+        <button class="btn-call-contact flex align-center justify-center" catchtap="callPhone" data-phone="{{contactConfig.phone}}">📞 拨打电话</button>
       </view>
 
       <!-- 关闭按钮 -->
       <view class="contact-actions" style="margin-top: 28rpx;">
-        <button class="btn-close-contact" bindtap="closeContactModal">关闭窗口</button>
+        <button class="btn-close-contact flex align-center justify-center" bindtap="closeContactModal">好的，我知道了</button>
       </view>
     </view>
   </view>

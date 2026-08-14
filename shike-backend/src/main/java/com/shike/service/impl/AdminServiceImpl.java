@@ -1153,9 +1153,17 @@ public class AdminServiceImpl implements AdminService {
             config = contactConfigRepository.save(config);
         }
 
+        String cleanTitle = config.getTitle();
+        if (cleanTitle != null) {
+            cleanTitle = cleanTitle.replace("💬", "").replace("🎧", "").trim();
+        }
+        if (cleanTitle == null || cleanTitle.isBlank()) {
+            cleanTitle = "联系客服 & 意见反馈";
+        }
+
         return com.shike.model.dto.ContactConfigDTO.builder()
                 .enabled(config.getEnabled() != null ? config.getEnabled() : true)
-                .title(config.getTitle())
+                .title(cleanTitle)
                 .wxId(config.getWxId())
                 .phone(config.getPhone())
                 .notice(config.getNotice())

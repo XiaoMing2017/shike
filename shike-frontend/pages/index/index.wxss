@@ -3713,43 +3713,78 @@
 .btn-copy-contact {
   background: linear-gradient(135deg, #10B981, #059669) !important;
   color: #FFFFFF !important;
-  font-size: 24rpx !important;
+  font-size: 23rpx !important;
   font-weight: 700 !important;
-  padding: 12rpx 28rpx !important;
+  padding: 12rpx 26rpx !important;
   border-radius: 30rpx !important;
   margin: 0 !important;
   line-height: 1.4 !important;
-  box-shadow: 0 6rpx 16rpx rgba(16, 185, 129, 0.25) !important;
+  box-shadow: 0 6rpx 16rpx rgba(16, 185, 129, 0.28) !important;
+  transition: transform 0.15s ease !important;
+}
+
+.btn-copy-contact:active {
+  transform: scale(0.95) !important;
+  opacity: 0.9 !important;
 }
 
 .btn-call-contact {
   background: linear-gradient(135deg, #06B6D4, #0891B2) !important;
   color: #FFFFFF !important;
-  font-size: 24rpx !important;
+  font-size: 23rpx !important;
   font-weight: 700 !important;
-  padding: 12rpx 28rpx !important;
+  padding: 12rpx 26rpx !important;
   border-radius: 30rpx !important;
   margin: 0 !important;
   line-height: 1.4 !important;
-  box-shadow: 0 6rpx 16rpx rgba(6, 182, 212, 0.25) !important;
+  box-shadow: 0 6rpx 16rpx rgba(6, 182, 212, 0.28) !important;
+  transition: transform 0.15s ease !important;
 }
 
+.btn-call-contact:active {
+  transform: scale(0.95) !important;
+  opacity: 0.9 !important;
+}
+
+/* 底部完成确认按钮：精细翡翠绿柔和磨砂发光质感 */
 .btn-close-contact {
   width: 100% !important;
-  background: #F1F5F9 !important;
-  color: #64748B !important;
-  font-size: 26rpx !important;
-  font-weight: 700 !important;
-  padding: 20rpx 0 !important;
-  border-radius: 24rpx !important;
+  background: linear-gradient(135deg, rgba(236, 253, 245, 0.95), rgba(204, 251, 241, 0.85)) !important;
+  border: 1.5rpx solid rgba(16, 185, 129, 0.35) !important;
+  color: #047857 !important;
+  font-size: 28rpx !important;
+  font-weight: 800 !important;
+  padding: 22rpx 0 !important;
+  border-radius: 32rpx !important;
   margin: 0 !important;
   line-height: 1.4 !important;
+  letter-spacing: 1rpx !important;
+  box-shadow: 0 6rpx 18rpx rgba(16, 185, 129, 0.15) !important;
+  transition: transform 0.15s ease, background 0.15s ease !important;
 }
 
+.btn-close-contact:active {
+  transform: scale(0.98) !important;
+  background: rgba(16, 185, 129, 0.2) !important;
+}
+
+/* 右上角关闭遮罩按钮 */
 .feedback-modal-close {
-  font-size: 44rpx !important;
-  color: rgba(255, 255, 255, 0.5) !important;
-  padding: 0 12rpx !important;
+  width: 44rpx !important;
+  height: 44rpx !important;
+  border-radius: 50% !important;
+  background: rgba(15, 23, 42, 0.06) !important;
+  color: #64748B !important;
+  font-size: 32rpx !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  transition: background 0.15s ease !important;
+}
+
+.feedback-modal-close:active {
+  background: rgba(15, 23, 42, 0.12) !important;
 }
 
 .feedback-type-tabs {
