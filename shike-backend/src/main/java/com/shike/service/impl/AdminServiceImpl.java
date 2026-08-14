@@ -52,6 +52,7 @@ public class AdminServiceImpl implements AdminService {
     private final com.shike.repository.ContactConfigRepository contactConfigRepository;
     private final PointsRecordRepository pointsRecordRepository;
     private final StringRedisTemplate stringRedisTemplate;
+    private static final com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
     @Override
     public AdminLoginDTO login(AdminLoginDTO loginDTO) {
