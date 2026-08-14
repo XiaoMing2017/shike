@@ -1207,15 +1207,15 @@
     </view>
   </view>
 
-  <!-- 💬 右侧贴边悬浮客服/反馈胶囊按钮 -->
+  <!-- 💬 右侧贴边悬浮客服气泡 (正圆形水滴画风，匹配饮水气泡) -->
   <block wx:if="{{features.user_feedback !== false && contactConfig.enabled !== false}}">
     <!-- 方式 A: 微信原生客服聊天 -->
-    <button class="feedback-floating-fab flex align-center" open-type="contact" wx:if="{{contactConfig.openType === 'CONTACT'}}">
+    <button class="feedback-floating-fab flex flex-col align-center justify-center" open-type="contact" wx:if="{{contactConfig.openType === 'CONTACT'}}">
       <text class="fab-icon">💬</text>
       <text class="fab-text">客服</text>
     </button>
     <!-- 方式 B: 极简联系卡弹窗 -->
-    <view class="feedback-floating-fab flex align-center" catchtap="openContactModal" wx:else>
+    <view class="feedback-floating-fab flex flex-col align-center justify-center" catchtap="openContactModal" wx:else>
       <text class="fab-icon">💬</text>
       <text class="fab-text">客服</text>
     </view>
