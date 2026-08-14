@@ -700,5 +700,17 @@ Page({
         }, 300);
       }
     });
+  },
+
+  openContactModal() {
+    wx.switchTab({
+      url: '/pages/index/index',
+      success: () => {
+        const page = getCurrentPages().pop();
+        if (page && page.openContactModal) {
+          page.openContactModal();
+        }
+      }
+    });
   }
-})
+});

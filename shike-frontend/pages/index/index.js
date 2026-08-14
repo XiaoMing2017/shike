@@ -127,6 +127,8 @@ Page({
     posterFoodImg: '', // 用户临时选择的食物照片 (仅本地 tempFilePath，不上传服务器)
     // 🎛️ 线上动态功能开关配置
     features: { ai_plan: false, diet_diagnosis: true, photo_recognize: true, poster_share: true, team_challenge: true, water_log: true, week_dashboard: true, month_dashboard: true, user_feedback: true },
+    contactConfig: null,
+    showContactModal: false,
     // 🎯 专属 AI 运动与饮食计划
     showPlanModal: false,
     selectedPlanLocation: 'HOME', // HOME: 居家训练, GYM: 健身房训练
@@ -171,6 +173,7 @@ Page({
 
   onLoad(options) {
     this.fetchAnnouncementConfig();
+    this.fetchContactConfig();
     // 检查是否显示新功能上线重磅引导弹窗 (页面首次加载/每次打开进入展现1次)
     try {
       const user = (app.globalData && app.globalData.userInfo) || wx.getStorageSync('userInfo');
@@ -251,6 +254,54 @@ Page({
       },
       fail: (err) => {
         console.error('Failed to fetch announcement config', err);
+      }
+    });
+  },
+
+  fetchContactConfig() {
+    wx.request({
+      url: `${app.globalData.baseUrl}/api/v1/config/contact`,
+      method: 'GET',
+      success: (res) => {
+        if (res.data && res.data.code === 200 && res.data.data) {
+          this.setData({ contactConfig: res.data.data });
+        }
+      },
+      fail: (err) => {
+        console.error('Failed to fetch contact config', err);
+      }
+    });
+  },
+
+  openContactModal() {
+    this.setData({ showContactModal: true });
+    if (!this.data.contactConfig) {
+      this.fetchContactConfig();
+    }
+  },
+
+  closeContactModal() {
+    this.setData({ showContactModal: false });
+  },
+
+  copyWxId(e) {
+    const wxId = (e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.wx) || (this.data.contactConfig && this.data.contactConfig.wxId);
+    if (!wxId) return;
+    wx.setClipboardData({
+      data: wxId,
+      success() {
+        wx.showToast({ title: '微信号已复制', icon: 'success' });
+      }
+    });
+  },
+
+  callPhone(e) {
+    const phone = (e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.phone) || (this.data.contactConfig && this.data.contactConfig.phone);
+    if (!phone) return;
+    wx.makePhoneCall({
+      phoneNumber: phone,
+      fail() {
+        wx.showToast({ title: '无法发起呼叫', icon: 'none' });
       }
     });
   },

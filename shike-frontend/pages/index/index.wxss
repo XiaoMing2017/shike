@@ -3638,6 +3638,82 @@
   color: #FFFFFF !important;
 }
 
+/* 💬 极简客服与联系方式 Modal 专属卡片样式 */
+.contact-notice-box {
+  background: rgba(14, 165, 233, 0.12) !important;
+  border: 1rpx solid rgba(14, 165, 233, 0.3) !important;
+  border-radius: 18rpx !important;
+  padding: 20rpx 24rpx !important;
+  margin: 24rpx 0 !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 12rpx !important;
+}
+
+.notice-icon {
+  font-size: 28rpx !important;
+}
+
+.notice-text {
+  font-size: 25rpx !important;
+  color: #7DD3FC !important;
+  line-height: 1.5 !important;
+}
+
+.contact-card-item {
+  background: rgba(30, 41, 59, 0.8) !important;
+  border: 1rpx solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 20rpx !important;
+  padding: 24rpx !important;
+  margin-bottom: 16rpx !important;
+}
+
+.contact-label {
+  font-size: 22rpx !important;
+  color: #94A3B8 !important;
+  margin-bottom: 6rpx !important;
+}
+
+.contact-value {
+  font-size: 30rpx !important;
+  font-weight: 800 !important;
+  color: #F8FAFC !important;
+}
+
+.btn-copy-contact {
+  background: linear-gradient(135deg, #06B6D4, #0891B2) !important;
+  color: #FFFFFF !important;
+  font-size: 24rpx !important;
+  font-weight: 700 !important;
+  padding: 10rpx 26rpx !important;
+  border-radius: 30rpx !important;
+  margin: 0 !important;
+  line-height: 1.5 !important;
+}
+
+.btn-call-contact {
+  background: linear-gradient(135deg, #10B981, #059669) !important;
+  color: #FFFFFF !important;
+  font-size: 24rpx !important;
+  font-weight: 700 !important;
+  padding: 10rpx 26rpx !important;
+  border-radius: 30rpx !important;
+  margin: 0 !important;
+  line-height: 1.5 !important;
+}
+
+.btn-close-contact {
+  width: 100% !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #94A3B8 !important;
+  font-size: 28rpx !important;
+  font-weight: 600 !important;
+  padding: 18rpx 0 !important;
+  border-radius: 24rpx !important;
+  margin: 0 !important;
+  line-height: 1.5 !important;
+}
+
 .feedback-modal-close {
   font-size: 44rpx !important;
   color: rgba(255, 255, 255, 0.5) !important;

@@ -1273,6 +1273,9 @@
         <button class="btn-action" onclick="openAnnouncementModal()" style="background: linear-gradient(135deg, #EC4899, #BE185D); font-size: 12px;">
           <i class="fa-solid fa-bullhorn"></i> 📢 版本弹窗管理
         </button>
+        <button class="btn-action" onclick="openContactConfigModal()" style="background: linear-gradient(135deg, #06B6D4, #0891B2); font-size: 12px;">
+          <i class="fa-solid fa-headset"></i> 📞 客服与联系配置
+        </button>
         <button class="btn-action" id="btnOpenTeamModalHeader" onclick="openTeamModal()" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8); font-size: 12px;">
           <i class="fa-solid fa-trophy"></i> 查看减脂小队与成员
         </button>
@@ -1742,6 +1745,66 @@
         <button class="btn-action" onclick="closeAnnouncementModal()" style="background: var(--card-border); font-size: 13px;">取消</button>
         <button class="btn-action" onclick="saveAnnouncementConfig()" style="background: linear-gradient(135deg, #EC4899, #BE185D); font-size: 13px; font-weight: 700; padding: 10px 20px;">
           <i class="fa-solid fa-floppy-disk"></i> 保存并发布给客户端
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 📞 客服与联系方式配置 Modal -->
+  <div class="modal-overlay" id="modalContactConfig">
+    <div class="modal-box" style="max-width: 600px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(6, 182, 212, 0.2); color: #06B6D4; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+            <i class="fa-solid fa-headset"></i>
+          </div>
+          <div>
+            <div style="font-weight: 700; font-size: 16px; color: #F8FAFC;">客服与联系方式配置</div>
+            <div style="font-size: 12px; color: #94A3B8;">配置小程序右下角悬浮按钮点击后的客服联系方式或聊天形式</div>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeContactConfigModal()">&times;</button>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 16px;">
+        <div style="background: rgba(15, 23, 42, 0.6); padding: 14px; border-radius: 12px; border: 1px solid var(--card-border);">
+          <div style="font-size: 13px; font-weight: 700; color: #F8FAFC; margin-bottom: 8px;">1. 悬浮按钮响应方式 (OpenType)</div>
+          <div style="display: flex; gap: 16px;">
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; color: #E2E8F0;">
+              <input type="radio" name="contactOpenType" value="MODAL" checked> 💬 极简联系卡弹窗 (展示微信/电话/一键复制)
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; color: #E2E8F0;">
+              <input type="radio" name="contactOpenType" value="CONTACT"> 🟢 微信原生客服聊天 (需小程序绑定客服)
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size: 12px; color: #94A3B8; display: block; margin-bottom: 6px; font-weight: 600;">弹窗标题</label>
+          <input type="text" id="contactTitle" placeholder="例如: 💬 联系客服 & 意见反馈" style="width: 100%; background: var(--bg-dark); border: 1px solid var(--card-border); color: #FFF; padding: 10px 14px; border-radius: 8px; font-size: 13px;">
+        </div>
+
+        <div style="display: flex; gap: 12px;">
+          <div style="flex: 1;">
+            <label style="font-size: 12px; color: #94A3B8; display: block; margin-bottom: 6px; font-weight: 600;">客服微信号 (支持点击一键复制)</label>
+            <input type="text" id="contactWxId" placeholder="例如: shike_helper" style="width: 100%; background: var(--bg-dark); border: 1px solid var(--card-border); color: #FFF; padding: 10px 14px; border-radius: 8px; font-size: 13px;">
+          </div>
+          <div style="flex: 1;">
+            <label style="font-size: 12px; color: #94A3B8; display: block; margin-bottom: 6px; font-weight: 600;">客服联系电话 (支持直接点击拨打)</label>
+            <input type="text" id="contactPhone" placeholder="例如: 13800138000" style="width: 100%; background: var(--bg-dark); border: 1px solid var(--card-border); color: #FFF; padding: 10px 14px; border-radius: 8px; font-size: 13px;">
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size: 12px; color: #94A3B8; display: block; margin-bottom: 6px; font-weight: 600;">反馈与提示说明文案</label>
+          <textarea id="contactNotice" rows="3" placeholder="例如: 遇到 Bug 或有改进建议？添加客服微信号反映，采纳有契约积分奖励哦！" style="width: 100%; background: var(--bg-dark); border: 1px solid var(--card-border); color: #FFF; padding: 10px 14px; border-radius: 8px; font-size: 13px; line-height: 1.5; resize: vertical;"></textarea>
+        </div>
+      </div>
+
+      <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 12px;">
+        <button class="btn-action" onclick="closeContactConfigModal()" style="background: var(--card-border); font-size: 13px;">取消</button>
+        <button class="btn-action" onclick="saveContactConfig()" style="background: linear-gradient(135deg, #06B6D4, #0891B2); font-size: 13px; font-weight: 700; padding: 10px 20px;">
+          <i class="fa-solid fa-floppy-disk"></i> 保存修改
         </button>
       </div>
     </div>
@@ -3647,7 +3710,70 @@
       .catch(e => alert('网络通信失败: ' + e.message));
     }
 
+    function openContactConfigModal() {
+      document.getElementById('modalContactConfig').classList.add('active');
+      loadContactConfig();
+    }
+
+    function closeContactConfigModal() {
+      document.getElementById('modalContactConfig').classList.remove('active');
+    }
+
+    function loadContactConfig() {
+      fetch('/api/v1/admin/config/contact')
+        .then(r => r.json())
+        .then(res => {
+          if (res.code === 200 && res.data) {
+            const d = res.data;
+            document.getElementById('contactTitle').value = d.title || '💬 联系客服 & 意见反馈';
+            document.getElementById('contactWxId').value = d.wxId || 'shike_helper';
+            document.getElementById('contactPhone').value = d.phone || '';
+            document.getElementById('contactNotice').value = d.notice || '';
+            
+            const radios = document.getElementsByName('contactOpenType');
+            for (let r of radios) {
+              if (r.value === (d.openType || 'MODAL')) {
+                r.checked = true;
+              }
+            }
+          }
+        })
+        .catch(e => console.warn('Failed to load contact config', e));
+    }
+
+    function saveContactConfig() {
+      const title = document.getElementById('contactTitle').value.trim();
+      const wxId = document.getElementById('contactWxId').value.trim();
+      const phone = document.getElementById('contactPhone').value.trim();
+      const notice = document.getElementById('contactNotice').value.trim();
+      
+      let openType = 'MODAL';
+      const radios = document.getElementsByName('contactOpenType');
+      for (let r of radios) {
+        if (r.checked) openType = r.value;
+      }
+
+      fetch('/api/v1/admin/config/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: true, title, wxId, phone, notice, openType })
+      })
+      .then(r => r.json())
+      .then(res => {
+        if (res.code === 200) {
+          alert('✅ 客服与联系方式配置已成功保存！');
+          closeContactConfigModal();
+        } else {
+          alert('保存失败: ' + (res.message || ''));
+        }
+      })
+      .catch(e => alert('网络通信失败: ' + e.message));
+    }
+
     // Expose functions globally to ensure onclick attributes work everywhere
+    window.openContactConfigModal = openContactConfigModal;
+    window.closeContactConfigModal = closeContactConfigModal;
+    window.saveContactConfig = saveContactConfig;
     window.openTeamModal = openTeamModal;
     window.closeTeamModal = closeTeamModal;
     window.toggleTeamStatus = toggleTeamStatus;

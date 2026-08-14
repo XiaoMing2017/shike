@@ -194,4 +194,15 @@ public class AdminController {
     public ResultDTO<java.util.Map<String, Object>> getFeedbackStatsWidget() {
         return ResultDTO.success(feedbackService.getFeedbackStatsWidget());
     }
+
+    @GetMapping({"/config/contact", "/api/v1/admin/config/contact"})
+    public ResultDTO<com.shike.model.dto.ContactConfigDTO> getAdminContactConfig() {
+        return ResultDTO.success(adminService.getContactConfig());
+    }
+
+    @PostMapping({"/config/contact", "/api/v1/admin/config/contact"})
+    public ResultDTO<Void> updateContactConfig(@RequestBody com.shike.model.dto.ContactConfigDTO dto) {
+        adminService.updateContactConfig(dto, "admin");
+        return ResultDTO.success();
+    }
 }

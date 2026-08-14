@@ -49,6 +49,7 @@ public class AdminServiceImpl implements AdminService {
     private final AdminAuditLogRepository adminAuditLogRepository;
     private final com.shike.repository.FeatureToggleRepository featureToggleRepository;
     private final com.shike.repository.AnnouncementConfigRepository announcementConfigRepository;
+    private final com.shike.repository.ContactConfigRepository contactConfigRepository;
     private final PointsRecordRepository pointsRecordRepository;
     private final StringRedisTemplate stringRedisTemplate;
 
@@ -1135,5 +1136,48 @@ public class AdminServiceImpl implements AdminService {
         } catch (Exception e) {
             log.warn("Failed to write audit log: {}", e.getMessage());
         }
+    }
+
+    @Override
+    public com.shike.model.dto.ContactConfigDTO getContactConfig() {
+        com.shike.model.entity.ContactConfig config = contactConfigRepository.findFirstByOrderByIdAsc().orElse(null);
+        if (config == null) {
+            config = com.shike.model.entity.ContactConfig.builder()
+                    .enabled(true)
+                    .title("💬 联系客服 & 意见反馈")
+                    .wxId("shike_helper")
+                    .phone("13800138000")
+                    .notice("遇到 Bug 或有改进建议？长按复制微信号添加客服，采纳有契约积分奖励哦！")
+                    .openType("MODAL")
+                    .build();
+            config = contactConfigRepository.save(config);
+        }
+
+        return com.shike.model.dto.ContactConfigDTO.builder()
+                .enabled(config.getEnabled() != null ? config.getEnabled() : true)
+                .title(config.getTitle())
+                .wxId(config.getWxId())
+                .phone(config.getPhone())
+                .notice(config.getNotice())
+                .openType(config.getOpenType() != null ? config.getOpenType() : "MODAL")
+                .build();
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void updateContactConfig(com.shike.model.dto.ContactConfigDTO dto, String adminUsername) {
+        if (dto == null) return;
+        com.shike.model.entity.ContactConfig config = contactConfigRepository.findFirstByOrderByIdAsc()
+                .orElse(new com.shike.model.entity.ContactConfig());
+
+        config.setEnabled(dto.getEnabled() != null ? dto.getEnabled() : true);
+        if (dto.getTitle() != null) config.setTitle(dto.getTitle().trim());
+        if (dto.getWxId() != null) config.setWxId(dto.getWxId().trim());
+        if (dto.getPhone() != null) config.setPhone(dto.getPhone().trim());
+        if (dto.getNotice() != null) config.setNotice(dto.getNotice().trim());
+        if (dto.getOpenType() != null) config.setOpenType(dto.getOpenType().trim());
+
+        contactConfigRepository.save(config);
+        logAudit(adminUsername, "UPDATE_CONTACT_CONFIG", "GLOBAL", "更新客服与联系方式配置: wxId=" + dto.getWxId() + ", openType=" + dto.getOpenType());
     }
 }

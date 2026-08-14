@@ -41,4 +41,7 @@ public interface AdminService {
     void addCustomAiModelOption(String moduleKey, String modelName, String adminUsername);
 
     com.shike.model.dto.AdminFeatureUsageDTO getFeatureUsageOverview();
+
+    com.shike.model.dto.ContactConfigDTO getContactConfig();
+    void updateContactConfig(com.shike.model.dto.ContactConfigDTO dto, String adminUsername);
 }

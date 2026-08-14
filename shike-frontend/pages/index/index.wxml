@@ -1207,40 +1207,57 @@
     </view>
   </view>
 
-  <!-- 💬 右侧贴边悬浮反馈胶囊按钮 -->
-  <view class="feedback-floating-fab flex align-center" catchtap="openFeedbackModal" wx:if="{{features.user_feedback !== false}}">
-    <text class="fab-icon">💬</text>
-    <text class="fab-text">反馈</text>
-  </view>
+  <!-- 💬 右侧贴边悬浮客服/反馈胶囊按钮 -->
+  <block wx:if="{{features.user_feedback !== false && contactConfig.enabled !== false}}">
+    <!-- 方式 A: 微信原生客服聊天 -->
+    <button class="feedback-floating-fab flex align-center" open-type="contact" wx:if="{{contactConfig.openType === 'CONTACT'}}">
+      <text class="fab-icon">💬</text>
+      <text class="fab-text">客服</text>
+    </button>
+    <!-- 方式 B: 极简联系卡弹窗 -->
+    <view class="feedback-floating-fab flex align-center" catchtap="openContactModal" wx:else>
+      <text class="fab-icon">💬</text>
+      <text class="fab-text">客服</text>
+    </view>
+  </block>
 
-  <!-- 💬 用户意见与 BUG 反馈 Modal 弹窗 -->
-  <view class="feedback-modal-mask flex justify-center align-center" wx:if="{{showFeedbackModal}}" catchtouchmove="preventTouchMove">
+  <!-- 💬 极简客服与联系方式 Modal 弹窗 -->
+  <view class="feedback-modal-mask flex justify-center align-center" wx:if="{{showContactModal}}" catchtouchmove="preventTouchMove">
     <view class="glass-card feedback-modal-dialog">
       <view class="feedback-modal-header flex justify-between align-center">
         <view class="flex align-center" style="gap: 12rpx;">
-          <text style="font-size: 34rpx;">💬</text>
-          <text class="feedback-modal-title">意见与 BUG 反馈</text>
+          <text style="font-size: 36rpx;">💬</text>
+          <text class="feedback-modal-title">{{contactConfig.title || '联系客服 & 意见反馈'}}</text>
         </view>
-        <text class="feedback-modal-close" bindtap="closeFeedbackModal">×</text>
+        <text class="feedback-modal-close" bindtap="closeContactModal">×</text>
       </view>
 
-      <!-- 反馈类型 Tabs -->
-      <view class="feedback-type-tabs flex justify-between">
-        <view class="fb-type-item {{fbType === 'BUG' ? 'active' : ''}}" bindtap="selectFbType" data-type="BUG">🐛 BUG 报错</view>
-        <view class="fb-type-item {{fbType === 'SUGGESTION' ? 'active' : ''}}" bindtap="selectFbType" data-type="SUGGESTION">💡 功能建议</view>
-        <view class="fb-type-item {{fbType === 'QUESTION' ? 'active' : ''}}" bindtap="selectFbType" data-type="QUESTION">❓ 使用疑问</view>
+      <view class="contact-notice-box" wx:if="{{contactConfig.notice}}">
+        <text class="notice-icon">💡</text>
+        <text class="notice-text">{{contactConfig.notice}}</text>
       </view>
 
-      <!-- 反馈内容文本框 -->
-      <textarea class="feedback-textarea" placeholder="请详细描述您遇到的报错问题或宝贵建议..." value="{{fbContent}}" bindinput="onFbContentInput" max-length="500"></textarea>
+      <!-- 微信号复制卡片 -->
+      <view class="contact-card-item flex justify-between align-center" wx:if="{{contactConfig.wxId}}">
+        <view class="flex flex-col">
+          <text class="contact-label">客服微信号</text>
+          <text class="contact-value">{{contactConfig.wxId}}</text>
+        </view>
+        <button class="btn-copy-contact" catchtap="copyWxId" data-wx="{{contactConfig.wxId}}">复制微信号</button>
+      </view>
 
-      <!-- 联系方式（可选） -->
-      <input class="feedback-contact-input" placeholder="联系方式 (微信号/手机号，方便回复奖励)" value="{{fbContact}}" bindinput="onFbContactInput" />
+      <!-- 电话拨打卡片 -->
+      <view class="contact-card-item flex justify-between align-center" wx:if="{{contactConfig.phone}}">
+        <view class="flex flex-col">
+          <text class="contact-label">客服电话</text>
+          <text class="contact-value">{{contactConfig.phone}}</text>
+        </view>
+        <button class="btn-call-contact" catchtap="callPhone" data-phone="{{contactConfig.phone}}">拨打电话</button>
+      </view>
 
-      <!-- 操作按钮 -->
-      <view class="feedback-actions flex justify-between" style="gap: 20rpx; margin-top: 24rpx;">
-        <button class="btn-cancel-fb" bindtap="closeFeedbackModal">取消</button>
-        <button class="btn-submit-fb" bindtap="submitFeedbackAction">确认提交反馈</button>
+      <!-- 关闭按钮 -->
+      <view class="contact-actions" style="margin-top: 28rpx;">
+        <button class="btn-close-contact" bindtap="closeContactModal">关闭窗口</button>
       </view>
     </view>
   </view>
