@@ -3723,7 +3723,7 @@
     let currentContactItems = [];
 
     function loadContactConfig() {
-      fetch('/api/v1/admin/config/contact')
+      authFetch('/api/v1/admin/config/contact')
         .then(r => r.json())
         .then(res => {
           if (res.code === 200 && res.data) {
@@ -3827,7 +3827,7 @@
         items: currentContactItems
       };
 
-      fetch('/api/v1/admin/config/contact', {
+      authFetch('/api/v1/admin/config/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
