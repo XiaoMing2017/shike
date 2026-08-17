@@ -980,6 +980,15 @@
             <text class="summary-content">{{planData.summary}}</text>
           </view>
 
+          <!-- ⚠️ 健康参考与免责声明卡片 -->
+          <view class="plan-disclaimer-card" style="margin-bottom: 24rpx; margin-top: 16rpx;">
+            <view class="flex align-center" style="margin-bottom: 6rpx;">
+              <text style="font-size: 22rpx; margin-right: 6rpx;">⚠️</text>
+              <text class="disclaimer-title">健康参考与免责声明</text>
+            </view>
+            <text class="disclaimer-text">本计划由算法拟合生成，仅供健康人群膳食与运动参考，不构成医疗诊断或处方建议。患慢病、孕期或严重过敏者请遵医嘱。</text>
+          </view>
+
           <!-- 计划 Tab 切换 -->
           <view class="plan-tabs flex justify-between">
             <view class="plan-tab {{planActiveTab === 'workout' ? 'active' : ''}}" catchtap="switchPlanTab" data-tab="workout">
@@ -993,55 +1002,49 @@
           <!-- Tab 1: 7天运动计划 -->
           <view class="plan-tab-content" wx:if="{{planActiveTab === 'workout'}}">
             <!-- 星期选择横轴 -->
-            <scroll-view class="day-selector-scroll" scroll-x="true" show-scrollbar="false">
-              <view class="day-tags-container flex">
-                <view class="day-tag-item {{planDayIndex === index ? 'active' : ''}}" wx:for="{{planData.workoutPlan}}" wx:key="dayIndex" catchtap="switchPlanDay" data-index="{{index}}">
-                  <text class="day-title">{{item.dayName || ('第' + (index + 1) + '天')}}</text>
-                  <text class="day-focus">{{item.focusArea || '全理'}}</text>
-                </view>
+            <scroll-view class="days-scroll flex" scroll-x="true" enable-flex="true">
+              <view class="day-chip {{planDayIndex === index ? 'active' : ''}} {{todayPlanDayIndex === index ? 'today' : ''}}" wx:for="{{planData.workoutPlan}}" wx:key="day" catchtap="switchPlanDay" data-index="{{index}}">
+                <text class="day-chip-name">{{item.day}}</text>
+                <text class="day-chip-today" wx:if="{{todayPlanDayIndex === index}}">今天</text>
+                <text class="day-chip-dot" wx:elif="{{item.isRestDay}}">休息</text>
               </view>
             </scroll-view>
 
-            <!-- 当天运动明细卡片 -->
-            <view class="workout-day-card" wx:if="{{planData.workoutPlan[planDayIndex]}}">
-              <view class="workout-day-header flex justify-between align-center">
-                <text class="workout-day-title">🔥 {{planData.workoutPlan[planDayIndex].focusArea}} 专项训练</text>
-                <text class="workout-day-cal">预计消耗 ~{{planData.workoutPlan[planDayIndex].estimatedBurnCalories || 200}} kcal</text>
+            <!-- 选中日期的运动清单 -->
+            <view class="day-workout-card" wx:if="{{planData.workoutPlan[planDayIndex]}}">
+              <view class="day-focus-header flex justify-between align-center">
+                <text class="day-focus-title">🎯 训练焦点：{{planData.workoutPlan[planDayIndex].focus}}</text>
+                <text class="rest-badge" wx:if="{{planData.workoutPlan[planDayIndex].isRestDay}}">😴 深度恢复</text>
               </view>
-              <text class="workout-day-desc" wx:if="{{planData.workoutPlan[planDayIndex].restDayNotice}}">💡 建议: {{planData.workoutPlan[planDayIndex].restDayNotice}}</text>
 
-              <!-- 动作列表 -->
-              <view class="exercise-list" style="margin-top: 16rpx;">
-                <view class="exercise-card-item flex justify-between align-center" wx:for="{{planData.workoutPlan[planDayIndex].exercises}}" wx:key="exerciseName" wx:for-item="ex">
-                  <view class="flex flex-col" style="flex: 1; padding-right: 16rpx;">
-                    <text class="ex-name">{{ex.exerciseName}}</text>
-                    <text class="ex-detail">{{ex.sets}}组 × {{ex.repsOrDuration}} | 组间休息{{ex.restSeconds || 60}}s</text>
+              <view class="workout-items-list">
+                <view class="workout-item-card flex justify-between align-center" wx:for="{{planData.workoutPlan[planDayIndex].items}}" wx:key="name">
+                  <view class="workout-item-left flex flex-col">
+                    <view class="flex align-center" style="gap: 12rpx;">
+                      <text class="workout-item-name">{{item.name}}</text>
+                      <text class="workout-item-meta">{{item.duration}}分钟 · {{item.calories}}kcal</text>
+                    </view>
+                    <text class="workout-item-detail" wx:if="{{item.detail}}">💡 {{item.detail}}</text>
                   </view>
-                  <text class="ex-tag" wx:if="{{ex.equipment}}">{{ex.equipment}}</text>
+                  <view class="btn-checkin-exercise {{checkedPlanExercisesMap[item.cleanName] ? 'checked' : ''}}" catchtap="{{checkedPlanExercisesMap[item.cleanName] ? '' : 'onAddPlanExercise'}}" data-name="{{item.name}}" data-duration="{{item.duration}}" data-calories="{{item.calories}}">
+                    {{checkedPlanExercisesMap[item.cleanName] ? '✓ 已打卡' : '＋打卡'}}
+                  </view>
                 </view>
               </view>
             </view>
           </view>
 
-          <!-- Tab 2: 每日膳食推荐 -->
+          <!-- Tab 2: 每日膳食计划 -->
           <view class="plan-tab-content" wx:if="{{planActiveTab === 'diet'}}">
-            <!-- 星期选择横轴 -->
-            <scroll-view class="day-selector-scroll" scroll-x="true" show-scrollbar="false">
-              <view class="day-tags-container flex">
-                <view class="day-tag-item {{planDayIndex === index ? 'active' : ''}}" wx:for="{{planData.dietPlan}}" wx:key="dayIndex" catchtap="switchPlanDay" data-index="{{index}}">
-                  <text class="day-title">Day {{index + 1}}</text>
-                  <text class="day-focus">{{item.targetCalorie || 1800}} kcal</text>
-                </view>
+            <!-- 7天膳食日期选择横轴 -->
+            <scroll-view class="days-scroll flex" scroll-x="true" enable-flex="true">
+              <view class="day-chip {{planDayIndex === index ? 'active' : ''}} {{todayPlanDayIndex === index ? 'today' : ''}}" wx:for="{{planData.workoutPlan}}" wx:key="day" catchtap="switchPlanDay" data-index="{{index}}">
+                <text class="day-chip-name">{{item.day}}</text>
+                <text class="day-chip-today" wx:if="{{todayPlanDayIndex === index}}">今天</text>
               </view>
             </scroll-view>
 
-            <!-- 当天三餐明细 -->
-            <view class="diet-day-card" wx:if="{{activeDietPlan}}">
-              <view class="diet-summary-bar flex justify-between align-center">
-                <text style="font-size: 26rpx; font-weight: 700; color: #0F172A;">🥗 Day {{planDayIndex + 1}} 膳食打卡指南</text>
-                <text style="font-size: 24rpx; color: #059669; font-weight: 700;">总热量 ~{{activeDietPlan.targetCalorie || 1800}} kcal</text>
-              </view>
-
+            <view class="diet-meals-list" wx:if="{{activeDietPlan}}">
               <!-- 早餐 -->
               <view class="diet-meal-card" wx:if="{{activeDietPlan.breakfast}}">
                 <view class="diet-meal-header flex justify-between align-center">
@@ -1060,7 +1063,7 @@
                   <text class="meal-tag lunch">☀️ 午餐 · {{activeDietPlan.lunch.title}}</text>
                   <text class="meal-cal">{{activeDietPlan.lunch.calories}} kcal</text>
                 </view>
-                <text class="meal-portion-hint" wx:if="{{activeDietPlan.lunch.portionHint}}">✋ 估算推荐: {{activeDietPlan.lunch.portionHint}}</text>
+                <text class="meal-portion-hint" wx:if="{{activeDietPlan.lunch.portionHint}}">✋ 估算推荐: {{activeDietPlan.portionHint}}</text>
                 <view class="meal-foods-tags flex flex-wrap">
                   <text class="food-tag" wx:for="{{activeDietPlan.lunch.foods}}" wx:key="*this">{{item}}</text>
                 </view>
