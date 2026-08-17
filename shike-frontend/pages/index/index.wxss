@@ -2304,7 +2304,7 @@
 /* 🎯 计划弹窗样式 */
 .plan-modal-dialog {
   width: 90vw;
-  max-height: 82vh;
+  max-height: 85vh;
   background: #FFFFFF;
   border-radius: 36rpx;
   padding: 32rpx 32rpx 32rpx 32rpx;
@@ -2316,10 +2316,30 @@
 
 .plan-modal-body {
   flex: 1;
-  max-height: 60vh;
-  margin-top: 12rpx;
-  margin-bottom: 16rpx;
+  max-height: 70vh;
+  margin-top: 8rpx;
+  margin-bottom: 8rpx;
   box-sizing: border-box;
+}
+
+.btn-generate-plan-main {
+  width: 90% !important;
+  height: 92rpx !important;
+  line-height: 92rpx !important;
+  background: linear-gradient(135deg, #10B981, #059669) !important;
+  color: #FFFFFF !important;
+  font-size: 30rpx !important;
+  font-weight: 800 !important;
+  border-radius: 46rpx !important;
+  box-shadow: 0 10rpx 26rpx rgba(16, 185, 129, 0.35) !important;
+  margin: 10rpx auto 16rpx auto !important;
+  padding: 0 !important;
+  transition: transform 0.15s ease !important;
+}
+
+.btn-generate-plan-main:active {
+  transform: scale(0.96) !important;
+  opacity: 0.92 !important;
 }
 
 .plan-loading-box {
