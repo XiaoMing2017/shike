@@ -53,11 +53,10 @@
     </view>
 
     <!-- 收起状态下的精炼数据摘要条 -->
-    <view wx:if="{{isFormCollapsed}}" catchtap="toggleFormCollapse" class="flex justify-between align-center" style="margin-top: 14rpx; cursor: pointer; padding: 6rpx 0;">
-      <text style="font-size: 24rpx; color: #64748B; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 520rpx;">
+    <view wx:if="{{isFormCollapsed}}" catchtap="toggleFormCollapse" class="flex align-center" style="margin-top: 14rpx; cursor: pointer; padding: 6rpx 0;">
+      <text style="font-size: 24rpx; color: #64748B; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 100%;">
         {{genderOptions[genderIndex].label}} · {{age || '--'}}岁 · {{height || '--'}}cm / {{weight || '--'}}kg · {{goalOptions[goalIndex].key === 'PERIOD' ? (customGoalDays + '天' + (periodDirection === 'LOSE' ? '减' : '增') + customGoalWeightDisplay + '斤') : goalOptions[goalIndex].label}}
       </text>
-      <text style="font-size: 22rpx; color: #10B981; font-weight: 600; margin-left: 10rpx; white-space: nowrap;">编辑 ✏️</text>
     </view>
     
     <view wx:if="{{!isFormCollapsed}}" class="form-content-wrap" style="margin-top: 10rpx;">
