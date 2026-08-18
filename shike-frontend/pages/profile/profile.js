@@ -51,8 +51,10 @@ Page({
     showPointsBillModal: false,
     pointsRecords: [],
     customGoalType: 'PERIOD',
+    periodDirection: 'LOSE', // 'LOSE' 减脂, 'GAIN' 增重
     customGoalDays: '',
     customGoalWeight: '',
+    customGoalWeightDisplay: '',
     currentBodyFat: '',
     customGoalWarning: '',
     features: { user_feedback: true }
@@ -148,6 +150,19 @@ Page({
         const trainingIdx = this.data.trainingOptions.findIndex(o => o.key === user.trainingLevel);
         const genderIdx = user.gender === 2 ? 1 : 0;
         
+        let periodDirection = 'LOSE';
+        let customGoalWeightDisplay = '';
+        if (user.customGoalWeight != null && user.customGoalWeight !== '') {
+          const rawW = parseFloat(user.customGoalWeight);
+          if (rawW < 0) {
+            periodDirection = 'LOSE';
+            customGoalWeightDisplay = Math.abs(rawW).toString();
+          } else {
+            periodDirection = 'GAIN';
+            customGoalWeightDisplay = rawW.toString();
+          }
+        }
+
         this.setData({
           age: user.age,
           height: user.height,
@@ -160,8 +175,10 @@ Page({
           tdee: user.tdee || 0,
           targetCal: user.targetCalories || 0,
           customGoalType: user.customGoalType || 'PERIOD',
+          periodDirection,
           customGoalDays: user.customGoalDays || '',
           customGoalWeight: user.customGoalWeight || '',
+          customGoalWeightDisplay,
           currentBodyFat: user.currentBodyFat || ''
         }, () => {
           this.calculateNutrientsTargets();
@@ -355,13 +372,29 @@ Page({
     this.saveProfileSilent(null, nickname);
   },
 
+  onSelectPeriodDirection(e) {
+    const periodDirection = e.currentTarget.dataset.dir || 'LOSE';
+    this.setData({ periodDirection }, () => {
+      this.recalculateMetabolism();
+      this.saveProfileSilent();
+    });
+  },
+
   onCustomGoalDaysInput(e) {
     this.setData({ customGoalDays: parseInt(e.detail.value) || '' });
     this.recalculateMetabolism();
   },
 
   onCustomGoalWeightInput(e) {
-    this.setData({ customGoalWeight: parseFloat(e.detail.value) || '' });
+    const val = parseFloat(e.detail.value);
+    const customGoalWeightDisplay = isNaN(val) ? '' : val.toString();
+    const sign = this.data.periodDirection === 'LOSE' ? -1 : 1;
+    const customGoalWeight = isNaN(val) ? '' : (sign * Math.abs(val));
+    
+    this.setData({
+      customGoalWeightDisplay,
+      customGoalWeight
+    });
     this.recalculateMetabolism();
   },
 
@@ -371,7 +404,7 @@ Page({
   },
 
   recalculateMetabolism() {
-    const { age, height, weight, activityIndex, activityOptions, goalIndex, goalOptions, genderIndex, genderOptions } = this.data;
+    const { age, height, weight, activityIndex, activityOptions, goalIndex, goalOptions, genderIndex, genderOptions, periodDirection, customGoalWeightDisplay } = this.data;
     if (!age || !height || !weight) return;
 
     const gender = genderOptions[genderIndex].key;
@@ -391,9 +424,10 @@ Page({
 
     if (goalKey === 'PERIOD') {
       const days = parseInt(this.data.customGoalDays);
-      const weightChange = parseFloat(this.data.customGoalWeight);
+      const rawWeight = parseFloat(customGoalWeightDisplay);
+      const weightChange = (periodDirection === 'LOSE' ? -1 : 1) * Math.abs(rawWeight || 0);
 
-      if (days && days > 0 && weightChange) {
+      if (days && days > 0 && rawWeight > 0) {
         let calculatedOffset = (weightChange * 3850.0) / days;
         const ratePerWeek = Math.abs(weightChange) / days * 7.0;
 
@@ -440,12 +474,16 @@ Page({
       targetCal = Math.round(tdee + offset);
     }
 
-    if (targetCal < bmr) {
-      targetCal = bmr;
+    // 科学安全双轨保底 (国际医学绝对底线: 男1500, 女1200; 相对底线: BMR * 85%)
+    const absoluteFloor = gender === 2 ? 1200 : 1500;
+    const safetyFloor = Math.max(Math.round(bmr * 0.85), absoluteFloor);
+
+    if (targetCal < safetyFloor) {
+      targetCal = safetyFloor;
       if (!warning) {
-        warning = '⚠️ 提示：计算出的每日建议摄入热量已低于基础代谢（BMR），已自动锁定在 BMR 底线以保障健康。';
+        warning = '🛡️ 科学守护：计算出的摄入热量已触及安全代谢保底线（' + safetyFloor + ' kcal），已自动锁定底线以保护脏器与肌肉健康。';
       } else {
-        warning += ' 此外，建议摄入量已触及基础代谢（BMR）底线，已自动锁定在 BMR。';
+        warning += ' 此外，建议摄入量已触及安全代谢保底线（' + safetyFloor + ' kcal）。';
       }
     }
 

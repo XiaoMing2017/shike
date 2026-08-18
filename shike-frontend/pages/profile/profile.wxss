@@ -106,6 +106,35 @@
   white-space: nowrap;
 }
 
+/* 计划目标方向切换胶囊 */
+.period-direction-toggle {
+  background: #F1F5F9;
+  border-radius: 20rpx;
+  padding: 6rpx;
+  gap: 8rpx;
+}
+
+.dir-btn {
+  font-size: 24rpx;
+  padding: 10rpx 20rpx;
+  border-radius: 16rpx;
+  color: #64748B;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.dir-btn.active.lose {
+  background: #10B981;
+  color: #FFFFFF;
+  box-shadow: 0 4rpx 12rpx rgba(16, 185, 129, 0.25);
+}
+
+.dir-btn.active.gain {
+  background: #3B82F6;
+  color: #FFFFFF;
+  box-shadow: 0 4rpx 12rpx rgba(59, 130, 246, 0.25);
+}
+
 /* 3. 计算结果看板 */
 .result-card {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(240, 253, 250, 0.85) 100%) !important;

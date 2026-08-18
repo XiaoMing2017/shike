@@ -1539,22 +1539,42 @@ public class DietServiceImpl implements DietService {
             user.setWeight(weight);
             // 重新推算 BMR 与 每日目标卡路里
             if (user.getGender() != null && user.getHeight() != null && user.getAge() != null) {
-                double bmr;
-                if ("男".equals(user.getGender())) {
-                    bmr = 88.362 + (13.397 * weight.doubleValue()) + (4.799 * user.getHeight().doubleValue()) - (5.677 * user.getAge());
-                } else {
-                    bmr = 447.593 + (9.247 * weight.doubleValue()) + (3.098 * user.getHeight().doubleValue()) - (4.330 * user.getAge());
+                double w = weight.doubleValue();
+                double h = user.getHeight().doubleValue();
+                int age = user.getAge();
+                
+                // Mifflin-St Jeor Formula
+                double bmr = (user.getGender() != null && user.getGender() == 2) 
+                        ? (10 * w + 6.25 * h - 5 * age - 161)
+                        : (10 * w + 6.25 * h - 5 * age + 5);
+                        
+                double activityMultiplier = 1.2;
+                if ("LIGHT".equalsIgnoreCase(user.getActivityLevel())) {
+                    activityMultiplier = 1.375;
+                } else if ("MODERATE".equalsIgnoreCase(user.getActivityLevel())) {
+                    activityMultiplier = 1.55;
+                } else if ("ACTIVE".equalsIgnoreCase(user.getActivityLevel())) {
+                    activityMultiplier = 1.725;
                 }
-                double activityMultiplier = 1.375;
+                
                 double tdee = bmr * activityMultiplier;
-                double targetKcal = tdee;
-                if ("减脂".equals(user.getGoal())) {
-                    targetKcal = tdee - 500;
-                } else if ("增肌".equals(user.getGoal())) {
-                    targetKcal = tdee + 300;
+                double goalOffset = 0.0;
+                if ("LOSE_WEIGHT".equalsIgnoreCase(user.getGoal()) || "减脂".equals(user.getGoal())) {
+                    goalOffset = -500.0;
+                } else if ("GAIN_MUSCLE".equalsIgnoreCase(user.getGoal()) || "增肌".equals(user.getGoal())) {
+                    goalOffset = 300.0;
                 }
-                user.setBmr(BigDecimal.valueOf(Math.round(bmr)));
-                user.setTargetCalories(BigDecimal.valueOf(Math.round(targetKcal)));
+                
+                double targetKcal = tdee + goalOffset;
+                double absoluteFloor = (user.getGender() != null && user.getGender() == 2) ? 1200.0 : 1500.0;
+                double safetyFloor = Math.max(bmr * 0.85, absoluteFloor);
+                if (targetKcal < safetyFloor) {
+                    targetKcal = safetyFloor;
+                }
+                
+                user.setBmr(BigDecimal.valueOf(bmr).setScale(1, RoundingMode.HALF_UP));
+                user.setTdee(BigDecimal.valueOf(tdee).setScale(1, RoundingMode.HALF_UP));
+                user.setTargetCalories(BigDecimal.valueOf(targetKcal).setScale(1, RoundingMode.HALF_UP));
             }
             userRepository.save(user);
             log.info("Synced updated weight {} kg to User {} profile successfully", weight, userId);

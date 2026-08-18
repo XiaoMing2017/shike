@@ -260,8 +260,12 @@ public class UserServiceImpl implements UserService {
         }
         
         double targetCalVal = tdeeVal + goalOffset;
-        if (targetCalVal < bmrVal) {
-            targetCalVal = bmrVal; // Lock at BMR Floor
+        
+        // 科学安全双轨保底 (国际医学绝对底线: 男1500, 女1200; 相对底线: BMR * 85%)
+        double absoluteFloor = (user.getGender() != null && user.getGender() == 2) ? 1200.0 : 1500.0;
+        double safetyFloor = Math.max(bmrVal * 0.85, absoluteFloor);
+        if (targetCalVal < safetyFloor) {
+            targetCalVal = safetyFloor; // 保护脏器与基础代谢安全
         }
         
         user.setTargetCalories(BigDecimal.valueOf(targetCalVal).setScale(1, RoundingMode.HALF_UP));

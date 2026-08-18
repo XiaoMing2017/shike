@@ -88,12 +88,19 @@
       <!-- Custom periodic weight goal inputs -->
       <block wx:if="{{goalOptions[goalIndex].key === 'PERIOD'}}">
         <view class="form-item flex justify-between align-center">
-          <text class="label">计划周期 (天)</text>
-          <input class="input" type="number" placeholder="如 30, 66, 90" value="{{customGoalDays}}" bindinput="onCustomGoalDaysInput" bindblur="onFieldBlur" />
+          <text class="label">计划目标方向</text>
+          <view class="period-direction-toggle flex">
+            <view class="dir-btn {{periodDirection === 'LOSE' ? 'active lose' : ''}}" catchtap="onSelectPeriodDirection" data-dir="LOSE">📉 减脂 (减轻)</view>
+            <view class="dir-btn {{periodDirection === 'GAIN' ? 'active gain' : ''}}" catchtap="onSelectPeriodDirection" data-dir="GAIN">📈 增重 (增加)</view>
+          </view>
         </view>
         <view class="form-item flex justify-between align-center">
-          <text class="label">期望体重变化 (斤)</text>
-          <input class="input" type="digit" placeholder="减脂填负数 (如 -10), 增重填正数" value="{{customGoalWeight}}" bindinput="onCustomGoalWeightInput" bindblur="onFieldBlur" />
+          <text class="label">计划周期 (天)</text>
+          <input class="input" type="number" placeholder="如 30, 60, 90" value="{{customGoalDays}}" bindinput="onCustomGoalDaysInput" bindblur="onFieldBlur" />
+        </view>
+        <view class="form-item flex justify-between align-center">
+          <text class="label">{{periodDirection === 'LOSE' ? '期望减重斤数 (斤)' : '期望增重斤数 (斤)'}}</text>
+          <input class="input" type="digit" placeholder="如 10" value="{{customGoalWeightDisplay}}" bindinput="onCustomGoalWeightInput" bindblur="onFieldBlur" />
         </view>
       </block>
 
