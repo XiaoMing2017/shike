@@ -54,29 +54,29 @@
       </view>
     </view>
 
-    <!-- 4宫格核心数据快照 -->
-    <view class="body-stats-grid flex flex-wrap">
-      <view class="stat-pill flex-col">
-        <text class="stat-lbl">性别 · 年龄</text>
+    <!-- 4宫格核心数据快照 (2x2 网格) -->
+    <view class="body-stats-grid">
+      <view class="stat-pill">
+        <text class="stat-lbl">👤 性别 · 年龄</text>
         <text class="stat-val">{{genderOptions[genderIndex].label}} · {{age || '--'}}岁</text>
       </view>
-      <view class="stat-pill flex-col">
-        <text class="stat-lbl">身高 · 当前体重</text>
+      <view class="stat-pill">
+        <text class="stat-lbl">📏 身高 · 体重</text>
         <text class="stat-val">{{height || '--'}}cm · {{weight || '--'}}kg</text>
       </view>
-      <view class="stat-pill flex-col">
-        <text class="stat-lbl">日常活动系数</text>
+      <view class="stat-pill">
+        <text class="stat-lbl">⚡ 日常活动系数</text>
         <text class="stat-val">{{activityOptions[activityIndex].label}}</text>
       </view>
-      <view class="stat-pill flex-col">
-        <text class="stat-lbl">减脂/增肌目标</text>
+      <view class="stat-pill">
+        <text class="stat-lbl">🎯 减脂/增肌目标</text>
         <text class="stat-val">{{goalOptions[goalIndex].key === 'PERIOD' ? (customGoalDays + '天' + (periodDirection === 'LOSE' ? '减' : '增') + customGoalWeightDisplay + '斤') : goalOptions[goalIndex].label}}</text>
       </view>
     </view>
 
-    <!-- 科学建议提示小条 -->
-    <view class="overview-tip flex align-center" wx:if="{{customGoalWarning}}">
-      <text style="font-size: 22rpx; color: #EA580C; line-height: 1.4;">{{customGoalWarning}}</text>
+    <!-- 科学建议提示小条 (支持绿色/橙色状态) -->
+    <view class="overview-tip {{customGoalWarningType || 'warn'}}" wx:if="{{customGoalWarning}}">
+      <text>{{customGoalWarning}}</text>
     </view>
   </view>
 

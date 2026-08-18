@@ -444,6 +444,7 @@ Page({
     
     let targetCal = tdee;
     let warning = '';
+    let warningType = 'success';
     const goalKey = goalOptions[goalIndex].key;
 
     if (goalKey === 'PERIOD') {
@@ -461,17 +462,25 @@ Page({
           if (rawWeight >= currentWeightJin * 0.4 && rawWeight < currentWeightJin) {
             const possibleDiff = currentWeightJin - rawWeight;
             warning = '💡 智能提示：您填写的减重斤数（' + rawWeight + ' 斤）较多。如果您是希望从 ' + currentWeightJin.toFixed(0) + ' 斤减到 ' + rawWeight + ' 斤，请在此处填写实际要减掉的斤数【' + possibleDiff.toFixed(0) + ' 斤】哦～';
+            warningType = 'warn';
           } else if (ratePerWeek > 2.0) {
             calculatedOffset = -1000.0;
-            warning = '⚠️ 提示：' + days + ' 天减重 ' + rawWeight + ' 斤（平均每周减 ' + ratePerWeek.toFixed(1) + ' 斤）超出了健康减重建议范围（每周最多减 2 斤）。已自动为您调整为健康安全上限（每日赤字 1000 kcal），以防代谢受损。';
+            warning = '⚠️ 提示：' + days + ' 天计划减重 ' + rawWeight + ' 斤（平均每周减 ' + ratePerWeek.toFixed(1) + ' 斤）速度过快。已自动为您调整为健康安全上限（每日赤字 1000 kcal），以防代谢受损。';
+            warningType = 'warn';
           } else {
             const targetWeightJin = currentWeightJin - rawWeight;
             warning = '🎯 科学分析：' + days + ' 天计划减重 ' + rawWeight + ' 斤（平均每周减 ' + ratePerWeek.toFixed(1) + ' 斤，处于健康减脂黄金速度），达成后预计体重为 ' + targetWeightJin.toFixed(1) + ' 斤！';
+            warningType = 'success';
           }
         } else { // Gain
           if (ratePerWeek > 1.0) {
             calculatedOffset = 500.0;
             warning = '⚠️ 提示：您填写的计划速度超出了健康增肌建议范围（每周最多增 1 斤）。已自动为您调整为健康安全上限（每日盈余 500 kcal）。';
+            warningType = 'warn';
+          } else {
+            const targetWeightJin = (weight * 2.0) + rawWeight;
+            warning = '💪 科学分析：' + days + ' 天计划增重 ' + rawWeight + ' 斤（平均每周增 ' + ratePerWeek.toFixed(1) + ' 斤，处于健康增肌速度），达成后预计体重为 ' + targetWeightJin.toFixed(1) + ' 斤！';
+            warningType = 'success';
           }
         }
         targetCal = Math.round(tdee + calculatedOffset);
@@ -494,9 +503,11 @@ Page({
           const ratePerWeek = fatLossNeededInJin / days * 7.0;
           if (ratePerWeek > 2.0) {
             calculatedOffset = -1000.0;
-            warning = '⚠️ 提示：为了在 ' + days + ' 天内露出腹肌，需要减掉 ' + fatLossNeededInJin.toFixed(1) + ' 斤脂肪。这超出了健康减重建议范围（每周最多减 2 斤）。已自动调整为健康安全上限（每日赤字 1000 kcal）。';
+            warning = '⚠️ 提示：为了在 ' + days + ' 天内露出腹肌，需要减掉 ' + fatLossNeededInJin.toFixed(1) + ' 斤脂肪。速度偏快，已自动调整为健康安全上限（每日赤字 1000 kcal）。';
+            warningType = 'warn';
           } else {
-            warning = '💡 分析：为了露出清晰腹肌，您需要减少约 ' + fatLossNeededInJin.toFixed(1) + ' 斤纯脂肪，计划每天保持 -' + Math.round(Math.abs(calculatedOffset)) + ' kcal 的热量赤字。';
+            warning = '💡 分析：为了露出清晰腹肌，您需要减少约 ' + fatLossNeededInJin.toFixed(1) + ' 斤纯脂肪，计划每天保持 -' + Math.round(Math.abs(calculatedOffset)) + ' kcal 的黄金热量赤字。';
+            warningType = 'success';
           }
           targetCal = Math.round(tdee + calculatedOffset);
         }
@@ -513,9 +524,10 @@ Page({
     if (targetCal < safetyFloor) {
       targetCal = safetyFloor;
       if (!warning) {
-        warning = '🛡️ 科学守护：计算出的摄入热量已触及安全代谢保底线（' + safetyFloor + ' kcal），已自动锁定底线以保护脏器与肌肉健康。';
-      } else {
-        warning += ' 此外，建议摄入量已触及安全代谢保底线（' + safetyFloor + ' kcal）。';
+        warning = '🛡️ 科学守护：建议摄入热量已自动匹配安全代谢保底线（' + safetyFloor + ' kcal），保护基础代谢与肌肉健康。';
+        warningType = 'success';
+      } else if (warningType === 'success') {
+        warning += ' 系统已为您智能匹配最佳安全代谢摄入（' + safetyFloor + ' kcal），平稳燃脂并保护肌肉。';
       }
     }
 
@@ -523,7 +535,8 @@ Page({
       bmr,
       tdee,
       targetCal,
-      customGoalWarning: warning
+      customGoalWarning: warning,
+      customGoalWarningType: warningType
     }, () => {
       this.calculateNutrientsTargets();
     });
