@@ -49,6 +49,7 @@ Page({
     showGoalSheet: false,
     alreadySignedIn: false,
     showPointsBillModal: false,
+    showBodyDataModal: false,
     pointsRecords: [],
     customGoalType: 'PERIOD',
     periodDirection: 'LOSE', // 'LOSE' 减脂, 'GAIN' 增重
@@ -284,7 +285,30 @@ Page({
       trainingIndex: index,
       showTrainingSheet: false
     });
+    this.recalculateMetabolism();
     this.saveProfileSilent(null, null);
+  },
+
+  openBodyDataModal() {
+    this.setData({ showBodyDataModal: true });
+  },
+
+  closeBodyDataModal() {
+    this.setData({ showBodyDataModal: false });
+    this.saveProfileSilent(null, null);
+  },
+
+  onQuickSelectGender(e) {
+    const index = parseInt(e.currentTarget.dataset.index);
+    this.setData({ genderIndex: index }, () => {
+      this.recalculateMetabolism();
+      this.saveProfileSilent(null, null);
+    });
+  },
+
+  onSaveBodyDataModal() {
+    this.setData({ showBodyDataModal: false });
+    this.onSaveProfile();
   },
 
   toggleFormCollapse() {
