@@ -119,6 +119,23 @@
       </view>
     </view>
 
+    <!-- 🐾 自律搭子宠物养成入口卡片 -->
+    <view class="glass-card pet-entry-card flex justify-between align-center" catchtap="onGoToPet" wx:if="{{features.pet_system !== false}}">
+      <view class="pet-entry-left flex align-center">
+        <view class="pet-entry-badge flex align-center justify-center">🐾</view>
+        <view class="pet-entry-info flex flex-col justify-center">
+          <view class="pet-entry-header-row flex align-center">
+            <text class="pet-entry-title">我的自律搭子</text>
+            <text class="pet-entry-tag">运动得食物 🍖</text>
+          </view>
+          <text class="pet-entry-sub">我不运动，小家伙就没饭吃 · 点击查看</text>
+        </view>
+      </view>
+      <view class="pet-entry-arrow-btn flex align-center justify-center">
+        <text class="arrow-text">去投喂 ›</text>
+      </view>
+    </view>
+
     <!-- 🎯 专属 AI 运动与饮食计划快捷入口卡片 -->
     <view class="glass-card ai-plan-entry-card flex justify-between align-center" catchtap="openPlanModal" wx:if="{{features.ai_plan !== false}}">
       <view class="ai-plan-left flex align-center">

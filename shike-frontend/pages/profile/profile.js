@@ -770,6 +770,12 @@ Page({
     });
   },
 
+  onGoToPet() {
+    wx.navigateTo({
+      url: '/pages/pet/pet'
+    });
+  },
+
   onGoToHomePlan() {
     wx.switchTab({
       url: '/pages/index/index',

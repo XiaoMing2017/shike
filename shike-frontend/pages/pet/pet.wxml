@@ -1,0 +1,212 @@
+<!-- pages/pet/pet.wxml -->
+<view class="pet-container">
+
+  <!-- 顶部状态栏提示 -->
+  <view class="pet-header flex align-center justify-between">
+    <view class="flex align-center" style="gap: 12rpx;">
+      <text style="font-size: 40rpx;">🐾</text>
+      <view class="flex flex-col">
+        <text class="header-title">自律搭子 · 情绪养成</text>
+        <text class="header-subtitle">我不运动，小家伙就没饭吃</text>
+      </view>
+    </view>
+    <view class="refresh-badge" bindtap="fetchPetInfo">
+      <text style="font-size: 24rpx; color: #10B981; font-weight: 700;">🔄 刷新</text>
+    </view>
+  </view>
+
+  <!-- 页面主体内容 -->
+  <block wx:if="{{loading}}">
+    <view class="loading-box flex flex-col align-center justify-center">
+      <view class="loading-spinner"></view>
+      <text style="font-size: 26rpx; color: #94A3B8; margin-top: 20rpx;">正在唤醒你的自律搭子...</text>
+    </view>
+  </block>
+
+  <!-- 状态 A：未领养状态（领养向导流） -->
+  <block wx:elif="{{!hasPet}}">
+    <view class="adopt-wrapper">
+      
+      <!-- 引导介绍卡片 -->
+      <view class="adopt-intro-card">
+        <view class="flex align-center" style="gap: 12rpx; margin-bottom: 12rpx;">
+          <text style="font-size: 32rpx;">✨</text>
+          <text style="font-size: 30rpx; font-weight: 800; color: #0F172A;">领养专属自律搭子</text>
+        </view>
+        <text class="intro-desc">
+          减脂路上不孤单！选择一只属于你的神兽或萌宠搭子。每天完成运动打卡带回食物投喂它，它会陪你一起变轻、变好、变强！
+        </text>
+      </view>
+
+      <!-- 宠物形象预览卡片 -->
+      <view class="adopt-preview-card flex flex-col align-center">
+        <view class="pet-avatar-wrapper">
+          <image class="preview-pet-img animate-float" src="{{currentTypeInfo.image}}" mode="aspectFit"></image>
+        </view>
+        <view class="pet-type-tag" style="background: {{currentTypeInfo.themeBg}}; color: {{currentTypeInfo.themeColor}};">
+          <text>{{currentTypeInfo.name}} · {{currentTypeInfo.tag}}</text>
+        </view>
+        <text class="pet-desc-quote">“{{currentTypeInfo.quote}}”</text>
+      </view>
+
+      <!-- 首发 5 大物种切换 Tab -->
+      <view class="type-selector-section">
+        <text class="section-title">选择首发物种：</text>
+        <view class="type-grid">
+          <view wx:for="{{types}}" wx:key="type" 
+                class="type-chip {{selectedType === item.type ? 'active' : ''}}" 
+                bindtap="onSelectType" data-type="{{item.type}}">
+            <text class="chip-icon">{{item.icon}}</text>
+            <text class="chip-name">{{item.name}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 宠物起名与输入 -->
+      <view class="pet-name-section">
+        <text class="section-title">为它起个名字：</text>
+        <view class="name-input-box flex align-center">
+          <input class="name-input" type="text" placeholder="例如：小燃 / 木木 / 豆豆" value="{{petName}}" bindinput="onInputName" maxlength="12" />
+          <view class="random-name-btn" bindtap="onRandomName">
+            <text>🎲 换一个</text>
+          </view>
+        </view>
+
+        <!-- 候选名字标签 -->
+        <view class="candidate-tags flex align-center">
+          <text style="font-size: 22rpx; color: #94A3B8;">常用名：</text>
+          <view wx:for="{{candidateNames}}" wx:key="*this" class="candidate-item" bindtap="onSelectCandidateName" data-name="{{item}}">
+            {{item}}
+          </view>
+        </view>
+      </view>
+
+      <!-- 领养按钮 -->
+      <view class="adopt-action-box">
+        <button class="btn-adopt" bindtap="onAdoptPet" loading="{{adopting}}">
+          🎉 立即领养我的自律搭子
+        </button>
+      </view>
+
+    </view>
+  </block>
+
+  <!-- 状态 B：已领养状态（自律搭子主看板） -->
+  <block wx:else>
+    <view class="dashboard-wrapper">
+      
+      <!-- 宠物主展台玻璃卡片 -->
+      <view class="pet-main-card">
+        
+        <!-- 顶部信息栏 -->
+        <view class="pet-meta-row flex align-center justify-between">
+          <view class="flex align-center" style="gap: 12rpx;">
+            <text class="pet-name-display">{{pet.name}}</text>
+            <view class="pet-badge-level">Lv.{{pet.level}}</view>
+          </view>
+          <view class="streak-badge flex align-center">
+            <text style="font-size: 24rpx; margin-right: 6rpx;">🔥</text>
+            <text style="font-size: 22rpx; font-weight: 700; color: #EA580C;">陪伴第 {{pet.streakDays}} 天</text>
+          </view>
+        </view>
+
+        <!-- 互动气泡台词 -->
+        <view class="dialogue-bubble animate-pop" wx:if="{{pet.dialogue}}">
+          <text class="bubble-text">“{{pet.dialogue}}”</text>
+        </view>
+
+        <!-- 宠物大立绘 (支持点击轻触互动) -->
+        <view class="pet-stage flex align-center justify-center" bindtap="onTapPet">
+          <image class="pet-stage-img animate-float {{isFeeding ? 'animate-bounce-feed' : ''}}" 
+                 src="{{pet.avatarUrl}}" mode="aspectFit"></image>
+        </view>
+
+        <!-- 心情胶囊 -->
+        <view class="mood-capsule-row flex align-center justify-center">
+          <view class="mood-capsule mood-{{pet.mood}}">
+            <text>{{pet.moodText}}</text>
+          </view>
+        </view>
+
+        <view class="tap-hint-text">
+          <text>👆 轻触它身体，听听它今天想对你说什么</text>
+        </view>
+
+      </view>
+
+      <!-- 状态仪表盘 -->
+      <view class="status-gauge-card">
+        
+        <!-- 饱食度条 -->
+        <view class="gauge-item">
+          <view class="flex justify-between align-center" style="margin-bottom: 8rpx;">
+            <view class="flex align-center" style="gap: 8rpx;">
+              <text style="font-size: 26rpx;">🍖</text>
+              <text class="gauge-title">饱食度</text>
+            </view>
+            <text class="gauge-val" style="color: {{pet.fullness < 30 ? '#EF4444' : '#10B981'}};">{{pet.fullness}} / 100</text>
+          </view>
+          <view class="gauge-bar-bg">
+            <view class="gauge-bar-fill" style="width: {{pet.fullness}}%; background: {{pet.fullness < 30 ? '#EF4444' : '#10B981'}};"></view>
+          </view>
+        </view>
+
+        <!-- 成长值条 -->
+        <view class="gauge-item" style="margin-top: 24rpx;">
+          <view class="flex justify-between align-center" style="margin-bottom: 8rpx;">
+            <view class="flex align-center" style="gap: 8rpx;">
+              <text style="font-size: 26rpx;">📈</text>
+              <text class="gauge-title">成长进度 (升级还需 {{pet.maxExp - pet.exp}} 点)</text>
+            </view>
+            <text class="gauge-val" style="color: #6366F1;">{{pet.exp}} / {{pet.maxExp}}</text>
+          </view>
+          <view class="gauge-bar-bg">
+            <view class="gauge-bar-fill" style="width: {{(pet.exp / pet.maxExp) * 100}}%; background: linear-gradient(90deg, #6366F1, #8B5CF6);"></view>
+          </view>
+        </view>
+
+        <!-- 亲密度与陪伴状态 -->
+        <view class="gauge-sub-row flex justify-between align-center" style="margin-top: 24rpx;">
+          <view class="sub-stat flex align-center">
+            <text style="font-size: 28rpx; margin-right: 8rpx;">❤️</text>
+            <text style="font-size: 24rpx; color: #475569;">亲密度: <text style="font-weight: 800; color: #E11D48;">{{pet.intimacy}}</text></text>
+          </view>
+          <view class="sub-stat flex align-center">
+            <text style="font-size: 28rpx; margin-right: 8rpx;">🎒</text>
+            <text style="font-size: 24rpx; color: #475569;">食物背包: <text style="font-weight: 800; color: #10B981;">{{pet.foodCount}}</text> 份</text>
+          </view>
+        </view>
+
+      </view>
+
+      <!-- 核心互动操作区 -->
+      <view class="action-card flex flex-col">
+        
+        <view class="flex justify-between" style="gap: 16rpx;">
+          <!-- 立即投喂按钮 -->
+          <button class="btn-feed flex align-center justify-center" bindtap="onFeedPet" disabled="{{isFeeding || pet.foodCount <= 0}}">
+            <text style="font-size: 32rpx; margin-right: 8rpx;">🥣</text>
+            <text style="font-weight: 800;">{{pet.foodCount > 0 ? '投喂食物 (' + pet.foodCount + ')' : '暂无食物'}}</text>
+          </button>
+
+          <!-- 去运动打卡按钮 -->
+          <button class="btn-exercise flex align-center justify-center" bindtap="onGoExercise">
+            <text style="font-size: 32rpx; margin-right: 8rpx;">🏃</text>
+            <text style="font-weight: 800;">去运动打卡</text>
+          </button>
+        </view>
+
+        <!-- 打卡奖励说明 -->
+        <view class="exercise-rule-box flex align-center" style="margin-top: 20rpx;">
+          <text style="font-size: 28rpx; margin-right: 12rpx;">💡</text>
+          <text class="rule-text">
+            每日完成 1 次运动打卡（慢跑/快走/力量训练等），即可为搭子免费赚取 1 份健康食物！
+          </text>
+        </view>
+
+      </view>
+
+    </view>
+  </block>
+
+</view>

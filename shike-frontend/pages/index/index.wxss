@@ -2212,6 +2212,90 @@
   transform: scale(0.96);
 }
 
+/* 🐾 我的自律搭子宠物看板卡片样式 */
+.pet-entry-card {
+  margin: 2rpx 0 12rpx 0;
+  padding: 16rpx 20rpx;
+  background: linear-gradient(135deg, rgba(236, 253, 245, 0.95) 0%, rgba(240, 253, 250, 0.95) 100%);
+  border: 1.5rpx solid rgba(16, 185, 129, 0.32);
+  border-radius: 24rpx;
+  box-shadow: 0 6rpx 18rpx rgba(16, 185, 129, 0.08);
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.pet-entry-card:active {
+  transform: scale(0.98);
+  opacity: 0.95;
+}
+
+.pet-entry-left {
+  flex: 1;
+  min-width: 0;
+  margin-right: 12rpx;
+}
+
+.pet-entry-badge {
+  width: 56rpx;
+  height: 56rpx;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  border-radius: 16rpx;
+  font-size: 28rpx;
+  margin-right: 14rpx;
+  box-shadow: 0 4rpx 12rpx rgba(16, 185, 129, 0.25);
+}
+
+.pet-entry-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.pet-entry-header-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 10rpx;
+}
+
+.pet-entry-title {
+  font-size: 26rpx;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.pet-entry-tag {
+  font-size: 20rpx;
+  color: #047857;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1rpx solid rgba(16, 185, 129, 0.3);
+  padding: 2rpx 10rpx;
+  border-radius: 8rpx;
+  font-weight: 700;
+}
+
+.pet-entry-sub {
+  font-size: 20rpx;
+  color: #64748B;
+  margin-top: 4rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pet-entry-arrow-btn {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1rpx solid rgba(16, 185, 129, 0.25);
+  border-radius: 20rpx;
+  padding: 6rpx 16rpx;
+}
+
+.pet-entry-arrow-btn .arrow-text {
+  font-size: 22rpx;
+  color: #059669;
+  font-weight: 700;
+}
+
 /* 🎯 专属 AI 运动与饮食计划样式 */
 .ai-plan-entry-card {
   margin: 2rpx 0 12rpx 0;

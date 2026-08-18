@@ -1,0 +1,447 @@
+/* pages/pet/pet.wxss */
+page {
+  background-color: #F8FAFC;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+.pet-container {
+  padding: 24rpx 28rpx 60rpx 28rpx;
+}
+
+/* 顶部栏 */
+.pet-header {
+  margin-bottom: 24rpx;
+}
+
+.header-title {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.header-subtitle {
+  font-size: 22rpx;
+  color: #64748B;
+  margin-top: 4rpx;
+}
+
+.refresh-badge {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1.5rpx solid rgba(16, 185, 129, 0.3);
+  padding: 8rpx 18rpx;
+  border-radius: 30rpx;
+}
+
+/* 加载状态 */
+.loading-box {
+  padding: 120rpx 0;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 6rpx solid #E2E8F0;
+  border-top-color: #10B981;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ================= 状态 A: 领养向导样式 ================= */
+.adopt-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.adopt-intro-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(240, 253, 244, 0.9));
+  border: 2rpx solid rgba(16, 185, 129, 0.25);
+  border-radius: 28rpx;
+  padding: 24rpx 28rpx;
+  box-shadow: 0 10rpx 25rpx rgba(16, 185, 129, 0.06);
+}
+
+.intro-desc {
+  font-size: 24rpx;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.adopt-preview-card {
+  background: #FFFFFF;
+  border: 2rpx solid #E2E8F0;
+  border-radius: 32rpx;
+  padding: 36rpx 24rpx 28rpx 24rpx;
+  box-shadow: 0 12rpx 30rpx rgba(15, 23, 42, 0.04);
+}
+
+.pet-avatar-wrapper {
+  width: 360rpx;
+  height: 360rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-pet-img {
+  width: 100%;
+  height: 100%;
+}
+
+.pet-type-tag {
+  font-size: 24rpx;
+  font-weight: 700;
+  padding: 8rpx 24rpx;
+  border-radius: 30rpx;
+  margin-top: 16rpx;
+}
+
+.pet-desc-quote {
+  font-size: 24rpx;
+  color: #64748B;
+  font-style: italic;
+  margin-top: 14rpx;
+  text-align: center;
+  padding: 0 20rpx;
+}
+
+/* 物种选择器 */
+.type-selector-section, .pet-name-section {
+  background: #FFFFFF;
+  border: 2rpx solid #E2E8F0;
+  border-radius: 28rpx;
+  padding: 24rpx 24rpx;
+}
+
+.section-title {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #1E293B;
+  margin-bottom: 16rpx;
+  display: block;
+}
+
+.type-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14rpx;
+}
+
+.type-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  padding: 16rpx 10rpx;
+  background: #F1F5F9;
+  border: 2rpx solid transparent;
+  border-radius: 20rpx;
+  transition: all 0.2s ease;
+}
+
+.type-chip.active {
+  background: #ECFDF5;
+  border-color: #10B981;
+  color: #047857;
+  font-weight: 700;
+  box-shadow: 0 4rpx 12rpx rgba(16, 185, 129, 0.15);
+}
+
+.chip-icon {
+  font-size: 28rpx;
+}
+
+.chip-name {
+  font-size: 24rpx;
+}
+
+/* 起名输入 */
+.name-input-box {
+  background: #F8FAFC;
+  border: 2rpx solid #CBD5E1;
+  border-radius: 20rpx;
+  padding: 10rpx 18rpx;
+}
+
+.name-input {
+  flex: 1;
+  font-size: 28rpx;
+  color: #0F172A;
+  font-weight: 600;
+}
+
+.random-name-btn {
+  font-size: 22rpx;
+  color: #6366F1;
+  font-weight: 700;
+  padding: 6rpx 14rpx;
+  background: #EEF2FF;
+  border-radius: 12rpx;
+}
+
+.candidate-tags {
+  margin-top: 14rpx;
+  gap: 12rpx;
+  flex-wrap: wrap;
+}
+
+.candidate-item {
+  font-size: 22rpx;
+  color: #475569;
+  background: #F1F5F9;
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+.btn-adopt {
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: #FFFFFF;
+  font-size: 32rpx;
+  font-weight: 800;
+  padding: 22rpx 0;
+  border-radius: 36rpx;
+  box-shadow: 0 10rpx 25rpx rgba(16, 185, 129, 0.35);
+  border: none;
+}
+
+/* ================= 状态 B: 搭子主看板样式 ================= */
+.dashboard-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.pet-main-card {
+  position: relative;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F1F5F9 100%);
+  border: 2rpx solid #E2E8F0;
+  border-radius: 36rpx;
+  padding: 32rpx 28rpx 24rpx 28rpx;
+  box-shadow: 0 16rpx 36rpx rgba(15, 23, 42, 0.05);
+}
+
+.pet-meta-row {
+  margin-bottom: 20rpx;
+}
+
+.pet-name-display {
+  font-size: 38rpx;
+  font-weight: 900;
+  color: #0F172A;
+}
+
+.pet-badge-level {
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  color: #FFFFFF;
+  font-size: 22rpx;
+  font-weight: 800;
+  padding: 4rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+.streak-badge {
+  background: #FFF7ED;
+  border: 1.5rpx solid #FFEDD5;
+  padding: 6rpx 18rpx;
+  border-radius: 24rpx;
+}
+
+/* 气泡台词 */
+.dialogue-bubble {
+  background: rgba(255, 255, 255, 0.95);
+  border: 2rpx solid #E2E8F0;
+  border-radius: 24rpx;
+  padding: 16rpx 24rpx;
+  margin: 0 auto 16rpx auto;
+  max-width: 80%;
+  text-align: center;
+  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.04);
+}
+
+.bubble-text {
+  font-size: 25rpx;
+  color: #334155;
+  font-weight: 600;
+}
+
+/* 宠物展示台 */
+.pet-stage {
+  width: 440rpx;
+  height: 440rpx;
+  margin: 0 auto;
+}
+
+.pet-stage-img {
+  width: 100%;
+  height: 100%;
+}
+
+/* 心情胶囊 */
+.mood-capsule-row {
+  margin-top: 14rpx;
+}
+
+.mood-capsule {
+  font-size: 24rpx;
+  font-weight: 700;
+  padding: 8rpx 28rpx;
+  border-radius: 30rpx;
+}
+
+.mood-HAPPY {
+  background: #ECFDF5;
+  color: #047857;
+  border: 1.5rpx solid #A7F3D0;
+}
+
+.mood-HUNGRY {
+  background: #FEF2F2;
+  color: #B91C1C;
+  border: 1.5rpx solid #FECACA;
+}
+
+.mood-WANT_EXERCISE {
+  background: #FFFBEB;
+  color: #B45309;
+  border: 1.5rpx solid #FDE68A;
+}
+
+.mood-NORMAL {
+  background: #F0FDF4;
+  color: #15803D;
+  border: 1.5rpx solid #BBF7D0;
+}
+
+.tap-hint-text {
+  text-align: center;
+  font-size: 20rpx;
+  color: #94A3B8;
+  margin-top: 14rpx;
+}
+
+/* 状态仪表盘卡片 */
+.status-gauge-card {
+  background: #FFFFFF;
+  border: 2rpx solid #E2E8F0;
+  border-radius: 28rpx;
+  padding: 28rpx 28rpx;
+}
+
+.gauge-title {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #334155;
+}
+
+.gauge-val {
+  font-size: 26rpx;
+  font-weight: 800;
+}
+
+.gauge-bar-bg {
+  width: 100%;
+  height: 16rpx;
+  background: #E2E8F0;
+  border-radius: 10rpx;
+  overflow: hidden;
+}
+
+.gauge-bar-fill {
+  height: 100%;
+  border-radius: 10rpx;
+  transition: width 0.4s ease;
+}
+
+.sub-stat {
+  background: #F8FAFC;
+  border: 1.5rpx solid #E2E8F0;
+  padding: 10rpx 20rpx;
+  border-radius: 20rpx;
+  flex: 1;
+  margin: 0 6rpx;
+  justify-content: center;
+}
+
+/* 操作卡片 */
+.action-card {
+  background: #FFFFFF;
+  border: 2rpx solid #E2E8F0;
+  border-radius: 28rpx;
+  padding: 24rpx;
+}
+
+.btn-feed {
+  flex: 1;
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: #FFFFFF;
+  font-size: 30rpx;
+  border-radius: 28rpx;
+  padding: 18rpx 0;
+  box-shadow: 0 8rpx 20rpx rgba(16, 185, 129, 0.3);
+  border: none;
+}
+
+.btn-feed[disabled] {
+  background: #E2E8F0 !important;
+  color: #94A3B8 !important;
+  box-shadow: none !important;
+}
+
+.btn-exercise {
+  flex: 1;
+  background: linear-gradient(135deg, #6366F1, #4F46E5);
+  color: #FFFFFF;
+  font-size: 30rpx;
+  border-radius: 28rpx;
+  padding: 18rpx 0;
+  box-shadow: 0 8rpx 20rpx rgba(99, 102, 241, 0.3);
+  border: none;
+}
+
+.exercise-rule-box {
+  background: #F8FAFC;
+  border-radius: 18rpx;
+  padding: 14rpx 18rpx;
+}
+
+.rule-text {
+  font-size: 22rpx;
+  color: #64748B;
+  line-height: 1.5;
+}
+
+/* 动效 */
+.animate-float {
+  animation: floatAnim 3.5s ease-in-out infinite;
+}
+
+@keyframes floatAnim {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-12rpx); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-pop {
+  animation: popAnim 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popAnim {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-bounce-feed {
+  animation: bounceFeedAnim 0.6s ease;
+}
+
+@keyframes bounceFeedAnim {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.15) rotate(-3deg); }
+  60% { transform: scale(0.95) rotate(3deg); }
+  100% { transform: scale(1); }
+}
