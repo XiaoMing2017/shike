@@ -42,41 +42,89 @@
     <text style="color: #6366F1; font-weight: bold; font-size: 26rpx;">查看 ></text>
   </view>
 
-  <!-- 2. 身体健康数据概览卡片 (点击唤起修改弹窗) -->
-  <view class="glass-card body-overview-card" catchtap="openBodyDataModal">
-    <view class="flex justify-between align-center" style="margin-bottom: 20rpx;">
-      <view class="flex align-center" style="gap: 12rpx;">
+  <!-- 2. 健康档案编辑 (直接展开) -->
+  <view class="glass-card profile-form-card">
+    <view class="card-title flex justify-between align-center">
+      <view class="flex align-center" style="gap: 10rpx;">
         <text style="font-size: 32rpx;">📊</text>
-        <text class="overview-title">身体健康与减脂档案</text>
-      </view>
-      <view class="btn-edit-capsule flex align-center">
-        <text>✏️ 修改数据</text>
+        <text>身体健康数据 (用于计算TDEE)</text>
       </view>
     </view>
+    
+    <view class="form-content-wrap" style="margin-top: 10rpx;">
+      <view class="form-item flex justify-between align-center">
+        <text class="label">性别</text>
+        <view class="gender-toggle flex">
+          <view class="dir-btn {{genderIndex === 0 ? 'active male' : ''}}" catchtap="onQuickSelectGender" data-index="0">👨 男士</view>
+          <view class="dir-btn {{genderIndex === 1 ? 'active female' : ''}}" catchtap="onQuickSelectGender" data-index="1">👩 女士</view>
+        </view>
+      </view>
 
-    <!-- 4宫格核心数据快照 (2x2 网格) -->
-    <view class="body-stats-grid">
-      <view class="stat-pill">
-        <text class="stat-lbl">👤 性别 · 年龄</text>
-        <text class="stat-val">{{genderOptions[genderIndex].label}} · {{age || '--'}}岁</text>
+      <view class="form-item flex justify-between align-center">
+        <text class="label">年龄 (岁)</text>
+        <input class="input" type="number" placeholder="如 28" value="{{age}}" bindinput="onAgeInput" bindblur="onFieldBlur" />
       </view>
-      <view class="stat-pill">
-        <text class="stat-lbl">📏 身高 · 体重</text>
-        <text class="stat-val">{{height || '--'}}cm · {{weight || '--'}}kg</text>
+      
+      <view class="form-item flex justify-between align-center">
+        <text class="label">身高 (cm)</text>
+        <input class="input" type="digit" placeholder="如 175" value="{{height}}" bindinput="onHeightInput" bindblur="onFieldBlur" />
       </view>
-      <view class="stat-pill">
-        <text class="stat-lbl">⚡ 日常活动系数</text>
-        <text class="stat-val">{{activityOptions[activityIndex].label}}</text>
+      
+      <view class="form-item flex justify-between align-center">
+        <text class="label">当前体重 (kg)</text>
+        <input class="input" type="digit" placeholder="如 70" value="{{weight}}" bindinput="onWeightInput" bindblur="onFieldBlur" />
       </view>
-      <view class="stat-pill">
-        <text class="stat-lbl">🎯 减脂/增肌目标</text>
-        <text class="stat-val">{{goalOptions[goalIndex].key === 'PERIOD' ? (customGoalDays + '天' + (periodDirection === 'LOSE' ? '减' : '增') + customGoalWeightDisplay + '斤') : goalOptions[goalIndex].label}}</text>
-      </view>
-    </view>
 
-    <!-- 科学建议提示小条 (支持绿色/橙色状态) -->
-    <view class="overview-tip {{customGoalWarningType || 'warn'}}" wx:if="{{customGoalWarning}}">
-      <text>{{customGoalWarning}}</text>
+      <view class="form-item flex justify-between align-center" catchtap="showTrainingModal">
+        <text class="label">训练经验等级</text>
+        <view class="picker-val">{{trainingOptions[trainingIndex].label}} ▾</view>
+      </view>
+ 
+      <view class="form-item flex justify-between align-center" catchtap="showActivityModal">
+        <text class="label">日常活动系数</text>
+        <view class="picker-val">{{activityOptions[activityIndex].label}} ▾</view>
+      </view>
+ 
+      <view class="form-item flex justify-between align-center" catchtap="showGoalModal">
+        <text class="label">减脂/增肌目标</text>
+        <view class="picker-val">{{goalOptions[goalIndex].label}} ▾</view>
+      </view>
+
+      <!-- Custom periodic weight goal inputs -->
+      <block wx:if="{{goalOptions[goalIndex].key === 'PERIOD'}}">
+        <view class="form-item flex justify-between align-center">
+          <text class="label">计划目标方向</text>
+          <view class="period-direction-toggle flex">
+            <view class="dir-btn {{periodDirection === 'LOSE' ? 'active lose' : ''}}" catchtap="onSelectPeriodDirection" data-dir="LOSE">📉 减脂 (减轻)</view>
+            <view class="dir-btn {{periodDirection === 'GAIN' ? 'active gain' : ''}}" catchtap="onSelectPeriodDirection" data-dir="GAIN">📈 增重 (增加)</view>
+          </view>
+        </view>
+        <view class="form-item flex justify-between align-center">
+          <text class="label">计划周期 (天)</text>
+          <input class="input" type="number" placeholder="如 30, 60, 100" value="{{customGoalDays}}" bindinput="onCustomGoalDaysInput" bindblur="onFieldBlur" />
+        </view>
+        <view class="form-item flex justify-between align-center">
+          <text class="label">{{periodDirection === 'LOSE' ? '期望减掉斤数 (斤)' : '期望增加斤数 (斤)'}}</text>
+          <input class="input" type="digit" placeholder="{{periodDirection === 'LOSE' ? '如想减20斤请填20' : '如想增10斤请填10'}}" value="{{customGoalWeightDisplay}}" bindinput="onCustomGoalWeightInput" bindblur="onFieldBlur" />
+        </view>
+      </block>
+
+      <!-- Custom abs visualization goal inputs -->
+      <block wx:if="{{goalOptions[goalIndex].key === 'ABS'}}">
+        <view class="form-item flex justify-between align-center">
+          <text class="label">当前体脂率 (%)</text>
+          <input class="input" type="digit" placeholder="如 20" value="{{currentBodyFat}}" bindinput="onCurrentBodyFatInput" bindblur="onFieldBlur" />
+        </view>
+        <view class="form-item flex justify-between align-center">
+          <text class="label">期望达成时间 (天)</text>
+          <input class="input" type="number" placeholder="如 60, 90" value="{{customGoalDays}}" bindinput="onCustomGoalDaysInput" bindblur="onFieldBlur" />
+        </view>
+      </block>
+
+      <!-- 科学建议与提示卡片 -->
+      <view class="overview-tip {{customGoalWarningType || 'warn'}}" wx:if="{{(goalOptions[goalIndex].key === 'PERIOD' || goalOptions[goalIndex].key === 'ABS') && customGoalWarning}}">
+        <text>{{customGoalWarning}}</text>
+      </view>
     </view>
   </view>
 
@@ -246,98 +294,4 @@
     </view>
   </view>
 
-  <!-- 💥 全新升级：身体健康数据与目标设置专属弹窗 -->
-  <view class="modal-backdrop {{showBodyDataModal ? 'active' : ''}}" catchtap="closeBodyDataModal" catchtouchmove="preventBubble">
-    <view class="modal-dialog body-edit-dialog" catchtap="preventBubble">
-      <view class="modal-header">
-        <view class="flex align-center" style="gap: 8rpx;">
-          <text style="font-size: 32rpx;">📊</text>
-          <text class="modal-title">修改身体健康数据</text>
-        </view>
-        <text class="modal-close" catchtap="closeBodyDataModal">✕</text>
-      </view>
-
-      <scroll-view class="body-edit-scroll" scroll-y>
-        <view class="form-item flex justify-between align-center">
-          <text class="label">性别</text>
-          <view class="gender-toggle flex">
-            <view class="dir-btn {{genderIndex === 0 ? 'active male' : ''}}" catchtap="onQuickSelectGender" data-index="0">👨 男士</view>
-            <view class="dir-btn {{genderIndex === 1 ? 'active female' : ''}}" catchtap="onQuickSelectGender" data-index="1">👩 女士</view>
-          </view>
-        </view>
-
-        <view class="form-item flex justify-between align-center">
-          <text class="label">年龄 (岁)</text>
-          <input class="input" type="number" placeholder="如 28" value="{{age}}" bindinput="onAgeInput" />
-        </view>
-        
-        <view class="form-item flex justify-between align-center">
-          <text class="label">身高 (cm)</text>
-          <input class="input" type="digit" placeholder="如 175" value="{{height}}" bindinput="onHeightInput" />
-        </view>
-        
-        <view class="form-item flex justify-between align-center">
-          <text class="label">当前体重 (kg)</text>
-          <input class="input" type="digit" placeholder="如 70" value="{{weight}}" bindinput="onWeightInput" />
-        </view>
-
-        <view class="form-item flex justify-between align-center" catchtap="showTrainingModal">
-          <text class="label">训练经验等级</text>
-          <view class="picker-val">{{trainingOptions[trainingIndex].label}} ▾</view>
-        </view>
-   
-        <view class="form-item flex justify-between align-center" catchtap="showActivityModal">
-          <text class="label">日常活动系数</text>
-          <view class="picker-val">{{activityOptions[activityIndex].label}} ▾</view>
-        </view>
-   
-        <view class="form-item flex justify-between align-center" catchtap="showGoalModal">
-          <text class="label">减脂/增肌目标</text>
-          <view class="picker-val">{{goalOptions[goalIndex].label}} ▾</view>
-        </view>
-
-        <!-- Custom periodic weight goal inputs -->
-        <block wx:if="{{goalOptions[goalIndex].key === 'PERIOD'}}">
-          <view class="form-item flex justify-between align-center">
-            <text class="label">计划目标方向</text>
-            <view class="period-direction-toggle flex">
-              <view class="dir-btn {{periodDirection === 'LOSE' ? 'active lose' : ''}}" catchtap="onSelectPeriodDirection" data-dir="LOSE">📉 减脂 (减轻)</view>
-              <view class="dir-btn {{periodDirection === 'GAIN' ? 'active gain' : ''}}" catchtap="onSelectPeriodDirection" data-dir="GAIN">📈 增重 (增加)</view>
-            </view>
-          </view>
-          <view class="form-item flex justify-between align-center">
-            <text class="label">计划周期 (天)</text>
-            <input class="input" type="number" placeholder="如 30, 60, 100" value="{{customGoalDays}}" bindinput="onCustomGoalDaysInput" />
-          </view>
-          <view class="form-item flex justify-between align-center">
-            <text class="label">{{periodDirection === 'LOSE' ? '期望减掉斤数 (斤)' : '期望增加斤数 (斤)'}}</text>
-            <input class="input" type="digit" placeholder="{{periodDirection === 'LOSE' ? '如想减20斤请填20' : '如想增10斤请填10'}}" value="{{customGoalWeightDisplay}}" bindinput="onCustomGoalWeightInput" />
-          </view>
-        </block>
-
-        <!-- Custom abs visualization goal inputs -->
-        <block wx:if="{{goalOptions[goalIndex].key === 'ABS'}}">
-          <view class="form-item flex justify-between align-center">
-            <text class="label">当前体脂率 (%)</text>
-            <input class="input" type="digit" placeholder="如 20" value="{{currentBodyFat}}" bindinput="onCurrentBodyFatInput" />
-          </view>
-          <view class="form-item flex justify-between align-center">
-            <text class="label">期望达成时间 (天)</text>
-            <input class="input" type="number" placeholder="如 60, 90" value="{{customGoalDays}}" bindinput="onCustomGoalDaysInput" />
-          </view>
-        </block>
-
-        <!-- Health Warning Notification Block -->
-        <block wx:if="{{(goalOptions[goalIndex].key === 'PERIOD' || goalOptions[goalIndex].key === 'ABS') && customGoalWarning}}">
-          <view style="background-color: rgba(249, 115, 22, 0.08); border: 1rpx solid #F97316; border-radius: 12rpx; padding: 16rpx 20rpx; margin: 16rpx 0 10rpx 0;">
-            <text style="color: #EA580C; font-size: 22rpx; line-height: 1.4; display: block; font-weight: 500;">{{customGoalWarning}}</text>
-          </view>
-        </block>
-      </scroll-view>
-
-      <view class="modal-footer-save" style="padding-top: 20rpx; width: 100%;">
-        <button class="btn-confirm-body-data" catchtap="onSaveBodyDataModal">✓ 确认保存并更新看板</button>
-      </view>
-    </view>
-  </view>
 </view>
