@@ -5,7 +5,7 @@ App({
   },
   globalData: {
     userInfo: null,
-    baseUrl: 'https://shike.store/api/v1'
+    baseUrl: 'http://127.0.0.1:8081/api/v1'
   },
   formatImageUrl(url) {
     const defaultAvatar = 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0';
