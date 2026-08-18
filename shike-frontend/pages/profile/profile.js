@@ -432,9 +432,17 @@ Page({
         const ratePerWeek = Math.abs(weightChange) / days * 7.0;
 
         if (weightChange < 0) { // Loss
-          if (ratePerWeek > 2.0) {
+          const currentWeightJin = (weight * 2.0);
+          // 智能防呆：如果用户填的数字接近自身体重（比如200斤填了180），提示用户是目标体重还是减重斤数
+          if (rawWeight >= currentWeightJin * 0.4 && rawWeight < currentWeightJin) {
+            const possibleDiff = currentWeightJin - rawWeight;
+            warning = '💡 智能提示：您填写的减重斤数（' + rawWeight + ' 斤）较多。如果您是希望从 ' + currentWeightJin.toFixed(0) + ' 斤减到 ' + rawWeight + ' 斤，请在此处填写实际要减掉的斤数【' + possibleDiff.toFixed(0) + ' 斤】哦～';
+          } else if (ratePerWeek > 2.0) {
             calculatedOffset = -1000.0;
-            warning = '⚠️ 提示：您填写的计划速度超出了健康减重建议范围（每周最多减 2 斤）。已自动为您调整为健康安全上限（每日赤字 1000 kcal），以防代谢受损。';
+            warning = '⚠️ 提示：' + days + ' 天减重 ' + rawWeight + ' 斤（平均每周减 ' + ratePerWeek.toFixed(1) + ' 斤）超出了健康减重建议范围（每周最多减 2 斤）。已自动为您调整为健康安全上限（每日赤字 1000 kcal），以防代谢受损。';
+          } else {
+            const targetWeightJin = currentWeightJin - rawWeight;
+            warning = '🎯 科学分析：' + days + ' 天计划减重 ' + rawWeight + ' 斤（平均每周减 ' + ratePerWeek.toFixed(1) + ' 斤，处于健康减脂黄金速度），达成后预计体重为 ' + targetWeightJin.toFixed(1) + ' 斤！';
           }
         } else { // Gain
           if (ratePerWeek > 1.0) {
