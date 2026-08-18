@@ -110,7 +110,7 @@ Page({
     }
 
     wx.request({
-      url: ${app.globalData.baseUrl}/pet/my?userId=,
+      url: `${app.globalData.baseUrl}/pet/my?userId=${user.id}`,
       method: 'GET',
       success: (res) => {
         if (res.data && res.data.code === 200 && res.data.data) {
@@ -185,7 +185,7 @@ Page({
     wx.showLoading({ title: '正在唤醒搭子...' });
 
     wx.request({
-      url: ${app.globalData.baseUrl}/pet/create,
+      url: `${app.globalData.baseUrl}/pet/create`,
       method: 'POST',
       data: {
         userId: user.id,
@@ -244,7 +244,7 @@ Page({
     wx.vibrateShort({ type: 'medium' });
 
     wx.request({
-      url: ${app.globalData.baseUrl}/pet/feed?userId=,
+      url: `${app.globalData.baseUrl}/pet/feed?userId=${user.id}`,
       method: 'POST',
       success: (res) => {
         if (res.data && res.data.code === 200) {
@@ -277,9 +277,6 @@ Page({
   onTapPet() {
     if (!this.data.pet) return;
     wx.vibrateShort({ type: 'light' });
-
-    const petType = this.data.pet.petType;
-    const mood = this.data.pet.mood;
 
     const quotes = [
       '吃饱饱，今天陪你一起燃脂！💪',
