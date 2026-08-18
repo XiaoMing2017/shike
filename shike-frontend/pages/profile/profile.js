@@ -771,7 +771,7 @@ Page({
   },
 
   onGoToPet() {
-    wx.navigateTo({
+    wx.switchTab({
       url: '/pages/pet/pet'
     });
   },
