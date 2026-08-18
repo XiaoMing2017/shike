@@ -8,6 +8,7 @@ const TYPE_CONFIG = {
     name: '青玉小幼龙',
     tag: '燃脂蜕变',
     image: '/images/pets/pet_dragon.png',
+    food: '🍎',
     quote: '我不运动，小龙就没饭吃！',
     themeBg: '#ECFDF5',
     themeColor: '#047857',
@@ -19,6 +20,7 @@ const TYPE_CONFIG = {
     name: '治愈大龙猫',
     tag: '温馨陪伴',
     image: '/images/pets/pet_totoro.png',
+    food: '🥝',
     quote: '吃饱才有力气自律，记得按时吃减脂餐哦～',
     themeBg: '#F1F5F9',
     themeColor: '#334155',
@@ -30,6 +32,7 @@ const TYPE_CONFIG = {
     name: '软萌元气猫',
     tag: '灵动轻盈',
     image: '/images/pets/pet_cat.png',
+    food: '🍊',
     quote: '动作要轻盈，体态要挺拔，今天打卡超棒喵～',
     themeBg: '#FFF7ED',
     themeColor: '#C2410C',
@@ -41,6 +44,7 @@ const TYPE_CONFIG = {
     name: '忠诚自律狗',
     tag: '户外自律',
     image: '/images/pets/pet_dog.png',
+    food: '🍓',
     quote: '主人快走！去公园跑两圈，今天的狗粮就有啦汪！',
     themeBg: '#FEF3C7',
     themeColor: '#B45309',
@@ -52,6 +56,7 @@ const TYPE_CONFIG = {
     name: '祥瑞小麒麟',
     tag: '祥瑞好运',
     image: '/images/pets/pet_qilin.png',
+    food: '🍑',
     quote: '自律者自带祥瑞，坚持打卡，好身材和好运一起来！',
     themeBg: '#F5F3FF',
     themeColor: '#6D28D9',
@@ -69,6 +74,9 @@ Page({
     petName: '木木',
     adopting: false,
     isFeeding: false,
+    isTouched: false,
+    heartAnim: false,
+    foodIcon: '🍎',
     candidateNames: ['木木', '小燃', '豆豆', '卡卡', '饭团'],
     types: [
       { type: 'DRAGON', icon: '🐉', name: '小幼龙' },
@@ -115,9 +123,11 @@ Page({
       success: (res) => {
         if (res.data && res.data.code === 200 && res.data.data) {
           const pet = res.data.data;
+          const info = TYPE_CONFIG[pet.petType] || TYPE_CONFIG['DRAGON'];
           this.setData({
             hasPet: true,
             pet: pet,
+            foodIcon: info.food || '🍎',
             loading: false
           });
         } else {
@@ -144,7 +154,8 @@ Page({
     this.setData({
       selectedType: type,
       currentTypeInfo: info,
-      petName: info.defaultName
+      petName: info.defaultName,
+      foodIcon: info.food || '🍎'
     });
     wx.vibrateShort({ type: 'light' });
   },
@@ -182,7 +193,7 @@ Page({
     }
 
     this.setData({ adopting: true });
-    wx.showLoading({ title: '正在唤醒搭子...' });
+    wx.showLoading({ title: '正在唤醒 3D 搭子...' });
 
     wx.request({
       url: `${app.globalData.baseUrl}/pet/create`,
@@ -201,9 +212,12 @@ Page({
             title: '领养成功！🎉',
             icon: 'success'
           });
+          const pet = res.data.data;
+          const info = TYPE_CONFIG[pet.petType] || TYPE_CONFIG['DRAGON'];
           this.setData({
             hasPet: true,
-            pet: res.data.data
+            pet: pet,
+            foodIcon: info.food || '🍎'
           });
           wx.vibrateShort({ type: 'medium' });
         } else {
@@ -228,7 +242,7 @@ Page({
     if (this.data.pet.foodCount <= 0) {
       wx.showModal({
         title: '食物不足',
-        content: '小家伙的饭碗空空啦！今天完成一次运动打卡（快走/慢跑/力量等）就能免费带回食物哦～',
+        content: '小家伙的饭碗空空啦！今天去完成一次运动打卡（快走/慢跑/力量等）就能免费带回食物哦～',
         confirmText: '去运动',
         cancelText: '稍后再说',
         success: (modalRes) => {
@@ -240,6 +254,7 @@ Page({
       return;
     }
 
+    // 触发抛物线投喂与咀嚼动效
     this.setData({ isFeeding: true });
     wx.vibrateShort({ type: 'medium' });
 
@@ -253,7 +268,7 @@ Page({
             pet: updated
           });
           wx.showToast({
-            title: '投喂成功！+10 经验',
+            title: '投喂成功！+10 经验 ✨',
             icon: 'none'
           });
         } else {
@@ -269,13 +284,19 @@ Page({
       complete: () => {
         setTimeout(() => {
           this.setData({ isFeeding: false });
-        }, 600);
+        }, 800);
       }
     });
   },
 
   onTapPet() {
-    if (!this.data.pet) return;
+    if (!this.data.pet || this.data.isFeeding) return;
+
+    // 触发 Q 弹果冻与爱心动效
+    this.setData({
+      isTouched: true,
+      heartAnim: true
+    });
     wx.vibrateShort({ type: 'light' });
 
     const quotes = [
@@ -284,13 +305,21 @@ Page({
       '自律最酷啦，今天也要一起加油哦！🔥',
       '少油少盐多喝水，体态越来越棒啦！💧',
       '你今天超自律！本搭子超级开心～✨',
-      '今天又多消耗了卡路里，我们都在变强！🌟'
+      '今天又多消耗了卡路里，我们都在变强！🌟',
+      '呼噜噜～摸摸头好舒服呀！❤️'
     ];
 
     const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
     this.setData({
       'pet.dialogue': randomQuote
     });
+
+    setTimeout(() => {
+      this.setData({
+        isTouched: false,
+        heartAnim: false
+      });
+    }, 600);
   },
 
   onGoExercise() {
