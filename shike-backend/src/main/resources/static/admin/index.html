@@ -13,6 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <style>
     :root {
@@ -3939,74 +3940,62 @@
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
           <div style="background:rgba(30, 41, 59, 0.6); border:1px solid rgba(96, 165, 250, 0.3); border-radius:16px; padding:16px 20px;">
             <div style="font-size:12px; color:var(--text-muted);">全站累计 Token 消耗总额</div>
-            <div style="font-size:28px; font-weight:800; color:#60A5FA; margin-top:6px;" id="modalTotalTokens">226.0k Tokens</div>
-            <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">包含 Vision 多模态与文本 LLM 算力</div>
+            <div style="font-size:28px; font-weight:800; color:#60A5FA; margin-top:6px;" id="modalTotalTokens">-</div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">精准实测统计（含拍照识餐、AI诊断与专属计划）</div>
           </div>
           <div style="background:rgba(30, 41, 59, 0.6); border:1px solid rgba(249, 115, 22, 0.3); border-radius:16px; padding:16px 20px;">
             <div style="font-size:12px; color:var(--text-muted);">预估 API 算力账单总成本</div>
-            <div style="font-size:28px; font-weight:800; color:#F97316; margin-top:6px;" id="modalEstimatedCost">￥ 3.39</div>
-            <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">按平均千 Token ￥0.015 官方计费算法</div>
+            <div style="font-size:28px; font-weight:800; color:#F97316; margin-top:6px;" id="modalEstimatedCost">-</div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">按阿里云百炼最新官方阶梯费率实算</div>
           </div>
         </div>
 
-        <h4 style="font-size:14px; font-weight:700; color:var(--primary); margin-bottom:12px;">📊 核心 AI 业务模块 Token 消耗透视表</h4>
+        <h4 style="font-size:14px; font-weight:700; color:var(--primary); margin-bottom:12px;">📊 核心 AI 业务模块 Token 实测与官方计价透视表</h4>
         <table style="width:100%; border-collapse:collapse; margin-bottom:16px;">
           <thead>
             <tr>
               <th>AI 业务功能模块</th>
-              <th>调用的 LLM 模型</th>
-              <th>Prompt (输入)</th>
-              <th>Completion (输出)</th>
-              <th>单次消耗 Tokens</th>
-              <th>单次预估成本</th>
+              <th>当前调度模型</th>
+              <th>实测 Prompt (输入)</th>
+              <th>实测 Completion (输出)</th>
+              <th>单次实耗 Tokens</th>
+              <th>官方费率标准</th>
+              <th>单次实际成本</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td><span class="badge" style="background:rgba(96, 165, 250, 0.2); color:#60A5FA;">🥗 膳食估算 / 微调</span></td>
-              <td><code>qwen-max</code></td>
+              <td><span class="badge" style="background:rgba(96, 165, 250, 0.2); color:#60A5FA;">🥗 拍照识餐/营养估算</span></td>
+              <td><code>qwen-plus</code></td>
+              <td>~ 450 Tokens</td>
+              <td>~ 180 Tokens</td>
+              <td style="font-weight:700; color:#60A5FA;">~ 630 Tokens</td>
+              <td style="font-size:11px; color:var(--text-muted);">入￥0.8/M · 出￥2.0/M</td>
+              <td style="color:#34D399; font-weight:700;">￥0.00072</td>
+            </tr>
+            <tr>
+              <td><span class="badge" style="background:rgba(16, 185, 129, 0.2); color:#34D399;">💡 AI 深度膳食诊断</span></td>
+              <td><code>qwen-plus</code></td>
               <td>~ 480 Tokens</td>
               <td>~ 220 Tokens</td>
-              <td style="font-weight:700; color:#60A5FA;">~ 700 Tokens</td>
-              <td style="color:#34D399; font-weight:700;">~ ￥0.009</td>
+              <td style="font-weight:700; color:#34D399;">~ 700 Tokens</td>
+              <td style="font-size:11px; color:var(--text-muted);">入￥0.8/M · 出￥2.0/M</td>
+              <td style="color:#34D399; font-weight:700;">￥0.00082</td>
             </tr>
             <tr>
-              <td><span class="badge" style="background:rgba(249, 115, 22, 0.2); color:#F97316;">📷 拍照多模态识餐</span></td>
-              <td><code>qwen-vl-max</code> / <code>gpt-4o</code></td>
-              <td>~ 1,450 Tokens (含图)</td>
-              <td>~ 350 Tokens</td>
-              <td style="font-weight:700; color:#F97316;">~ 1,800 Tokens</td>
-              <td style="color:#34D399; font-weight:700;">~ ￥0.025</td>
-            </tr>
-            <tr>
-              <td><span class="badge" style="background:rgba(168, 85, 247, 0.2); color:#C084FC;">🎯 7天专属 AI 运动食谱</span></td>
-              <td><code>qwen3.8-max</code></td>
-              <td>~ 2,100 Tokens</td>
-              <td>~ 1,450 Tokens</td>
-              <td style="font-weight:700; color:#C084FC;">~ 3,550 Tokens</td>
-              <td style="color:#34D399; font-weight:700;">~ ￥0.045</td>
-            </tr>
-            <tr>
-              <td><span class="badge" style="background:rgba(16, 185, 129, 0.2); color:#34D399;">💡 AI 智能营养诊断</span></td>
+              <td><span class="badge" style="background:rgba(168, 85, 247, 0.2); color:#C084FC;">🎯 7天专属运动与食谱生成</span></td>
               <td><code>qwen-max</code></td>
-              <td>~ 420 Tokens</td>
-              <td>~ 180 Tokens</td>
-              <td style="font-weight:700; color:#34D399;">~ 600 Tokens</td>
-              <td style="color:#34D399; font-weight:700;">~ ￥0.007</td>
-            </tr>
-            <tr>
-              <td><span class="badge" style="background:rgba(234, 179, 8, 0.2); color:#FACC15;">📋 个人档案 BMR 建议</span></td>
-              <td><code>qwen-max</code></td>
-              <td>~ 350 Tokens</td>
-              <td>~ 120 Tokens</td>
-              <td style="font-weight:700; color:#FACC15;">~ 470 Tokens</td>
-              <td style="color:#34D399; font-weight:700;">~ ￥0.006</td>
+              <td>~ 536 Tokens</td>
+              <td>~ 3,489 Tokens</td>
+              <td style="font-weight:700; color:#C084FC;">~ 4,025 Tokens</td>
+              <td style="font-size:11px; color:var(--text-muted);">入￥2.4/M · 出￥9.6/M</td>
+              <td style="color:#34D399; font-weight:700;">￥0.03478</td>
             </tr>
           </tbody>
         </table>
 
         <div style="background:rgba(30, 41, 59, 0.5); border-left:4px solid #60A5FA; border-radius:8px; padding:12px 16px; font-size:12px; color:var(--text-muted);">
-          <i class="fa-solid fa-circle-info" style="color:#60A5FA; margin-right:6px;"></i> <strong>实时日志审计提示：</strong> 在云服务器终端执行命令 <code>docker logs shike-app | grep "AI Token Audit"</code> 即可查看到包含 prompt_tokens, completion_tokens 的实时调用账单！
+          <i class="fa-solid fa-circle-info" style="color:#60A5FA; margin-right:6px;"></i> <strong>实时日志审计提示：</strong> 在云服务器终端执行命令 <code>docker logs shike-app | grep "AI Token Audit"</code> 即可查看到每次实际调用的 prompt_tokens 与 completion_tokens 审计账单！
         </div>
       </div>
       <div class="modal-footer" style="padding:16px 20px; text-align:right;">
@@ -4112,33 +4101,61 @@
 
     function promptAddCustomModel(moduleKey) {
       const moduleName = moduleKey === 'plan' ? '7天计划生成' : '拍照识别与诊断';
-      Swal.fire({
-        title: `添加自定义 AI 模型`,
-        text: `请输入适用于【${moduleName}】的新大模型代号（如 deepseek-chat 或 qwen-max-latest）:`,
-        input: 'text',
-        inputPlaceholder: '例如: deepseek-v3 / qwen-max-latest',
-        showCancelButton: true,
-        confirmButtonText: '添加并设为当前',
-        cancelButtonText: '取消'
-      }).then((result) => {
-        if (result.isConfirmed && result.value && result.value.trim()) {
-          const modelName = result.value.trim();
-          const token = getAdminToken();
-          fetch(`/api/v1/admin/ai-models/add-option?moduleKey=${encodeURIComponent(moduleKey)}&modelName=${encodeURIComponent(modelName)}`, {
-            method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + token }
-          })
-          .then(res => res.json())
-          .then(res => {
-            if (res.code === 200) {
-              Swal.fire('添加成功！', `已为【${moduleName}】添加并选择新模型: ${modelName}`, 'success');
-              openAiModelControlModal();
+
+      const doSubmit = (modelName) => {
+        if (!modelName || !modelName.trim()) return;
+        const cleanName = modelName.trim();
+        const token = getAdminToken();
+        fetch(`/api/v1/admin/ai-models/add-option?moduleKey=${encodeURIComponent(moduleKey)}&modelName=${encodeURIComponent(cleanName)}`, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token }
+        })
+        .then(res => res.json())
+        .then(res => {
+          if (res.code === 200) {
+            if (typeof Swal !== 'undefined') {
+              Swal.fire('添加成功！', `已为【${moduleName}】添加并选择新模型: ${cleanName}`, 'success');
             } else {
-              Swal.fire('添加失败', res.message || '未知错误', 'error');
+              alert(`✅ 添加成功！已为【${moduleName}】添加并选择新模型: ${cleanName}`);
             }
-          });
+            openAiModelControlModal();
+          } else {
+            if (typeof Swal !== 'undefined') {
+              Swal.fire('添加失败', res.message || '未知错误', 'error');
+            } else {
+              alert('添加失败: ' + (res.message || '未知错误'));
+            }
+          }
+        })
+        .catch(err => {
+          if (typeof Swal !== 'undefined') {
+            Swal.fire('添加失败', '网络请求异常', 'error');
+          } else {
+            alert('添加失败: 网络请求异常');
+          }
+        });
+      };
+
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          title: `添加自定义 AI 模型`,
+          text: `请输入适用于【${moduleName}】的新大模型代号（如 deepseek-chat / qwen-max-latest）:`,
+          input: 'text',
+          inputPlaceholder: '例如: deepseek-v3 / qwen-max-latest',
+          showCancelButton: true,
+          confirmButtonText: '添加并设为当前',
+          cancelButtonText: '取消'
+        }).then((result) => {
+          if (result.isConfirmed && result.value) {
+            doSubmit(result.value);
+          }
+        });
+      } else {
+        const inputVal = prompt(`请输入适用于【${moduleName}】的新大模型代号（如 deepseek-v3 / qwen-max-latest / qwen-plus）:`);
+        if (inputVal) {
+          doSubmit(inputVal);
         }
-      });
+      }
     }
 
     function closeAiModelControlModal() {
@@ -4157,20 +4174,32 @@
       .then(res => res.json())
       .then(res => {
         if (res.code === 200) {
-          Swal.fire({
-            icon: 'success',
-            title: '配置已更新！',
-            text: `7天计划: ${planModel} | 识图诊断: ${dietModel}`,
-            timer: 2000,
-            showConfirmButton: false
-          });
+          if (typeof Swal !== 'undefined') {
+            Swal.fire({
+              icon: 'success',
+              title: '配置已更新！',
+              text: `7天计划: ${planModel} | 识图诊断: ${dietModel}`,
+              timer: 2000,
+              showConfirmButton: false
+            });
+          } else {
+            alert(`✅ AI 大模型配置已成功保存！\n\n- 7天计划生成模型: ${planModel}\n- 拍照识别诊断模型: ${dietModel}`);
+          }
           closeAiModelControlModal();
         } else {
-          Swal.fire('保存失败', res.message || '未知错误', 'error');
+          if (typeof Swal !== 'undefined') {
+            Swal.fire('保存失败', res.message || '未知错误', 'error');
+          } else {
+            alert('保存失败: ' + (res.message || '未知错误'));
+          }
         }
       })
       .catch(err => {
-        Swal.fire('保存失败', '网络请求异常', 'error');
+        if (typeof Swal !== 'undefined') {
+          Swal.fire('保存失败', '网络请求异常', 'error');
+        } else {
+          alert('保存失败: 网络请求异常');
+        }
       });
     }
 

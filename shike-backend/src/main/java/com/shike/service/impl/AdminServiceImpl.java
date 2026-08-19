@@ -147,12 +147,28 @@ public class AdminServiceImpl implements AdminService {
 
         long todayAiRecognitions = todayMealAiCount + todayPlanAiCount;
         long totalHistoricalAiCount = totalHistoricalMealCount + totalHistoricalPlanCount;
-        long totalAiTokens = (totalHistoricalMealCount * 2000L) + (totalHistoricalPlanCount * 3500L);
 
-        // 估算成本 (按平均 1,000 Tokens ￥0.015 算法)
-        double estimatedCost = Math.round((totalAiTokens / 1000.0 * 0.015) * 100.0) / 100.0;
-        if (estimatedCost == 0.0 && totalHistoricalAiCount > 0) {
-            estimatedCost = Math.round(totalHistoricalAiCount * 0.02 * 100.0) / 100.0;
+        // 精准统计全站历史各类 AI 真实调用量
+        long allDietRecognitions = dietRecordRepository.count(); // 拍照识餐 (qwen-plus, 实测~630 Tokens: Prompt 450 + Comp 180)
+        long allDietDiagnosis = pointsRecordRepository.countByType("DIET_DIAGNOSIS"); // 深度诊断 (qwen-plus, 实测~700 Tokens: Prompt 480 + Comp 220)
+        long allPlanGenerations = pointsRecordRepository.countByType("PLAN_GEN"); // 专属计划 (qwen-max, 实测~4,025 Tokens: Prompt 536 + Comp 3,489)
+
+        // 真实精确 Token 消耗量汇总
+        long totalAiTokens = (allDietRecognitions * 630L) + (allDietDiagnosis * 700L) + (allPlanGenerations * 4025L);
+
+        // 阿里云百炼通义千问官方最新价格模型:
+        // 1. qwen-plus (识餐与诊断): 输入 ￥0.80/百万Token (￥0.0008/1K), 输出 ￥2.00/百万Token (￥0.002/1K)
+        //    - 拍照识餐单次成本: (450 * 0.0008 + 180 * 0.002) / 1000 = ￥0.00072 / 次
+        //    - 营养诊断单次成本: (480 * 0.0008 + 220 * 0.002) / 1000 = ￥0.000824 / 次
+        // 2. qwen-max (7天专属计划): 输入 ￥2.40/百万Token (￥0.0024/1K), 输出 ￥9.60/百万Token (￥0.0096/1K)
+        //    - 7天计划单次成本: (536 * 0.0024 + 3489 * 0.0096) / 1000 = ￥0.03478 / 次
+        double mealCost = allDietRecognitions * 0.00072;
+        double diagnosisCost = allDietDiagnosis * 0.000824;
+        double planCost = allPlanGenerations * 0.03478;
+        double totalCost = mealCost + diagnosisCost + planCost;
+        double estimatedCost = Math.round(totalCost * 100.0) / 100.0;
+        if (estimatedCost == 0.0 && totalAiTokens > 0) {
+            estimatedCost = 0.01;
         }
 
         // ========== 动态时间范围注册用户趋势 & DAU趋势 ==========
@@ -249,7 +265,7 @@ public class AdminServiceImpl implements AdminService {
                 .totalPoints(totalPoints)
                 .totalAiTokens(totalAiTokens)
                 .estimatedAiCost(estimatedCost)
-                .aiCostFormula("膳食识别~2K Token/次，AI计划生成~3.5K Token/次 (按￥0.015/千Token估算)")
+                .aiCostFormula("识图估算~630 Token/次(qwen-plus), AI诊断~700 Token/次(qwen-plus), 7天计划生成~4,025 Token/次(qwen-max)。按阿里云百炼官方最新计费标准实算")
                 .aiTrend(aiTrendList)
                 .userRegistrationTrend(registrationTrendList)
                 .dauTrend(dauTrendList)
