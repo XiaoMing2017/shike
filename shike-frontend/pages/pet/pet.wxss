@@ -150,7 +150,7 @@
 .pet-cutout-img {
   width: 160rpx;
   height: 160rpx;
-  filter: drop-shadow(0 10rpx 16rpx rgba(0, 0, 0, 0.28));
+  filter: drop-shadow(0 6rpx 12rpx rgba(0, 0, 0, 0.18));
 }
 
 /* 触地柔光阴影 */
@@ -271,7 +271,8 @@
 
 @keyframes petBreathe {
   0% { transform: translateY(0) scale(1, 1); }
-  100% { transform: translateY(-8rpx) scale(1.03, 0.97); }
+  50% { transform: translateY(-6rpx) scale(1.02, 0.98) rotate(0.5deg); }
+  100% { transform: translateY(-10rpx) scale(1.04, 0.96) rotate(-0.5deg); }
 }
 
 /* 2. 漫步走动小碎步 */

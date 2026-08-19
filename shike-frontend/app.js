@@ -9,13 +9,13 @@ App({
     // 🌐 后端接口地址切换配置 (按需注释/取消注释即可快速切换)
     // =========================================================================
     // 1. 本地开发调试环境 (电脑本地运行后端服务)
-    // baseUrl: 'http://127.0.0.1:8081/api/v1',
+    baseUrl: 'http://127.0.0.1:8081/api/v1',
 
     // 2. 线上正线服务器环境 (云端真实 Docker 后端 117.72.61.18)
     // baseUrl: 'http://117.72.61.18:8081/api/v1',
 
     // 3. 线上正式域名环境 (已配置 SSL 证书的微信发版域名)
-    baseUrl: 'https://shike.store/api/v1'
+    // baseUrl: 'https://shike.store/api/v1'
   },
   formatImageUrl(url) {
     const defaultAvatar = 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0';
