@@ -987,7 +987,50 @@
   box-shadow: 0 6rpx 16rpx rgba(37, 99, 235, 0.25);
 }
 
-/* ===================== AI 识别结果弹窗 ===================== */
+/* ===================== AI 识别结果弹窗 (全新极简清爽微质感) ===================== */
+.modal-dialog.ai-result-modal-dialog {
+  max-width: 680rpx;
+  width: 92%;
+  border-radius: 36rpx;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(24px);
+  border: 1rpx solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 20rpx 50rpx rgba(15, 23, 42, 0.16);
+  padding: 30rpx 28rpx;
+  box-sizing: border-box;
+}
+
+.modal-header-icon-badge {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 12rpx;
+  background: linear-gradient(135deg, #E6FDF4 0%, #D1FAE5 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+}
+
+.modal-close-circle {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  background: #F1F5F9;
+  color: #94A3B8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22rpx;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.modal-close-circle:active {
+  transform: scale(0.9);
+  background: #E2E8F0;
+  color: #64748B;
+}
+
 .ai-result-body {
   display: flex;
   flex-direction: column;
@@ -998,126 +1041,234 @@
 .editable-food-list {
   width: 100%;
   box-sizing: border-box;
-  margin-bottom: 24rpx;
-  background: rgba(255, 255, 255, 0.45);
-  border-radius: 20rpx;
-  border: 1rpx solid rgba(255, 255, 255, 0.5);
-  padding: 16rpx 20rpx;
+  margin-bottom: 20rpx;
+  background: #F8FAFC;
+  border-radius: 24rpx;
+  border: 1.5rpx solid #EEF2F6;
+  padding: 16rpx;
   overflow: hidden;
-}
-
-.editable-food-header {
-  display: flex;
-  font-size: 22rpx;
-  color: #64748B;
-  font-weight: 700;
-  padding-bottom: 12rpx;
-  border-bottom: 1rpx solid rgba(203, 213, 225, 0.4);
-  margin-bottom: 12rpx;
-  align-items: center;
-}
-
-.food-header-col-name {
-  flex: 3;
-}
-
-.food-header-col-weight {
-  flex: 2;
-  text-align: center;
-}
-
-.food-header-col-cal {
-  flex: 2.2;
-  text-align: center;
-}
-
-.food-header-col-del {
-  width: 44rpx;
 }
 
 .food-list-scroll {
   width: 100%;
-  height: 220rpx;
+  max-height: 440rpx;
 }
 
-.food-item-row {
+.food-item-card {
+  background: #FFFFFF;
+  border: 1.5rpx solid #E2E8F0;
+  border-radius: 20rpx;
+  padding: 14rpx 14rpx;
+  margin-bottom: 14rpx;
+  box-sizing: border-box;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 12rpx;
+  box-shadow: 0 4rpx 12rpx rgba(15, 23, 42, 0.03);
+  transition: all 0.2s ease;
+}
+
+.food-item-card:last-of-type {
+  margin-bottom: 6rpx;
+}
+
+.food-item-row-top {
+  display: flex;
   align-items: center;
-  margin-bottom: 12rpx;
-  gap: 8rpx;
+  gap: 10rpx;
   width: 100%;
 }
 
+.food-name-box {
+  flex: 3.2;
+  min-width: 0;
+}
+
 .food-input {
-  height: 54rpx;
+  height: 60rpx;
   font-size: 26rpx;
   color: #1E293B;
   font-weight: 600;
-  background: rgba(255, 255, 255, 0.6);
-  border: 1rpx solid rgba(203, 213, 225, 0.6);
-  border-radius: 12rpx;
-  padding: 0 12rpx;
+  background: #F8FAFC;
+  border: 1.5rpx solid #E2E8F0;
+  border-radius: 14rpx;
+  padding: 0 14rpx;
   box-sizing: border-box;
 }
 
 .food-input.name {
-  flex: 3;
+  width: 100%;
+  font-size: 26rpx;
+  color: #0F172A;
+  font-weight: 700;
 }
 
-.food-input.weight {
-  flex: 2;
-  text-align: center;
+.input-unit-container {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
-.food-input.calories {
-  flex: 2.2;
-  text-align: center;
+.input-unit-container.weight {
+  flex: 2.1;
+  min-width: 0;
+}
+
+.input-unit-container.calories {
+  flex: 2.5;
+  min-width: 0;
+}
+
+.input-unit-container.weight .food-input {
+  width: 100%;
+  padding-left: 10rpx;
+  padding-right: 32rpx;
+  font-size: 26rpx;
+  color: #1E293B;
+  font-weight: 700;
+  text-align: left;
+}
+
+.input-unit-container.calories .food-input {
+  width: 100%;
+  padding-left: 10rpx;
+  padding-right: 50rpx;
+  font-size: 26rpx;
+  color: #D97706;
+  font-weight: 700;
+  text-align: left;
+}
+
+.input-unit-container .input-unit {
+  position: absolute;
+  right: 10rpx;
+  font-size: 20rpx;
+  color: #94A3B8;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.input-unit-container.calories .input-unit {
+  right: 10rpx;
+  font-size: 18rpx;
+  color: #B45309;
 }
 
 .food-delete-btn {
-  width: 44rpx;
-  height: 44rpx;
+  width: 48rpx;
+  height: 48rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #EF4444;
-  font-size: 24rpx;
+  font-size: 22rpx;
   font-weight: bold;
-  background: rgba(239, 68, 68, 0.08);
+  background: #FEE2E2;
   border-radius: 50%;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
 }
 
 .food-delete-btn:active {
-  transform: scale(0.9);
+  transform: scale(0.85);
+  background: #FECACA;
+}
+
+.food-item-row-bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 8rpx;
+  width: 100%;
+}
+
+.nutrient-input-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  border-radius: 12rpx;
+  padding: 0 10rpx;
+  box-sizing: border-box;
+  height: 50rpx;
+}
+
+.nutrient-input-box.protein {
+  background: #EFF6FF;
+  border: 1.5rpx solid #DBEAFE;
+}
+
+.nutrient-input-box.fat {
+  background: #FEFCE8;
+  border: 1.5rpx solid #FEF08A;
+}
+
+.nutrient-input-box.carbs {
+  background: #F0FDF4;
+  border: 1.5rpx solid #DCFCE7;
+}
+
+.nutrient-emoji {
+  font-size: 18rpx;
+  margin-right: 4rpx;
+  flex-shrink: 0;
+}
+
+.nutrient-label {
+  font-size: 18rpx;
+  color: #475569;
+  font-weight: 700;
+  margin-right: 4rpx;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.nutrient-val {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+  font-size: 22rpx;
+  color: #0F172A;
+  font-weight: 800;
+  height: 100%;
+}
+
+.nutrient-unit {
+  font-size: 16rpx;
+  color: #94A3B8;
+  margin-left: 2rpx;
+  font-weight: 700;
+  flex-shrink: 0;
 }
 
 .match-suggestion-toast {
   width: 100%;
   font-size: 20rpx;
-  color: #10B981;
-  background-color: #E6FDF4;
-  border: 1rpx solid rgba(16, 185, 129, 0.2);
-  border-radius: 8rpx;
-  padding: 6rpx 12rpx;
+  color: #059669;
+  background-color: #ECFDF5;
+  border: 1.5rpx solid #A7F3D0;
+  border-radius: 10rpx;
+  padding: 8rpx 14rpx;
   margin-top: 4rpx;
   box-sizing: border-box;
+  font-weight: 600;
 }
 
 .add-food-row {
   display: flex;
   justify-content: center;
-  margin: 16rpx 0;
+  margin: 14rpx 0 16rpx 0;
 }
 
 .add-food-btn {
   font-size: 24rpx;
-  color: #10B981;
+  color: #059669;
   font-weight: 700;
-  background: rgba(16, 185, 129, 0.08);
-  border: 1rpx dashed rgba(16, 185, 129, 0.4);
-  padding: 8rpx 24rpx;
-  border-radius: 30rpx;
+  background: #FFFFFF;
+  border: 1.5rpx solid #A7F3D0;
+  padding: 10rpx 30rpx;
+  border-radius: 40rpx;
+  box-shadow: 0 4rpx 10rpx rgba(16, 185, 129, 0.08);
+  gap: 8rpx;
+  transition: all 0.15s ease;
 }
 
 .add-food-btn:active {
@@ -1709,104 +1860,6 @@
 
 .plus-text {
   color: #0EA5E9 !important;
-}
-
-/* Card Design for Editable Food Items */
-.food-item-card {
-  background: rgba(255, 255, 255, 0.45);
-  border: 1rpx solid rgba(226, 232, 240, 0.7);
-  border-radius: 18rpx;
-  padding: 16rpx;
-  margin-bottom: 16rpx;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: 12rpx;
-  transition: all 0.2s ease;
-}
-
-.food-item-row-top {
-  display: flex;
-  align-items: center;
-  gap: 10rpx;
-  width: 100%;
-}
-
-.input-unit-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.input-unit-container.weight {
-  flex: 2;
-}
-
-.input-unit-container.calories {
-  flex: 2.2;
-}
-
-.input-unit-container .food-input {
-  width: 100%;
-  padding-right: 46rpx;
-}
-
-.input-unit-container .input-unit {
-  position: absolute;
-  right: 12rpx;
-  font-size: 18rpx;
-  color: #94a3b8;
-  font-weight: 700;
-  pointer-events: none;
-}
-
-.food-item-row-bottom {
-  display: flex;
-  justify-content: space-between;
-  gap: 8rpx;
-  width: 100%;
-}
-
-.nutrient-input-box {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.65);
-  border: 1rpx solid rgba(226, 232, 240, 0.6);
-  border-radius: 10rpx;
-  padding: 0 8rpx;
-  box-sizing: border-box;
-  height: 48rpx;
-}
-
-.nutrient-emoji {
-  font-size: 18rpx;
-  margin-right: 4rpx;
-}
-
-.nutrient-label {
-  font-size: 16rpx;
-  color: #64748b;
-  font-weight: 700;
-  margin-right: 6rpx;
-  white-space: nowrap;
-}
-
-.nutrient-val {
-  flex: 1;
-  min-width: 0;
-  text-align: right;
-  font-size: 20rpx;
-  color: #1e293b;
-  font-weight: 700;
-  height: 100%;
-}
-
-.nutrient-unit {
-  font-size: 16rpx;
-  color: #94a3b8;
-  margin-left: 2rpx;
-  font-weight: 700;
 }
 
 /* Macro Nutrient Summary Row */

@@ -10,13 +10,29 @@
         <text class="brand-sub">运动打卡赚粮 · 陪伴减脂蜕变</text>
       </view>
     </view>
-    <view class="refresh-pill" bindtap="fetchPetInfo">
+    <view class="refresh-pill" bindtap="onRefreshPage">
       <text style="font-size: 22rpx; color: #10B981; font-weight: 700;">🔄 刷新</text>
     </view>
   </view>
 
+  <!-- 状态 0：特性开关已关闭（全网下架 / 未开启） -->
+  <block wx:if="{{!petSystemEnabled}}">
+    <view class="disabled-state-box flex flex-col align-center justify-center">
+      <view class="disabled-icon-wrap">
+        <text style="font-size: 80rpx;">🐾</text>
+        <view class="disabled-lock-badge">🔒</view>
+      </view>
+      <text class="disabled-title">自律搭子暂未开放</text>
+      <text class="disabled-desc">该功能当前已由管理员在云端全网下架或维护调整，敬请期待后续上线！</text>
+      
+      <button class="btn-back-home" bindtap="onGoHome">
+        🏠 返回首页看板
+      </button>
+    </view>
+  </block>
+
   <!-- 页面主体加载态 -->
-  <block wx:if="{{loading}}">
+  <block wx:elif="{{loading}}">
     <view class="loading-container flex flex-col align-center justify-center">
       <view class="magic-spinner"></view>
       <text class="loading-text">正在唤醒 3D 自律搭子...</text>

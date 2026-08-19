@@ -48,9 +48,17 @@ public class PetServiceImpl implements PetService {
             "QILIN", "/images/pets/pet_qilin.png"
     );
 
+    private void checkPetFeatureEnabled() {
+        Map<String, Boolean> toggles = adminService.getPublicFeatureToggles("test");
+        if (Boolean.FALSE.equals(toggles.get("pet_system"))) {
+            throw new BizException(403, "自律搭子功能当前已在云端下架维护中");
+        }
+    }
+
     @Override
     @Transactional(readOnly = true)
     public PetDTO getMyPet(Long userId) {
+        checkPetFeatureEnabled();
         Pet pet = petRepository.findByUserId(userId).orElse(null);
         if (pet == null) {
             return null;
@@ -61,6 +69,7 @@ public class PetServiceImpl implements PetService {
     @Override
     @Transactional
     public PetDTO createPet(Long userId, PetCreateDTO dto) {
+        checkPetFeatureEnabled();
         log.info("Creating pet for userId={}, name={}, type={}", userId, dto.getName(), dto.getPetType());
         
         Optional<Pet> existingOpt = petRepository.findByUserId(userId);
@@ -107,6 +116,7 @@ public class PetServiceImpl implements PetService {
     @Override
     @Transactional
     public PetDTO feedPet(Long userId) {
+        checkPetFeatureEnabled();
         Pet pet = petRepository.findByUserId(userId)
                 .orElseThrow(() -> new BizException(404, "尚未领养自律搭子，请先领养一只吧！"));
 

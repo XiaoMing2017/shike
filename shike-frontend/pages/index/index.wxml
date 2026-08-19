@@ -636,32 +636,42 @@
     </view>
   </view>
 
-  <!-- AI 识别结果磨砂弹窗 -->
+  <!-- AI 识别结果磨砂弹窗 (全新精致卡片视觉) -->
   <view class="modal-backdrop {{showAiResultModal ? 'active' : ''}}" catchtouchmove="preventBubble">
-    <view class="modal-dialog" catchtap="preventBubble">
-      <view class="modal-header">
-        <text class="modal-title">{{aiResultSuccess ? '🍽️ AI 识别成功' : '⚠️ 识别提示'}}</text>
-        <text class="modal-close" catchtap="hideAiResultModal">✕</text>
+    <view class="modal-dialog ai-result-modal-dialog" catchtap="preventBubble">
+      <view class="modal-header flex justify-between align-center">
+        <view class="flex align-center" style="gap: 12rpx;">
+          <view class="modal-header-icon-badge">✨</view>
+          <text class="modal-title">{{aiResultSuccess ? 'AI 识别结果确认' : '⚠️ 识别提示'}}</text>
+        </view>
+        <view class="modal-close-circle" catchtap="hideAiResultModal">✕</view>
       </view>
+      
       <view class="ai-result-body">
         <block wx:if="{{aiResultSuccess}}">
           <!-- 可编辑食材列表 -->
-          <view class="editable-food-list" style="margin: 12rpx 0; width: 100%;">
-            <scroll-view class="food-list-scroll" scroll-y style="height: 420rpx;">
+          <view class="editable-food-list" style="margin: 8rpx 0 0 0; width: 100%;">
+            <scroll-view class="food-list-scroll" scroll-y style="max-height: 440rpx;">
               <view class="food-item-card" wx:for="{{aiFoodItems}}" wx:key="index">
+                <!-- 顶部：食材名 + 重量 + 热量 + 删除 -->
                 <view class="food-item-row-top">
-                  <input class="food-input name" value="{{item.name}}" bindinput="onFoodItemNameInput" data-index="{{index}}" placeholder="食材名称" />
+                  <view class="food-name-box">
+                    <input class="food-input name" value="{{item.name}}" bindinput="onFoodItemNameInput" data-index="{{index}}" placeholder="食材名称" />
+                  </view>
                   <view class="input-unit-container weight">
-                    <input class="food-input weight" type="digit" value="{{item.weight}}" bindinput="onFoodItemWeightInput" data-index="{{index}}" />
+                    <input class="food-input weight" type="digit" value="{{item.weight}}" bindinput="onFoodItemWeightInput" data-index="{{index}}" placeholder="克数" />
                     <text class="input-unit">g</text>
                   </view>
                   <view class="input-unit-container calories">
-                    <input class="food-input calories" type="digit" value="{{item.calories}}" bindinput="onFoodItemCaloriesInput" data-index="{{index}}" />
+                    <input class="food-input calories" type="digit" value="{{item.calories}}" bindinput="onFoodItemCaloriesInput" data-index="{{index}}" placeholder="千卡" />
                     <text class="input-unit">kcal</text>
                   </view>
-                  <view class="food-delete-btn" catchtap="deleteFoodItem" data-index="{{index}}">✕</view>
+                  <view class="food-delete-btn" catchtap="deleteFoodItem" data-index="{{index}}">
+                    <text>✕</text>
+                  </view>
                 </view>
                 
+                <!-- 底部：三大营养素微型小胶囊 -->
                 <view class="food-item-row-bottom">
                   <view class="nutrient-input-box protein">
                     <text class="nutrient-emoji">🥩</text>
@@ -692,12 +702,18 @@
             
             <!-- 新增食材按钮 -->
             <view class="add-food-row" catchtap="addNewFoodItem">
-              <text class="add-food-btn">+ 添加食材</text>
+              <view class="add-food-btn flex align-center justify-center">
+                <text class="add-plus-icon">＋</text>
+                <text>添加其他食材</text>
+              </view>
             </view>
             
             <!-- 常见食材估重助手小卡片 -->
             <view class="portion-helper-card">
-              <view class="portion-helper-title">💡 常见食物估量助手</view>
+              <view class="portion-helper-title flex align-center">
+                <text style="margin-right: 6rpx;">💡</text>
+                <text>常见分量快速添加</text>
+              </view>
               <view class="portion-helper-tags">
                 <view class="portion-helper-tag" wx:for="{{helperFoods}}" wx:key="name" catchtap="addHelperFood" data-name="{{item.name}}">
                   + {{item.name}} (1{{item.unit}})
@@ -705,43 +721,56 @@
               </view>
             </view>
 
-            <!-- 三大营养素总量汇总 -->
+            <!-- 汇总概览区：三大宏量营养素胶囊 -->
             <view class="ai-result-macro-row">
               <view class="macro-badge protein">
                 <text class="macro-dot">🥩</text>
-                <text class="macro-label">蛋白</text>
-                <text class="macro-value">{{aiResultProtein || 0}}g</text>
+                <view class="macro-text-group">
+                  <text class="macro-label">蛋白质</text>
+                  <text class="macro-value">{{aiResultProtein || 0}}<text class="macro-unit">g</text></text>
+                </view>
               </view>
               <view class="macro-badge fat">
                 <text class="macro-dot">🥑</text>
-                <text class="macro-label">脂肪</text>
-                <text class="macro-value">{{aiResultFat || 0}}g</text>
+                <view class="macro-text-group">
+                  <text class="macro-label">脂肪</text>
+                  <text class="macro-value">{{aiResultFat || 0}}<text class="macro-unit">g</text></text>
+                </view>
               </view>
               <view class="macro-badge carbs">
                 <text class="macro-dot">🍞</text>
-                <text class="macro-label">碳水</text>
-                <text class="macro-value">{{aiResultCarbs || 0}}g</text>
+                <view class="macro-text-group">
+                  <text class="macro-label">碳水</text>
+                  <text class="macro-value">{{aiResultCarbs || 0}}<text class="macro-unit">g</text></text>
+                </view>
               </view>
             </view>
 
-            <view class="ai-result-cal-row">
-              <text class="ai-result-cal-label">估算总热量</text>
-              <text class="ai-result-cal-value">{{aiResultCalories}} kcal</text>
+            <!-- 总热量能量卡片 -->
+            <view class="ai-result-cal-card flex justify-between align-center">
+              <view class="flex flex-col">
+                <text class="ai-result-cal-label">整餐估算总热量</text>
+                <text class="ai-result-cal-subhint">确认后可选择烹饪油量修正系数</text>
+              </view>
+              <view class="ai-result-cal-val-box">
+                <text class="ai-result-cal-number">{{aiResultCalories}}</text>
+                <text class="ai-result-cal-unit">kcal</text>
+              </view>
             </view>
-            <view class="ai-result-hint">确认后将选择油量级别并保存记录</view>
           </view>
         </block>
-          <block wx:else>
-            <view class="ai-result-icon fail">❌</view>
-            <view class="ai-result-fail-msg">{{aiResultMessage}}</view>
-            <view class="ai-result-hint">请拍摄含有食物或饮品的照片</view>
-          </block>
+        <block wx:else>
+          <view class="ai-result-icon fail">❌</view>
+          <view class="ai-result-fail-msg">{{aiResultMessage}}</view>
+          <view class="ai-result-hint">请拍摄含有食物或饮品的照片</view>
+        </block>
+      </view>
+
+      <view class="ai-result-actions flex">
+        <view class="ai-result-btn cancel" catchtap="hideAiResultModal">取消</view>
+        <view class="ai-result-btn confirm {{aiResultSuccess ? '' : 'fail'}}" catchtap="onAiResultConfirm">
+          {{aiResultSuccess ? '下一步：选择油量 ➔' : '知道了'}}
         </view>
-        <view class="ai-result-actions flex">
-          <view class="ai-result-btn cancel" catchtap="hideAiResultModal">取消</view>
-          <view class="ai-result-btn confirm {{aiResultSuccess ? '' : 'fail'}}" catchtap="onAiResultConfirm">
-            {{aiResultSuccess ? '选择油量' : '知道了'}}
-          </view>
       </view>
     </view>
   </view>

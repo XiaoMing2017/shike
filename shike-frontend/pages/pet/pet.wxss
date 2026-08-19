@@ -704,3 +704,64 @@ page {
   color: #64748B;
   line-height: 1.5;
 }
+
+
+/* ================= 下架与维护禁用状态 ================= */
+.disabled-state-box {
+  padding: 140rpx 40rpx;
+  background: #FFFFFF;
+  border: 2rpx solid #E2E8F0;
+  border-radius: 36rpx;
+  box-shadow: 0 12rpx 32rpx rgba(15, 23, 42, 0.04);
+  text-align: center;
+  margin-top: 40rpx;
+}
+
+.disabled-icon-wrap {
+  position: relative;
+  width: 140rpx;
+  height: 140rpx;
+  background: #F1F5F9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 30rpx;
+}
+
+.disabled-lock-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  font-size: 32rpx;
+  background: #FFFFFF;
+  border-radius: 50%;
+  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.1);
+  padding: 4rpx;
+}
+
+.disabled-title {
+  font-size: 34rpx;
+  font-weight: 900;
+  color: #0F172A;
+  margin-bottom: 14rpx;
+}
+
+.disabled-desc {
+  font-size: 26rpx;
+  color: #64748B;
+  line-height: 1.6;
+  max-width: 80%;
+  margin-bottom: 40rpx;
+}
+
+.btn-back-home {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: #FFFFFF;
+  font-size: 30rpx;
+  font-weight: 800;
+  padding: 18rpx 48rpx;
+  border-radius: 30rpx;
+  box-shadow: 0 8rpx 20rpx rgba(16, 185, 129, 0.3);
+  border: none;
+}

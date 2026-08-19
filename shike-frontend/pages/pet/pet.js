@@ -67,6 +67,7 @@ const TYPE_CONFIG = {
 Page({
   data: {
     loading: true,
+    petSystemEnabled: true,
     hasPet: false,
     pet: null,
     selectedType: 'DRAGON',
@@ -88,24 +89,53 @@ Page({
   },
 
   onLoad(options) {
-    this.ensureUserAndLoad();
+    this.checkToggleAndLoad();
   },
 
   onShow() {
-    if (app.globalData.userInfo) {
-      this.fetchPetInfo();
-    }
+    this.checkToggleAndLoad();
   },
 
   onPullDownRefresh() {
-    this.fetchPetInfo(() => {
+    this.checkToggleAndLoad(() => {
       wx.stopPullDownRefresh();
     });
   },
 
-  ensureUserAndLoad() {
-    app.login((user) => {
-      this.fetchPetInfo();
+  onRefreshPage() {
+    this.checkToggleAndLoad();
+  },
+
+  checkToggleAndLoad(callback) {
+    let env = 'release';
+    try {
+      const accountInfo = wx.getAccountInfoSync();
+      env = (accountInfo && accountInfo.miniProgram && accountInfo.miniProgram.envVersion) || 'release';
+    } catch (e) {}
+
+    wx.request({
+      url: `${app.globalData.baseUrl}/config/features?env=${env}`,
+      method: 'GET',
+      success: (res) => {
+        if (res.data && res.data.code === 200 && res.data.data) {
+          const enabled = res.data.data.pet_system !== false;
+          this.setData({ petSystemEnabled: enabled });
+          if (!enabled) {
+            this.setData({ loading: false });
+            if (callback) callback();
+            return;
+          }
+        }
+        // If enabled, load pet info
+        app.login((user) => {
+          this.fetchPetInfo(callback);
+        });
+      },
+      fail: (err) => {
+        app.login((user) => {
+          this.fetchPetInfo(callback);
+        });
+      }
     });
   },
 
@@ -128,6 +158,12 @@ Page({
             hasPet: true,
             pet: pet,
             foodIcon: info.food || '🍎',
+            loading: false
+          });
+        } else if (res.data && res.data.code === 403) {
+          // 云端开关下架
+          this.setData({
+            petSystemEnabled: false,
             loading: false
           });
         } else {
@@ -323,6 +359,12 @@ Page({
   },
 
   onGoExercise() {
+    wx.switchTab({
+      url: '/pages/index/index'
+    });
+  },
+
+  onGoHome() {
     wx.switchTab({
       url: '/pages/index/index'
     });
