@@ -90,10 +90,12 @@ Page({
 
   onLoad(options) {
     this.checkToggleAndLoad();
+    this.updateCustomTabBar();
   },
 
   onShow() {
     this.checkToggleAndLoad();
+    this.updateCustomTabBar();
   },
 
   onPullDownRefresh() {
@@ -104,6 +106,7 @@ Page({
 
   onRefreshPage() {
     this.checkToggleAndLoad();
+    this.updateCustomTabBar();
   },
 
   checkToggleAndLoad(callback) {
@@ -120,6 +123,8 @@ Page({
         if (res.data && res.data.code === 200 && res.data.data) {
           const enabled = res.data.data.pet_system !== false;
           this.setData({ petSystemEnabled: enabled });
+          if (app.globalData) { app.globalData.features = res.data.data; }
+          this.updateCustomTabBar();
           if (!enabled) {
             this.setData({ loading: false });
             if (callback) callback();
@@ -137,6 +142,13 @@ Page({
         });
       }
     });
+  },
+
+
+  updateCustomTabBar() {
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().updateTabs('pages/pet/pet', (app && app.globalData && app.globalData.features));
+    }
   },
 
   fetchPetInfo(callback) {

@@ -1,0 +1,64 @@
+/* custom-tab-bar/index.wxss */
+.tab-bar-shell {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 9999;
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+  box-shadow: 0 -4rpx 20rpx rgba(15, 23, 42, 0.05);
+}
+
+.tab-bar-hairline {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1.5rpx;
+  background: rgba(226, 232, 240, 0.8);
+}
+
+.tab-bar-container {
+  height: 100rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  transition: all 0.2s ease;
+}
+
+.tab-item:active {
+  transform: scale(0.92);
+}
+
+.tab-icon-wrap {
+  width: 44rpx;
+  height: 44rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tab-icon {
+  width: 42rpx;
+  height: 42rpx;
+}
+
+.tab-label {
+  font-size: 20rpx;
+  font-weight: 700;
+  margin-top: 4rpx;
+  letter-spacing: 0.5rpx;
+}

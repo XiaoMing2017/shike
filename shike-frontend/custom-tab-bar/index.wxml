@@ -1,0 +1,15 @@
+<!-- custom-tab-bar/index.wxml -->
+<view class="tab-bar-shell">
+  <view class="tab-bar-hairline"></view>
+  <view class="tab-bar-container">
+    <view wx:for="{{list}}" wx:key="pagePath"
+          class="tab-item {{selectedPath === item.pagePath ? 'active' : ''}}"
+          data-path="{{item.pagePath}}"
+          bindtap="switchTab">
+      <view class="tab-icon-wrap">
+        <image class="tab-icon" src="{{selectedPath === item.pagePath ? item.selectedIconPath : item.iconPath}}" mode="aspectFit"></image>
+      </view>
+      <text class="tab-label" style="color: {{selectedPath === item.pagePath ? selectedColor : color}};">{{item.text}}</text>
+    </view>
+  </view>
+</view>

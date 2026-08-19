@@ -738,7 +738,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public java.util.Map<String, Boolean> getPublicFeatureToggles(String env) {
-        String isTestEnv = ("develop".equalsIgnoreCase(env) || "trial".equalsIgnoreCase(env)) ? "test" : "prod";
+        String isTestEnv = ("develop".equalsIgnoreCase(env) || "trial".equalsIgnoreCase(env) || "test".equalsIgnoreCase(env)) ? "test" : "prod";
         String cacheKey = "shike:sys:feature_toggles:" + isTestEnv;
 
         try {

@@ -37,11 +37,19 @@ Page({
   },
 
   onShow() {
+    this.updateCustomTabBar();
     this.checkUserAndLoadData();
     if (app.globalData.pendingInviteCode) {
       this.setData({ inputInviteCode: app.globalData.pendingInviteCode });
       app.globalData.pendingInviteCode = '';
       wx.showToast({ title: '已自动填入邀请码', icon: 'success' });
+    }
+  },
+
+
+  updateCustomTabBar() {
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().updateTabs('pages/team/team', (app && app.globalData && app.globalData.features));
     }
   },
 

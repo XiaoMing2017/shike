@@ -209,6 +209,7 @@ Page({
     }
 
     this.fetchFeatureToggles();
+    this.updateCustomTabBar();
 
     if (options && (options.inviteCode || options.scene)) {
       let inviteCode = options.inviteCode;
@@ -558,6 +559,13 @@ Page({
 
     // 从后端拉取真实剩余额度
     this._loadWaterSubQuota();
+  },
+
+
+  updateCustomTabBar() {
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().updateTabs('pages/index/index', this.data.features || app.globalData.features);
+    }
   },
 
   updateDateDisplay() {
@@ -2062,6 +2070,8 @@ Page({
       success: (res) => {
         if (res.data && res.data.code === 200 && res.data.data) {
           this.setData({ features: res.data.data });
+          app.globalData.features = res.data.data;
+          this.updateCustomTabBar();
         }
       }
     });

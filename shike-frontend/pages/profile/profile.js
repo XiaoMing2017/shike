@@ -73,20 +73,30 @@ Page({
   },
 
   onShow() {
+    this.updateCustomTabBar();
     this.loginAndFetchProfile();
     this.fetchFeatureToggles();
   },
 
   fetchFeatureToggles() {
     wx.request({
-      url: `${app.globalData.baseUrl}/config/features?env=release`,
+      url: `${app.globalData.baseUrl}/config/features?env=${((wx.getAccountInfoSync && wx.getAccountInfoSync().miniProgram && wx.getAccountInfoSync().miniProgram.envVersion) || 'release')}`,
       method: 'GET',
       success: (res) => {
         if (res.data && res.data.code === 200 && res.data.data) {
           this.setData({ features: res.data.data });
+          app.globalData.features = res.data.data;
+          this.updateCustomTabBar();
         }
       }
     });
+  },
+
+
+  updateCustomTabBar() {
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().updateTabs('pages/profile/profile', this.data.features || (app && app.globalData && app.globalData.features));
+    }
   },
 
   onShareAppMessage() {
