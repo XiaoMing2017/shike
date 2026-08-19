@@ -7,7 +7,7 @@
       <text style="font-size: 38rpx;">🐾</text>
       <view class="flex flex-col">
         <text class="brand-title">自律搭子 · 3D生活世界</text>
-        <text class="brand-sub">{{currentSceneInfo.name}} · 陪伴成长</text>
+        <text class="brand-sub">{{currentSceneInfo.name}} · 自由漫步</text>
       </view>
     </view>
 
@@ -46,7 +46,6 @@
   <block wx:elif="{{!hasPet}}">
     <view class="adopt-showcase-flow">
       
-      <!-- 引导标语 -->
       <view class="adopt-banner-card">
         <view class="flex align-center" style="gap: 10rpx; margin-bottom: 8rpx;">
           <text style="font-size: 32rpx;">✨</text>
@@ -59,20 +58,16 @@
 
       <!-- 3D 展台预览 -->
       <view class="adopt-3d-stage-box flex flex-col align-center">
-        
-        <!-- 3D 场景视口 -->
         <view class="stage-3d-viewport flex align-center justify-center" style="background-image: url('{{currentSceneInfo.image}}');">
           <view class="scene-overlay-soft"></view>
           <view class="ambient-sunbeam"></view>
           
-          <!-- 3D 宠物模型 -->
           <view class="pet-model-anchor animate-idle-breathe">
-            <image class="pet-model-img" src="{{currentTypeInfo.image}}" mode="aspectFit"></image>
+            <image class="pet-model-img" src="{{currentTypeInfo.idleGif}}" mode="aspectFit"></image>
             <view class="pet-dynamic-shadow"></view>
           </view>
         </view>
 
-        <!-- 物种标签 -->
         <view class="type-capsule" style="background: {{currentTypeInfo.themeBg}}; color: {{currentTypeInfo.themeColor}};">
           <text>{{currentTypeInfo.name}} · {{currentTypeInfo.tag}}</text>
         </view>
@@ -140,10 +135,10 @@
       <!-- 🌟 3D 核心景深生活大场景（点击地面可引导宠物走动） -->
       <view class="virtual-3d-world-scene" bindtap="onTapSceneGround">
         
-        <!-- 高清 3D 场景背景图 -->
+        <!-- 高清 3D 纯净场景背景图 -->
         <image class="scene-panoramic-bg" src="{{currentSceneInfo.image}}" mode="aspectFill"></image>
         
-        <!-- 环境光效、光晕与微尘/蝴蝶粒子 -->
+        <!-- 环境微尘/蝴蝶粒子 -->
         <view class="world-sun-ray"></view>
         <view class="world-sparkle sp1">✨</view>
         <view class="world-sparkle sp2">🦋</view>
@@ -157,13 +152,13 @@
           <view class="bowl-shadow"></view>
         </view>
 
-        <!-- 🌟 自由走动活体宠物（坐标由 petPosX / petPosY 实时驱动） -->
+        <!-- 🌟 自由走动活体宠物（坐标由 petPosX / petPosY 实时驱动，带 3D 深度透视缩放） -->
         <view class="roaming-pet-entity" 
-              style="left: {{petPosX}}%; top: {{petPosY}}%;" 
+              style="left: {{petPosX}}%; top: {{petPosY}}%; transform: translate(-50%, -85%) scale({{facingRight ? depthScale : -depthScale}}, {{depthScale}});" 
               catchtap="onTapPet">
           
           <!-- 悬浮台词气泡 -->
-          <view class="speech-bubble-3d animate-bubble-float" wx:if="{{pet.dialogue}}">
+          <view class="speech-bubble-3d animate-bubble-float" wx:if="{{pet.dialogue}}" style="transform: scale({{facingRight ? 1 : -1}});">
             <text class="bubble-msg">“{{pet.dialogue}}”</text>
             <view class="bubble-arrow"></view>
           </view>
@@ -183,20 +178,20 @@
             <text class="exp-text">+10 EXP ✨</text>
           </view>
 
-          <!-- 3D 宠物主体容器（支持转向、走路摆动、咀嚼、蹦跳） -->
-          <view class="pet-mesh-container {{motionState === 'walking' ? 'animate-pet-walk' : (motionState === 'eating' ? 'animate-pet-chew' : (motionState === 'happy' ? 'animate-pet-happy' : 'animate-idle-breathe'))}}" 
-                style="transform: scaleX({{facingRight ? 1 : -1}});">
-            <image class="pet-cutout-img" src="{{pet.avatarUrl}}" mode="aspectFit"></image>
-            <!-- 动态同步触地阴影 -->
+          <!-- 3D 宠物主体容器（多帧连续行走/呼吸打盹动画） -->
+          <view class="pet-mesh-container {{motionState === 'eating' ? 'animate-pet-chew' : (motionState === 'happy' ? 'animate-pet-happy' : '')}}">
+            <!-- 动态切换 Walk / Idle 多帧动画 -->
+            <image class="pet-cutout-img" src="{{activeSpriteUrl}}" mode="aspectFit"></image>
+            <!-- 动态同步触地柔光阴影 -->
             <view class="pet-floor-shadow"></view>
           </view>
 
           <!-- 当前动作状态小微标 -->
           <view class="pet-status-mini-bubble" wx:if="{{motionState === 'walking'}}">
-            <text style="font-size: 20rpx;">🚶 漫步中</text>
+            <text style="font-size: 20rpx;">🐾 迈步漫步中</text>
           </view>
           <view class="pet-status-mini-bubble" wx:elif="{{motionState === 'eating'}}">
-            <text style="font-size: 20rpx;">😋 干饭中</text>
+            <text style="font-size: 20rpx;">😋 大口干饭中</text>
           </view>
 
         </view>
@@ -213,7 +208,7 @@
 
         <!-- 互动指引 -->
         <view class="touch-hint-label">
-          <text>👆 点击地面它会走过去 · 摸摸身体它会开心撒欢</text>
+          <text>👆 点击房间地面它会迈着小短腿走过去 · 摸摸身体撒欢</text>
         </view>
 
       </view>
@@ -221,7 +216,6 @@
       <!-- 心情与数值状态栏 -->
       <view class="gamified-stats-deck">
         
-        <!-- 心情胶囊 -->
         <view class="flex justify-between align-center" style="margin-bottom: 20rpx;">
           <view class="mood-pill mood-{{pet.mood}} flex align-center">
             <text class="mood-icon">{{pet.mood === 'HAPPY' ? '😄' : (pet.mood === 'HUNGRY' ? '🥺' : (pet.mood === 'WANT_EXERCISE' ? '🏃' : '🌱'))}}</text>
@@ -278,13 +272,11 @@
       <view class="action-deck-card flex flex-col">
         <view class="flex justify-between" style="gap: 18rpx;">
           
-          <!-- 3D 投喂按键 -->
           <button class="btn-3d-action btn-3d-feed flex align-center justify-center" bindtap="onFeedPet" disabled="{{isFeeding || pet.foodCount <= 0}}">
             <text style="font-size: 34rpx; margin-right: 10rpx;">🥣</text>
             <text style="font-weight: 900;">{{pet.foodCount > 0 ? '立即投喂 (' + pet.foodCount + ')' : '暂无食物'}}</text>
           </button>
 
-          <!-- 3D 运动打卡按键 -->
           <button class="btn-3d-action btn-3d-exercise flex align-center justify-center" bindtap="onGoExercise">
             <text style="font-size: 34rpx; margin-right: 10rpx;">🏃</text>
             <text style="font-weight: 900;">去运动打卡</text>
@@ -292,7 +284,6 @@
 
         </view>
 
-        <!-- 每日自律奖励提示 -->
         <view class="daily-reward-tip flex align-center" style="margin-top: 20rpx;">
           <text style="font-size: 28rpx; margin-right: 12rpx;">💡</text>
           <text class="tip-content">

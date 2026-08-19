@@ -8,6 +8,8 @@ const TYPE_CONFIG = {
     name: '青玉小幼龙',
     tag: '燃脂蜕变',
     image: '/images/pets/pet_dragon.png',
+    walkGif: '/images/pets/pet_dragon_walk.gif',
+    idleGif: '/images/pets/pet_dragon_idle.gif',
     food: '🍎',
     quote: '我不运动，小龙就没饭吃！',
     themeBg: '#ECFDF5',
@@ -20,6 +22,8 @@ const TYPE_CONFIG = {
     name: '治愈大龙猫',
     tag: '温馨陪伴',
     image: '/images/pets/pet_totoro.png',
+    walkGif: '/images/pets/pet_totoro_walk.gif',
+    idleGif: '/images/pets/pet_totoro_idle.gif',
     food: '🥝',
     quote: '吃饱才有力气自律，记得按时吃减脂餐哦～',
     themeBg: '#F1F5F9',
@@ -32,6 +36,8 @@ const TYPE_CONFIG = {
     name: '软萌元气猫',
     tag: '灵动轻盈',
     image: '/images/pets/pet_cat.png',
+    walkGif: '/images/pets/pet_cat_walk.gif',
+    idleGif: '/images/pets/pet_cat_idle.gif',
     food: '🍊',
     quote: '动作要轻盈，体态要挺拔，今天打卡超棒喵～',
     themeBg: '#FFF7ED',
@@ -44,6 +50,8 @@ const TYPE_CONFIG = {
     name: '忠诚自律狗',
     tag: '户外自律',
     image: '/images/pets/pet_dog.png',
+    walkGif: '/images/pets/pet_dog_walk.gif',
+    idleGif: '/images/pets/pet_dog_idle.gif',
     food: '🍓',
     quote: '主人快走！去公园跑两圈，今天的狗粮就有啦汪！',
     themeBg: '#FEF3C7',
@@ -56,6 +64,8 @@ const TYPE_CONFIG = {
     name: '祥瑞小麒麟',
     tag: '祥瑞好运',
     image: '/images/pets/pet_qilin.png',
+    walkGif: '/images/pets/pet_qilin_walk.gif',
+    idleGif: '/images/pets/pet_qilin_idle.gif',
     food: '🍑',
     quote: '自律者自带祥瑞，坚持打卡，好身材和好运一起来！',
     themeBg: '#F5F3FF',
@@ -74,9 +84,9 @@ const SCENE_CONFIG = {
     motto: '温馨客厅 · 铺上瑜伽垫一起自律打卡',
     waypoints: [
       { x: 48, y: 58 }, // 地毯中心
-      { x: 32, y: 52 }, // 窗边绿植
-      { x: 64, y: 50 }, // 沙发边
-      { x: 68, y: 70 }  // 瑜伽垫
+      { x: 34, y: 52 }, // 窗边木地板
+      { x: 62, y: 50 }, // 沙发茶几旁
+      { x: 68, y: 68 }  // 瑜伽垫区域
     ],
     foodBowlPos: { x: 74, y: 72 }
   },
@@ -88,10 +98,10 @@ const SCENE_CONFIG = {
     image: '/images/scenes/scene_island.jpg',
     motto: '奇幻空岛 · 沐浴云端阳光与花海',
     waypoints: [
-      { x: 42, y: 44 }, // 花坡草坪
-      { x: 54, y: 38 }, // 果树下
-      { x: 66, y: 58 }, // 泉水边
-      { x: 30, y: 68 }  // 石阶木桥
+      { x: 44, y: 46 }, // 花坡草坪
+      { x: 54, y: 38 }, // 果树石阶
+      { x: 64, y: 56 }, // 清冽泉池旁
+      { x: 32, y: 66 }  // 迎客木桥头
     ],
     foodBowlPos: { x: 32, y: 66 }
   },
@@ -103,10 +113,10 @@ const SCENE_CONFIG = {
     image: '/images/scenes/scene_yard.jpg',
     motto: '活力庭院 · 跑步机与喷泉花园',
     waypoints: [
-      { x: 58, y: 60 }, // 草坪中心
-      { x: 32, y: 66 }, // 跑步机旁
-      { x: 72, y: 52 }, // 喷泉花丛
-      { x: 38, y: 50 }  // 砖石露台
+      { x: 56, y: 60 }, // 阳光草坪中心
+      { x: 34, y: 64 }, // 跑步机区域
+      { x: 70, y: 52 }, // 雕花喷泉旁
+      { x: 40, y: 50 }  // 木质甲板
     ],
     foodBowlPos: { x: 26, y: 56 }
   }
@@ -128,7 +138,7 @@ Page({
     heartAnim: false,
     foodIcon: '🍎',
     
-    // 3D 沉浸式场景与活体漫步坐标系统
+    // 3D 沉浸式场景与活体连续步态系统
     currentScene: 'ROOM',
     currentSceneInfo: SCENE_CONFIG['ROOM'],
     sceneList: [SCENE_CONFIG['ROOM'], SCENE_CONFIG['ISLAND'], SCENE_CONFIG['YARD']],
@@ -136,9 +146,11 @@ Page({
     
     petPosX: 48,
     petPosY: 58,
+    depthScale: 1.0, // 3D 近大远小透视缩放
     facingRight: true,
     motionState: 'idle', // 'idle' | 'walking' | 'eating' | 'happy'
-    motionStateText: '悠闲发呆',
+    activeSpriteUrl: '/images/pets/pet_dragon_idle.gif',
+    motionStateText: '舒服趴卧中',
 
     candidateNames: ['木木', '小燃', '豆豆', '卡卡', '饭团'],
     types: [
@@ -157,7 +169,8 @@ Page({
       currentScene: savedScene,
       currentSceneInfo: sceneInfo,
       petPosX: sceneInfo.waypoints[0].x,
-      petPosY: sceneInfo.waypoints[0].y
+      petPosY: sceneInfo.waypoints[0].y,
+      depthScale: this.calcDepthScale(sceneInfo.waypoints[0].y)
     });
 
     this.checkToggleAndLoad();
@@ -175,6 +188,13 @@ Page({
 
   onUnload() {
     this.stopLivingMotionLoop();
+  },
+
+  calcDepthScale(y) {
+    // 3D 透视深度：Y 从 40% (远处) 到 80% (近处) 缩放从 0.85 渐变到 1.15
+    const clampedY = Math.max(35, Math.min(80, y));
+    const scale = 0.80 + ((clampedY - 35) / 45) * 0.35;
+    return parseFloat(scale.toFixed(2));
   },
 
   updateCustomTabBar() {
@@ -235,6 +255,8 @@ Page({
           this.setData({
             hasPet: true,
             pet: pet,
+            currentTypeInfo: info,
+            activeSpriteUrl: info.idleGif,
             foodIcon: info.food || '🍎',
             loading: false
           });
@@ -262,7 +284,7 @@ Page({
     });
   },
 
-  /* ================= 3D 活体自主漫步与行为状态机 ================= */
+  /* ================= 3D 真实多帧活体步态漫步系统 ================= */
   startLivingMotionLoop() {
     this.stopLivingMotionLoop();
     if (!this.data.hasPet) return;
@@ -274,35 +296,39 @@ Page({
       const waypoints = scene.waypoints || [];
       if (waypoints.length === 0) return;
 
-      // 随机挑选下一个漫步路径点
       const nextIdx = Math.floor(Math.random() * waypoints.length);
       const targetPoint = waypoints[nextIdx];
 
       const currentX = this.data.petPosX;
       const facingRight = targetPoint.x >= currentX;
+      const typeInfo = this.data.currentTypeInfo || TYPE_CONFIG['DRAGON'];
+      const targetScale = this.calcDepthScale(targetPoint.y);
 
-      // 切换为漫步状态并移动
+      // 切换为多帧行走步态 GIF + 移动坐标 + 深度缩放
       this.setData({
         facingRight: facingRight,
         motionState: 'walking',
-        motionStateText: '悠闲漫步中 🚶',
+        activeSpriteUrl: typeInfo.walkGif,
+        motionStateText: '迈步漫步中 🐾',
         petPosX: targetPoint.x,
-        petPosY: targetPoint.y
+        petPosY: targetPoint.y,
+        depthScale: targetScale
       });
 
-      // 走动 1.8 秒后停下恢复待机
+      // 步态走动 1.8 秒后停下，切换为呼吸打盹/待机 GIF
       setTimeout(() => {
         if (this.data.motionState === 'walking') {
-          const idleTexts = ['东张西望 👀', '伸懒腰 🐱', '发呆晒太阳 ☀️', '摇摇尾巴 🐾'];
+          const idleTexts = ['东张西望 👀', '舒服趴卧 🐱', '发呆晒太阳 ☀️', '摇摇尾巴 🐾'];
           const randomIdle = idleTexts[Math.floor(Math.random() * idleTexts.length)];
           this.setData({
             motionState: 'idle',
+            activeSpriteUrl: typeInfo.idleGif,
             motionStateText: randomIdle
           });
         }
       }, 1900);
 
-    }, 8500); // 每 8.5 秒执行一次自主漫步
+    }, 9000);
   },
 
   stopLivingMotionLoop() {
@@ -312,11 +338,10 @@ Page({
     }
   },
 
-  /* 点击场景地面引导宠物走动 */
+  /* 点击场景地面引导宠物走过去 */
   onTapSceneGround(e) {
     if (!this.data.hasPet || this.data.isFeeding) return;
 
-    // 微信小程序点击坐标转百分比
     const query = wx.createSelectorQuery();
     query.select('.virtual-3d-world-scene').boundingClientRect(rect => {
       if (!rect) return;
@@ -327,18 +352,22 @@ Page({
       const relX = ((clickX - rect.left) / rect.width) * 100;
       const relY = ((clickY - rect.top) / rect.height) * 100;
 
-      // 限制在安全地面活动范围 (20% ~ 80%)
+      // 限制在安全地面活动范围 (22% ~ 78%)
       const clampedX = Math.max(22, Math.min(78, relX));
-      const clampedY = Math.max(40, Math.min(76, relY));
+      const clampedY = Math.max(42, Math.min(76, relY));
 
       const facingRight = clampedX >= this.data.petPosX;
+      const typeInfo = this.data.currentTypeInfo || TYPE_CONFIG['DRAGON'];
+      const targetScale = this.calcDepthScale(clampedY);
 
       this.setData({
         facingRight: facingRight,
         motionState: 'walking',
+        activeSpriteUrl: typeInfo.walkGif,
         motionStateText: '跑向新地点 🐾',
         petPosX: clampedX,
-        petPosY: clampedY
+        petPosY: clampedY,
+        depthScale: targetScale
       });
 
       wx.vibrateShort({ type: 'light' });
@@ -347,7 +376,8 @@ Page({
         if (this.data.motionState === 'walking') {
           this.setData({
             motionState: 'idle',
-            motionStateText: '好奇观察中'
+            activeSpriteUrl: typeInfo.idleGif,
+            motionStateText: '好奇观察中 👀'
           });
         }
       }, 1900);
@@ -369,12 +399,15 @@ Page({
   applyScene(key) {
     const sceneInfo = SCENE_CONFIG[key] || SCENE_CONFIG['ROOM'];
     wx.setStorageSync('user_pet_scene', key);
+    const typeInfo = this.data.currentTypeInfo || TYPE_CONFIG['DRAGON'];
     this.setData({
       currentScene: key,
       currentSceneInfo: sceneInfo,
       petPosX: sceneInfo.waypoints[0].x,
       petPosY: sceneInfo.waypoints[0].y,
+      depthScale: this.calcDepthScale(sceneInfo.waypoints[0].y),
       motionState: 'idle',
+      activeSpriteUrl: typeInfo.idleGif,
       motionStateText: '到达新场景 ✨'
     });
     wx.vibrateShort({ type: 'medium' });
@@ -388,9 +421,7 @@ Page({
     this.setData({ showSceneModal: false });
   },
 
-  noBubble() {
-    // 阻止冒泡
-  },
+  noBubble() {},
 
   onSelectType(e) {
     const type = e.currentTarget.dataset.type;
@@ -398,6 +429,7 @@ Page({
     this.setData({
       selectedType: type,
       currentTypeInfo: info,
+      activeSpriteUrl: info.idleGif,
       petName: info.defaultName,
       foodIcon: info.food || '🍎'
     });
@@ -405,9 +437,7 @@ Page({
   },
 
   onInputName(e) {
-    this.setData({
-      petName: e.detail.value
-    });
+    this.setData({ petName: e.detail.value });
   },
 
   onSelectCandidateName(e) {
@@ -447,24 +477,20 @@ Page({
         wx.hideLoading();
         this.setData({ adopting: false });
         if (res.data && res.data.code === 200) {
-          wx.showToast({
-            title: '领养成功！🎉',
-            icon: 'success'
-          });
+          wx.showToast({ title: '领养成功！🎉', icon: 'success' });
           const pet = res.data.data;
           const info = TYPE_CONFIG[pet.petType] || TYPE_CONFIG['DRAGON'];
           this.setData({
             hasPet: true,
             pet: pet,
+            currentTypeInfo: info,
+            activeSpriteUrl: info.idleGif,
             foodIcon: info.food || '🍎'
           });
           wx.vibrateShort({ type: 'medium' });
           this.startLivingMotionLoop();
         } else {
-          wx.showToast({
-            title: (res.data && res.data.message) || '领养失败',
-            icon: 'none'
-          });
+          wx.showToast({ title: (res.data && res.data.message) || '领养失败', icon: 'none' });
         }
       },
       fail: (err) => {
@@ -475,7 +501,7 @@ Page({
     });
   },
 
-  /* 立即投喂：跑向食盆 + 欢快咀嚼 */
+  /* 立即投喂：迈步奔向食盆 + 欢快咀嚼 */
   onFeedPet() {
     const user = app.globalData.userInfo;
     if (!user || !user.id || !this.data.pet) return;
@@ -497,15 +523,19 @@ Page({
 
     const bowlPos = this.data.currentSceneInfo.foodBowlPos || { x: 70, y: 70 };
     const facingRight = bowlPos.x >= this.data.petPosX;
+    const typeInfo = this.data.currentTypeInfo || TYPE_CONFIG['DRAGON'];
+    const targetScale = this.calcDepthScale(bowlPos.y);
 
-    // 1. 跑向食盆
+    // 1. 播放行走步态跑向食盆
     this.setData({
       isFeeding: true,
       facingRight: facingRight,
       motionState: 'walking',
+      activeSpriteUrl: typeInfo.walkGif,
       motionStateText: '奔向食盆干饭 🥣',
       petPosX: bowlPos.x,
-      petPosY: bowlPos.y
+      petPosY: bowlPos.y,
+      depthScale: targetScale
     });
     wx.vibrateShort({ type: 'medium' });
 
@@ -513,6 +543,7 @@ Page({
     setTimeout(() => {
       this.setData({
         motionState: 'eating',
+        activeSpriteUrl: typeInfo.idleGif,
         motionStateText: '大口嚼嚼嚼 😋'
       });
     }, 700);
@@ -523,18 +554,10 @@ Page({
       success: (res) => {
         if (res.data && res.data.code === 200) {
           const updated = res.data.data;
-          this.setData({
-            pet: updated
-          });
-          wx.showToast({
-            title: '投喂成功！+10 经验 ✨',
-            icon: 'none'
-          });
+          this.setData({ pet: updated });
+          wx.showToast({ title: '投喂成功！+10 经验 ✨', icon: 'none' });
         } else {
-          wx.showToast({
-            title: (res.data && res.data.message) || '投喂失败',
-            icon: 'none'
-          });
+          wx.showToast({ title: (res.data && res.data.message) || '投喂失败', icon: 'none' });
         }
       },
       fail: (err) => {
@@ -545,6 +568,7 @@ Page({
           this.setData({
             isFeeding: false,
             motionState: 'idle',
+            activeSpriteUrl: typeInfo.idleGif,
             motionStateText: '吃饱饱超满足 💖'
           });
         }, 2200);
@@ -552,7 +576,7 @@ Page({
     });
   },
 
-  /* 点击身体抚摸：原地蹦跳撒欢 */
+  /* 点击身体抚摸：原地旋转蹦跳撒欢 */
   onTapPet() {
     if (!this.data.pet || this.data.isFeeding) return;
 
@@ -588,14 +612,10 @@ Page({
   },
 
   onGoExercise() {
-    wx.switchTab({
-      url: '/pages/index/index'
-    });
+    wx.switchTab({ url: '/pages/index/index' });
   },
 
   onGoHome() {
-    wx.switchTab({
-      url: '/pages/index/index'
-    });
+    wx.switchTab({ url: '/pages/index/index' });
   }
 });
