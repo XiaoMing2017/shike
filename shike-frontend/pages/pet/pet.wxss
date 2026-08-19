@@ -673,3 +673,361 @@
   box-shadow: 0 8rpx 20rpx rgba(16, 185, 129, 0.3);
   border: none;
 }
+
+
+/* ================= 神兽蛋孵化破壳仪式 ================= */
+.egg-model-anchor {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.egg-large-emoji {
+  font-size: 160rpx;
+  filter: drop-shadow(0 16rpx 28rpx rgba(16, 185, 129, 0.35));
+}
+
+.egg-idle-wobble {
+  animation: eggGentleWobble 3s ease-in-out infinite;
+}
+
+@keyframes eggGentleWobble {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-8rpx) rotate(-4deg); }
+  75% { transform: translateY(-8rpx) rotate(4deg); }
+}
+
+.egg-cracking-shake {
+  animation: eggIntenseShake 0.4s ease-in-out infinite;
+}
+
+@keyframes eggIntenseShake {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  20% { transform: translate(-8rpx, -4rpx) rotate(-8deg); }
+  40% { transform: translate(8rpx, 4rpx) rotate(8deg); }
+  60% { transform: translate(-6rpx, 6rpx) rotate(-5deg); }
+  80% { transform: translate(6rpx, -6rpx) rotate(5deg); }
+}
+
+.egg-crack-overlay {
+  position: absolute;
+  top: 30rpx;
+  font-size: 60rpx;
+  color: #F59E0B;
+  animation: crackFlicker 0.3s ease-in-out infinite alternate;
+}
+
+@keyframes crackFlicker {
+  0% { opacity: 0.4; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1.2); }
+}
+
+.egg-shine-glow {
+  position: absolute;
+  width: 240rpx;
+  height: 240rpx;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.5) 0%, rgba(245, 158, 11, 0) 70%);
+  border-radius: 50%;
+  animation: shineGlowPulse 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes shineGlowPulse {
+  0% { transform: scale(0.8); opacity: 0.5; }
+  100% { transform: scale(1.3); opacity: 0.9; }
+}
+
+/* ================= 进化形态光环 (Evolution Aura) ================= */
+.stage-rank-tag {
+  font-size: 20rpx;
+  font-weight: 800;
+  padding: 2rpx 14rpx;
+  border-radius: 12rpx;
+}
+
+.stage-rank-1 { background: #ECFDF5; color: #047857; border: 1rpx solid #A7F3D0; }
+.stage-rank-2 { background: #EEF2FF; color: #4338CA; border: 1rpx solid #C7D2FE; }
+.stage-rank-3 { background: #FEF3C7; color: #B45309; border: 1rpx solid #FDE68A; }
+
+.evolution-aura-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 340rpx;
+  height: 340rpx;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.evo-2 {
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.25) 0%, rgba(99, 102, 241, 0) 65%);
+  animation: evoPulseAura 3s ease-in-out infinite alternate;
+}
+
+.evo-3 {
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.35) 0%, rgba(245, 158, 11, 0) 70%);
+  box-shadow: 0 0 40rpx rgba(245, 158, 11, 0.4);
+  animation: evoPulseAura 2s ease-in-out infinite alternate;
+}
+
+@keyframes evoPulseAura {
+  0% { transform: translate(-50%, -50%) scale(0.85); opacity: 0.5; }
+  100% { transform: translate(-50%, -50%) scale(1.15); opacity: 0.9; }
+}
+
+.badge-nav-pill {
+  background: #FEF3C7;
+  border: 1.5rpx solid #FDE68A;
+  padding: 8rpx 18rpx;
+  border-radius: 30rpx;
+}
+
+/* ================= 勋章馆弹窗 (Badge Modal) ================= */
+.badge-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.badge-modal-backdrop.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.badge-modal-sheet {
+  background: #FFFFFF;
+  border-radius: 36rpx 36rpx 0 0;
+  padding: 36rpx 32rpx 60rpx;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 -10rpx 40rpx rgba(0, 0, 0, 0.15);
+}
+
+.sheet-title {
+  font-size: 32rpx;
+  font-weight: 900;
+  color: #0F172A;
+}
+
+.sheet-close {
+  font-size: 34rpx;
+  color: #94A3B8;
+  font-weight: 700;
+  padding: 6rpx 14rpx;
+}
+
+.sheet-subtitle {
+  font-size: 22rpx;
+  color: #64748B;
+  margin-top: 6rpx;
+  margin-bottom: 24rpx;
+  display: block;
+}
+
+.badge-grid-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+}
+
+.badge-card-item {
+  padding: 20rpx 12rpx;
+  border-radius: 20rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.badge-card-item.unlocked {
+  background: #FEF3C7;
+  border: 2rpx solid #F59E0B;
+  box-shadow: 0 4rpx 14rpx rgba(245, 158, 11, 0.2);
+}
+
+.badge-card-item.locked {
+  background: #F8FAFC;
+  border: 1.5rpx dashed #CBD5E1;
+  opacity: 0.65;
+}
+
+.badge-icon-wrap {
+  position: relative;
+  width: 80rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8rpx;
+}
+
+.badge-emoji { font-size: 52rpx; }
+
+.badge-lock-tag, .badge-check-tag {
+  position: absolute;
+  bottom: -4rpx;
+  right: -4rpx;
+  font-size: 20rpx;
+  border-radius: 50%;
+  padding: 2rpx;
+  background: #FFFFFF;
+}
+
+.badge-check-tag { color: #10B981; font-weight: 900; }
+
+.badge-name {
+  font-size: 22rpx;
+  font-weight: 800;
+  color: #0F172A;
+  margin-bottom: 4rpx;
+}
+
+.badge-req {
+  font-size: 18rpx;
+  color: #64748B;
+}
+
+.badge-detail-card {
+  background: #F8FAFC;
+  border: 1rpx solid #E2E8F0;
+  padding: 20rpx 24rpx;
+  border-radius: 20rpx;
+}
+
+.badge-status-pill {
+  font-size: 18rpx;
+  font-weight: 800;
+  padding: 2rpx 12rpx;
+  border-radius: 10rpx;
+}
+
+.badge-status-pill.unlocked { background: #ECFDF5; color: #047857; }
+.badge-status-pill.locked { background: #F1F5F9; color: #64748B; }
+
+/* ================= 进化庆祝全屏弹窗 ================= */
+.evo-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.evo-modal-backdrop.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.evo-modal-card {
+  width: 100%;
+  background: #FFFFFF;
+  border-radius: 36rpx;
+  padding: 40rpx 32rpx;
+  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.3);
+  text-align: center;
+  animation: popInEvo 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes popInEvo {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.evo-fireworks {
+  font-size: 40rpx;
+  margin-bottom: 12rpx;
+}
+
+.evo-title {
+  font-size: 36rpx;
+  font-weight: 900;
+  color: #0F172A;
+}
+
+.evo-subtitle {
+  font-size: 22rpx;
+  color: #64748B;
+  margin-top: 6rpx;
+  margin-bottom: 24rpx;
+}
+
+.evo-stage-avatar-box {
+  position: relative;
+  width: 260rpx;
+  height: 260rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20rpx;
+}
+
+.evo-radiant-glow {
+  position: absolute;
+  width: 280rpx;
+  height: 280rpx;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.5) 0%, rgba(245, 158, 11, 0) 70%);
+  border-radius: 50%;
+  animation: shineGlowPulse 1s ease-in-out infinite alternate;
+}
+
+.evo-pet-avatar {
+  width: 240rpx;
+  height: 240rpx;
+  filter: drop-shadow(0 14rpx 28rpx rgba(245, 158, 11, 0.4));
+  z-index: 10;
+}
+
+.evo-rank-badge {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  padding: 8rpx 32rpx;
+  border-radius: 30rpx;
+  box-shadow: 0 6rpx 18rpx rgba(245, 158, 11, 0.35);
+  margin-bottom: 14rpx;
+}
+
+.evo-quote {
+  font-size: 24rpx;
+  color: #475569;
+  font-style: italic;
+  margin-bottom: 36rpx;
+}
+
+.btn-evo-confirm {
+  width: 80%;
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: #FFFFFF;
+  font-size: 30rpx;
+  font-weight: 900;
+  height: 88rpx;
+  border-radius: 26rpx;
+  box-shadow: 0 8rpx 20rpx rgba(16, 185, 129, 0.35);
+  border: none;
+}

@@ -7,11 +7,20 @@
       <text style="font-size: 38rpx;">🐾</text>
       <view class="flex flex-col">
         <text class="brand-title">自律搭子 · 3D养成乐园</text>
-        <text class="brand-sub">运动打卡赚粮 · 陪伴减脂蜕变</text>
+        <text class="brand-sub">Our Teacher 陪伴进化体系</text>
       </view>
     </view>
-    <view class="refresh-pill" bindtap="onRefreshPage">
-      <text style="font-size: 22rpx; color: #10B981; font-weight: 700;">🔄 刷新</text>
+    
+    <view class="flex align-center" style="gap: 12rpx;">
+      <!-- 勋章馆入口 -->
+      <view class="badge-nav-pill flex align-center" bindtap="onOpenBadgeModal" wx:if="{{hasPet}}">
+        <text style="font-size: 24rpx; margin-right: 6rpx;">🏅</text>
+        <text style="font-size: 22rpx; font-weight: 800; color: #D97706;">勋章馆 ({{unlockedBadgeCount}}/6)</text>
+      </view>
+      <!-- 刷新按钮 -->
+      <view class="refresh-pill" bindtap="onRefreshPage">
+        <text style="font-size: 20rpx; color: #10B981; font-weight: 700;">🔄</text>
+      </view>
     </view>
   </view>
 
@@ -39,31 +48,32 @@
     </view>
   </block>
 
-  <!-- 状态 A：未领养状态（3D 领养向导展台） -->
+  <!-- 状态 A：未领养状态（神兽蛋破壳孵化向导） -->
   <block wx:elif="{{!hasPet}}">
     <view class="adopt-showcase-flow">
       
       <!-- 引导标语 -->
       <view class="adopt-banner-card">
         <view class="flex align-center" style="gap: 10rpx; margin-bottom: 8rpx;">
-          <text style="font-size: 32rpx;">✨</text>
-          <text style="font-size: 30rpx; font-weight: 900; color: #0F172A;">领养你的 3D 自律搭子</text>
+          <text style="font-size: 32rpx;">🥚</text>
+          <text style="font-size: 30rpx; font-weight: 900; color: #0F172A;">孵化你的 3D 神兽搭子</text>
         </view>
         <text class="banner-desc">
-          减脂路上有人陪！选一只属于你的 3D 神兽搭子。每天运动打卡为它带回美食，一起变轻、变好、变强！
+          每位自律者都拥有一颗专属神兽蛋。通过每日运动打卡注入能量，见证它从破壳幼体蜕变为终极传奇神兽！
         </text>
       </view>
 
-      <!-- 3D 展台预览 -->
+      <!-- 3D 浮岛神兽蛋展台 -->
       <view class="adopt-3d-stage-box flex flex-col align-center">
         
-        <!-- 3D 浮岛光束展台 -->
         <view class="stage-3d-viewport flex align-center justify-center">
           <view class="ambient-sunbeam"></view>
           
-          <!-- 3D 宠物模型 -->
-          <view class="pet-model-anchor animate-idle-breathe">
-            <image class="pet-model-img" src="{{currentTypeInfo.image}}" mode="aspectFit"></image>
+          <!-- 神兽蛋 (带孵化摇晃动效与破壳光芒) -->
+          <view class="egg-model-anchor {{hatchingStep > 0 ? 'egg-cracking-shake' : 'egg-idle-wobble'}}" bindtap="onTapEgg">
+            <text class="egg-large-emoji">{{currentTypeInfo.eggEmoji}}</text>
+            <view class="egg-crack-overlay" wx:if="{{hatchingStep >= 1}}">⚡</view>
+            <view class="egg-shine-glow" wx:if="{{hatchingStep >= 2}}"></view>
             <view class="pet-dynamic-shadow"></view>
           </view>
 
@@ -74,21 +84,21 @@
           </view>
         </view>
 
-        <!-- 物种标签 -->
+        <!-- 蛋属性标签 -->
         <view class="type-capsule" style="background: {{currentTypeInfo.themeBg}}; color: {{currentTypeInfo.themeColor}};">
-          <text>{{currentTypeInfo.name}} · {{currentTypeInfo.tag}}</text>
+          <text>{{currentTypeInfo.eggName}} · {{currentTypeInfo.tag}}</text>
         </view>
         <text class="type-motto">“{{currentTypeInfo.quote}}”</text>
       </view>
 
-      <!-- 5 大神兽切换 -->
+      <!-- 5 大神兽蛋选择 -->
       <view class="type-switch-panel">
-        <text class="panel-label">选择首发 3D 萌宠：</text>
+        <text class="panel-label">选择你的专属神兽蛋：</text>
         <view class="type-grid">
           <view wx:for="{{types}}" wx:key="type" 
                 class="type-item {{selectedType === item.type ? 'active' : ''}}" 
                 bindtap="onSelectType" data-type="{{item.type}}">
-            <text class="type-icon">{{item.icon}}</text>
+            <text class="type-icon">{{item.eggEmoji}}</text>
             <text class="type-text">{{item.name}}</text>
           </view>
         </view>
@@ -96,7 +106,7 @@
 
       <!-- 起名面板 -->
       <view class="name-edit-panel">
-        <text class="panel-label">为搭子起个好听的名字：</text>
+        <text class="panel-label">为即将破壳的搭子起个名字：</text>
         <view class="input-row flex align-center">
           <input class="name-ipt" type="text" placeholder="例如：木木 / 小燃 / 豆豆" value="{{petName}}" bindinput="onInputName" maxlength="12" />
           <view class="dice-btn" bindtap="onRandomName">
@@ -112,17 +122,17 @@
         </view>
       </view>
 
-      <!-- 领养确定按钮 -->
+      <!-- 孵化按钮 -->
       <view class="adopt-btn-wrap">
-        <button class="btn-3d-adopt" bindtap="onAdoptPet" loading="{{adopting}}">
-          🎉 领养并唤醒自律搭子
+        <button class="btn-3d-adopt" bindtap="onStartHatchCeremony" loading="{{adopting}}">
+          🥚 开启破壳仪式 · 唤醒搭子
         </button>
       </view>
 
     </view>
   </block>
 
-  <!-- 状态 B：已领养状态（Our Teacher 风格 3D 核心互动舞台） -->
+  <!-- 状态 B：已领养状态（Our Teacher 3D 浮岛主舞台） -->
   <block wx:else>
     <view class="living-stage-wrapper">
       
@@ -131,10 +141,12 @@
         <view class="flex align-center" style="gap: 12rpx;">
           <text class="hud-pet-name">{{pet.name}}</text>
           <view class="hud-level-tag">Lv.{{pet.level}}</view>
+          <!-- 进化阶数徽章 -->
+          <view class="stage-rank-tag stage-rank-{{petStageRank}}">{{petStageName}}</view>
         </view>
         <view class="hud-streak-tag flex align-center">
           <text style="font-size: 24rpx; margin-right: 6rpx;">🔥</text>
-          <text style="font-size: 22rpx; font-weight: 800; color: #EA580C;">连续陪伴第 {{pet.streakDays}} 天</text>
+          <text style="font-size: 22rpx; font-weight: 800; color: #EA580C;">陪伴第 {{pet.streakDays}} 天</text>
         </view>
       </view>
 
@@ -146,6 +158,9 @@
         <view class="world-sparkle sp1">✨</view>
         <view class="world-sparkle sp2">🍃</view>
         <view class="world-sparkle sp3">✨</view>
+
+        <!-- 进阶光环粒子 (Lv.5+ 进阶光芒 / Lv.10+ 究极神兽光芒) -->
+        <view class="evolution-aura-ring evo-{{petStageRank}}" wx:if="{{petStageRank >= 2}}"></view>
 
         <!-- 悬浮台词气泡 -->
         <view class="speech-bubble-3d animate-bubble-float" wx:if="{{pet.dialogue}}">
@@ -174,11 +189,10 @@
           <!-- 3D 活体宠物模型（支持待机呼吸、触碰Q弹、干饭咀嚼） -->
           <view class="pet-mesh-container {{isFeeding ? 'animate-pet-chew' : (isTouched ? 'animate-pet-squish' : 'animate-idle-breathe')}}">
             <image class="pet-cutout-img" src="{{pet.avatarUrl}}" mode="aspectFit"></image>
-            <!-- 动态同步触地阴影 -->
             <view class="pet-floor-shadow {{isFeeding ? 'shadow-chew' : (isTouched ? 'shadow-squish' : 'shadow-breathe')}}"></view>
           </view>
 
-          <!-- 3D 悬浮岛台与草木底座 -->
+          <!-- 3D 悬浮草木浮岛底座 -->
           <view class="stage-3d-island-disc">
             <view class="disc-top-ring"></view>
             <view class="disc-bottom-base"></view>
@@ -218,7 +232,7 @@
           </view>
         </view>
 
-        <!-- 成长进度 -->
+        <!-- 成长进度与进化预览 -->
         <view class="stat-gauge-cell" style="margin-top: 24rpx;">
           <view class="flex justify-between align-center" style="margin-bottom: 10rpx;">
             <view class="flex align-center" style="gap: 10rpx;">
@@ -229,6 +243,10 @@
           </view>
           <view class="gauge-track">
             <view class="gauge-fill" style="width: {{(pet.exp / pet.maxExp) * 100}}%; background: linear-gradient(90deg, #6366F1, #8B5CF6);"></view>
+          </view>
+          <view class="evolution-next-tip flex align-center justify-between" style="margin-top: 10rpx;">
+            <text style="font-size: 20rpx; color: #64748B;">下一形态：{{nextStageGoalText}}</text>
+            <text style="font-size: 20rpx; font-weight: 700; color: #8B5CF6;">{{petStageProgressText}}</text>
           </view>
         </view>
 
@@ -250,13 +268,11 @@
       <view class="action-deck-card flex flex-col">
         <view class="flex justify-between" style="gap: 18rpx;">
           
-          <!-- 3D 投喂按键 -->
           <button class="btn-3d-action btn-3d-feed flex align-center justify-center" bindtap="onFeedPet" disabled="{{isFeeding || pet.foodCount <= 0}}">
             <text style="font-size: 34rpx; margin-right: 10rpx;">🥣</text>
             <text style="font-weight: 900;">{{pet.foodCount > 0 ? '立即投喂 (' + pet.foodCount + ')' : '暂无食物'}}</text>
           </button>
 
-          <!-- 3D 运动打卡按键 -->
           <button class="btn-3d-action btn-3d-exercise flex align-center justify-center" bindtap="onGoExercise">
             <text style="font-size: 34rpx; margin-right: 10rpx;">🏃</text>
             <text style="font-weight: 900;">去运动打卡</text>
@@ -264,7 +280,6 @@
 
         </view>
 
-        <!-- 每日自律奖励提示 -->
         <view class="daily-reward-tip flex align-center" style="margin-top: 20rpx;">
           <text style="font-size: 28rpx; margin-right: 12rpx;">💡</text>
           <text class="tip-content">
@@ -275,5 +290,75 @@
 
     </view>
   </block>
+
+  <!-- 🌟 勋章馆弹窗 (Badge Showcase Modal) -->
+  <view class="badge-modal-backdrop {{showBadgeModal ? 'show' : ''}}" bindtap="onCloseBadgeModal">
+    <view class="badge-modal-sheet" catchtap="noBubble">
+      
+      <view class="sheet-header flex justify-between align-center">
+        <view class="flex align-center" style="gap: 10rpx;">
+          <text style="font-size: 36rpx;">🏅</text>
+          <text class="sheet-title">自律成就勋章馆</text>
+        </view>
+        <text class="sheet-close" bindtap="onCloseBadgeModal">✕</text>
+      </view>
+      <text class="sheet-subtitle">每一次打卡与投喂，都在见证你与搭子的蜕变！</text>
+
+      <!-- 勋章网格列表 -->
+      <view class="badge-grid-list">
+        <view wx:for="{{badgeList}}" wx:key="id" 
+              class="badge-card-item {{item.unlocked ? 'unlocked' : 'locked'}}" 
+              bindtap="onTapBadgeItem" data-item="{{item}}">
+          
+          <view class="badge-icon-wrap">
+            <text class="badge-emoji">{{item.icon}}</text>
+            <view class="badge-lock-tag" wx:if="{{!item.unlocked}}">🔒</view>
+            <view class="badge-check-tag" wx:if="{{item.unlocked}}">✓</view>
+          </view>
+          
+          <text class="badge-name">{{item.name}}</text>
+          <text class="badge-req">{{item.unlocked ? '已解锁' : item.req}}</text>
+        </view>
+      </view>
+
+      <!-- 选中勋章详情展示卡 -->
+      <view class="badge-detail-card flex align-center" wx:if="{{selectedBadge}}">
+        <text style="font-size: 54rpx; margin-right: 18rpx;">{{selectedBadge.icon}}</text>
+        <view class="flex flex-col flex-1">
+          <view class="flex align-center" style="gap: 10rpx;">
+            <text style="font-size: 28rpx; font-weight: 900; color: #0F172A;">{{selectedBadge.name}}</text>
+            <view class="badge-status-pill {{selectedBadge.unlocked ? 'unlocked' : 'locked'}}">
+              {{selectedBadge.unlocked ? '✨ 达成成就' : '🔒 待解锁'}}
+            </view>
+          </view>
+          <text style="font-size: 22rpx; color: #64748B; margin-top: 6rpx;">{{selectedBadge.desc}}</text>
+        </view>
+      </view>
+
+    </view>
+  </view>
+
+  <!-- 🌟 形态进化庆祝全屏弹窗 (Evolution Celebration Modal) -->
+  <view class="evo-modal-backdrop {{showEvolutionModal ? 'show' : ''}}">
+    <view class="evo-modal-card flex flex-col align-center">
+      <view class="evo-fireworks">🎉✨🌟✨🎉</view>
+      <text class="evo-title">恭喜搭子完成形态进化！</text>
+      <text class="evo-subtitle">自律的力量让它完成了华丽蜕变！</text>
+
+      <view class="evo-stage-avatar-box">
+        <view class="evo-radiant-glow"></view>
+        <image class="evo-pet-avatar" src="{{pet.avatarUrl}}" mode="aspectFit"></image>
+      </view>
+
+      <view class="evo-rank-badge">
+        <text style="font-size: 28rpx; font-weight: 900; color: #FFFFFF;">🌟 {{petStageName}} 🌟</text>
+      </view>
+      <text class="evo-quote">“多亏了主人的每天自律，我变得更强更有力量啦！”</text>
+
+      <button class="btn-evo-confirm" bindtap="onCloseEvolutionModal">
+        💪 收到！继续保持自律
+      </button>
+    </view>
+  </view>
 
 </view>
