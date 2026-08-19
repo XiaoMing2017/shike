@@ -6,8 +6,8 @@
     <view class="flex align-center" style="gap: 12rpx;">
       <text style="font-size: 38rpx;">🐾</text>
       <view class="flex flex-col">
-        <text class="brand-title">自律搭子 · 3D生活世界</text>
-        <text class="brand-sub">{{currentSceneInfo.name}} · 自由漫步</text>
+        <text class="brand-title">自律搭子 · 3D自主世界</text>
+        <text class="brand-sub">{{currentSceneInfo.name}} · 真实生命感</text>
       </view>
     </view>
 
@@ -38,7 +38,7 @@
   <block wx:elif="{{loading}}">
     <view class="loading-container flex flex-col align-center justify-center">
       <view class="magic-spinner"></view>
-      <text class="loading-text">正在唤醒 3D 沉浸式生活世界...</text>
+      <text class="loading-text">正在唤醒 3D 自主生命感知世界...</text>
     </view>
   </block>
 
@@ -49,10 +49,10 @@
       <view class="adopt-banner-card">
         <view class="flex align-center" style="gap: 10rpx; margin-bottom: 8rpx;">
           <text style="font-size: 32rpx;">✨</text>
-          <text style="font-size: 30rpx; font-weight: 900; color: #0F172A;">领养你的 3D 自律搭子</text>
+          <text style="font-size: 30rpx; font-weight: 900; color: #0F172A;">领养你的 3D 自主神兽</text>
         </view>
         <text class="banner-desc">
-          减脂路上有人陪！选一只属于你的 3D 神兽搭子。每天运动打卡为它带回美食，一起变轻、变好、变强！
+          减脂路上有人陪！它会在房间里自主观察环境、跳沙发睡觉、闻植物、自由生活。每天运动打卡为它带回美食，一起变好变强！
         </text>
       </view>
 
@@ -105,7 +105,6 @@
         </view>
       </view>
 
-      <!-- 领养确定按钮 -->
       <view class="adopt-btn-wrap">
         <button class="btn-3d-adopt" bindtap="onAdoptPet" loading="{{adopting}}">
           🎉 领养并唤醒自律搭子
@@ -115,7 +114,7 @@
     </view>
   </block>
 
-  <!-- 状态 B：已领养状态（3D 沉浸式活体漫步世界） -->
+  <!-- 状态 B：已领养状态（3D 沉浸式自主生活大世界） -->
   <block wx:else>
     <view class="living-stage-wrapper">
       
@@ -132,7 +131,7 @@
         </view>
       </view>
 
-      <!-- 🌟 3D 核心景深生活大场景（点击地面可引导宠物走动） -->
+      <!-- 🌟 3D 核心景深生活大场景（NavMesh 避障寻路 + Smart Objects 空间感知） -->
       <view class="virtual-3d-world-scene" bindtap="onTapSceneGround">
         
         <!-- 高清 3D 纯净场景背景图 -->
@@ -152,14 +151,19 @@
           <view class="bowl-shadow"></view>
         </view>
 
-        <!-- 🌟 自由走动活体宠物（坐标由 petPosX / petPosY 实时驱动，带 3D 深度透视缩放） -->
+        <!-- 🌟 自由走动活体宠物（坐标由 petPosX / petPosY 驱动，带 3D 透视深度缩放） -->
         <view class="roaming-pet-entity" 
               style="left: {{petPosX}}%; top: {{petPosY}}%; transform: translate(-50%, -85%) scale({{facingRight ? depthScale : -depthScale}}, {{depthScale}});" 
               catchtap="onTapPet">
           
+          <!-- 睡觉 zZZ 气泡 -->
+          <view class="sleep-bubble-anim" wx:if="{{sleepBubble}}">
+            <text class="sleep-zzz-text">zZZ</text>
+          </view>
+
           <!-- 悬浮台词气泡 -->
-          <view class="speech-bubble-3d animate-bubble-float" wx:if="{{pet.dialogue}}" style="transform: scale({{facingRight ? 1 : -1}});">
-            <text class="bubble-msg">“{{pet.dialogue}}”</text>
+          <view class="speech-bubble-3d animate-bubble-float" wx:if="{{petDialogue}}" style="transform: scale({{facingRight ? 1 : -1}});">
+            <text class="bubble-msg">“{{petDialogue}}”</text>
             <view class="bubble-arrow"></view>
           </view>
 
@@ -178,20 +182,15 @@
             <text class="exp-text">+10 EXP ✨</text>
           </view>
 
-          <!-- 3D 宠物主体容器（多帧连续行走/呼吸打盹动画） -->
+          <!-- 3D 宠物主体容器（支持多帧连续步态/呼吸打盹/干饭/蹦跳） -->
           <view class="pet-mesh-container {{motionState === 'eating' ? 'animate-pet-chew' : (motionState === 'happy' ? 'animate-pet-happy' : '')}}">
-            <!-- 动态切换 Walk / Idle 多帧动画 -->
             <image class="pet-cutout-img" src="{{activeSpriteUrl}}" mode="aspectFit"></image>
-            <!-- 动态同步触地柔光阴影 -->
             <view class="pet-floor-shadow"></view>
           </view>
 
-          <!-- 当前动作状态小微标 -->
-          <view class="pet-status-mini-bubble" wx:if="{{motionState === 'walking'}}">
-            <text style="font-size: 20rpx;">🐾 迈步漫步中</text>
-          </view>
-          <view class="pet-status-mini-bubble" wx:elif="{{motionState === 'eating'}}">
-            <text style="font-size: 20rpx;">😋 大口干饭中</text>
+          <!-- 实时自主行为心声气泡 -->
+          <view class="pet-thought-capsule" wx:if="{{currentThought}}">
+            <text class="thought-text">{{currentThought}}</text>
           </view>
 
         </view>
@@ -208,21 +207,22 @@
 
         <!-- 互动指引 -->
         <view class="touch-hint-label">
-          <text>👆 点击房间地面它会迈着小短腿走过去 · 摸摸身体撒欢</text>
+          <text>👆 点击房间地面引导它走动 · 摸摸身体撒欢</text>
         </view>
 
       </view>
 
-      <!-- 心情与数值状态栏 -->
+      <!-- 8 大内在需求与健康仪表盘 -->
       <view class="gamified-stats-deck">
         
+        <!-- 实时心情与行为状态 -->
         <view class="flex justify-between align-center" style="margin-bottom: 20rpx;">
-          <view class="mood-pill mood-{{pet.mood}} flex align-center">
-            <text class="mood-icon">{{pet.mood === 'HAPPY' ? '😄' : (pet.mood === 'HUNGRY' ? '🥺' : (pet.mood === 'WANT_EXERCISE' ? '🏃' : '🌱'))}}</text>
-            <text class="mood-text">{{pet.moodText}}</text>
+          <view class="mood-pill mood-{{needsMood.mood}} flex align-center">
+            <text class="mood-icon">{{needsMood.mood === 'HAPPY' ? '😄' : (needsMood.mood === 'HUNGRY' ? '🥺' : (needsMood.mood === 'TIRED' ? '💤' : '🌱'))}}</text>
+            <text class="mood-text">{{needsMood.text}}</text>
           </view>
           <view class="behavior-tip flex align-center">
-            <text style="font-size: 22rpx; color: #64748B;">状态：{{motionStateText}}</text>
+            <text style="font-size: 22rpx; color: #64748B;">AI生活动机：{{currentThought}}</text>
           </view>
         </view>
 
