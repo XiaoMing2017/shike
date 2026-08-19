@@ -77,6 +77,15 @@ public class User {
     @Column(length = 20, columnDefinition = "varchar(20) default 'ENABLED'")
     private String status; // ENABLED, DISABLED
 
+    @Column(name = "vip_type", length = 20, columnDefinition = "varchar(20) default 'NORMAL'")
+    private String vipType; // NORMAL, VIP, PRO, TEST
+
+    @Column(name = "vip_expire_time")
+    private LocalDateTime vipExpireTime;
+
+    @Column(name = "ai_unlimited", columnDefinition = "tinyint(1) default 0")
+    private Boolean aiUnlimited;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -84,4 +93,16 @@ public class User {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    /**
+     * 判断当前用户是否享有无限次免费使用全站 AI 功能的特权
+     */
+    public boolean isUnlimitedAiUser() {
+        if (Boolean.TRUE.equals(this.aiUnlimited)) return true;
+        if ("TEST".equalsIgnoreCase(this.vipType)) return true;
+        if ("VIP".equalsIgnoreCase(this.vipType) || "PRO".equalsIgnoreCase(this.vipType)) {
+            return this.vipExpireTime == null || this.vipExpireTime.isAfter(LocalDateTime.now());
+        }
+        return false;
+    }
 }

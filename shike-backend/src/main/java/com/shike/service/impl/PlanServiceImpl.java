@@ -58,9 +58,13 @@ public class PlanServiceImpl implements PlanService {
         boolean hasCachedPlan = Boolean.TRUE.equals(stringRedisTemplate.hasKey(cacheKey));
         boolean hasGeneratedBefore = pointsRecordRepository.existsByUserIdAndType(userId, "PLAN_GEN");
 
+        boolean isUnlimited = user.isUnlimitedAiUser();
+
         Map<String, Object> statusMap = new HashMap<>();
         statusMap.put("hasPlan", hasCachedPlan);
-        statusMap.put("isFirstTime", !hasGeneratedBefore);
+        statusMap.put("isFirstTime", isUnlimited || !hasGeneratedBefore);
+        statusMap.put("isUnlimitedAi", isUnlimited);
+        statusMap.put("vipType", user.getVipType() != null ? user.getVipType() : "NORMAL");
         statusMap.put("userPoints", user.getPoints() != null ? user.getPoints() : 0);
         return statusMap;
     }
@@ -97,9 +101,12 @@ public class PlanServiceImpl implements PlanService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BizException(404, "找不到该用户档案"));
 
-        // 3. 校验并扣除积分 (首次免费，以后每次扣除 100 积分)
+        // 3. 校验并扣除积分 (VIP/特权用户免扣无限次，普通用户首次免费，以后每次扣除 100 积分)
         boolean hasGeneratedBefore = pointsRecordRepository.existsByUserIdAndType(userId, "PLAN_GEN");
-        if (hasGeneratedBefore) {
+        if (user.isUnlimitedAiUser()) {
+            log.info("User {} [VIP: {}, AI Unlimited: {}] generating AI plan with unlimited quota, no points deducted.",
+                    userId, user.getVipType(), user.getAiUnlimited());
+        } else if (hasGeneratedBefore) {
             int currentPoints = user.getPoints() != null ? user.getPoints() : 0;
             if (currentPoints < 100) {
                 throw new BizException(400, "契约积分不足 100 分（当前可用余额: " + currentPoints + " 分）。可以通过每日签到或参与挑战小队赚取积分！");
@@ -164,6 +171,118 @@ public class PlanServiceImpl implements PlanService {
         }
 
         return planMap;
+    }
+
+    @Override
+    public void generatePlanStream(Long userId, Boolean forceRefresh, Boolean createIfAbsent, String location, java.util.function.Consumer<Map<String, Object>> progressConsumer) {
+        String cacheKey = REDIS_PLAN_KEY_PREFIX + userId;
+
+        // 1. 检查 Redis 缓存
+        if (!Boolean.TRUE.equals(forceRefresh)) {
+            String cachedJson = stringRedisTemplate.opsForValue().get(cacheKey);
+            if (cachedJson != null && !cachedJson.trim().isEmpty()) {
+                try {
+                    log.info("Returning cached AI plan stream for userId {}", userId);
+                    Map<String, Object> cachedMap = objectMapper.readValue(cachedJson, new TypeReference<Map<String, Object>>() {});
+                    progressConsumer.accept(Map.of("type", "progress", "percent", 100, "stepNum", 7, "title", "🎉 计划已就绪", "desc", "从高速缓存中加载"));
+                    progressConsumer.accept(Map.of("type", "done", "percent", 100, "stepNum", 7, "title", "🎉 7 天专属计划已就绪！", "data", cachedMap));
+                    return;
+                } catch (Exception e) {
+                    log.warn("Failed to parse cached plan JSON, will regenerate", e);
+                }
+            }
+        }
+
+        // 2. 获取用户档案
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BizException(404, "找不到该用户档案"));
+
+        // 3. 校验并扣除积分 (VIP/特权用户免扣无限次，普通用户首次免费，以后每次扣除 100 积分)
+        boolean hasGeneratedBefore = pointsRecordRepository.existsByUserIdAndType(userId, "PLAN_GEN");
+        if (user.isUnlimitedAiUser()) {
+            log.info("User {} [VIP: {}, AI Unlimited: {}] generating AI plan STREAM with unlimited quota, no points deducted.",
+                    userId, user.getVipType(), user.getAiUnlimited());
+        } else if (hasGeneratedBefore) {
+            int currentPoints = user.getPoints() != null ? user.getPoints() : 0;
+            if (currentPoints < 100) {
+                progressConsumer.accept(Map.of("type", "error", "message", "契约积分不足 100 分（当前可用: " + currentPoints + " 分）"));
+                return;
+            }
+            user.setPoints(currentPoints - 100);
+            userRepository.save(user);
+
+            PointsRecord record = PointsRecord.builder()
+                    .userId(userId)
+                    .amount(-100)
+                    .type("PLAN_GEN")
+                    .remark("AI 定制运动与饮食计划 (消耗 100 积分)")
+                    .build();
+            pointsRecordRepository.save(record);
+            log.info("Deducted 100 points for user {} for AI plan generation. Remaining balance: {}", userId, user.getPoints());
+        } else {
+            PointsRecord record = PointsRecord.builder()
+                    .userId(userId)
+                    .amount(0)
+                    .type("PLAN_GEN")
+                    .remark("AI 定制运动与饮食计划 (首次生成免费)")
+                    .build();
+            pointsRecordRepository.save(record);
+            log.info("First time AI plan generation for user {}, free of charge.", userId);
+        }
+
+        // 发送初始启动事件 (阶段 1)
+        progressConsumer.accept(Map.of(
+                "type", "progress",
+                "percent", 8,
+                "stepNum", 1,
+                "title", "📊 1/7 解析身体代谢画像",
+                "desc", "推算 BMR 代谢基准与安全每日热量赤字..."
+        ));
+
+        // 4. 构建专属 Prompt 并流式调用大模型
+        Map<String, Object> planMap;
+        try {
+            String prompt = buildExpertPrompt(user, location);
+            String aiResponseJson = callTextLlmStream(prompt, progressConsumer);
+            planMap = parseAndCleanJson(aiResponseJson);
+            if (!planMap.containsKey("nutritionOverview") || planMap.get("nutritionOverview") == null) {
+                double targetCal = (user.getTargetCalories() != null) ? user.getTargetCalories().doubleValue() : 2000.0;
+                double weight = (user.getWeight() != null) ? user.getWeight().doubleValue() : 70.0;
+                int proteinG = (int) Math.round(weight * 1.8);
+                int fatG = (int) Math.round((targetCal * 0.25) / 9.0);
+                int carbsG = (int) Math.round((targetCal - (proteinG * 4) - (fatG * 9)) / 4.0);
+                Map<String, Object> overview = new HashMap<>();
+                overview.put("targetCal", (int) targetCal);
+                overview.put("proteinG", proteinG);
+                overview.put("carbsG", carbsG);
+                overview.put("fatG", fatG);
+                planMap.put("nutritionOverview", overview);
+            }
+        } catch (Exception e) {
+            log.error("AI Stream Generation failed for user {}, fallback to template plan: {}", userId, e.getMessage());
+            planMap = generateScientificFallbackPlan(user, location);
+        }
+        recordPlanAiUsage(userId);
+
+        planMap.put("userPoints", user.getPoints() != null ? user.getPoints() : 0);
+
+        // 5. 写入缓存
+        try {
+            String planJson = objectMapper.writeValueAsString(planMap);
+            stringRedisTemplate.opsForValue().set(cacheKey, planJson, 7, TimeUnit.DAYS);
+        } catch (Exception e) {
+            log.error("Failed to cache plan to Redis", e);
+        }
+
+        // 6. 发送最终完成事件 (100%)
+        Map<String, Object> doneEvent = new HashMap<>();
+        doneEvent.put("type", "done");
+        doneEvent.put("percent", 100);
+        doneEvent.put("stepNum", 7);
+        doneEvent.put("title", "🎉 7 天专属计划生成完成！");
+        doneEvent.put("desc", "量身定制的周训练与 28 餐食谱已就绪");
+        doneEvent.put("data", planMap);
+        progressConsumer.accept(doneEvent);
     }
 
     private String buildExpertPrompt(User user, String location) {
@@ -324,16 +443,19 @@ public class PlanServiceImpl implements PlanService {
         sb.append("【用户】: ").append(genderStr).append(", ").append(age).append("岁, ").append(height).append("cm, ").append(weight).append("kg, 经验: ").append(trainingLevelLabel).append(", 目标: ").append(goalLabel).append(", 目标热量: ").append((int)targetCal).append("kcal (蛋白").append(proteinG).append("g, 碳水").append(carbsG).append("g, 脂肪").append(fatG).append("g)。\n");
         sb.append("【指导】: ").append(trainingLevelGuidance).append("\n");
         sb.append("【场地】: ").append(isHome ? "🏠居家训练(限定徒手自重、家用哑铃/弹力带，严禁出现杠铃/高位下拉/龙门架/倒蹬机等大型健身房器械)" : "🏋️健身房训练(充分利用杠哑铃/器械)").append("。\n");
-        sb.append("【要求】: 运动每天3-4个动作(含名称+Emoji/组数/时长/卡路里)；膳食每天4餐(早餐/午餐/加餐/晚餐，含食物与替代建议)。在summary末尾带合规说明'注：基于算法拟合生成，仅供参考。'\n\n");
+        sb.append("【核心要求】: 快速生成【周一至周日】共7天标准紧凑JSON，严禁输出任何markdown标记或解释！\n");
+        sb.append("1. user_summary: summary 限制在100字内精炼诊断，末尾注'注：基于算法拟合生成，仅供参考。'；\n");
+        sb.append("2. weekly_training: 必须7天('周一'~'周日')，训练日每天3-4个动作(含名称+Emoji/时长min/卡路里kcal/组数)，休息日安排拉伸；\n");
+        sb.append("3. weekly_diet: 必须7天('周一'~'周日')，每天严格4餐(早餐/午餐/加餐/晚餐，含食物名与手掌估算)。\n\n");
 
-        sb.append("【按固定 JSON 格式直接输出，严禁任何解释文字或 markdown 标记】:\n");
+        sb.append("【按紧凑 JSON 直接输出】:\n");
         sb.append("{\n");
-        sb.append("  \"user_summary\": { \"summary\": \"专家诊断与建议... (含注:...)\" },\n");
+        sb.append("  \"user_summary\": { \"summary\": \"专家评估与建议... 注：基于算法拟合生成，仅供参考。\" },\n");
         sb.append("  \"weekly_training\": [\n");
-        sb.append("    { \"day\": \"周一\", \"training_type\": \"胸/三头力量+有氧\", \"total_duration\": 50, \"items\": [{ \"name\": \"哑铃卧推 💪\", \"duration_min\": 15, \"calorie_kcal\": 90, \"sets_reps_rir\": \"4组x12次(RIR2)\" }] }\n");
+        sb.append("    { \"day\": \"周一\", \"training_type\": \"胸/三头力量\", \"total_duration\": 45, \"items\": [{ \"name\": \"哑铃卧推 💪\", \"duration_min\": 15, \"calorie_kcal\": 90, \"sets_reps_rir\": \"4组x12次(RIR2)\" }] }\n");
         sb.append("  ],\n");
         sb.append("  \"weekly_diet\": [\n");
-        sb.append("    { \"day\": \"周一\", \"total_calories\": ").append((int)targetCal).append(", \"meals\": [{ \"meal\": \"早餐\", \"foods\": \"燕麦粥1碗+水煮蛋1个(或无糖酸奶)\", \"hand_size_reference\": \"1掌蛋白+1手心碳水\" }] }\n");
+        sb.append("    { \"day\": \"周一\", \"total_calories\": ").append((int)targetCal).append(", \"meals\": [{ \"meal\": \"早餐\", \"foods\": \"燕麦粥1碗+水煮蛋1个\", \"hand_size_reference\": \"1掌蛋白+1手心碳水\" }, { \"meal\": \"午餐\", \"foods\": \"糙米饭1碗+香煎鸡胸肉150g+西兰花\", \"hand_size_reference\": \"1掌蛋白+1手心碳水+2拳蔬菜\" }, { \"meal\": \"加餐\", \"foods\": \"全脂牛奶200ml+坚果1小把\", \"hand_size_reference\": \"1手心\" }, { \"meal\": \"晚餐\", \"foods\": \"蒸红薯1个+清蒸鲈鱼150g+菠菜\", \"hand_size_reference\": \"1掌蛋白+1手心碳水+2拳蔬菜\" }] }\n");
         sb.append("  ]\n");
         sb.append("}\n");
 
@@ -346,11 +468,16 @@ public class PlanServiceImpl implements PlanService {
             if (adminService != null && adminService.getAiModelConfig() != null) {
                 String dynamicModel = adminService.getAiModelConfig().get("planModel");
                 if (dynamicModel != null && !dynamicModel.isBlank()) {
-                    activeModel = dynamicModel;
+                    activeModel = dynamicModel.trim();
                 }
             }
         } catch (Exception e) {
             log.warn("Failed to fetch dynamic plan model, using default: {}", e.getMessage());
+        }
+
+        // 🛡️ 智能自动容错：自动转换为全小写标准模型 Code (如 Qwen3.7-Plus -> qwen3.7-plus)
+        if (activeModel != null) {
+            activeModel = activeModel.trim().toLowerCase();
         }
 
         log.info("Calling Text LLM (streaming) endpoint: {}, active model: {}", aiEndpoint, activeModel);
@@ -438,6 +565,192 @@ public class PlanServiceImpl implements PlanService {
                     Object compTok = usage.get("completion_tokens");
                     Object totalTok = usage.get("total_tokens");
                     log.info("[AI Token Audit] Module: [专属AI运动与饮食计划生成] | Model: {} | Prompt Tokens: {} | Completion Tokens: {} | Total Tokens: {}",
+                            activeModel, promptTok, compTok, totalTok);
+                }
+            } catch (Exception e) {
+                log.warn("Failed to parse usage from final SSE chunk", e);
+            }
+        }
+
+        String result = contentBuilder.toString();
+        if (result.isEmpty()) {
+            throw new RuntimeException("Streaming response returned empty content");
+        }
+
+        log.info("Streaming LLM call completed, received {} chars", result.length());
+        return result;
+    }
+
+    private String callTextLlmStream(String prompt, java.util.function.Consumer<Map<String, Object>> progressConsumer) throws Exception {
+        String activeModel = aiModel;
+        try {
+            if (adminService != null && adminService.getAiModelConfig() != null) {
+                String dynamicModel = adminService.getAiModelConfig().get("planModel");
+                if (dynamicModel != null && !dynamicModel.isBlank()) {
+                    activeModel = dynamicModel.trim();
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch dynamic plan model, using default: {}", e.getMessage());
+        }
+
+        if (activeModel != null) {
+            activeModel = activeModel.trim().toLowerCase();
+        }
+
+        log.info("Calling Text LLM STREAM endpoint: {}, active model: {}", aiEndpoint, activeModel);
+
+        Map<String, Object> systemMsg = Map.of("role", "system", "content", "你是一位严格输出标准JSON的专业营养师与健身教练AI。");
+        Map<String, Object> userMsg = Map.of("role", "user", "content", prompt);
+
+        Map<String, Object> payload = new java.util.LinkedHashMap<>();
+        payload.put("model", activeModel);
+        payload.put("messages", List.of(systemMsg, userMsg));
+        payload.put("temperature", activeModel.contains("qwen") ? 0.5 : 0.6);
+        payload.put("max_tokens", 6000);
+        payload.put("stream", true);
+        payload.put("stream_options", Map.of("include_usage", true));
+        if (activeModel.contains("qwen3")) {
+            payload.put("enable_thinking", false);
+        }
+
+        String requestBodyJson = objectMapper.writeValueAsString(payload);
+
+        HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(30))
+                .build();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(aiEndpoint))
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + aiApiKey)
+                .POST(HttpRequest.BodyPublishers.ofString(requestBodyJson))
+                .timeout(Duration.ofMinutes(10))
+                .build();
+
+        HttpResponse<java.io.InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+
+        if (response.statusCode() != 200) {
+            String errorBody = new String(response.body().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            throw new RuntimeException("LLM API returned code " + response.statusCode() + ": " + errorBody);
+        }
+
+        StringBuilder contentBuilder = new StringBuilder();
+        String usageLine = null;
+
+        // 真实流式进度分析器状态
+        int lastPushedPercent = 8;
+        int currentStepNum = 1;
+        long lastPushTimestamp = System.currentTimeMillis();
+
+        try (java.io.BufferedReader reader = new java.io.BufferedReader(
+                new java.io.InputStreamReader(response.body(), java.nio.charset.StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                if (line.isEmpty() || line.startsWith(":")) continue;
+                if (line.startsWith("data: ")) {
+                    String data = line.substring(6).trim();
+                    if ("[DONE]".equals(data)) break;
+                    try {
+                        Map<String, Object> chunk = objectMapper.readValue(data, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
+                        Map<String, Object> usage = (Map<String, Object>) chunk.get("usage");
+                        if (usage != null) {
+                            usageLine = data;
+                        }
+
+                        List<Map<String, Object>> choices = (List<Map<String, Object>>) chunk.get("choices");
+                        if (choices != null && !choices.isEmpty()) {
+                            Map<String, Object> delta = (Map<String, Object>) choices.get(0).get("delta");
+                            if (delta != null && delta.get("content") != null) {
+                                String piece = String.valueOf(delta.get("content"));
+                                contentBuilder.append(piece);
+
+                                int charCount = contentBuilder.length();
+                                long now = System.currentTimeMillis();
+
+                                // 动态解析大模型当前生成的阶段与真实进度 (基于字符量与语法关键词锚点)
+                                int step = 1;
+                                int percent = 10;
+                                String stepTitle = "📊 1/7 解析身体代谢画像";
+                                String stepDesc = "推算 BMR 代谢基准与每日安全热量赤字...";
+
+                                String currentText = contentBuilder.toString();
+                                boolean hasDiet = currentText.contains("weekly_diet");
+
+                                if (hasDiet) {
+                                    if (currentText.contains("周日") || currentText.contains("周六")) {
+                                        step = 7;
+                                        percent = Math.min(97, 88 + (charCount > 6500 ? (charCount - 6500) / 200 : 0));
+                                        stepTitle = "✨ 7/7 专家系统最终交叉质检";
+                                        stepDesc = "宏量营养素闭环校验完毕，即将呈现...";
+                                    } else {
+                                        step = 6;
+                                        percent = Math.min(88, 75 + (charCount > 4500 ? (charCount - 4500) / 150 : 0));
+                                        stepTitle = "🥗 6/7 精算 28 餐高饱腹食谱";
+                                        stepDesc = "结合手掌法则推算早中晚加餐搭配与食材分量...";
+                                    }
+                                } else if (currentText.contains("周五") || currentText.contains("周六") || currentText.contains("周日")) {
+                                    step = 5;
+                                    percent = Math.min(75, 60 + (charCount > 3000 ? (charCount - 3000) / 100 : 0));
+                                    stepTitle = "🏋️‍♂️ 5/7 编排后半周进阶训练 (周五~周日)";
+                                    stepDesc = "统筹全周 MEV/MAV 动作总容量与主动恢复...";
+                                } else if (currentText.contains("周三") || currentText.contains("周四")) {
+                                    step = 4;
+                                    percent = Math.min(60, 42 + (charCount > 1800 ? (charCount - 1800) / 80 : 0));
+                                    stepTitle = "🏃 4/7 编排周中训练与有氧 (周三~周四)";
+                                    stepDesc = "匹配 Zone 2 稳态燃脂与弱项肌群强化...";
+                                } else if (currentText.contains("周一") || currentText.contains("周二")) {
+                                    step = 3;
+                                    percent = Math.min(42, 25 + (charCount > 800 ? (charCount - 800) / 60 : 0));
+                                    stepTitle = "🏋️‍♂️ 3/7 编排前半周力量动作 (周一~周二)";
+                                    stepDesc = "根据训练经验分配复合动作容量与 RIR 疲劳控制...";
+                                } else if (charCount > 300 || currentText.contains("weekly_training")) {
+                                    step = 2;
+                                    percent = Math.min(25, 12 + (charCount / 25));
+                                    stepTitle = "⚖️ 2/7 拟合三大营养素供能比";
+                                    stepDesc = "根据体脂率与目标定制高蛋白供能比与碳水下限...";
+                                } else {
+                                    step = 1;
+                                    percent = Math.min(12, 6 + (charCount / 30));
+                                }
+
+                                if (percent < lastPushedPercent) {
+                                    percent = lastPushedPercent; // 进度只增不减
+                                }
+
+                                // 每 150ms 且进度有提升或阶段发生跳跃时向前端 Push
+                                if (now - lastPushTimestamp > 150 && (percent > lastPushedPercent || step != currentStepNum)) {
+                                    lastPushedPercent = percent;
+                                    currentStepNum = step;
+                                    lastPushTimestamp = now;
+
+                                    Map<String, Object> progressEvent = new HashMap<>();
+                                    progressEvent.put("type", "progress");
+                                    progressEvent.put("percent", percent);
+                                    progressEvent.put("stepNum", step);
+                                    progressEvent.put("title", stepTitle);
+                                    progressEvent.put("desc", stepDesc);
+                                    progressConsumer.accept(progressEvent);
+                                }
+                            }
+                        }
+                    } catch (Exception parseEx) {
+                        log.warn("Failed to parse SSE chunk: {}", data, parseEx);
+                    }
+                }
+            }
+        }
+
+        if (usageLine != null) {
+            try {
+                Map<String, Object> lastChunk = objectMapper.readValue(usageLine, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
+                Map<String, Object> usage = (Map<String, Object>) lastChunk.get("usage");
+                if (usage != null) {
+                    Object promptTok = usage.get("prompt_tokens");
+                    Object compTok = usage.get("completion_tokens");
+                    Object totalTok = usage.get("total_tokens");
+                    log.info("[AI Token Audit] Module: [专属AI运动与饮食计划生成(流式)] | Model: {} | Prompt Tokens: {} | Completion Tokens: {} | Total Tokens: {}",
                             activeModel, promptTok, compTok, totalTok);
                 }
             } catch (Exception e) {

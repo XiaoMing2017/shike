@@ -59,7 +59,7 @@
           <text style="font-size: 30rpx; font-weight: 900; color: #0F172A;">孵化你的 3D 神兽搭子</text>
         </view>
         <text class="banner-desc">
-          每位自律者都拥有一颗专属神兽蛋。通过每日运动打卡注入能量，见证它从破壳幼体蜕变为终极传奇神兽！
+          每位自律者都拥有一颗专属神兽蛋。通过每日打卡注入能量，见证它从破壳幼体蜕变为终极传奇神兽！
         </text>
       </view>
 
@@ -223,7 +223,7 @@
           <view class="flex justify-between align-center" style="margin-bottom: 10rpx;">
             <view class="flex align-center" style="gap: 10rpx;">
               <text style="font-size: 28rpx;">🍖</text>
-              <text class="gauge-name">饱食度 (不运动就挨饿哦)</text>
+              <text class="gauge-name">饱食度 (不自律就挨饿哦)</text>
             </view>
             <text class="gauge-number" style="color: {{pet.fullness < 30 ? '#EF4444' : '#10B981'}};">{{pet.fullness}} / 100</text>
           </view>
@@ -273,18 +273,97 @@
             <text style="font-weight: 900;">{{pet.foodCount > 0 ? '立即投喂 (' + pet.foodCount + ')' : '暂无食物'}}</text>
           </button>
 
-          <button class="btn-3d-action btn-3d-exercise flex align-center justify-center" bindtap="onGoExercise">
-            <text style="font-size: 34rpx; margin-right: 10rpx;">🏃</text>
-            <text style="font-weight: 900;">去运动打卡</text>
+          <button class="btn-3d-action btn-3d-checkin flex align-center justify-center" bindtap="onDailyCheckin" disabled="{{foodTasks.checkin}}">
+            <text style="font-size: 34rpx; margin-right: 10rpx;">📅</text>
+            <text style="font-weight: 900;">{{foodTasks.checkin ? '今日已签到' : '每日签到领粮'}}</text>
           </button>
 
         </view>
+      </view>
 
-        <view class="daily-reward-tip flex align-center" style="margin-top: 20rpx;">
-          <text style="font-size: 28rpx; margin-right: 12rpx;">💡</text>
-          <text class="tip-content">
-            每次在首页完成运动打卡（快走/慢跑/力量等），即可为搭子免费赚取 1 份营养粮！
-          </text>
+      <!-- 🎒 每日自律赚粮任务中心 -->
+      <view class="food-tasks-card">
+        <view class="flex justify-between align-center" style="margin-bottom: 16rpx;">
+          <view class="flex align-center" style="gap: 10rpx;">
+            <text style="font-size: 32rpx;">🎒</text>
+            <text style="font-size: 28rpx; font-weight: 900; color: #0F172A;">每日自律赚粮任务</text>
+          </view>
+          <text style="font-size: 22rpx; color: #10B981; font-weight: 800;">今日已赚 {{earnedFoodCount}}/5 份</text>
+        </view>
+        <text style="font-size: 22rpx; color: #64748B; margin-bottom: 20rpx; display: block;">完成日常自律打卡，免费为搭子带回专属营养粮！</text>
+
+        <view class="task-item-list">
+          
+          <!-- 1. 每日签到 -->
+          <view class="task-row flex justify-between align-center">
+            <view class="flex align-center" style="gap: 14rpx;">
+              <text class="task-icon">📅</text>
+              <view class="flex flex-col">
+                <text class="task-title">每日自律签到</text>
+                <text class="task-reward">+1 份营养粮 · 开启元气一天</text>
+              </view>
+            </view>
+            <button class="btn-task {{foodTasks.checkin ? 'done' : 'action'}}" bindtap="onDailyCheckin" disabled="{{foodTasks.checkin}}">
+              {{foodTasks.checkin ? '✓ 已领取' : '一键签到'}}
+            </button>
+          </view>
+
+          <!-- 2. 运动锻炼 -->
+          <view class="task-row flex justify-between align-center">
+            <view class="flex align-center" style="gap: 14rpx;">
+              <text class="task-icon">🏃</text>
+              <view class="flex flex-col">
+                <text class="task-title">自律运动打卡</text>
+                <text class="task-reward">+1 份营养粮 · 快走/慢跑/力量</text>
+              </view>
+            </view>
+            <button class="btn-task {{foodTasks.exercise ? 'done' : 'action'}}" bindtap="onGoExercise">
+              {{foodTasks.exercise ? '✓ 已达成' : '去运动'}}
+            </button>
+          </view>
+
+          <!-- 3. 三餐饮食 -->
+          <view class="task-row flex justify-between align-center">
+            <view class="flex align-center" style="gap: 14rpx;">
+              <text class="task-icon">🍽️</text>
+              <view class="flex flex-col">
+                <text class="task-title">记录三餐减脂饮食</text>
+                <text class="task-reward">+1 份营养粮 · 拍照或手动记餐</text>
+              </view>
+            </view>
+            <button class="btn-task {{foodTasks.diet ? 'done' : 'action'}}" bindtap="onGoDiet">
+              {{foodTasks.diet ? '✓ 已达成' : '去记餐'}}
+            </button>
+          </view>
+
+          <!-- 4. 喝水打卡 -->
+          <view class="task-row flex justify-between align-center">
+            <view class="flex align-center" style="gap: 14rpx;">
+              <text class="task-icon">💧</text>
+              <view class="flex flex-col">
+                <text class="task-title">健康喝水打卡</text>
+                <text class="task-reward">+1 份营养粮 · 达标 200ml 以上</text>
+              </view>
+            </view>
+            <button class="btn-task {{foodTasks.water ? 'done' : 'action'}}" bindtap="onGoWater">
+              {{foodTasks.water ? '✓ 已达成' : '去喝水'}}
+            </button>
+          </view>
+
+          <!-- 5. 体重记录 -->
+          <view class="task-row flex justify-between align-center">
+            <view class="flex align-center" style="gap: 14rpx;">
+              <text class="task-icon">⚖️</text>
+              <view class="flex flex-col">
+                <text class="task-title">记录晨起体重</text>
+                <text class="task-reward">+1 份营养粮 · 见证变轻变好</text>
+              </view>
+            </view>
+            <button class="btn-task {{foodTasks.weight ? 'done' : 'action'}}" bindtap="onGoWeight">
+              {{foodTasks.weight ? '✓ 已达成' : '去称重'}}
+            </button>
+          </view>
+
         </view>
       </view>
 

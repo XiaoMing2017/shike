@@ -90,10 +90,10 @@ Page({
     foodIcon: '🍎',
 
     // 破壳孵化仪式状态
-    hatchingStep: 0, // 0=未孵化, 1=轻微裂纹, 2=剧烈金光, 3=破壳诞生
+    hatchingStep: 0,
 
     // 进化形态数据
-    petStageRank: 1,       // 1=幼年期, 2=成长期, 3=究极体
+    petStageRank: 1,
     petStageName: '幼年期 · 萌新搭子',
     nextStageGoalText: 'Lv.5 解锁成长期形态',
     petStageProgressText: '1/5',
@@ -112,6 +112,16 @@ Page({
       { id: 'evo_stage3', icon: '🌟', name: '传奇守护神', req: '达到 Lv.10', desc: '搭子达成 Lv.10 究极进化，身披祥瑞光芒！', unlocked: false }
     ],
 
+    // 每日赚粮任务状态
+    foodTasks: {
+      checkin: false,
+      exercise: false,
+      diet: false,
+      water: false,
+      weight: false
+    },
+    earnedFoodCount: 0,
+
     candidateNames: ['木木', '小燃', '豆豆', '卡卡', '饭团'],
     types: [
       { type: 'DRAGON', icon: '🐉', eggEmoji: '🟢', name: '小幼龙' },
@@ -129,16 +139,19 @@ Page({
   onShow() {
     this.checkToggleAndLoad();
     this.updateCustomTabBar();
+    this.fetchFoodTasks();
   },
 
   onPullDownRefresh() {
     this.checkToggleAndLoad(() => {
+      this.fetchFoodTasks();
       wx.stopPullDownRefresh();
     });
   },
 
   onRefreshPage() {
     this.checkToggleAndLoad();
+    this.fetchFoodTasks();
   },
 
   updateCustomTabBar() {
@@ -227,6 +240,59 @@ Page({
     });
   },
 
+  /* 查询今日赚粮任务进度 */
+  fetchFoodTasks() {
+    const user = app.globalData.userInfo;
+    if (!user || !user.id) return;
+
+    wx.request({
+      url: `${app.globalData.baseUrl}/pet/food-tasks?userId=${user.id}`,
+      method: 'GET',
+      success: (res) => {
+        if (res.data && res.data.code === 200 && res.data.data) {
+          const tasks = res.data.data.tasks || {};
+          let count = 0;
+          Object.values(tasks).forEach(v => { if (v) count++; });
+          this.setData({
+            foodTasks: tasks,
+            earnedFoodCount: count
+          });
+        }
+      }
+    });
+  },
+
+  /* 每日一键签到 */
+  onDailyCheckin() {
+    const user = app.globalData.userInfo;
+    if (!user || !user.id) {
+      wx.showToast({ title: '请先登录', icon: 'none' });
+      return;
+    }
+
+    wx.showLoading({ title: '正在签到...' });
+    wx.request({
+      url: `${app.globalData.baseUrl}/pet/checkin?userId=${user.id}`,
+      method: 'POST',
+      success: (res) => {
+        wx.hideLoading();
+        if (res.data && res.data.code === 200) {
+          const data = res.data.data;
+          wx.showToast({ title: data.message || '签到成功！', icon: 'none', duration: 2500 });
+          wx.vibrateShort({ type: 'medium' });
+          this.fetchPetInfo();
+          this.fetchFoodTasks();
+        } else {
+          wx.showToast({ title: (res.data && res.data.message) || '签到失败', icon: 'none' });
+        }
+      },
+      fail: () => {
+        wx.hideLoading();
+        wx.showToast({ title: '网络异常', icon: 'none' });
+      }
+    });
+  },
+
   /* 计算进化阶段与成就勋章 */
   calculateEvolutionAndBadges(pet) {
     const lvl = pet.level || 1;
@@ -247,9 +313,8 @@ Page({
       progressText = `${lvl}/10`;
     }
 
-    // 勋章状态刷新
     const badges = [...this.data.badgeList];
-    badges[0].unlocked = true; // 破壳
+    badges[0].unlocked = true;
     badges[1].unlocked = (pet.streakDays || 0) >= 7;
     badges[2].unlocked = (pet.intimacy || 0) >= 200;
     badges[3].unlocked = (pet.level || 1) >= 3;
@@ -305,7 +370,6 @@ Page({
     wx.vibrateShort({ type: 'light' });
   },
 
-  /* 开启神兽蛋破壳仪式 */
   onStartHatchCeremony() {
     const user = app.globalData.userInfo;
     if (!user || !user.id) {
@@ -322,7 +386,6 @@ Page({
     this.setData({ adopting: true, hatchingStep: 1 });
     wx.vibrateShort({ type: 'medium' });
 
-    // 播放 3 阶段破壳动画
     setTimeout(() => {
       this.setData({ hatchingStep: 2 });
       wx.vibrateShort({ type: 'heavy' });
@@ -357,6 +420,7 @@ Page({
             hatchingStep: 0
           });
           this.calculateEvolutionAndBadges(pet);
+          this.fetchFoodTasks();
           wx.vibrateShort({ type: 'heavy' });
         } else {
           wx.showToast({ title: (res.data && res.data.message) || '孵化失败', icon: 'none' });
@@ -377,12 +441,12 @@ Page({
     if (this.data.pet.foodCount <= 0) {
       wx.showModal({
         title: '食物不足',
-        content: '小家伙的饭碗空空啦！今天去完成一次运动打卡（快走/慢跑/力量等）就能免费带回食物哦～',
-        confirmText: '去运动',
+        content: '小家伙的饭碗空空啦！完成下方「赚粮任务」（每日签到/运动/饮食打卡）就能免费获得食物哦～',
+        confirmText: '立即签到',
         cancelText: '稍后再说',
         success: (modalRes) => {
-          if (modalRes.confirm) {
-            this.onGoExercise();
+          if (modalRes.confirm && !this.data.foodTasks.checkin) {
+            this.onDailyCheckin();
           }
         }
       });
@@ -404,7 +468,6 @@ Page({
           this.setData({ pet: updated });
           this.calculateEvolutionAndBadges(updated);
 
-          // 触发形态进化弹窗 (Lv.5 或 Lv.10)
           if ((oldLevel < 5 && newLevel >= 5) || (oldLevel < 10 && newLevel >= 10)) {
             setTimeout(() => {
               this.setData({ showEvolutionModal: true });
@@ -440,7 +503,7 @@ Page({
 
     const quotes = [
       '吃饱饱，今天陪你一起燃脂！💪',
-      '我不运动，小家伙就没饭吃啦！快走两圈～🏃',
+      '我不自律，小家伙就没饭吃啦！快去打卡～🏃',
       '自律最酷啦，今天也要一起加油哦！🔥',
       '少油少盐多喝水，体态越来越棒啦！💧',
       '你今天超自律！本搭子超级开心～✨',
@@ -461,7 +524,14 @@ Page({
     }, 600);
   },
 
-  /* 勋章馆弹窗 */
+  /* 任务快捷跳转 */
+  onGoExercise() { wx.switchTab({ url: '/pages/index/index' }); },
+  onGoDiet() { wx.switchTab({ url: '/pages/index/index' }); },
+  onGoWater() { wx.switchTab({ url: '/pages/index/index' }); },
+  onGoWeight() { wx.switchTab({ url: '/pages/index/index' }); },
+  onGoHome() { wx.switchTab({ url: '/pages/index/index' }); },
+
+  /* 勋章馆 */
   onOpenBadgeModal() {
     const first = this.data.badgeList[0];
     this.setData({
@@ -484,7 +554,5 @@ Page({
     this.setData({ showEvolutionModal: false });
   },
 
-  noBubble() {},
-  onGoExercise() { wx.switchTab({ url: '/pages/index/index' }); },
-  onGoHome() { wx.switchTab({ url: '/pages/index/index' }); }
+  noBubble() {}
 });

@@ -47,6 +47,7 @@ public class DietServiceImpl implements DietService {
     private final UserRepository userRepository;
     private final PointsRecordRepository pointsRecordRepository;
     private final com.shike.repository.WeightRecordRepository weightRecordRepository;
+    private final com.shike.service.PetService petService;
     private final ObjectMapper objectMapper;
     private final StringRedisTemplate stringRedisTemplate;
     private final com.shike.service.AdminService adminService;
@@ -773,6 +774,11 @@ public class DietServiceImpl implements DietService {
         if (userId == null) return;
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) return;
+        if (user.isUnlimitedAiUser()) {
+            log.info("User {} [VIP: {}, AI Unlimited: {}] has unlimited AI recognition quota. Skip point deduction.",
+                    userId, user.getVipType(), user.getAiUnlimited());
+            return;
+        }
         int currentPoints = user.getPoints() != null ? user.getPoints() : 0;
         user.setPoints(Math.max(0, currentPoints - 5));
         userRepository.save(user);
@@ -987,7 +993,10 @@ public class DietServiceImpl implements DietService {
                 .orElseThrow(() -> new BizException(404, "用户不存在"));
 
         boolean hasDiagnosisBefore = pointsRecordRepository.existsByUserIdAndType(userId, "DIET_DIAGNOSIS");
-        if (hasDiagnosisBefore) {
+        if (user.isUnlimitedAiUser()) {
+            log.info("User {} [VIP: {}, AI Unlimited: {}] has unlimited AI diet diagnosis quota. Skip point deduction.",
+                    userId, user.getVipType(), user.getAiUnlimited());
+        } else if (hasDiagnosisBefore) {
             int currentPoints = (user.getPoints() != null) ? user.getPoints() : 0;
             if (currentPoints < 15) {
                 throw new BizException(400, "积分不足！生成 AI 深度营养诊断需要 15 积分，您当前剩余 " + currentPoints + " 积分。");
@@ -1533,6 +1542,13 @@ public class DietServiceImpl implements DietService {
                         .build());
         record.setWeight(weight);
         weightRecordRepository.save(record);
+        try {
+            if (petService != null) {
+                petService.awardPetFood(userId, "WEIGHT", date != null ? date : LocalDate.now());
+            }
+        } catch (Exception e) {
+            log.warn("Failed to award pet food for weight: {}", e.getMessage());
+        }
 
         // 始终同步刷新个人档案 User.weight 和目标卡路里
         if (user != null) {

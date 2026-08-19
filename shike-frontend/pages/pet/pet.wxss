@@ -1031,3 +1031,72 @@
   box-shadow: 0 8rpx 20rpx rgba(16, 185, 129, 0.35);
   border: none;
 }
+
+
+/* 签到按键 */
+.btn-3d-checkin {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  box-shadow: 0 8rpx 20rpx rgba(245, 158, 11, 0.35);
+}
+
+/* 赚粮任务中心卡片 */
+.food-tasks-card {
+  margin: 24rpx 32rpx;
+  padding: 28rpx 28rpx;
+  background: #FFFFFF;
+  border-radius: 28rpx;
+  box-shadow: 0 4rpx 16rpx rgba(15, 23, 42, 0.04);
+  border: 1rpx solid #E2E8F0;
+}
+
+.task-item-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.task-row {
+  background: #F8FAFC;
+  border: 1rpx solid #F1F5F9;
+  padding: 16rpx 20rpx;
+  border-radius: 20rpx;
+}
+
+.task-icon {
+  font-size: 40rpx;
+}
+
+.task-title {
+  font-size: 26rpx;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.task-reward {
+  font-size: 20rpx;
+  color: #64748B;
+  margin-top: 2rpx;
+}
+
+.btn-task {
+  margin: 0;
+  padding: 0 24rpx;
+  height: 58rpx;
+  line-height: 58rpx;
+  font-size: 22rpx;
+  font-weight: 800;
+  border-radius: 29rpx;
+}
+
+.btn-task.action {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: #FFFFFF;
+  box-shadow: 0 4rpx 10rpx rgba(16, 185, 129, 0.25);
+  border: none;
+}
+
+.btn-task.done {
+  background: #ECFDF5;
+  color: #059669;
+  border: 1rpx solid #A7F3D0;
+}

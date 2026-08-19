@@ -12,7 +12,8 @@ RUN mvn package -DskipTests --settings settings.xml
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/shike-backend-1.0.0.jar app.jar
-# JVM optimization (optimized for 2-core 4GB server)
-ENV JAVA_OPTS="-Xms256m -Xmx512m -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8"
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    JAVA_OPTS="-Xms256m -Xmx512m -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Duser.language=zh -Duser.country=CN"
 EXPOSE 8081
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

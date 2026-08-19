@@ -33,6 +33,41 @@ public class PlanController {
     }
 
     /**
+     * 实时流式生成接口 (SSE / Chunked 传输)
+     * 向小程序端实时推送大模型生成进度与事件 (application/x-ndjson)
+     */
+    @GetMapping(value = "/generate/stream")
+    public void generatePlanStream(
+            @RequestParam Long userId,
+            @RequestParam(defaultValue = "false") Boolean forceRefresh,
+            @RequestParam(defaultValue = "true") Boolean createIfAbsent,
+            @RequestParam(defaultValue = "GYM") String location,
+            jakarta.servlet.http.HttpServletResponse response) {
+        log.info("Request plan STREAM for userId: {}, forceRefresh: {}, createIfAbsent: {}, location: {}", userId, forceRefresh, createIfAbsent, location);
+        response.setContentType("application/x-ndjson;charset=UTF-8");
+        response.setHeader("Cache-Control", "no-cache, no-transform");
+        response.setHeader("Connection", "keep-alive");
+        response.setHeader("X-Accel-Buffering", "no"); // 禁用 Nginx 缓存，实现极速逐块透传
+
+        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+
+        try {
+            var outputStream = response.getOutputStream();
+            planService.generatePlanStream(userId, forceRefresh, createIfAbsent, location, eventMap -> {
+                try {
+                    String jsonLine = mapper.writeValueAsString(eventMap) + "\n";
+                    outputStream.write(jsonLine.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    outputStream.flush();
+                } catch (Exception e) {
+                    log.warn("Failed to write stream chunk to client for user {}: {}", userId, e.getMessage());
+                }
+            });
+        } catch (Exception e) {
+            log.error("Error in generatePlanStream for user {}", userId, e);
+        }
+    }
+
+    /**
      * 查询用户专属计划状态、是否首次免费、当前积分余额
      */
     @GetMapping("/status")

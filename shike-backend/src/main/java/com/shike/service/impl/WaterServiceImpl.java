@@ -19,6 +19,9 @@ public class WaterServiceImpl implements WaterService {
     @Autowired
     private WaterRecordRepository waterRecordRepository;
 
+    @Autowired
+    private com.shike.service.PetService petService;
+
     @Override
     @Transactional(readOnly = true)
     public WaterRecord getDailyRecord(Long userId, LocalDate date) {
@@ -41,7 +44,15 @@ public class WaterServiceImpl implements WaterService {
                         .amount(0)
                         .build());
         record.setAmount(record.getAmount() + amount);
-        return waterRecordRepository.save(record);
+        WaterRecord saved = waterRecordRepository.save(record);
+        try {
+            if (petService != null && record.getAmount() >= 200) {
+                petService.awardPetFood(userId, "WATER", date);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to award pet food for water: {}", e.getMessage());
+        }
+        return saved;
     }
 
     @Override
@@ -56,7 +67,15 @@ public class WaterServiceImpl implements WaterService {
                         .build());
         int newAmount = Math.max(0, record.getAmount() - amount);
         record.setAmount(newAmount);
-        return waterRecordRepository.save(record);
+        WaterRecord saved = waterRecordRepository.save(record);
+        try {
+            if (petService != null && record.getAmount() >= 200) {
+                petService.awardPetFood(userId, "WATER", date);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to award pet food for water: {}", e.getMessage());
+        }
+        return saved;
     }
 
     @Override

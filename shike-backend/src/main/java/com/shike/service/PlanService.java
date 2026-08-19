@@ -15,5 +15,7 @@ public interface PlanService {
     Map<String, Object> generateOrGetPlan(Long userId, Boolean forceRefresh, Boolean createIfAbsent);
     Map<String, Object> generateOrGetPlan(Long userId, Boolean forceRefresh, Boolean createIfAbsent, String location);
     
+    void generatePlanStream(Long userId, Boolean forceRefresh, Boolean createIfAbsent, String location, java.util.function.Consumer<Map<String, Object>> progressConsumer);
+
     Map<String, Object> getPlanStatus(Long userId);
 }

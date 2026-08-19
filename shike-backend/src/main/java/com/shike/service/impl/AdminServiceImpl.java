@@ -456,16 +456,20 @@ public class AdminServiceImpl implements AdminService {
         StringBuilder csv = new StringBuilder();
         // UTF-8 BOM to prevent Excel encoding issue
         csv.append("\uFEFF");
-        csv.append("用户ID,微信OpenID,用户昵称,性别,年龄,身高(cm),体重(kg),BMR(kcal),TDEE(kcal),目标摄入(kcal),契约积分,注册时间\n");
+        csv.append("用户ID,微信OpenID,用户昵称,会员等级,AI无限特权,会员到期时间,性别,年龄,身高(cm),体重(kg),BMR(kcal),TDEE(kcal),目标摄入(kcal),契约积分,注册时间\n");
 
         List<User> users = userRepository.findAll(Sort.by(Sort.Direction.DESC, "id"));
         for (User u : users) {
             String genderStr = u.getGender() != null && u.getGender() == 2 ? "女" : (u.getGender() != null && u.getGender() == 1 ? "男" : "未设置");
             String createdAt = u.getCreatedAt() != null ? u.getCreatedAt().toString().replace("T", " ") : "";
+            String vipExpireTime = u.getVipExpireTime() != null ? u.getVipExpireTime().toString().replace("T", " ") : "永不过期/无";
 
             csv.append(u.getId()).append(",")
                     .append(escapeCsv(u.getOpenid())).append(",")
                     .append(escapeCsv(u.getNickname() != null ? u.getNickname() : "微信用户")).append(",")
+                    .append(escapeCsv(u.getVipType() != null ? u.getVipType() : "NORMAL")).append(",")
+                    .append(Boolean.TRUE.equals(u.getAiUnlimited()) ? "是" : "否").append(",")
+                    .append(escapeCsv(vipExpireTime)).append(",")
                     .append(genderStr).append(",")
                     .append(u.getAge() != null ? u.getAge() : "").append(",")
                     .append(u.getHeight() != null ? u.getHeight() : "").append(",")
@@ -574,6 +578,45 @@ public class AdminServiceImpl implements AdminService {
                 .build());
 
         logAudit(adminUsername, "ADJUST_POINTS", String.valueOf(userId), "调整用户 [" + (user.getNickname() != null ? user.getNickname() : "微信用户") + "] 积分: " + (pointsDelta >= 0 ? "+" : "") + pointsDelta + "，备注: " + remark);
+    }
+
+    @Override
+    public void updateUserVip(Long userId, String vipType, Boolean aiUnlimited, Integer days, String adminUsername) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BizException(404, "用户不存在"));
+
+        String finalType = (vipType != null && !vipType.isBlank()) ? vipType.trim().toUpperCase() : "NORMAL";
+        user.setVipType(finalType);
+
+        if ("NORMAL".equals(finalType)) {
+            user.setVipExpireTime(null);
+            user.setAiUnlimited(Boolean.TRUE.equals(aiUnlimited));
+        } else if ("TEST".equals(finalType)) {
+            // 测试账号默认永久有效且开启无限 AI
+            user.setVipExpireTime(java.time.LocalDateTime.of(2099, 12, 31, 23, 59, 59));
+            user.setAiUnlimited(true);
+        } else {
+            // VIP 或 PRO 会员
+            int validDays = (days != null && days > 0) ? days : 30;
+            if (validDays >= 9999) {
+                user.setVipExpireTime(java.time.LocalDateTime.of(2099, 12, 31, 23, 59, 59));
+            } else {
+                user.setVipExpireTime(java.time.LocalDateTime.now().plusDays(validDays));
+            }
+            user.setAiUnlimited(aiUnlimited != null ? aiUnlimited : true);
+        }
+
+        userRepository.save(user);
+
+        String desc = String.format("配置用户 [%s] 会员权益: 等级=%s, AI无限特权=%s, 到期时间=%s",
+                (user.getNickname() != null ? user.getNickname() : "微信用户"),
+                user.getVipType(),
+                user.getAiUnlimited(),
+                user.getVipExpireTime() != null ? user.getVipExpireTime().toString().replace("T", " ") : "无/永不过期");
+
+        logAudit(adminUsername, "UPDATE_USER_VIP", String.valueOf(userId), desc);
+        log.info("Admin {} updated user {} VIP info: type={}, aiUnlimited={}, expire={}",
+                adminUsername, userId, user.getVipType(), user.getAiUnlimited(), user.getVipExpireTime());
     }
 
     @Override
@@ -1026,7 +1069,7 @@ public class AdminServiceImpl implements AdminService {
         
         java.util.Set<String> planOptions = stringRedisTemplate.opsForSet().members("shike:sys:config:ai_model_plan_options");
         if (planOptions == null || planOptions.isEmpty()) {
-            planOptions = new java.util.LinkedHashSet<>(java.util.List.of("qwen3.8-max", "qwen3.6-plus", "qwen3.6-flash", "qwen-max", "gpt-4o", "deepseek-chat"));
+            planOptions = new java.util.LinkedHashSet<>(java.util.List.of("qwen3.7-plus", "qwen-max", "qwen-plus", "qwen-turbo", "deepseek-chat", "gpt-4o"));
             for (String opt : planOptions) {
                 stringRedisTemplate.opsForSet().add("shike:sys:config:ai_model_plan_options", opt);
             }
@@ -1034,7 +1077,7 @@ public class AdminServiceImpl implements AdminService {
         
         java.util.Set<String> dietOptions = stringRedisTemplate.opsForSet().members("shike:sys:config:ai_model_diet_options");
         if (dietOptions == null || dietOptions.isEmpty()) {
-            dietOptions = new java.util.LinkedHashSet<>(java.util.List.of("qwen3.6-plus", "qwen3.6-flash", "qwen-vl-max", "qwen3.8-max", "glm-4v-flash"));
+            dietOptions = new java.util.LinkedHashSet<>(java.util.List.of("qwen3.7-plus", "qwen-plus", "qwen-vl-max", "qwen-max", "qwen-turbo"));
             for (String opt : dietOptions) {
                 stringRedisTemplate.opsForSet().add("shike:sys:config:ai_model_diet_options", opt);
             }

@@ -76,6 +76,15 @@ public class AdminController {
         return ResultDTO.success();
     }
 
+    @PostMapping({"/users/{userId}/vip", "/api/v1/admin/users/{userId}/vip"})
+    public ResultDTO<Void> updateUserVip(@PathVariable Long userId,
+                                         @RequestParam String vipType,
+                                         @RequestParam(required = false) Boolean aiUnlimited,
+                                         @RequestParam(required = false) Integer days) {
+        adminService.updateUserVip(userId, vipType, aiUnlimited, days, "admin");
+        return ResultDTO.success();
+    }
+
     @PostMapping({"/config/ai-limit", "/api/v1/admin/config/ai-limit"})
     public ResultDTO<Void> updateGlobalAiLimit(@RequestParam Integer limit) {
         adminService.updateGlobalAiLimit(limit, "admin");

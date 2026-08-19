@@ -1447,6 +1447,59 @@
     </div>
   </div>
 
+  <!-- User VIP and AI Quota Modal -->
+  <div class="modal-overlay" id="vipModal">
+    <div class="modal-box" style="width: 480px; max-width: 92vw; padding: 24px;">
+      <div class="modal-header" style="margin-bottom: 18px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(245, 158, 11, 0.15); color: #F59E0B; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+            <i class="fa-solid fa-crown"></i>
+          </div>
+          <div>
+            <h3 style="font-size: 16px; font-weight: 700; color: #FFF; margin: 0;">配置用户会员与 AI 权益</h3>
+            <span id="vipModalSubtitle" style="font-size: 12px; color: var(--text-muted);">为付费用户或测试人员配置专属特权</span>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeVipModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div style="margin-bottom: 16px;">
+        <label style="font-size: 13px; color: #E2E8F0; font-weight: 600; display: block; margin-bottom: 8px;">👑 会员等级 / 身份类型</label>
+        <select id="vipTypeSelect" onchange="onVipTypeChange()" style="width: 100%; background: rgba(15, 23, 42, 0.9); border: 1px solid var(--card-border); padding: 10px 14px; border-radius: 10px; color: #FFF; font-size: 14px; outline: none;">
+          <option value="NORMAL">普通用户 (NORMAL) - 按标准消耗积分</option>
+          <option value="VIP">VIP 会员 (VIP) - 享受无限 AI 与高级权益</option>
+          <option value="PRO">高级 PRO 会员 (PRO) - 享受顶级权益</option>
+          <option value="TEST">开发者 / 测试白名单账号 (TEST) - 终身无限特权</option>
+        </select>
+      </div>
+
+      <div id="vipDaysSection" style="margin-bottom: 16px;">
+        <label style="font-size: 13px; color: #E2E8F0; font-weight: 600; display: block; margin-bottom: 8px;">⏳ 会员有效时长</label>
+        <select id="vipDaysSelect" style="width: 100%; background: rgba(15, 23, 42, 0.9); border: 1px solid var(--card-border); padding: 10px 14px; border-radius: 10px; color: #FFF; font-size: 14px; outline: none;">
+          <option value="30">月卡 VIP (30 天)</option>
+          <option value="90">季卡 VIP (90 天)</option>
+          <option value="365">年卡 VIP (365 天)</option>
+          <option value="9999">终身 / 永久 VIP (永不过期)</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom: 20px; background: rgba(15, 23, 42, 0.6); padding: 14px; border-radius: 10px; border: 1px solid var(--card-border);">
+        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none;">
+          <input type="checkbox" id="aiUnlimitedCheckbox" style="width: 18px; height: 18px; accent-color: #10B981;">
+          <div>
+            <div style="font-size: 13px; font-weight: 700; color: #10B981;">⚡ 开启 AI 全功能无限免费使用 (AI Unlimited)</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">勾选后免除 AI 计划(100分)、AI识餐(5分)、AI诊断(15分)扣费</div>
+          </div>
+        </label>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn-action" onclick="closeVipModal()" style="background: transparent; border: 1px solid var(--card-border);">取消</button>
+        <button class="btn-action" onclick="submitVipConfig()" style="background: linear-gradient(135deg, #F59E0B, #D97706); font-weight: 700;"><i class="fa-solid fa-crown"></i> 保存权益配置</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Audit Log Modal -->
   <div class="modal-overlay" id="auditLogModal">
     <div class="modal-box" style="width: 840px; max-width: 95vw; padding: 24px;">
@@ -2638,11 +2691,23 @@
           ? '<span style="background:rgba(239, 68, 68, 0.15); color:#F87171; border:1px solid rgba(239, 68, 68, 0.3); padding:3px 8px; border-radius:10px; font-size:11px;"><i class="fa-solid fa-user-slash"></i> 已封禁</span>'
           : '<span style="background:rgba(16, 185, 129, 0.15); color:#34D399; border:1px solid rgba(16, 185, 129, 0.3); padding:3px 8px; border-radius:10px; font-size:11px;"><i class="fa-solid fa-user-check"></i> 正常</span>';
 
+        // 会员权益徽标
+        let vipBadge = '';
+        if (u.vipType === 'TEST') {
+          vipBadge = '<span style="background:rgba(16, 185, 129, 0.2); color:#34D399; border:1px solid rgba(16, 185, 129, 0.4); font-size:10px; padding:1px 6px; border-radius:6px; font-weight:700; margin-left:4px;"><i class="fa-solid fa-flask"></i> 测试特权</span>';
+        } else if (u.vipType === 'VIP' || u.vipType === 'PRO') {
+          vipBadge = `<span style="background:rgba(245, 158, 11, 0.2); color:#FBBF24; border:1px solid rgba(245, 158, 11, 0.4); font-size:10px; padding:1px 6px; border-radius:6px; font-weight:700; margin-left:4px;"><i class="fa-solid fa-crown"></i> ${u.vipType}</span>`;
+        } else if (u.aiUnlimited) {
+          vipBadge = '<span style="background:rgba(59, 130, 246, 0.2); color:#60A5FA; border:1px solid rgba(59, 130, 246, 0.4); font-size:10px; padding:1px 6px; border-radius:6px; font-weight:700; margin-left:4px;"><i class="fa-solid fa-bolt"></i> AI无限</span>';
+        }
+
         const banBtn = isBanned
           ? `<button class="btn-action" onclick="toggleUserStatus(${u.id}, 'DISABLED', '${nickname}')" style="background:rgba(16, 185, 129, 0.2); color:#34D399; border:1px solid rgba(16, 185, 129, 0.4); font-size:11px; padding:3px 6px;"><i class="fa-solid fa-unlock"></i> 解封</button>`
           : `<button class="btn-action" onclick="toggleUserStatus(${u.id}, 'ENABLED', '${nickname}')" style="background:rgba(239, 68, 68, 0.2); color:#F87171; border:1px solid rgba(239, 68, 68, 0.4); font-size:11px; padding:3px 6px;"><i class="fa-solid fa-ban"></i> 禁用</button>`;
 
         const pointBtn = `<button class="btn-action" onclick="openPointsModal(${u.id}, '${nickname}', ${u.points || 0})" style="background:rgba(245, 158, 11, 0.2); color:#FBBF24; border:1px solid rgba(245, 158, 11, 0.4); font-size:11px; padding:3px 6px;"><i class="fa-solid fa-coins"></i> 积分</button>`;
+
+        const vipBtn = `<button class="btn-action" onclick="openVipModal(${u.id}, '${nickname}', '${u.vipType || 'NORMAL'}', ${u.aiUnlimited === true}, '${u.vipExpireTime || ''}')" style="background:rgba(139, 92, 246, 0.2); color:#C4B5FD; border:1px solid rgba(139, 92, 246, 0.4); font-size:11px; padding:3px 6px;"><i class="fa-solid fa-crown"></i> 权益</button>`;
 
         return `
           <tr>
@@ -2650,7 +2715,7 @@
               <div class="user-cell">
                 <img src="${avatar}" class="user-avatar" title="点击放大预览头像" onclick="previewAvatar('${u.avatarUrl || ''}', '${nickname}')" onerror="this.src='https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0'">
                 <div>
-                  <div class="user-name">${nickname}${activeBadge}</div>
+                  <div class="user-name">${nickname}${activeBadge}${vipBadge}</div>
                   <div class="user-id-badge">ID: ${u.id}</div>
                 </div>
               </div>
@@ -2667,6 +2732,7 @@
                 <button class="btn-action" onclick="viewUserDetail(${u.id})" style="font-size:11px; padding:3px 8px; background:linear-gradient(135deg, #10B981, #059669);">
                   <i class="fa-solid fa-chart-line"></i> 明细
                 </button>
+                ${vipBtn}
                 ${banBtn}
                 ${pointBtn}
               </div>
@@ -3029,6 +3095,64 @@
           loadDashboard();
         } else {
           alert('积分调整失败: ' + (res.message || '系统错误'));
+        }
+      } catch (e) {
+        alert('网络请求异常');
+      }
+    }
+
+    // 2.5 用户会员与 AI 权益配置
+    let currentVipUserId = null;
+
+    function openVipModal(userId, nickname, vipType, aiUnlimited, expireTime) {
+      currentVipUserId = userId;
+      document.getElementById('vipModalSubtitle').innerText = `针对用户 [ ${nickname} ] (ID: ${userId}) 配置会员等级与 AI 专属特权`;
+      
+      const typeSelect = document.getElementById('vipTypeSelect');
+      typeSelect.value = vipType || 'NORMAL';
+      
+      const aiCheckbox = document.getElementById('aiUnlimitedCheckbox');
+      aiCheckbox.checked = (aiUnlimited === true || vipType === 'TEST');
+
+      onVipTypeChange();
+      document.getElementById('vipModal').classList.add('active');
+    }
+
+    function closeVipModal() {
+      document.getElementById('vipModal').classList.remove('active');
+    }
+
+    function onVipTypeChange() {
+      const type = document.getElementById('vipTypeSelect').value;
+      const daysSection = document.getElementById('vipDaysSection');
+      const aiCheckbox = document.getElementById('aiUnlimitedCheckbox');
+
+      if (type === 'NORMAL') {
+        daysSection.style.display = 'none';
+      } else if (type === 'TEST') {
+        daysSection.style.display = 'none';
+        aiCheckbox.checked = true;
+      } else {
+        daysSection.style.display = 'block';
+        aiCheckbox.checked = true;
+      }
+    }
+
+    async function submitVipConfig() {
+      if (!currentVipUserId) return;
+      const vipType = document.getElementById('vipTypeSelect').value;
+      const days = parseInt(document.getElementById('vipDaysSelect').value) || 30;
+      const aiUnlimited = document.getElementById('aiUnlimitedCheckbox').checked;
+
+      try {
+        const url = `/api/v1/admin/users/${currentVipUserId}/vip?vipType=${vipType}&aiUnlimited=${aiUnlimited}&days=${days}`;
+        const res = await authFetch(url, { method: 'POST' }).then(r => r.json());
+        if (res.code === 200) {
+          alert('👑 用户会员与 AI 权益配置成功！即时生效。');
+          closeVipModal();
+          loadDashboard();
+        } else {
+          alert('配置失败: ' + (res.message || '系统错误'));
         }
       } catch (e) {
         alert('网络请求异常');

@@ -103,7 +103,7 @@ public class PetServiceImpl implements PetService {
                 .exp(0)
                 .fullness(60)
                 .intimacy(10)
-                .foodCount(1) // 初始赠送 1 份食物，提升初次体验
+                .foodCount(1) // 初始赠送 1 份食物
                 .mood("NORMAL")
                 .streakDays(1)
                 .build();
@@ -122,7 +122,7 @@ public class PetServiceImpl implements PetService {
 
         int currentFood = pet.getFoodCount() != null ? pet.getFoodCount() : 0;
         if (currentFood <= 0) {
-            throw new BizException(400, "暂无可投喂的食物，去完成一次运动打卡带回健康食物吧！");
+            throw new BizException(400, "暂无可投喂的食物，去完成运动、记录饮食或每日签到赚取食物吧！");
         }
 
         LocalDate today = LocalDate.now();
@@ -171,22 +171,78 @@ public class PetServiceImpl implements PetService {
     @Override
     @Transactional
     public boolean awardExerciseFood(Long userId, LocalDate date) {
+        return awardPetFood(userId, "EXERCISE", date);
+    }
+
+    @Override
+    @Transactional
+    public boolean awardPetFood(Long userId, String source, LocalDate date) {
         Pet pet = petRepository.findByUserId(userId).orElse(null);
         if (pet == null) {
             return false;
         }
 
         LocalDate targetDate = date != null ? date : LocalDate.now();
-        if (pet.getLastExerciseDate() != null && pet.getLastExerciseDate().equals(targetDate)) {
-            log.info("User {} already claimed exercise food reward for today: {}", userId, targetDate);
-            return false; // 今日已发过食物
+        String sourceUpper = source != null ? source.toUpperCase() : "GENERAL";
+        String redisKey = "pet:food_reward:" + userId + ":" + sourceUpper + ":" + targetDate;
+
+        // 检查今日是否已通过该渠道获得过食物
+        try {
+            Boolean isNew = stringRedisTemplate.opsForValue().setIfAbsent(redisKey, "1", Duration.ofDays(2));
+            if (Boolean.FALSE.equals(isNew)) {
+                log.info("User {} already claimed {} food reward for today: {}", userId, sourceUpper, targetDate);
+                return false;
+            }
+        } catch (Exception e) {
+            log.warn("Redis check failed, fallback: {}", e.getMessage());
         }
 
         pet.setFoodCount((pet.getFoodCount() != null ? pet.getFoodCount() : 0) + 1);
-        pet.setLastExerciseDate(targetDate);
+        if ("EXERCISE".equals(sourceUpper)) {
+            pet.setLastExerciseDate(targetDate);
+        }
         petRepository.save(pet);
-        log.info("Awarded 1 exercise food to pet of userId={}", userId);
+        log.info("Awarded 1 pet food to userId={} from source={}", userId, sourceUpper);
         return true;
+    }
+
+    @Override
+    @Transactional
+    public Map<String, Object> checkin(Long userId) {
+        checkPetFeatureEnabled();
+        Pet pet = petRepository.findByUserId(userId)
+                .orElseThrow(() -> new BizException(404, "尚未领养自律搭子，请先领养一只吧！"));
+
+        LocalDate today = LocalDate.now();
+        boolean rewarded = awardPetFood(userId, "CHECKIN", today);
+
+        Map<String, Object> res = new HashMap<>();
+        res.put("success", rewarded);
+        res.put("message", rewarded ? "签到成功！已获得 1 份营养粮 🍎" : "今天已经签到过啦，明天继续哦！");
+        res.put("foodCount", pet.getFoodCount());
+        return res;
+    }
+
+    @Override
+    public Map<String, Object> getTodayFoodTasks(Long userId) {
+        LocalDate today = LocalDate.now();
+        Map<String, Object> res = new HashMap<>();
+
+        String[] sources = {"CHECKIN", "EXERCISE", "DIET", "WATER", "WEIGHT"};
+        Map<String, Boolean> taskStatus = new HashMap<>();
+
+        for (String s : sources) {
+            String key = "pet:food_reward:" + userId + ":" + s + ":" + today;
+            boolean completed = false;
+            try {
+                completed = Boolean.TRUE.equals(stringRedisTemplate.hasKey(key));
+            } catch (Exception e) {}
+            taskStatus.put(s.toLowerCase(), completed);
+        }
+
+        res.put("tasks", taskStatus);
+        res.put("date", today.toString());
+        return res;
     }
 
     @Override
@@ -251,10 +307,7 @@ public class PetServiceImpl implements PetService {
                 )
         );
 
-        HttpClient client = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(15))
-                .build();
-
+        HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(submitUrl))
                 .header("Content-Type", "application/json")
@@ -265,74 +318,50 @@ public class PetServiceImpl implements PetService {
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() != 200) {
-            log.warn("Wanx submit failed: code={}, body={}", response.statusCode(), response.body());
-            return null;
+            throw new RuntimeException("Wanx task submission failed: " + response.body());
         }
 
-        Map<String, Object> resMap = objectMapper.readValue(response.body(), Map.class);
-        Map<String, Object> output = (Map<String, Object>) resMap.get("output");
-        if (output == null || output.get("task_id") == null) {
-            return null;
-        }
-
+        Map<?, ?> resMap = objectMapper.readValue(response.body(), Map.class);
+        Map<?, ?> output = (Map<?, ?>) resMap.get("output");
         String taskId = (String) output.get("task_id");
-        String taskUrl = "https://dashscope.aliyuncs.com/api/v1/tasks/" + taskId;
 
-        // Poll task for up to 30s
-        for (int i = 0; i < 15; i++) {
-            Thread.sleep(2000);
-            HttpRequest pollReq = HttpRequest.newBuilder()
+        String taskUrl = "https://dashscope.aliyuncs.com/api/v1/tasks/" + taskId;
+        for (int i = 0; i < 20; i++) {
+            Thread.sleep(1500);
+            HttpRequest queryReq = HttpRequest.newBuilder()
                     .uri(URI.create(taskUrl))
                     .header("Authorization", "Bearer " + aiApiKey)
                     .GET()
                     .build();
-            HttpResponse<String> pollRes = client.send(pollReq, HttpResponse.BodyHandlers.ofString());
-            if (pollRes.statusCode() == 200) {
-                Map<String, Object> pollMap = objectMapper.readValue(pollRes.body(), Map.class);
-                Map<String, Object> pollOutput = (Map<String, Object>) pollMap.get("output");
-                if (pollOutput != null) {
-                    String status = (String) pollOutput.get("task_status");
-                    if ("SUCCEEDED".equals(status)) {
-                        List<Map<String, Object>> results = (List<Map<String, Object>>) pollOutput.get("results");
-                        if (results != null && !results.isEmpty()) {
-                            return (String) results.get(0).get("url");
-                        }
-                    } else if ("FAILED".equals(status) || "CANCELED".equals(status)) {
-                        break;
-                    }
+            HttpResponse<String> queryRes = client.send(queryReq, HttpResponse.BodyHandlers.ofString());
+            Map<?, ?> queryMap = objectMapper.readValue(queryRes.body(), Map.class);
+            Map<?, ?> queryOutput = (Map<?, ?>) queryMap.get("output");
+            String taskStatus = (String) queryOutput.get("task_status");
+
+            if ("SUCCEEDED".equals(taskStatus)) {
+                List<?> results = (List<?>) queryOutput.get("results");
+                if (results != null && !results.isEmpty()) {
+                    Map<?, ?> firstRes = (Map<?, ?>) results.get(0);
+                    return (String) firstRes.get("url");
                 }
+            } else if ("FAILED".equals(taskStatus)) {
+                throw new RuntimeException("Wanx task failed: " + queryRes.body());
             }
         }
         return null;
     }
 
     private PetDTO convertToDTO(Pet pet, Long userId) {
-        LocalDate today = LocalDate.now();
-        boolean fedToday = pet.getLastFeedDate() != null && pet.getLastFeedDate().equals(today);
-        boolean exercisedToday = exerciseRecordRepository.existsByUserIdAndRecordDate(userId, today);
-
-        // 动态计算心情状态
-        String mood;
-        String moodText;
-        if (fedToday) {
-            mood = "HAPPY";
-            moodText = "它吃得饱饱的，正在陪你一起变轻变强！✨";
-        } else if (pet.getFullness() != null && pet.getFullness() < 30) {
-            mood = "HUNGRY";
-            moodText = "咕噜噜～小肚子饿了，快去运动带回食物吧～🍖";
-        } else if (!exercisedToday) {
-            mood = "WANT_EXERCISE";
-            moodText = "今天还没动一动呢，带我一起去活动一下吧！🏃";
-        } else {
-            mood = "NORMAL";
-            moodText = "元气满满，期待今天的健康挑战！🌱";
-        }
-
-        // 挑选台词
-        String dialogue = getRandomDialogue(pet.getPetType(), mood, fedToday, exercisedToday);
-
+        int exp = pet.getExp() != null ? pet.getExp() : 0;
         int level = pet.getLevel() != null ? pet.getLevel() : 1;
         int maxExp = level * 50;
+
+        String dialogue = "今天也是充满活力的一天！一起来自律打卡吧～";
+        if ("HUNGRY".equals(pet.getMood())) {
+            dialogue = "肚子有点咕咕叫啦，记得运动打卡给我带点好吃的哦～";
+        } else if ("HAPPY".equals(pet.getMood())) {
+            dialogue = "吃饱饱超满足！今天也要元气满满哦～";
+        }
 
         return PetDTO.builder()
                 .id(pet.getId())
@@ -340,40 +369,26 @@ public class PetServiceImpl implements PetService {
                 .name(pet.getName())
                 .petType(pet.getPetType())
                 .avatarUrl(pet.getAvatarUrl())
-                .prompt(pet.getPrompt())
                 .level(level)
-                .exp(pet.getExp() != null ? pet.getExp() : 0)
+                .exp(exp)
                 .maxExp(maxExp)
                 .fullness(pet.getFullness() != null ? pet.getFullness() : 60)
                 .intimacy(pet.getIntimacy() != null ? pet.getIntimacy() : 10)
                 .foodCount(pet.getFoodCount() != null ? pet.getFoodCount() : 0)
-                .mood(mood)
-                .moodText(moodText)
-                .dialogue(dialogue)
+                .mood(pet.getMood() != null ? pet.getMood() : "NORMAL")
+                .moodText(getMoodText(pet.getMood()))
                 .streakDays(pet.getStreakDays() != null ? pet.getStreakDays() : 1)
-                .fedToday(fedToday)
-                .exercisedToday(exercisedToday)
-                .lastFeedDate(pet.getLastFeedDate())
-                .lastExerciseDate(pet.getLastExerciseDate())
+                .dialogue(dialogue)
                 .build();
     }
 
-    private String getRandomDialogue(String petType, String mood, boolean fedToday, boolean exercisedToday) {
-        List<String> pool = new ArrayList<>();
-        if ("HAPPY".equals(mood)) {
-            pool.add("吃得饱饱，今天陪你一起燃脂！💪");
-            pool.add("本搭子宣布：你今天超自律！🌟");
-            pool.add("今天又多消耗了卡路里，我们都在变强！✨");
-        } else if ("HUNGRY".equals(mood)) {
-            pool.add("咕噜噜～肚子好饿，快去运动带回健康粮吧！🍖");
-            pool.add("我不运动，小家伙就没饭吃啦！快走两圈～🏃");
-        } else if ("WANT_EXERCISE".equals(mood)) {
-            pool.add("今天还没去运动呢，带我一起去公园散散步吧！🐾");
-            pool.add("深蹲还是跑步？只要动起来，我就能吃到水果啦！🍎");
-        } else {
-            pool.add("自律最酷啦，今天也要一起加油哦！🔥");
-            pool.add("少油少盐多喝水，体态越来越棒啦！💧");
-        }
-        return pool.get(new Random().nextInt(pool.size()));
+    private String getMoodText(String mood) {
+        if (mood == null) return "悠然自得";
+        return switch (mood) {
+            case "HAPPY" -> "开心雀跃";
+            case "HUNGRY" -> "饥肠辘辘";
+            case "WANT_EXERCISE" -> "渴望运动";
+            default -> "悠然自得";
+        };
     }
 }

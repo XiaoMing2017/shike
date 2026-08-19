@@ -35,9 +35,19 @@ public class PetController {
         return ResultDTO.success(petService.feedPet(userId));
     }
 
+    @PostMapping("/checkin")
+    public ResultDTO<Map<String, Object>> checkin(@RequestParam Long userId) {
+        return ResultDTO.success(petService.checkin(userId));
+    }
+
+    @GetMapping("/food-tasks")
+    public ResultDTO<Map<String, Object>> getTodayFoodTasks(@RequestParam Long userId) {
+        return ResultDTO.success(petService.getTodayFoodTasks(userId));
+    }
+
     @PostMapping("/claim-reward")
     public ResultDTO<Boolean> claimExerciseReward(@RequestParam Long userId) {
-        boolean claimed = petService.awardExerciseFood(userId, LocalDate.now());
+        boolean claimed = petService.awardPetFood(userId, "EXERCISE", LocalDate.now());
         return ResultDTO.success(claimed);
     }
 
