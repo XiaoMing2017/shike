@@ -916,10 +916,40 @@
 
       <!-- 原生可滑动滚动容器 -->
       <scroll-view class="plan-modal-body" scroll-y="true" enhanced="true" show-scrollbar="false">
+        <!-- 🌀 科技感动态演播 Loading 容器 -->
         <view class="plan-loading-box flex flex-col align-center justify-center" wx:if="{{planLoading}}">
-          <text class="loading-icon" style="font-size: 54rpx; margin-bottom: 16rpx;">🤖</text>
-          <text style="font-size: 26rpx; color: #475569; font-weight: 600;">顶级专家 AI 正在根据您的档案推算计划...</text>
-          <text style="font-size: 22rpx; color: #94A3B8; margin-top: 8rpx;">遵守 RD/CSCS 知识库准则 · 匹配 Zone2 有氧与抗阻容量</text>
+          <!-- 呼吸光环能量球 -->
+          <view class="glowing-ai-orb-wrap">
+            <view class="glowing-ai-orb-ring"></view>
+            <view class="glowing-ai-orb-core">
+              <text class="orb-icon">🧠</text>
+            </view>
+          </view>
+          
+          <!-- 步骤状态徽标 -->
+          <view class="plan-loading-badge">
+            <text class="pulsing-dot"></text>
+            <text>推算阶段 {{planLoadingStepNum}} / 7 · AI 深度演算中</text>
+          </view>
+          
+          <!-- 步骤标题与副标题 -->
+          <text class="plan-loading-step-title">{{planLoadingStepTitle}}</text>
+          <text class="plan-loading-step-desc">{{planLoadingStepDesc}}</text>
+          
+          <!-- 动态进度条 -->
+          <view class="plan-progress-bar-wrap">
+            <view class="plan-progress-bar-fill" style="width: {{planLoadingProgress}}%;"></view>
+          </view>
+          <view class="plan-progress-meta flex justify-between align-center">
+            <text class="plan-progress-text">模型深度推理进度</text>
+            <text class="plan-progress-pct">{{planLoadingProgress}}%</text>
+          </view>
+
+          <!-- 底部防离开提示 -->
+          <view class="plan-loading-tip-card flex align-center">
+            <text style="margin-right: 8rpx; font-size: 24rpx;">💡</text>
+            <text>大模型正在深度定制 28 餐食谱与动作库，约需 20~35 秒，请稍候勿退出哦~</text>
+          </view>
         </view>
 
         <block wx:elif="{{!planData}}">
@@ -1128,7 +1158,7 @@
         </block>
       </scroll-view>
 
-      <view class="plan-footer-actions flex justify-between align-center">
+      <view class="plan-footer-actions flex justify-between align-center" wx:if="{{!planLoading}}">
         <button class="btn-refresh-plan" catchtap="onRefreshPlan" wx:if="{{planData}}">🤖 重新定制 (100积分)</button>
         <button class="btn-close-plan" catchtap="closePlanModal" style="{{!planData ? 'width: 100%;' : ''}}">完成</button>
       </view>
@@ -1262,5 +1292,48 @@
       </view>
     </view>
   </view>
+
+  <!-- 📸 晒餐与打卡海报生成弹窗 -->
+  <view class="modal-backdrop {{showPosterModal ? 'active' : ''}}" catchtap="closePosterModal" catchtouchmove="preventBubble" wx:if="{{showPosterModal}}">
+    <view class="modal-dialog poster-dialog" catchtap="preventBubble">
+      <view class="modal-header">
+        <text class="modal-title">📸 晒餐卡路里海报</text>
+        <text class="modal-close" catchtap="closePosterModal">✕</text>
+      </view>
+      
+      <!-- 海报样式切换 -->
+      <view class="poster-tabs">
+        <view class="poster-tab {{activeTemplate === 'morandi' ? 'active' : ''}}" catchtap="switchTemplate" data-template="morandi">🌿 莫兰迪极简</view>
+        <view class="poster-tab {{activeTemplate === 'vogue' ? 'active' : ''}}" catchtap="switchTemplate" data-template="vogue">📸 杂志封面</view>
+        <view class="poster-tab {{activeTemplate === 'receipt' ? 'active' : ''}}" catchtap="switchTemplate" data-template="receipt">🧾 热量账单</view>
+      </view>
+
+      <!-- 📷 自定义照片选择操作区 -->
+      <view class="poster-photo-picker">
+        <view class="photo-pick-btn" catchtap="onChangePosterPhoto">
+          <text>{{posterFoodImg ? '🔄 更换美食照片' : '📷 上传美食照片'}}</text>
+        </view>
+        <view class="photo-pick-btn" catchtap="onRemovePosterPhoto" wx:if="{{posterFoodImg}}" style="color: #EF4444; border-color: rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.08);">
+          <text>✕ 恢复默认</text>
+        </view>
+      </view>
+
+      <view class="poster-preview-container">
+        <image class="poster-preview-img" src="{{tempPosterPath}}" mode="aspectFit" wx:if="{{tempPosterPath}}" />
+        <view class="empty-tip flex flex-col align-center justify-center" wx:else>
+          <text style="font-size: 40rpx; margin-bottom: 10rpx;">🎨</text>
+          <text style="font-size: 24rpx; color: #94A3B8;">海报正在绘制中...</text>
+        </view>
+      </view>
+      <view class="poster-action-buttons">
+        <view class="poster-btn save" catchtap="savePosterToAlbum">💾 保存海报</view>
+        <button class="poster-btn share" open-type="share">✉️ 发给好友</button>
+        <view class="poster-btn timeline" catchtap="savePosterToAlbum">📸 发朋友圈</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 离屏 Canvas 画布 (生成海报核心) -->
+  <canvas type="2d" id="posterCanvas" style="width: 375px; height: 500px; position: fixed; left: -9999px; top: -9999px;" width="750" height="1000"></canvas>
 
 </view>

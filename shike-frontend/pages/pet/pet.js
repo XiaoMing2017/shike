@@ -64,6 +64,56 @@ const TYPE_CONFIG = {
   }
 };
 
+const SCENE_CONFIG = {
+  ROOM: {
+    key: 'ROOM',
+    icon: '🏡',
+    name: '🌿 日式原木阳光小屋',
+    shortName: '阳光小屋',
+    image: '/images/scenes/scene_room.jpg',
+    motto: '温馨客厅 · 铺上瑜伽垫一起自律打卡',
+    waypoints: [
+      { x: 48, y: 58 }, // 地毯中心
+      { x: 32, y: 52 }, // 窗边绿植
+      { x: 64, y: 50 }, // 沙发边
+      { x: 68, y: 70 }  // 瑜伽垫
+    ],
+    foodBowlPos: { x: 74, y: 72 }
+  },
+  ISLAND: {
+    key: 'ISLAND',
+    icon: '☁️',
+    name: '☁️ 云端仙境浮空岛',
+    shortName: '仙境空岛',
+    image: '/images/scenes/scene_island.jpg',
+    motto: '奇幻空岛 · 沐浴云端阳光与花海',
+    waypoints: [
+      { x: 42, y: 44 }, // 花坡草坪
+      { x: 54, y: 38 }, // 果树下
+      { x: 66, y: 58 }, // 泉水边
+      { x: 30, y: 68 }  // 石阶木桥
+    ],
+    foodBowlPos: { x: 32, y: 66 }
+  },
+  YARD: {
+    key: 'YARD',
+    icon: '☀️',
+    name: '☀️ 阳光运动露台花园',
+    shortName: '运动露台',
+    image: '/images/scenes/scene_yard.jpg',
+    motto: '活力庭院 · 跑步机与喷泉花园',
+    waypoints: [
+      { x: 58, y: 60 }, // 草坪中心
+      { x: 32, y: 66 }, // 跑步机旁
+      { x: 72, y: 52 }, // 喷泉花丛
+      { x: 38, y: 50 }  // 砖石露台
+    ],
+    foodBowlPos: { x: 26, y: 56 }
+  }
+};
+
+let lifeLoopTimer = null;
+
 Page({
   data: {
     loading: true,
@@ -75,9 +125,21 @@ Page({
     petName: '木木',
     adopting: false,
     isFeeding: false,
-    isTouched: false,
     heartAnim: false,
     foodIcon: '🍎',
+    
+    // 3D 沉浸式场景与活体漫步坐标系统
+    currentScene: 'ROOM',
+    currentSceneInfo: SCENE_CONFIG['ROOM'],
+    sceneList: [SCENE_CONFIG['ROOM'], SCENE_CONFIG['ISLAND'], SCENE_CONFIG['YARD']],
+    showSceneModal: false,
+    
+    petPosX: 48,
+    petPosY: 58,
+    facingRight: true,
+    motionState: 'idle', // 'idle' | 'walking' | 'eating' | 'happy'
+    motionStateText: '悠闲发呆',
+
     candidateNames: ['木木', '小燃', '豆豆', '卡卡', '饭团'],
     types: [
       { type: 'DRAGON', icon: '🐉', name: '小幼龙' },
@@ -89,24 +151,36 @@ Page({
   },
 
   onLoad(options) {
+    const savedScene = wx.getStorageSync('user_pet_scene') || 'ROOM';
+    const sceneInfo = SCENE_CONFIG[savedScene] || SCENE_CONFIG['ROOM'];
+    this.setData({
+      currentScene: savedScene,
+      currentSceneInfo: sceneInfo,
+      petPosX: sceneInfo.waypoints[0].x,
+      petPosY: sceneInfo.waypoints[0].y
+    });
+
     this.checkToggleAndLoad();
-    this.updateCustomTabBar();
   },
 
   onShow() {
     this.checkToggleAndLoad();
     this.updateCustomTabBar();
+    this.startLivingMotionLoop();
   },
 
-  onPullDownRefresh() {
-    this.checkToggleAndLoad(() => {
-      wx.stopPullDownRefresh();
-    });
+  onHide() {
+    this.stopLivingMotionLoop();
   },
 
-  onRefreshPage() {
-    this.checkToggleAndLoad();
-    this.updateCustomTabBar();
+  onUnload() {
+    this.stopLivingMotionLoop();
+  },
+
+  updateCustomTabBar() {
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().updateTabs('pages/pet/pet', (app && app.globalData && app.globalData.features));
+    }
   },
 
   checkToggleAndLoad(callback) {
@@ -131,7 +205,6 @@ Page({
             return;
           }
         }
-        // If enabled, load pet info
         app.login((user) => {
           this.fetchPetInfo(callback);
         });
@@ -142,13 +215,6 @@ Page({
         });
       }
     });
-  },
-
-
-  updateCustomTabBar() {
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().updateTabs('pages/pet/pet', (app && app.globalData && app.globalData.features));
-    }
   },
 
   fetchPetInfo(callback) {
@@ -172,8 +238,8 @@ Page({
             foodIcon: info.food || '🍎',
             loading: false
           });
+          this.startLivingMotionLoop();
         } else if (res.data && res.data.code === 403) {
-          // 云端开关下架
           this.setData({
             petSystemEnabled: false,
             loading: false
@@ -194,6 +260,136 @@ Page({
         if (callback) callback();
       }
     });
+  },
+
+  /* ================= 3D 活体自主漫步与行为状态机 ================= */
+  startLivingMotionLoop() {
+    this.stopLivingMotionLoop();
+    if (!this.data.hasPet) return;
+
+    lifeLoopTimer = setInterval(() => {
+      if (this.data.isFeeding || this.data.motionState === 'happy') return;
+
+      const scene = this.data.currentSceneInfo;
+      const waypoints = scene.waypoints || [];
+      if (waypoints.length === 0) return;
+
+      // 随机挑选下一个漫步路径点
+      const nextIdx = Math.floor(Math.random() * waypoints.length);
+      const targetPoint = waypoints[nextIdx];
+
+      const currentX = this.data.petPosX;
+      const facingRight = targetPoint.x >= currentX;
+
+      // 切换为漫步状态并移动
+      this.setData({
+        facingRight: facingRight,
+        motionState: 'walking',
+        motionStateText: '悠闲漫步中 🚶',
+        petPosX: targetPoint.x,
+        petPosY: targetPoint.y
+      });
+
+      // 走动 1.8 秒后停下恢复待机
+      setTimeout(() => {
+        if (this.data.motionState === 'walking') {
+          const idleTexts = ['东张西望 👀', '伸懒腰 🐱', '发呆晒太阳 ☀️', '摇摇尾巴 🐾'];
+          const randomIdle = idleTexts[Math.floor(Math.random() * idleTexts.length)];
+          this.setData({
+            motionState: 'idle',
+            motionStateText: randomIdle
+          });
+        }
+      }, 1900);
+
+    }, 8500); // 每 8.5 秒执行一次自主漫步
+  },
+
+  stopLivingMotionLoop() {
+    if (lifeLoopTimer) {
+      clearInterval(lifeLoopTimer);
+      lifeLoopTimer = null;
+    }
+  },
+
+  /* 点击场景地面引导宠物走动 */
+  onTapSceneGround(e) {
+    if (!this.data.hasPet || this.data.isFeeding) return;
+
+    // 微信小程序点击坐标转百分比
+    const query = wx.createSelectorQuery();
+    query.select('.virtual-3d-world-scene').boundingClientRect(rect => {
+      if (!rect) return;
+      const touch = (e.touches && e.touches[0]) || e.detail;
+      const clickX = touch.x || touch.clientX;
+      const clickY = touch.y || touch.clientY;
+
+      const relX = ((clickX - rect.left) / rect.width) * 100;
+      const relY = ((clickY - rect.top) / rect.height) * 100;
+
+      // 限制在安全地面活动范围 (20% ~ 80%)
+      const clampedX = Math.max(22, Math.min(78, relX));
+      const clampedY = Math.max(40, Math.min(76, relY));
+
+      const facingRight = clampedX >= this.data.petPosX;
+
+      this.setData({
+        facingRight: facingRight,
+        motionState: 'walking',
+        motionStateText: '跑向新地点 🐾',
+        petPosX: clampedX,
+        petPosY: clampedY
+      });
+
+      wx.vibrateShort({ type: 'light' });
+
+      setTimeout(() => {
+        if (this.data.motionState === 'walking') {
+          this.setData({
+            motionState: 'idle',
+            motionStateText: '好奇观察中'
+          });
+        }
+      }, 1900);
+    }).exec();
+  },
+
+  /* 场景切换 */
+  onSelectScene(e) {
+    const key = e.currentTarget.dataset.key;
+    this.applyScene(key);
+  },
+
+  onSelectSceneFromModal(e) {
+    const key = e.currentTarget.dataset.key;
+    this.applyScene(key);
+    this.onCloseSceneModal();
+  },
+
+  applyScene(key) {
+    const sceneInfo = SCENE_CONFIG[key] || SCENE_CONFIG['ROOM'];
+    wx.setStorageSync('user_pet_scene', key);
+    this.setData({
+      currentScene: key,
+      currentSceneInfo: sceneInfo,
+      petPosX: sceneInfo.waypoints[0].x,
+      petPosY: sceneInfo.waypoints[0].y,
+      motionState: 'idle',
+      motionStateText: '到达新场景 ✨'
+    });
+    wx.vibrateShort({ type: 'medium' });
+  },
+
+  onOpenSceneModal() {
+    this.setData({ showSceneModal: true });
+  },
+
+  onCloseSceneModal() {
+    this.setData({ showSceneModal: false });
+  },
+
+  noBubble() {
+    // 阻止冒泡
   },
 
   onSelectType(e) {
@@ -235,11 +431,6 @@ Page({
     }
 
     const name = this.data.petName ? this.data.petName.trim() : '小搭子';
-    if (!name) {
-      wx.showToast({ title: '请为搭子起个名字', icon: 'none' });
-      return;
-    }
-
     this.setData({ adopting: true });
     wx.showLoading({ title: '正在唤醒 3D 搭子...' });
 
@@ -268,6 +459,7 @@ Page({
             foodIcon: info.food || '🍎'
           });
           wx.vibrateShort({ type: 'medium' });
+          this.startLivingMotionLoop();
         } else {
           wx.showToast({
             title: (res.data && res.data.message) || '领养失败',
@@ -283,6 +475,7 @@ Page({
     });
   },
 
+  /* 立即投喂：跑向食盆 + 欢快咀嚼 */
   onFeedPet() {
     const user = app.globalData.userInfo;
     if (!user || !user.id || !this.data.pet) return;
@@ -302,9 +495,27 @@ Page({
       return;
     }
 
-    // 触发抛物线投喂与咀嚼动效
-    this.setData({ isFeeding: true });
+    const bowlPos = this.data.currentSceneInfo.foodBowlPos || { x: 70, y: 70 };
+    const facingRight = bowlPos.x >= this.data.petPosX;
+
+    // 1. 跑向食盆
+    this.setData({
+      isFeeding: true,
+      facingRight: facingRight,
+      motionState: 'walking',
+      motionStateText: '奔向食盆干饭 🥣',
+      petPosX: bowlPos.x,
+      petPosY: bowlPos.y
+    });
     wx.vibrateShort({ type: 'medium' });
+
+    // 2. 到达食盆后开启动态咀嚼
+    setTimeout(() => {
+      this.setData({
+        motionState: 'eating',
+        motionStateText: '大口嚼嚼嚼 😋'
+      });
+    }, 700);
 
     wx.request({
       url: `${app.globalData.baseUrl}/pet/feed?userId=${user.id}`,
@@ -331,18 +542,23 @@ Page({
       },
       complete: () => {
         setTimeout(() => {
-          this.setData({ isFeeding: false });
-        }, 800);
+          this.setData({
+            isFeeding: false,
+            motionState: 'idle',
+            motionStateText: '吃饱饱超满足 💖'
+          });
+        }, 2200);
       }
     });
   },
 
+  /* 点击身体抚摸：原地蹦跳撒欢 */
   onTapPet() {
     if (!this.data.pet || this.data.isFeeding) return;
 
-    // 触发 Q 弹果冻与爱心动效
     this.setData({
-      isTouched: true,
+      motionState: 'happy',
+      motionStateText: '开心蹦跳撒欢 🎉',
       heartAnim: true
     });
     wx.vibrateShort({ type: 'light' });
@@ -364,10 +580,11 @@ Page({
 
     setTimeout(() => {
       this.setData({
-        isTouched: false,
-        heartAnim: false
+        heartAnim: false,
+        motionState: 'idle',
+        motionStateText: '悠闲发呆'
       });
-    }, 600);
+    }, 800);
   },
 
   onGoExercise() {

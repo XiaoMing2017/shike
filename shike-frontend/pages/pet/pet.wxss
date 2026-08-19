@@ -1,18 +1,17 @@
 /* pages/pet/pet.wxss */
-page {
-  background: linear-gradient(180deg, #F0FDF4 0%, #F8FAFC 35%, #F1F5F9 100%);
+.pet-immersive-page {
   min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background: #F8FAFC;
+  padding-bottom: 180rpx;
+  position: relative;
   box-sizing: border-box;
 }
 
-.pet-immersive-page {
-  padding: 20rpx 28rpx 60rpx 28rpx;
-}
-
-/* 顶部导航 */
+/* 顶部导航与状态栏 */
 .top-nav-bar {
-  margin-bottom: 20rpx;
+  padding: 30rpx 32rpx 20rpx;
+  background: #FFFFFF;
+  border-bottom: 1rpx solid rgba(226, 232, 240, 0.8);
 }
 
 .brand-title {
@@ -23,690 +22,768 @@ page {
 }
 
 .brand-sub {
-  font-size: 22rpx;
+  font-size: 20rpx;
   color: #64748B;
+  font-weight: 600;
   margin-top: 2rpx;
 }
 
-.refresh-pill {
-  background: rgba(16, 185, 129, 0.12);
-  border: 1.5rpx solid rgba(16, 185, 129, 0.3);
+.scene-switch-capsule {
+  background: #ECFDF5;
+  border: 1.5rpx solid #A7F3D0;
   padding: 8rpx 20rpx;
   border-radius: 30rpx;
-  box-shadow: 0 4rpx 10rpx rgba(16, 185, 129, 0.08);
+  box-shadow: 0 2rpx 8rpx rgba(16, 185, 129, 0.12);
 }
 
-/* 加载动画 */
-.loading-container {
-  padding: 160rpx 0;
-}
-
-.magic-spinner {
-  width: 70rpx;
-  height: 70rpx;
-  border: 6rpx solid #E2E8F0;
-  border-top-color: #10B981;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-.loading-text {
-  font-size: 26rpx;
-  color: #64748B;
-  margin-top: 24rpx;
-  font-weight: 600;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* ================= 状态 A: 领养向导 ================= */
-.adopt-showcase-flow {
-  display: flex;
-  flex-direction: column;
-  gap: 24rpx;
-}
-
-.adopt-banner-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(240, 253, 244, 0.9));
-  border: 2rpx solid rgba(16, 185, 129, 0.25);
-  border-radius: 28rpx;
-  padding: 24rpx 28rpx;
-  box-shadow: 0 10rpx 25rpx rgba(16, 185, 129, 0.06);
-}
-
-.banner-desc {
-  font-size: 24rpx;
-  color: #475569;
-  line-height: 1.6;
-}
-
-.adopt-3d-stage-box {
-  background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
-  border: 2rpx solid #E2E8F0;
-  border-radius: 36rpx;
-  padding: 30rpx 20rpx 28rpx 20rpx;
-  box-shadow: 0 14rpx 36rpx rgba(15, 23, 42, 0.04);
-}
-
-.stage-3d-viewport {
+/* ================= 3D 核心生活大场景 ================= */
+.virtual-3d-world-scene {
   position: relative;
-  width: 440rpx;
-  height: 440rpx;
+  width: 100%;
+  height: 640rpx;
+  overflow: hidden;
+  box-shadow: inset 0 -20rpx 30rpx rgba(0, 0, 0, 0.15);
 }
 
-.ambient-sunbeam {
+.scene-panoramic-bg {
   position: absolute;
-  top: -40rpx;
-  left: -40rpx;
-  width: 260rpx;
-  height: 260rpx;
-  background: radial-gradient(circle, rgba(254, 240, 138, 0.35) 0%, rgba(255, 255, 255, 0) 70%);
-  pointer-events: none;
-}
-
-.pet-model-anchor {
-  position: relative;
-  width: 360rpx;
-  height: 360rpx;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.pet-model-img {
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 14rpx 24rpx rgba(15, 23, 42, 0.15));
-}
-
-.island-pedestal {
-  position: absolute;
-  bottom: 24rpx;
-  width: 340rpx;
-  height: 80rpx;
-  background: linear-gradient(180deg, #D1FAE5 0%, #A7F3D0 60%, #6EE7B7 100%);
-  border: 4rpx solid rgba(255, 255, 255, 0.8);
-  border-radius: 50%;
-  transform: perspective(400px) rotateX(45deg);
-  box-shadow: 0 16rpx 28rpx rgba(16, 185, 129, 0.25);
   z-index: 1;
 }
 
-.type-capsule {
-  font-size: 24rpx;
-  font-weight: 800;
-  padding: 8rpx 28rpx;
-  border-radius: 30rpx;
-  margin-top: 14rpx;
+.scene-overlay-soft {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0.15) 100%);
+  z-index: 2;
 }
 
-.type-motto {
-  font-size: 24rpx;
-  color: #64748B;
-  font-style: italic;
-  margin-top: 12rpx;
-  text-align: center;
-  padding: 0 20rpx;
-}
-
-.type-switch-panel, .name-edit-panel {
-  background: #FFFFFF;
-  border: 2rpx solid #E2E8F0;
-  border-radius: 28rpx;
-  padding: 24rpx;
-}
-
-.panel-label {
-  font-size: 26rpx;
-  font-weight: 800;
-  color: #1E293B;
-  margin-bottom: 16rpx;
-  display: block;
-}
-
-.type-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14rpx;
-}
-
-.type-item {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8rpx;
-  padding: 16rpx 10rpx;
-  background: #F1F5F9;
-  border: 2rpx solid transparent;
-  border-radius: 20rpx;
-  transition: all 0.2s ease;
-}
-
-.type-item.active {
-  background: #ECFDF5;
-  border-color: #10B981;
-  color: #047857;
-  font-weight: 800;
-  box-shadow: 0 4rpx 14rpx rgba(16, 185, 129, 0.2);
-}
-
-.type-icon { font-size: 28rpx; }
-.type-text { font-size: 24rpx; }
-
-.input-row {
-  background: #F8FAFC;
-  border: 2rpx solid #CBD5E1;
-  border-radius: 20rpx;
-  padding: 10rpx 18rpx;
-}
-
-.name-ipt {
-  flex: 1;
-  font-size: 28rpx;
-  color: #0F172A;
-  font-weight: 700;
-}
-
-.dice-btn {
-  font-size: 22rpx;
-  color: #6366F1;
-  font-weight: 800;
-  padding: 6rpx 14rpx;
-  background: #EEF2FF;
-  border-radius: 12rpx;
-}
-
-.candidate-row {
-  margin-top: 14rpx;
-  gap: 12rpx;
-  flex-wrap: wrap;
-}
-
-.tag-name {
-  font-size: 22rpx;
-  color: #475569;
-  background: #F1F5F9;
-  padding: 6rpx 16rpx;
-  border-radius: 20rpx;
-  font-weight: 600;
-}
-
-.btn-3d-adopt {
-  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-  color: #FFFFFF;
-  font-size: 32rpx;
-  font-weight: 900;
-  padding: 22rpx 0;
-  border-radius: 36rpx;
-  box-shadow: 0 12rpx 28rpx rgba(16, 185, 129, 0.4);
-  border: none;
-}
-
-/* ================= 状态 B: 3D 沉浸式互动舞台 ================= */
-.living-stage-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 22rpx;
-}
-
-/* 顶部轻量 HUD */
-.floating-hud-bar {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(16px);
-  border: 2rpx solid rgba(226, 232, 240, 0.8);
-  border-radius: 28rpx;
-  padding: 16rpx 24rpx;
-  box-shadow: 0 6rpx 18rpx rgba(15, 23, 42, 0.04);
-}
-
-.hud-pet-name {
-  font-size: 36rpx;
-  font-weight: 900;
-  color: #0F172A;
-}
-
-.hud-level-tag {
-  background: linear-gradient(135deg, #6366F1, #8B5CF6);
-  color: #FFFFFF;
-  font-size: 22rpx;
-  font-weight: 800;
-  padding: 4rpx 16rpx;
-  border-radius: 20rpx;
-}
-
-.hud-streak-tag {
-  background: #FFF7ED;
-  border: 1.5rpx solid #FFEDD5;
-  padding: 6rpx 18rpx;
-  border-radius: 24rpx;
-}
-
-/* 3D 虚拟乐园展台 */
-.virtual-3d-world {
-  position: relative;
-  background: radial-gradient(circle at 50% 30%, #FFFFFF 0%, #F0FDF4 55%, #E2E8F0 100%);
-  border: 2rpx solid rgba(255, 255, 255, 0.9);
-  border-radius: 40rpx;
-  padding: 30rpx 24rpx 24rpx 24rpx;
-  box-shadow: 0 20rpx 50rpx rgba(16, 185, 129, 0.12), inset 0 2rpx 6rpx rgba(255, 255, 255, 0.8);
-  overflow: hidden;
-}
-
+/* 场景微尘与光线粒子 */
 .world-sun-ray {
   position: absolute;
-  top: -60rpx;
-  right: -60rpx;
-  width: 320rpx;
-  height: 320rpx;
-  background: radial-gradient(circle, rgba(253, 224, 71, 0.28) 0%, rgba(255, 255, 255, 0) 70%);
+  top: -50rpx;
+  left: -50rpx;
+  width: 300rpx;
+  height: 600rpx;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 70%);
+  transform: rotate(35deg);
   pointer-events: none;
+  z-index: 3;
 }
 
 .world-sparkle {
   position: absolute;
   font-size: 28rpx;
   pointer-events: none;
-  animation: floatSparkle 4s ease-in-out infinite;
+  z-index: 4;
+  animation: sparkleFloat 4s ease-in-out infinite alternate;
+}
+.sp1 { top: 12%; left: 18%; animation-delay: 0s; }
+.sp2 { top: 28%; right: 15%; animation-delay: 1.5s; }
+.sp3 { bottom: 35%; left: 22%; animation-delay: 2.5s; }
+
+@keyframes sparkleFloat {
+  0% { transform: translateY(0) scale(0.85); opacity: 0.4; }
+  100% { transform: translateY(-24rpx) scale(1.15); opacity: 0.95; }
 }
 
-.sp1 { top: 60rpx; left: 60rpx; animation-delay: 0s; }
-.sp2 { top: 120rpx; right: 80rpx; animation-delay: 1.2s; }
-.sp3 { top: 220rpx; left: 90rpx; animation-delay: 2.4s; }
-
-@keyframes floatSparkle {
-  0%, 100% { transform: translateY(0) scale(0.8); opacity: 0.4; }
-  50% { transform: translateY(-16rpx) scale(1.1); opacity: 0.9; }
-}
-
-/* 3D 悬浮气泡 */
-.speech-bubble-3d {
-  position: relative;
-  background: #FFFFFF;
-  border: 2rpx solid #E2E8F0;
-  border-radius: 28rpx;
-  padding: 16rpx 28rpx;
-  margin: 0 auto 16rpx auto;
-  max-width: 82%;
-  text-align: center;
-  box-shadow: 0 10rpx 25rpx rgba(15, 23, 42, 0.06);
-  z-index: 10;
-}
-
-.bubble-msg {
-  font-size: 26rpx;
-  color: #1E293B;
-  font-weight: 700;
-}
-
-.bubble-arrow {
+/* 场景食盆 */
+.scene-food-bowl {
   position: absolute;
-  bottom: -12rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 14rpx solid transparent;
-  border-right: 14rpx solid transparent;
-  border-top: 14rpx solid #FFFFFF;
+  z-index: 5;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
 }
 
-/* 3D 角色舞台 */
-.pet-3d-character-stage {
-  position: relative;
-  width: 480rpx;
-  height: 480rpx;
-  margin: 0 auto;
+.bowl-plate {
+  width: 56rpx;
+  height: 38rpx;
+  background: #FEF3C7;
+  border: 2rpx solid #F59E0B;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.15);
+}
+
+.bowl-food-item {
+  font-size: 24rpx;
+  transform: translateY(-4rpx);
+}
+
+.bowl-shadow {
+  width: 60rpx;
+  height: 14rpx;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 50%;
+  margin-top: -6rpx;
+}
+
+/* ================= 自由漫步活体宠物 ================= */
+.roaming-pet-entity {
+  position: absolute;
+  z-index: 10;
+  transform: translate(-50%, -85%);
+  transition: left 1.8s cubic-bezier(0.25, 1, 0.5, 1), top 1.8s cubic-bezier(0.25, 1, 0.5, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .pet-mesh-container {
   position: relative;
-  width: 380rpx;
-  height: 380rpx;
-  z-index: 5;
+  width: 170rpx;
+  height: 170rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  transform-origin: 50% 90%;
+  transition: transform 0.3s ease;
 }
 
 .pet-cutout-img {
-  width: 100%;
-  height: 100%;
-  filter: drop-shadow(0 16rpx 28rpx rgba(15, 23, 42, 0.18));
+  width: 160rpx;
+  height: 160rpx;
+  filter: drop-shadow(0 10rpx 16rpx rgba(0, 0, 0, 0.28));
 }
 
 /* 触地柔光阴影 */
 .pet-floor-shadow {
   position: absolute;
-  bottom: 8rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 260rpx;
-  height: 40rpx;
-  background: radial-gradient(ellipse, rgba(15, 23, 42, 0.35) 0%, rgba(15, 23, 42, 0) 72%);
+  bottom: 0;
+  width: 110rpx;
+  height: 24rpx;
+  background: radial-gradient(ellipse at center, rgba(15, 23, 42, 0.45) 0%, rgba(15, 23, 42, 0) 70%);
   border-radius: 50%;
   z-index: -1;
-  transition: all 0.3s ease;
 }
 
-/* 3D 浮岛基盘 */
-.stage-3d-island-disc {
+/* 状态微标 */
+.pet-status-mini-bubble {
   position: absolute;
-  bottom: 20rpx;
-  width: 400rpx;
-  height: 100rpx;
-  z-index: 2;
-  pointer-events: none;
+  top: -30rpx;
+  background: rgba(15, 23, 42, 0.75);
+  color: #FFFFFF;
+  padding: 2rpx 14rpx;
+  border-radius: 20rpx;
+  white-space: nowrap;
 }
 
-.disc-top-ring {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(180deg, #D1FAE5 0%, #A7F3D0 70%, #6EE7B7 100%);
-  border: 4rpx solid rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
-  transform: perspective(400px) rotateX(46deg);
-  box-shadow: 0 16rpx 32rpx rgba(16, 185, 129, 0.3);
-}
-
-/* 抛物线飞行动画 */
-.flying-food-projectile {
+/* 悬浮台词气泡 */
+.speech-bubble-3d {
   position: absolute;
-  bottom: 40rpx;
-  right: 60rpx;
+  top: -95rpx;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1.5rpx solid #10B981;
+  padding: 10rpx 22rpx;
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.12);
+  white-space: nowrap;
   z-index: 20;
 }
 
-.food-emoji {
-  font-size: 50rpx;
+.bubble-msg {
+  font-size: 22rpx;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.bubble-arrow {
+  position: absolute;
+  bottom: -10rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10rpx solid transparent;
+  border-right: 10rpx solid transparent;
+  border-top: 10rpx solid #10B981;
+}
+
+/* 爱心粒子迸发 */
+.heart-burst-particle {
+  position: absolute;
+  top: -60rpx;
+  font-size: 40rpx;
+  z-index: 25;
+}
+
+.animate-heart-fly {
+  animation: heartFlyUp 0.8s ease-out forwards;
+}
+
+@keyframes heartFlyUp {
+  0% { transform: translateY(0) scale(0.6); opacity: 0; }
+  40% { transform: translateY(-40rpx) scale(1.4); opacity: 1; }
+  100% { transform: translateY(-100rpx) scale(1); opacity: 0; }
+}
+
+/* 投喂抛物线与飘字 */
+.flying-food-projectile {
+  position: absolute;
+  bottom: -40rpx;
+  font-size: 48rpx;
+  z-index: 30;
 }
 
 .animate-food-parabola {
-  animation: foodParabolaFly 0.65s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  animation: foodParabolaFly 0.7s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
 }
 
 @keyframes foodParabolaFly {
-  0% {
-    transform: translate(0, 0) scale(0.6) rotate(0deg);
-    opacity: 1;
-  }
-  50% {
-    transform: translate(-100rpx, -180rpx) scale(1.2) rotate(-180deg);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-180rpx, -120rpx) scale(0.2) rotate(-360deg);
-    opacity: 0;
-  }
+  0% { transform: translate(0, 100rpx) scale(0.5); opacity: 0; }
+  50% { transform: translate(-30rpx, -60rpx) scale(1.2); opacity: 1; }
+  100% { transform: translate(0, 0) scale(0.8); opacity: 0; }
 }
 
-/* 爱心迸发动画 */
-.heart-burst-particle {
-  position: absolute;
-  top: 140rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 25;
-}
-
-.burst-text { font-size: 56rpx; }
-
-.animate-heart-fly {
-  animation: heartPopFly 0.8s ease-out forwards;
-}
-
-@keyframes heartPopFly {
-  0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; }
-  40% { transform: translate(-50%, -60rpx) scale(1.4); opacity: 1; }
-  100% { transform: translate(-50%, -140rpx) scale(1); opacity: 0; }
-}
-
-/* EXP 飘字 */
 .floating-exp-gain {
   position: absolute;
-  top: 120rpx;
-  right: 80rpx;
-  z-index: 25;
-}
-
-.exp-text {
-  font-size: 32rpx;
+  top: -70rpx;
+  font-size: 28rpx;
   font-weight: 900;
   color: #F59E0B;
-  text-shadow: 0 4rpx 10rpx rgba(245, 158, 11, 0.4);
+  text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
+  z-index: 35;
 }
 
 .animate-exp-up {
-  animation: expFloatUp 0.9s ease-out forwards;
+  animation: expFloatUp 0.8s ease-out forwards;
 }
 
 @keyframes expFloatUp {
-  0% { transform: translateY(0) scale(0.8); opacity: 0; }
-  30% { transform: translateY(-30rpx) scale(1.2); opacity: 1; }
-  100% { transform: translateY(-90rpx) scale(1); opacity: 0; }
+  0% { transform: translateY(0) scale(0.6); opacity: 0; }
+  50% { transform: translateY(-30rpx) scale(1.2); opacity: 1; }
+  100% { transform: translateY(-70rpx) scale(1); opacity: 0; }
 }
 
-/* ================= 3D 活体宠物多维动效体系 ================= */
+/* ================= 宠物动作动画 ================= */
 
-/* 1. 待机自然呼吸浮动 */
+/* 1. 待机呼吸 */
 .animate-idle-breathe {
-  animation: idle3DBreathe 3.6s ease-in-out infinite;
+  animation: petBreathe 3s ease-in-out infinite alternate;
 }
 
-@keyframes idle3DBreathe {
-  0% {
-    transform: translateY(0rpx) scale(1, 1) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-16rpx) scale(1.025, 0.975) rotate(1.2deg);
-  }
-  100% {
-    transform: translateY(0rpx) scale(1, 1) rotate(0deg);
-  }
+@keyframes petBreathe {
+  0% { transform: translateY(0) scale(1, 1); }
+  100% { transform: translateY(-8rpx) scale(1.03, 0.97); }
 }
 
-.shadow-breathe {
-  animation: shadowBreatheAnim 3.6s ease-in-out infinite;
+/* 2. 漫步走动小碎步 */
+.animate-pet-walk {
+  animation: petWalkStep 0.4s ease-in-out infinite alternate;
 }
 
-@keyframes shadowBreatheAnim {
-  0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.35; }
-  50% { transform: translateX(-50%) scale(0.82); opacity: 0.2; }
+@keyframes petWalkStep {
+  0% { transform: translateY(0) rotate(-4deg); }
+  100% { transform: translateY(-12rpx) rotate(4deg); }
 }
 
-/* 2. 点击果冻 Q 弹反馈 */
-.animate-pet-squish {
-  animation: jellySquishPop 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-@keyframes jellySquishPop {
-  0% { transform: scale(1, 1); }
-  25% { transform: scale(1.18, 0.82) rotate(-3deg); }
-  50% { transform: scale(0.88, 1.12) rotate(3deg); }
-  75% { transform: scale(1.05, 0.95) rotate(-1deg); }
-  100% { transform: scale(1, 1) rotate(0deg); }
-}
-
-.shadow-squish {
-  animation: shadowSquishAnim 0.55s ease;
-}
-
-@keyframes shadowSquishAnim {
-  0%, 100% { transform: translateX(-50%) scale(1); }
-  25% { transform: translateX(-50%) scale(1.25); }
-  50% { transform: translateX(-50%) scale(0.8); }
-}
-
-/* 3. 投喂咀嚼跳跃 */
+/* 3. 欢快干饭咀嚼 */
 .animate-pet-chew {
-  animation: petChewHappy 0.7s ease;
+  animation: petChewHappy 0.5s ease-in-out 3;
 }
 
 @keyframes petChewHappy {
-  0% { transform: scale(1); }
-  20% { transform: translateY(-24rpx) scale(1.12, 0.9) rotate(-4deg); }
-  40% { transform: translateY(0) scale(0.92, 1.08) rotate(4deg); }
-  60% { transform: translateY(-12rpx) scale(1.06, 0.95) rotate(-2deg); }
-  80% { transform: translateY(0) scale(0.98, 1.02) rotate(1deg); }
-  100% { transform: translateY(0) scale(1) rotate(0); }
+  0%, 100% { transform: scale(1, 1); }
+  30% { transform: scale(1.15, 0.85) translateY(6rpx); }
+  60% { transform: scale(0.9, 1.15) translateY(-14rpx); }
 }
 
-.shadow-chew {
-  animation: shadowChewAnim 0.7s ease;
+/* 4. 触碰撒欢欢跳 */
+.animate-pet-happy {
+  animation: petHappyJump 0.6s ease-out 1;
 }
 
-@keyframes shadowChewAnim {
-  0%, 40%, 80%, 100% { transform: translateX(-50%) scale(1); }
-  20% { transform: translateX(-50%) scale(0.7); opacity: 0.15; }
-  60% { transform: translateX(-50%) scale(0.85); opacity: 0.25; }
+@keyframes petHappyJump {
+  0% { transform: scale(1, 1); }
+  30% { transform: scale(1.2, 0.8) translateY(8rpx); }
+  60% { transform: scale(0.85, 1.25) translateY(-28rpx); }
+  85% { transform: scale(1.05, 0.95) translateY(0); }
+  100% { transform: scale(1, 1); }
 }
 
-/* 心情胶囊 */
-.mood-bar-row {
-  margin-top: 10rpx;
+/* 场景底部快捷切换药丸栏 */
+.scene-quick-bar {
+  position: absolute;
+  bottom: 24rpx;
+  left: 24rpx;
+  right: 24rpx;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 40rpx;
+  padding: 8rpx 14rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.15);
+  z-index: 40;
 }
 
-.mood-pill {
-  font-size: 24rpx;
-  font-weight: 800;
-  padding: 10rpx 30rpx;
+.scene-tab-pill {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  padding: 12rpx 16rpx;
   border-radius: 30rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
 }
 
-.mood-icon { font-size: 28rpx; margin-right: 8rpx; }
-
-.mood-HAPPY {
-  background: #ECFDF5;
-  color: #047857;
-  border: 1.5rpx solid #A7F3D0;
+.scene-tab-pill.active {
+  background: #10B981;
+  color: #FFFFFF;
+  box-shadow: 0 4rpx 12rpx rgba(16, 185, 129, 0.35);
 }
 
-.mood-HUNGRY {
-  background: #FEF2F2;
-  color: #B91C1C;
-  border: 1.5rpx solid #FECACA;
+.scene-pill-icon {
+  font-size: 24rpx;
 }
 
-.mood-WANT_EXERCISE {
-  background: #FFFBEB;
-  color: #B45309;
-  border: 1.5rpx solid #FDE68A;
+.scene-pill-name {
+  font-size: 22rpx;
+  font-weight: 800;
 }
 
-.mood-NORMAL {
-  background: #F0FDF4;
-  color: #15803D;
-  border: 1.5rpx solid #BBF7D0;
+.scene-tab-pill:not(.active) .scene-pill-name {
+  color: #475569;
 }
 
 .touch-hint-label {
-  text-align: center;
+  position: absolute;
+  top: 20rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
+  color: #FFFFFF;
   font-size: 20rpx;
-  color: #94A3B8;
-  margin-top: 14rpx;
+  font-weight: 600;
+  padding: 6rpx 20rpx;
+  border-radius: 30rpx;
+  z-index: 40;
+  white-space: nowrap;
 }
 
-/* ================= 游戏化数值仪表盘 ================= */
-.gamified-stats-deck {
+/* ================= 浮动 HUD 与仪表盘 ================= */
+.floating-hud-bar {
+  padding: 16rpx 32rpx;
   background: #FFFFFF;
-  border: 2rpx solid #E2E8F0;
-  border-radius: 32rpx;
-  padding: 28rpx;
-  box-shadow: 0 8rpx 24rpx rgba(15, 23, 42, 0.03);
+  border-bottom: 1rpx solid #F1F5F9;
+}
+
+.hud-pet-name {
+  font-size: 32rpx;
+  font-weight: 900;
+  color: #0F172A;
+}
+
+.hud-level-tag {
+  background: #10B981;
+  color: #FFFFFF;
+  font-size: 20rpx;
+  font-weight: 800;
+  padding: 2rpx 12rpx;
+  border-radius: 12rpx;
+}
+
+.scene-cur-badge {
+  background: #F1F5F9;
+  color: #475569;
+  font-size: 20rpx;
+  font-weight: 700;
+  padding: 2rpx 10rpx;
+  border-radius: 10rpx;
+}
+
+.hud-streak-tag {
+  background: #FFF7ED;
+  border: 1rpx solid #FFEDD5;
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+/* 游戏化数值卡片 */
+.gamified-stats-deck {
+  margin: 24rpx 32rpx;
+  padding: 24rpx 28rpx;
+  background: #FFFFFF;
+  border-radius: 28rpx;
+  box-shadow: 0 4rpx 16rpx rgba(15, 23, 42, 0.04);
+  border: 1rpx solid #E2E8F0;
+}
+
+.mood-pill {
+  padding: 6rpx 18rpx;
+  border-radius: 20rpx;
+  background: #ECFDF5;
+  border: 1rpx solid #A7F3D0;
+}
+
+.mood-text {
+  font-size: 22rpx;
+  font-weight: 800;
+  color: #047857;
+  margin-left: 6rpx;
+}
+
+.stat-gauge-cell {
+  width: 100%;
 }
 
 .gauge-name {
-  font-size: 26rpx;
-  font-weight: 800;
+  font-size: 24rpx;
+  font-weight: 700;
   color: #334155;
 }
 
 .gauge-number {
-  font-size: 26rpx;
+  font-size: 24rpx;
   font-weight: 900;
 }
 
 .gauge-track {
-  width: 100%;
-  height: 18rpx;
+  height: 16rpx;
   background: #E2E8F0;
-  border-radius: 12rpx;
+  border-radius: 10rpx;
   overflow: hidden;
 }
 
 .gauge-fill {
   height: 100%;
-  border-radius: 12rpx;
-  transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  border-radius: 10rpx;
+  transition: width 0.5s ease;
+}
+
+.stat-pills-row {
+  gap: 20rpx;
 }
 
 .pill-box {
-  background: #F8FAFC;
-  border: 1.5rpx solid #E2E8F0;
-  padding: 14rpx 20rpx;
-  border-radius: 24rpx;
   flex: 1;
-  margin: 0 8rpx;
+  background: #F8FAFC;
+  border: 1rpx solid #E2E8F0;
+  padding: 14rpx;
+  border-radius: 18rpx;
 }
 
-/* ================= 3D 触感操作 Deck ================= */
+/* 底部操作区 */
 .action-deck-card {
+  margin: 0 32rpx;
+  padding: 24rpx 28rpx;
   background: #FFFFFF;
-  border: 2rpx solid #E2E8F0;
-  border-radius: 32rpx;
-  padding: 24rpx;
-  box-shadow: 0 10rpx 26rpx rgba(15, 23, 42, 0.04);
+  border-radius: 28rpx;
+  box-shadow: 0 4rpx 16rpx rgba(15, 23, 42, 0.04);
+  border: 1rpx solid #E2E8F0;
 }
 
 .btn-3d-action {
   flex: 1;
-  font-size: 30rpx;
-  border-radius: 30rpx;
-  padding: 20rpx 0;
+  height: 88rpx;
+  border-radius: 24rpx;
+  font-size: 28rpx;
+  color: #FFFFFF;
   border: none;
-  transition: all 0.15s ease;
-}
-
-.btn-3d-action:active {
-  transform: translateY(4rpx) scale(0.98);
 }
 
 .btn-3d-feed {
   background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-  color: #FFFFFF;
-  box-shadow: 0 10rpx 24rpx rgba(16, 185, 129, 0.35);
-}
-
-.btn-3d-feed[disabled] {
-  background: #E2E8F0 !important;
-  color: #94A3B8 !important;
-  box-shadow: none !important;
+  box-shadow: 0 6rpx 16rpx rgba(16, 185, 129, 0.3);
 }
 
 .btn-3d-exercise {
   background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
-  color: #FFFFFF;
-  box-shadow: 0 10rpx 24rpx rgba(99, 102, 241, 0.35);
+  box-shadow: 0 6rpx 16rpx rgba(99, 102, 241, 0.3);
 }
 
 .daily-reward-tip {
-  background: #F8FAFC;
-  border-radius: 20rpx;
-  padding: 16rpx 20rpx;
+  background: #F0FDF4;
+  border: 1rpx solid #BBF7D0;
+  padding: 14rpx 20rpx;
+  border-radius: 16rpx;
 }
 
 .tip-content {
   font-size: 22rpx;
-  color: #64748B;
+  color: #166534;
+  line-height: 1.4;
+}
+
+/* ================= 领养流程视图 ================= */
+.adopt-showcase-flow {
+  padding: 24rpx 32rpx;
+}
+
+.adopt-banner-card {
+  background: linear-gradient(135deg, #ECFDF5 0%, #F0FDF4 100%);
+  border: 1.5rpx solid #A7F3D0;
+  padding: 24rpx 28rpx;
+  border-radius: 24rpx;
+  margin-bottom: 24rpx;
+}
+
+.banner-desc {
+  font-size: 24rpx;
+  color: #065F46;
   line-height: 1.5;
 }
 
+.adopt-3d-stage-box {
+  background: #FFFFFF;
+  border-radius: 28rpx;
+  padding: 24rpx;
+  box-shadow: 0 6rpx 20rpx rgba(15, 23, 42, 0.04);
+  border: 1rpx solid #E2E8F0;
+  margin-bottom: 24rpx;
+}
 
-/* ================= 下架与维护禁用状态 ================= */
+.stage-3d-viewport {
+  position: relative;
+  width: 100%;
+  height: 380rpx;
+  border-radius: 20rpx;
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+}
+
+.pet-model-anchor {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pet-model-img {
+  width: 220rpx;
+  height: 220rpx;
+  filter: drop-shadow(0 12rpx 20rpx rgba(0, 0, 0, 0.3));
+}
+
+.pet-dynamic-shadow {
+  width: 140rpx;
+  height: 26rpx;
+  background: radial-gradient(ellipse at center, rgba(15, 23, 42, 0.45) 0%, rgba(15, 23, 42, 0) 70%);
+  border-radius: 50%;
+  margin-top: -12rpx;
+}
+
+.type-capsule {
+  margin-top: 18rpx;
+  font-size: 24rpx;
+  font-weight: 800;
+  padding: 6rpx 20rpx;
+  border-radius: 20rpx;
+}
+
+.type-motto {
+  font-size: 22rpx;
+  color: #64748B;
+  font-style: italic;
+  margin-top: 8rpx;
+}
+
+.type-switch-panel, .name-edit-panel {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 24rpx 28rpx;
+  border: 1rpx solid #E2E8F0;
+  margin-bottom: 24rpx;
+}
+
+.panel-label {
+  font-size: 26rpx;
+  font-weight: 800;
+  color: #0F172A;
+  margin-bottom: 16rpx;
+  display: block;
+}
+
+.type-grid {
+  display: flex;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.type-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16rpx 8rpx;
+  border-radius: 18rpx;
+  background: #F8FAFC;
+  border: 2rpx solid #E2E8F0;
+  transition: all 0.2s ease;
+}
+
+.type-item.active {
+  background: #ECFDF5;
+  border-color: #10B981;
+  box-shadow: 0 4rpx 12rpx rgba(16, 185, 129, 0.2);
+}
+
+.type-icon { font-size: 36rpx; }
+.type-text { font-size: 22rpx; font-weight: 800; color: #334155; margin-top: 6rpx; }
+
+.input-row {
+  gap: 16rpx;
+}
+
+.name-ipt {
+  flex: 1;
+  height: 76rpx;
+  background: #F8FAFC;
+  border: 1.5rpx solid #CBD5E1;
+  border-radius: 16rpx;
+  padding: 0 20rpx;
+  font-size: 26rpx;
+}
+
+.dice-btn {
+  background: #F1F5F9;
+  padding: 16rpx 22rpx;
+  border-radius: 16rpx;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #475569;
+}
+
+.candidate-row {
+  margin-top: 16rpx;
+  gap: 12rpx;
+  flex-wrap: wrap;
+}
+
+.tag-name {
+  background: #F1F5F9;
+  padding: 6rpx 16rpx;
+  border-radius: 12rpx;
+  font-size: 22rpx;
+  color: #475569;
+}
+
+.btn-3d-adopt {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: #FFFFFF;
+  font-size: 30rpx;
+  font-weight: 900;
+  height: 96rpx;
+  border-radius: 28rpx;
+  box-shadow: 0 8rpx 24rpx rgba(16, 185, 129, 0.35);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 场景切换弹窗 */
+.scene-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.scene-modal-backdrop.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.scene-modal-sheet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #FFFFFF;
+  border-radius: 36rpx 36rpx 0 0;
+  padding: 36rpx 32rpx 60rpx;
+  box-sizing: border-box;
+}
+
+.sheet-title {
+  font-size: 32rpx;
+  font-weight: 900;
+  color: #0F172A;
+}
+
+.sheet-close {
+  font-size: 32rpx;
+  color: #94A3B8;
+  padding: 10rpx;
+}
+
+.sheet-subtitle {
+  font-size: 22rpx;
+  color: #64748B;
+  margin-top: 6rpx;
+  margin-bottom: 24rpx;
+  display: block;
+}
+
+.scene-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18rpx;
+}
+
+.scene-select-card {
+  display: flex;
+  align-items: center;
+  padding: 16rpx;
+  background: #F8FAFC;
+  border: 2rpx solid #E2E8F0;
+  border-radius: 20rpx;
+  transition: all 0.2s ease;
+}
+
+.scene-select-card.active {
+  border-color: #10B981;
+  background: #ECFDF5;
+  box-shadow: 0 4rpx 16rpx rgba(16, 185, 129, 0.2);
+}
+
+.scene-card-img {
+  width: 140rpx;
+  height: 100rpx;
+  border-radius: 12rpx;
+  margin-right: 18rpx;
+}
+
+.scene-card-name {
+  font-size: 28rpx;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.cur-active-badge {
+  background: #10B981;
+  color: #FFFFFF;
+  font-size: 18rpx;
+  font-weight: 700;
+  padding: 2rpx 10rpx;
+  border-radius: 8rpx;
+}
+
+.scene-card-motto {
+  font-size: 20rpx;
+  color: #64748B;
+  margin-top: 6rpx;
+}
+
+/* ================= 禁用与下架状态 ================= */
 .disabled-state-box {
   padding: 140rpx 40rpx;
   background: #FFFFFF;
@@ -714,7 +791,7 @@ page {
   border-radius: 36rpx;
   box-shadow: 0 12rpx 32rpx rgba(15, 23, 42, 0.04);
   text-align: center;
-  margin-top: 40rpx;
+  margin: 40rpx 32rpx;
 }
 
 .disabled-icon-wrap {

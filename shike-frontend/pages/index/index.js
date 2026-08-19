@@ -138,6 +138,10 @@ Page({
     planDayIndex: 0,
     todayPlanDayIndex: -1,
     planLoading: false,
+    planLoadingProgress: 0,
+    planLoadingStepTitle: '📊 解析身体代谢基准',
+    planLoadingStepDesc: '基于身体画像推算 TDEE 与安全热量赤字...',
+    planLoadingStepNum: 1,
     planStatus: { hasPlan: false, isFirstTime: true, userPoints: 0 },
     // 个人信息完善引导横幅
     showProfileGuide: false,
@@ -2168,60 +2172,235 @@ Page({
     this.onGeneratePlanClick();
   },
 
+  _planLoadingSteps: [
+    { title: '📊 1/7 解析身体代谢画像', desc: '基于身体数据推算 BMR 与安全每日热量赤字...' },
+    { title: '⚖️ 2/7 拟合三大营养素配比', desc: '根据体脂率与目标定制高蛋白供能比与碳水下限...' },
+    { title: '🏋️‍♂️ 3/7 编排前半周训练动作 (周一~周三)', desc: '根据训练经验分配 MEV/MAV 动作容量与 RIR 强度...' },
+    { title: '🏃 4/7 编排后半周与有氧恢复 (周四~周日)', desc: '匹配 Zone 2 稳态燃脂与弱项肌群强化...' },
+    { title: '🥗 5/7 定制工作日 16 餐高饱腹食谱', desc: '推算早餐、午餐、加餐搭配与手掌法则分量估算...' },
+    { title: '🥑 6/7 定制周末 12 餐灵活食谱', desc: '推算周末轻负担搭配与低卡外食替换方案...' },
+    { title: '✨ 7/7 专家系统最终交叉质检', desc: '完成宏量营养素闭环校验，专属计划即将呈现...' }
+  ],
+
+  startPlanLoadingAnimation() {
+    this.stopPlanLoadingAnimation(false);
+    const steps = this._planLoadingSteps;
+    
+    // 初始化显示第一步，绝不开启覆盖文字的定时器
+    this.setData({
+      planLoadingProgress: 8,
+      planLoadingStepTitle: steps[0].title,
+      planLoadingStepDesc: steps[0].desc,
+      planLoadingStepNum: 1
+    });
+  },
+
+  stopPlanLoadingAnimation(isSuccess = false) {
+    if (this._planProgressTimer) {
+      clearInterval(this._planProgressTimer);
+      this._planProgressTimer = null;
+    }
+    if (this._planStepTimer) {
+      clearInterval(this._planStepTimer);
+      this._planStepTimer = null;
+    }
+    if (isSuccess) {
+      this.setData({
+        planLoadingProgress: 100,
+        planLoadingStepTitle: '🎉 7 天专属计划生成完成！',
+        planLoadingStepDesc: '量身定制的周训练与 28 餐食谱已就绪'
+      });
+    }
+  },
+
+  _utf8Decode(bytes) {
+    let out = '';
+    let i = 0;
+    const len = bytes.length;
+    while (i < len) {
+      const c = bytes[i++];
+      if (c < 128) {
+        out += String.fromCharCode(c);
+      } else if (c > 191 && c < 224) {
+        if (i >= len) break;
+        const c2 = bytes[i++];
+        out += String.fromCharCode(((c & 31) << 6) | (c2 & 63));
+      } else if (c > 223 && c < 240) {
+        if (i + 1 >= len) break;
+        const c2 = bytes[i++];
+        const c3 = bytes[i++];
+        out += String.fromCharCode(((c & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
+      } else if (c > 239 && c < 248) {
+        if (i + 2 >= len) break;
+        const c2 = bytes[i++];
+        const c3 = bytes[i++];
+        const c4 = bytes[i++];
+        let cp = (((c & 7) << 18) | ((c2 & 63) << 12) | ((c3 & 63) << 6) | (c4 & 63)) - 0x10000;
+        out += String.fromCharCode(0xD800 + (cp >> 10), 0xDC00 + (cp & 0x3FF));
+      }
+    }
+    return out;
+  },
+
+  _decodeArrayBuffer(buffer) {
+    if (typeof TextDecoder !== 'undefined') {
+      try {
+        return new TextDecoder('utf-8').decode(buffer);
+      } catch (e) {}
+    }
+    try {
+      const bytes = new Uint8Array(buffer);
+      return this._utf8Decode(bytes);
+    } catch (e) {
+      console.warn('UTF-8 decode fallback failed:', e);
+      return '';
+    }
+  },
+
   fetchAiPlan(forceRefresh, createIfAbsent = true) {
     this.setData({ planLoading: true });
+    this.startPlanLoadingAnimation();
+
     app.login((user) => {
       if (!user || !user.id) {
+        this.stopPlanLoadingAnimation(false);
         this.setData({ planLoading: false });
         return;
       }
       const loc = this.data.selectedPlanLocation || 'HOME';
-      wx.request({
-        url: `${app.globalData.baseUrl}/plan/generate?userId=${user.id}&forceRefresh=${forceRefresh ? 'true' : 'false'}&createIfAbsent=${createIfAbsent ? 'true' : 'false'}&location=${loc}`,
+      const streamUrl = `${app.globalData.baseUrl}/plan/generate/stream?userId=${user.id}&forceRefresh=${forceRefresh ? 'true' : 'false'}&createIfAbsent=${createIfAbsent ? 'true' : 'false'}&location=${loc}`;
+
+      let chunkBuffer = '';
+      let isDoneHandled = false;
+
+      // 生成完成后的标准获取封装 (走微信底层原生 HTTP JSON 解析，100% 杜绝真机 UTF-8 乱码)
+      const fetchCompletePlanFromCache = () => {
+        if (isDoneHandled) return;
+        isDoneHandled = true;
+        wx.request({
+          url: `${app.globalData.baseUrl}/plan/generate?userId=${user.id}&forceRefresh=false&createIfAbsent=false`,
+          method: 'GET',
+          success: (resp) => {
+            if (resp.data && resp.data.code === 200 && resp.data.data) {
+              this._handlePlanGenerateSuccess(resp.data.data, forceRefresh);
+            } else {
+              this.stopPlanLoadingAnimation(false);
+              this.setData({ planLoading: false });
+            }
+          },
+          fail: () => {
+            this.stopPlanLoadingAnimation(false);
+            this.setData({ planLoading: false });
+          }
+        });
+      };
+
+      const requestTask = wx.request({
+        url: streamUrl,
         method: 'GET',
+        enableChunked: true,
         timeout: 180000,
         success: (res) => {
-          this.setData({ planLoading: false });
-          if (res.data && res.data.code === 200) {
-            const planData = res.data.data;
-            if (planData) {
-              if (planData.workoutPlan) {
-                planData.workoutPlan.forEach(w => {
-                  if (w.items) {
-                    w.items.forEach(it => {
-                      it.cleanName = (it.name || '').replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
-                    });
-                  }
-                });
-              }
-              const todayIdx = this.getTodayPlanDayIndex();
-              const startIdx = (planData.workoutPlan && todayIdx < planData.workoutPlan.length) ? todayIdx : 0;
-              const activeDietPlan = this.updateActiveDietPlan(planData, startIdx);
-              const userPoints = planData.userPoints !== undefined ? planData.userPoints : (this.data.planStatus ? this.data.planStatus.userPoints : 0);
-              this.setData({
-                planData: planData,
-                planDayIndex: startIdx,
-                todayPlanDayIndex: todayIdx,
-                activeDietPlan: activeDietPlan,
-                'planStatus.hasPlan': true,
-                'planStatus.isFirstTime': false,
-                'planStatus.userPoints': userPoints
-              });
-              this.updateCheckedPlanExercisesMap();
-              if (forceRefresh) {
-                wx.showToast({ title: 'AI 定制计划已更新！', icon: 'success' });
-              }
-            }
-          } else {
-            wx.showToast({ title: res.data.message || '获取计划失败', icon: 'none' });
+          if (!isDoneHandled) {
+            fetchCompletePlanFromCache();
           }
         },
-        fail: () => {
-          this.setData({ planLoading: false });
-          wx.showToast({ title: '网络失败', icon: 'none' });
+        fail: (err) => {
+          if (!isDoneHandled) {
+            this.stopPlanLoadingAnimation(false);
+            this.setData({ planLoading: false });
+            wx.showToast({ title: '网络连接异常，请重试', icon: 'none' });
+          }
+        }
+      });
+
+      // 实时监听大模型输出进度分块 (SSE/Chunked) - 唯一驱动源，杜绝抖动
+      requestTask.onChunkReceived((chunkRes) => {
+        try {
+          const text = this._decodeArrayBuffer(chunkRes.data);
+          chunkBuffer += text;
+          const lines = chunkBuffer.split('\n');
+          chunkBuffer = lines.pop(); // 保留末尾可能未闭合的行
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+            try {
+              const event = JSON.parse(trimmed);
+              if (event.type === 'progress') {
+                // 仅在数据发生实质变化时更新，消除重复 setData 带来的界面闪烁
+                const updates = {};
+                if (event.percent !== undefined && event.percent !== this.data.planLoadingProgress) {
+                  updates.planLoadingProgress = event.percent;
+                }
+                if (event.title && event.title !== this.data.planLoadingStepTitle) {
+                  updates.planLoadingStepTitle = event.title;
+                }
+                if (event.desc && event.desc !== this.data.planLoadingStepDesc) {
+                  updates.planLoadingStepDesc = event.desc;
+                }
+                if (event.stepNum && event.stepNum !== this.data.planLoadingStepNum) {
+                  updates.planLoadingStepNum = event.stepNum;
+                }
+
+                if (Object.keys(updates).length > 0) {
+                  this.setData(updates);
+                }
+              } else if (event.type === 'done') {
+                // 收到完成通知，立即通过原生 HTTP 获取完整规范的 UTF-8 计划数据
+                fetchCompletePlanFromCache();
+              } else if (event.type === 'error') {
+                isDoneHandled = true;
+                this.stopPlanLoadingAnimation(false);
+                this.setData({ planLoading: false });
+                wx.showToast({ title: event.message || '生成失败', icon: 'none' });
+              }
+            } catch (jsonErr) {
+              // 忽略非完整 JSON 片段
+            }
+          }
+        } catch (e) {
+          console.warn('Chunk parse error:', e);
         }
       });
     });
+  },
+
+  _handlePlanGenerateSuccess(planData, forceRefresh) {
+    if (planData) {
+      if (planData.workoutPlan) {
+        planData.workoutPlan.forEach(w => {
+          if (w.items) {
+            w.items.forEach(it => {
+              it.cleanName = (it.name || '').replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
+            });
+          }
+        });
+      }
+      const todayIdx = this.getTodayPlanDayIndex();
+      const startIdx = (planData.workoutPlan && todayIdx < planData.workoutPlan.length) ? todayIdx : 0;
+      const activeDietPlan = this.updateActiveDietPlan(planData, startIdx);
+      const userPoints = planData.userPoints !== undefined ? planData.userPoints : (this.data.planStatus ? this.data.planStatus.userPoints : 0);
+
+      this.stopPlanLoadingAnimation(true);
+
+      setTimeout(() => {
+        this.setData({
+          planLoading: false,
+          planData: planData,
+          planDayIndex: startIdx,
+          todayPlanDayIndex: todayIdx,
+          activeDietPlan: activeDietPlan,
+          'planStatus.hasPlan': true,
+          'planStatus.isFirstTime': false,
+          'planStatus.userPoints': userPoints
+        });
+        this.updateCheckedPlanExercisesMap();
+        if (forceRefresh) {
+          wx.showToast({ title: 'AI 定制计划已就绪！', icon: 'success' });
+        }
+      }, 400);
+    }
   },
 
   getExerciseMeta(rawName) {

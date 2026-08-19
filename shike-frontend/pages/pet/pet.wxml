@@ -1,17 +1,20 @@
 <!-- pages/pet/pet.wxml -->
 <view class="pet-immersive-page">
 
-  <!-- 顶部状态栏提示 -->
+  <!-- 顶部状态栏与场景切换 -->
   <view class="top-nav-bar flex align-center justify-between">
     <view class="flex align-center" style="gap: 12rpx;">
       <text style="font-size: 38rpx;">🐾</text>
       <view class="flex flex-col">
-        <text class="brand-title">自律搭子 · 3D养成乐园</text>
-        <text class="brand-sub">运动打卡赚粮 · 陪伴减脂蜕变</text>
+        <text class="brand-title">自律搭子 · 3D生活世界</text>
+        <text class="brand-sub">{{currentSceneInfo.name}} · 陪伴成长</text>
       </view>
     </view>
-    <view class="refresh-pill" bindtap="onRefreshPage">
-      <text style="font-size: 22rpx; color: #10B981; font-weight: 700;">🔄 刷新</text>
+
+    <!-- 场景切换胶囊栏 -->
+    <view class="scene-switch-capsule flex align-center" bindtap="onOpenSceneModal">
+      <text style="font-size: 24rpx; margin-right: 6rpx;">🖼️</text>
+      <text style="font-size: 22rpx; font-weight: 800; color: #047857;">换场景</text>
     </view>
   </view>
 
@@ -35,7 +38,7 @@
   <block wx:elif="{{loading}}">
     <view class="loading-container flex flex-col align-center justify-center">
       <view class="magic-spinner"></view>
-      <text class="loading-text">正在唤醒 3D 自律搭子...</text>
+      <text class="loading-text">正在唤醒 3D 沉浸式生活世界...</text>
     </view>
   </block>
 
@@ -57,8 +60,9 @@
       <!-- 3D 展台预览 -->
       <view class="adopt-3d-stage-box flex flex-col align-center">
         
-        <!-- 3D 光束与浮岛底座 -->
-        <view class="stage-3d-viewport flex align-center justify-center">
+        <!-- 3D 场景视口 -->
+        <view class="stage-3d-viewport flex align-center justify-center" style="background-image: url('{{currentSceneInfo.image}}');">
+          <view class="scene-overlay-soft"></view>
           <view class="ambient-sunbeam"></view>
           
           <!-- 3D 宠物模型 -->
@@ -66,9 +70,6 @@
             <image class="pet-model-img" src="{{currentTypeInfo.image}}" mode="aspectFit"></image>
             <view class="pet-dynamic-shadow"></view>
           </view>
-
-          <!-- 3D 浮岛基座 -->
-          <view class="island-pedestal"></view>
         </view>
 
         <!-- 物种标签 -->
@@ -119,7 +120,7 @@
     </view>
   </block>
 
-  <!-- 状态 B：已领养状态（3D 动态互动主舞台） -->
+  <!-- 状态 B：已领养状态（3D 沉浸式活体漫步世界） -->
   <block wx:else>
     <view class="living-stage-wrapper">
       
@@ -128,6 +129,7 @@
         <view class="flex align-center" style="gap: 12rpx;">
           <text class="hud-pet-name">{{pet.name}}</text>
           <view class="hud-level-tag">Lv.{{pet.level}}</view>
+          <view class="scene-cur-badge">{{currentSceneInfo.shortName}}</view>
         </view>
         <view class="hud-streak-tag flex align-center">
           <text style="font-size: 24rpx; margin-right: 6rpx;">🔥</text>
@@ -135,24 +137,37 @@
         </view>
       </view>
 
-      <!-- 3D 核心景深互动舞台 -->
-      <view class="virtual-3d-world">
+      <!-- 🌟 3D 核心景深生活大场景（点击地面可引导宠物走动） -->
+      <view class="virtual-3d-world-scene" bindtap="onTapSceneGround">
         
-        <!-- 环境光效与微尘粒子 -->
+        <!-- 高清 3D 场景背景图 -->
+        <image class="scene-panoramic-bg" src="{{currentSceneInfo.image}}" mode="aspectFill"></image>
+        
+        <!-- 环境光效、光晕与微尘/蝴蝶粒子 -->
         <view class="world-sun-ray"></view>
         <view class="world-sparkle sp1">✨</view>
-        <view class="world-sparkle sp2">🍃</view>
-        <view class="world-sparkle sp3">✨</view>
+        <view class="world-sparkle sp2">🦋</view>
+        <view class="world-sparkle sp3">🍃</view>
 
-        <!-- 悬浮台词气泡 -->
-        <view class="speech-bubble-3d animate-bubble-float" wx:if="{{pet.dialogue}}">
-          <text class="bubble-msg">“{{pet.dialogue}}”</text>
-          <view class="bubble-arrow"></view>
+        <!-- 场景内可交互食盆 -->
+        <view class="scene-food-bowl" style="left: {{currentSceneInfo.foodBowlPos.x}}%; top: {{currentSceneInfo.foodBowlPos.y}}%;" catchtap="onFeedPet">
+          <view class="bowl-plate">
+            <text class="bowl-food-item">{{foodIcon}}</text>
+          </view>
+          <view class="bowl-shadow"></view>
         </view>
 
-        <!-- 3D 宠物本体与触碰物理系统 -->
-        <view class="pet-3d-character-stage flex align-center justify-center" bindtap="onTapPet">
+        <!-- 🌟 自由走动活体宠物（坐标由 petPosX / petPosY 实时驱动） -->
+        <view class="roaming-pet-entity" 
+              style="left: {{petPosX}}%; top: {{petPosY}}%;" 
+              catchtap="onTapPet">
           
+          <!-- 悬浮台词气泡 -->
+          <view class="speech-bubble-3d animate-bubble-float" wx:if="{{pet.dialogue}}">
+            <text class="bubble-msg">“{{pet.dialogue}}”</text>
+            <view class="bubble-arrow"></view>
+          </view>
+
           <!-- 迸发爱心粒子 -->
           <view class="heart-burst-particle {{heartAnim ? 'animate-heart-fly' : ''}}" wx:if="{{heartAnim}}">
             <text class="burst-text">❤️</text>
@@ -168,39 +183,55 @@
             <text class="exp-text">+10 EXP ✨</text>
           </view>
 
-          <!-- 3D 活体宠物模型 -->
-          <view class="pet-mesh-container {{isFeeding ? 'animate-pet-chew' : (isTouched ? 'animate-pet-squish' : 'animate-idle-breathe')}}">
+          <!-- 3D 宠物主体容器（支持转向、走路摆动、咀嚼、蹦跳） -->
+          <view class="pet-mesh-container {{motionState === 'walking' ? 'animate-pet-walk' : (motionState === 'eating' ? 'animate-pet-chew' : (motionState === 'happy' ? 'animate-pet-happy' : 'animate-idle-breathe'))}}" 
+                style="transform: scaleX({{facingRight ? 1 : -1}});">
             <image class="pet-cutout-img" src="{{pet.avatarUrl}}" mode="aspectFit"></image>
             <!-- 动态同步触地阴影 -->
-            <view class="pet-floor-shadow {{isFeeding ? 'shadow-chew' : (isTouched ? 'shadow-squish' : 'shadow-breathe')}}"></view>
+            <view class="pet-floor-shadow"></view>
           </view>
 
-          <!-- 3D 悬浮岛台与草木底座 -->
-          <view class="stage-3d-island-disc">
-            <view class="disc-top-ring"></view>
-            <view class="disc-bottom-base"></view>
+          <!-- 当前动作状态小微标 -->
+          <view class="pet-status-mini-bubble" wx:if="{{motionState === 'walking'}}">
+            <text style="font-size: 20rpx;">🚶 漫步中</text>
+          </view>
+          <view class="pet-status-mini-bubble" wx:elif="{{motionState === 'eating'}}">
+            <text style="font-size: 20rpx;">😋 干饭中</text>
           </view>
 
         </view>
 
-        <!-- 心情胶囊栏 -->
-        <view class="mood-bar-row flex align-center justify-center">
-          <view class="mood-pill mood-{{pet.mood}} flex align-center">
-            <text class="mood-icon">{{pet.mood === 'HAPPY' ? '😄' : (pet.mood === 'HUNGRY' ? '🥺' : (pet.mood === 'WANT_EXERCISE' ? '🏃' : '🌱'))}}</text>
-            <text class="mood-text">{{pet.moodText}}</text>
+        <!-- 场景快速切换条（悬浮在场景底部） -->
+        <view class="scene-quick-bar flex align-center justify-around" catchtap="noBubble">
+          <view wx:for="{{sceneList}}" wx:key="key" 
+                class="scene-tab-pill {{currentScene === item.key ? 'active' : ''}}" 
+                catchtap="onSelectScene" data-key="{{item.key}}">
+            <text class="scene-pill-icon">{{item.icon}}</text>
+            <text class="scene-pill-name">{{item.shortName}}</text>
           </view>
         </view>
 
         <!-- 互动指引 -->
         <view class="touch-hint-label">
-          <text>👆 轻触身体抚摸它，它会做萌系动作与你对话</text>
+          <text>👆 点击地面它会走过去 · 摸摸身体它会开心撒欢</text>
         </view>
 
       </view>
 
-      <!-- 游戏化数值仪表盘 -->
+      <!-- 心情与数值状态栏 -->
       <view class="gamified-stats-deck">
         
+        <!-- 心情胶囊 -->
+        <view class="flex justify-between align-center" style="margin-bottom: 20rpx;">
+          <view class="mood-pill mood-{{pet.mood}} flex align-center">
+            <text class="mood-icon">{{pet.mood === 'HAPPY' ? '😄' : (pet.mood === 'HUNGRY' ? '🥺' : (pet.mood === 'WANT_EXERCISE' ? '🏃' : '🌱'))}}</text>
+            <text class="mood-text">{{pet.moodText}}</text>
+          </view>
+          <view class="behavior-tip flex align-center">
+            <text style="font-size: 22rpx; color: #64748B;">状态：{{motionStateText}}</text>
+          </view>
+        </view>
+
         <!-- 饱食度 -->
         <view class="stat-gauge-cell">
           <view class="flex justify-between align-center" style="margin-bottom: 10rpx;">
@@ -216,7 +247,7 @@
         </view>
 
         <!-- 成长进度 -->
-        <view class="stat-gauge-cell" style="margin-top: 24rpx;">
+        <view class="stat-gauge-cell" style="margin-top: 20rpx;">
           <view class="flex justify-between align-center" style="margin-bottom: 10rpx;">
             <view class="flex align-center" style="gap: 10rpx;">
               <text style="font-size: 28rpx;">📈</text>
@@ -230,13 +261,13 @@
         </view>
 
         <!-- 亲密度与背包 -->
-        <view class="stat-pills-row flex justify-between" style="margin-top: 24rpx;">
+        <view class="stat-pills-row flex justify-between" style="margin-top: 20rpx;">
           <view class="pill-box flex align-center justify-center">
-            <text style="font-size: 30rpx; margin-right: 8rpx;">❤️</text>
+            <text style="font-size: 28rpx; margin-right: 8rpx;">❤️</text>
             <text style="font-size: 24rpx; color: #475569;">亲密度: <text style="font-weight: 900; color: #E11D48;">{{pet.intimacy}}</text></text>
           </view>
           <view class="pill-box flex align-center justify-center">
-            <text style="font-size: 30rpx; margin-right: 8rpx;">🎒</text>
+            <text style="font-size: 28rpx; margin-right: 8rpx;">🎒</text>
             <text style="font-size: 24rpx; color: #475569;">食物背包: <text style="font-weight: 900; color: #10B981;">{{pet.foodCount}}</text> 份</text>
           </view>
         </view>
@@ -265,12 +296,38 @@
         <view class="daily-reward-tip flex align-center" style="margin-top: 20rpx;">
           <text style="font-size: 28rpx; margin-right: 12rpx;">💡</text>
           <text class="tip-content">
-            每次在首页完成运动打卡（快走/慢跑/力量等），即可为搭子免费赚取 1 份营养粮！
+            每次在首页完成运动打卡（快走/慢跑/力量等），即可为搭子免费带回 1 份健康营养粮！
           </text>
         </view>
       </view>
 
     </view>
   </block>
+
+  <!-- 场景选择浮层弹窗 -->
+  <view class="scene-modal-backdrop {{showSceneModal ? 'show' : ''}}" bindtap="onCloseSceneModal">
+    <view class="scene-modal-sheet" catchtap="noBubble">
+      <view class="sheet-header flex justify-between align-center">
+        <text class="sheet-title">🖼️ 选择 3D 生活空间</text>
+        <text class="sheet-close" bindtap="onCloseSceneModal">✕</text>
+      </view>
+      <text class="sheet-subtitle">随时切换生活场景，小家伙会自由在场景中漫步探索</text>
+
+      <view class="scene-card-list">
+        <view wx:for="{{sceneList}}" wx:key="key" 
+              class="scene-select-card {{currentScene === item.key ? 'active' : ''}}" 
+              bindtap="onSelectSceneFromModal" data-key="{{item.key}}">
+          <image class="scene-card-img" src="{{item.image}}" mode="aspectFill"></image>
+          <view class="scene-card-meta flex flex-col justify-center">
+            <view class="flex align-center" style="gap: 8rpx;">
+              <text class="scene-card-name">{{item.name}}</text>
+              <view class="cur-active-badge" wx:if="{{currentScene === item.key}}">当前使用</view>
+            </view>
+            <text class="scene-card-motto">{{item.motto}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
 
 </view>
