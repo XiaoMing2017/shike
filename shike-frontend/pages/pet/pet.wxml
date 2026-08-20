@@ -75,6 +75,8 @@
 
       <!-- 🌟 Finch 3D 浮岛直选展台（直接展示活生生的软萌幼宠） -->
       <view class="adopt-3d-stage-box flex flex-col align-center">
+        <!-- 3D 沉浸式阳光原木自律小屋背景 -->
+        <image class="world-scene-bg" src="/images/pets/scene_room_bg.jpg" mode="aspectFill" />
         
         <!-- 搭子初见台词气泡 -->
         <view class="adopt-speech-bubble">
@@ -163,6 +165,9 @@
 
       <!-- 🌟 3D 核心景深互动舞台 -->
       <view class="virtual-3d-world">
+        
+        <!-- 3D 沉浸式阳光原木自律小屋生活场景 -->
+        <image class="world-scene-bg" src="/images/pets/scene_room_bg.jpg" mode="aspectFill" />
         
         <!-- 环境光效与微尘粒子 -->
         <view class="world-sun-ray"></view>

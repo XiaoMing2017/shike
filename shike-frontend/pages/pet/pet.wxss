@@ -966,3 +966,19 @@
   align-items: center;
   justify-content: center;
 }
+
+/* 🌟 3D 沉浸式阳光原木小屋生活场景背景层 */
+.world-scene-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: 28rpx;
+}
+
+.virtual-3d-world .world-scene-bg {
+  border-radius: 0;
+}
