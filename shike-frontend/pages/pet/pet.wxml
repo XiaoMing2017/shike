@@ -1,29 +1,29 @@
 <!-- pages/pet/pet.wxml -->
 <view class="pet-immersive-page">
 
-  <!-- 顶部状态栏与品牌 -->
+    <!-- 顶部状态栏与品牌 -->
   <view class="top-nav-bar flex align-center justify-between">
-    <view class="flex align-center" style="gap: 12rpx;">
+    <view class="flex align-center nav-brand-wrap" style="gap: 12rpx;">
       <text style="font-size: 38rpx;">🐾</text>
       <view class="flex flex-col">
-        <text class="brand-title">自律搭子 · 3D养成乐园</text>
-        <text class="brand-sub">Our Teacher 3阶形态进化体系</text>
+        <text class="brand-title">自律搭子乐园</text>
+        <text class="brand-sub">3阶形态进化 · 温暖陪伴</text>
       </view>
     </view>
     
-    <view class="flex align-center" style="gap: 10rpx;">
+    <view class="flex align-center nav-actions-wrap" style="gap: 8rpx;">
       <!-- 形态图鉴入口 -->
       <view class="stage-dex-pill flex align-center" bindtap="onOpenDexModal" wx:if="{{hasPet}}">
-        <text style="font-size: 24rpx; margin-right: 4rpx;">📖</text>
-        <text style="font-size: 22rpx; font-weight: 800; color: #6366F1;">形态图鉴</text>
+        <text style="font-size: 20rpx; margin-right: 4rpx;">📖</text>
+        <text class="pill-text-indigo">图鉴</text>
       </view>
       <!-- 勋章馆入口 -->
       <view class="badge-nav-pill flex align-center" bindtap="onOpenBadgeModal" wx:if="{{hasPet}}">
-        <text style="font-size: 24rpx; margin-right: 4rpx;">🏅</text>
-        <text style="font-size: 22rpx; font-weight: 800; color: #D97706;">勋章 ({{unlockedBadgeCount}}/6)</text>
+        <text style="font-size: 20rpx; margin-right: 4rpx;">🏅</text>
+        <text class="pill-text-amber">勋章 {{unlockedBadgeCount}}/6</text>
       </view>
       <!-- 刷新按钮 -->
-      <view class="refresh-pill" bindtap="onRefreshPage">
+      <view class="refresh-pill flex align-center justify-center" bindtap="onRefreshPage">
         <text style="font-size: 20rpx; color: #10B981; font-weight: 700;">🔄</text>
       </view>
     </view>
@@ -134,7 +134,7 @@
     </view>
   </block>
 
-  <!-- 状态 B：已领养状态（Our Teacher 3D 浮岛主舞台） -->
+  <!-- 状态 B：已领养状态（3D 浮岛主舞台） -->
   <block wx:else>
     <view class="living-stage-wrapper">
       
@@ -148,7 +148,7 @@
         <view class="stage-rank-tag stage-rank-{{petStageRank}}">{{currentStageInfo.stageTitle}}</view>
       </view>
 
-      <!-- 🌟 Our Teacher 风格 3D 核心景深互动舞台 -->
+      <!-- 🌟 3D 核心景深互动舞台 -->
       <view class="virtual-3d-world">
         
         <!-- 环境光效与微尘粒子 -->
