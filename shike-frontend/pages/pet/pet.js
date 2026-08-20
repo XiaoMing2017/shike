@@ -465,11 +465,29 @@ Page({
     this.setData({
       selectedType: type,
       currentTypeInfo: info,
-      petName: info.defaultName,
+      petName: info.defaultName || '小搭子',
       foodIcon: info.food || '🍎',
       hatchingStep: 0
     });
+    wx.vibrateShort({ type: 'medium' });
+  },
+
+  onTapPreviewPet() {
     wx.vibrateShort({ type: 'light' });
+    wx.showToast({ title: '准备好领养我了吗？💖', icon: 'none' });
+  },
+
+  onDirectAdopt() {
+    const user = app.globalData.userInfo;
+    if (!user || !user.id) {
+      wx.showToast({ title: '请先登录', icon: 'none' });
+      return;
+    }
+
+    const name = this.data.petName ? this.data.petName.trim() : (this.data.currentTypeInfo.defaultName || '小搭子');
+    this.setData({ adopting: true });
+    wx.vibrateShort({ type: 'medium' });
+    this.submitAdopt(user.id, name);
   },
 
   onTapEgg() {
