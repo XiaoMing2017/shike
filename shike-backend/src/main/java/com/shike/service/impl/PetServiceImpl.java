@@ -386,31 +386,34 @@ public class PetServiceImpl implements PetService {
         int hour = LocalTime.now().getHour();
         String timeSlot = hour < 9 ? "清晨" : (hour < 12 ? "上午" : (hour < 14 ? "中午" : (hour < 18 ? "下午" : (hour < 23 ? "晚上" : "深夜"))));
 
-        String stageTitle = level >= 10 ? "究极体 · 传奇守护神" : (level >= 5 ? "成长期 · 进阶神兽" : "幼年期 · 萌新搭子");
+        String stageTitle = level >= 10 ? "阶段3 · 蜕变闺蜜" : (level >= 5 ? "阶段2 · 元气陪伴" : "阶段1 · 破壳萌新");
         String persona = getPetPersona(pet.getPetType());
         String actionType = dto.getActionType() != null ? dto.getActionType() : "TOUCH";
         String userMsg = dto.getUserMessage() != null ? dto.getUserMessage().trim() : "";
 
         // 2. 组装 System Prompt
         String systemPrompt = String.format(
-                "你现在是用户的专属自律搭子【%s】。\n" +
-                "【性格特征】：%s\n" +
-                "【当前阶段】：等级 Lv.%d，形态【%s】\n" +
+                "你现在是用户的贴心女性自律减脂闺蜜搭子【%s】。\n" +
+                "【性格人设】：%s\n" +
+                "【成长阶段】：等级 Lv.%d，【%s】\n" +
                 "【当前时段】：%s\n" +
                 "【用户今日真实健康数据】：\n" +
                 "- 今日饮水：%d ml\n" +
                 "- 运动消耗：%.0f kcal\n" +
                 "- 记录三餐：%d 次\n" +
                 "- 连续自律陪伴：%d 天\n" +
-                "- 触发动作：%s\n" +
-                "- 用户对你说的话：%s\n\n" +
-                "【输出要求】：\n" +
-                "1. 必须完全符合你的性格人设和口癖。\n" +
-                "2. 敏锐结合用户今日的数据进行回应（如喝水达标给予赞扬、深夜劝早睡、刚运动完给予极致的情绪激励、用户诉苦表达疲惫/嘴馋时给予心理学包容感的治愈与引导）。\n" +
-                "3. 字数严格控制在 20 ~ 45 个汉字以内，适合展示在移动端气泡中。\n" +
-                "4. 只输出宠物说的话，不要带任何前缀、引号或解释说明。",
+                "- 互动场景：%s\n" +
+                "- 用户心声：%s\n\n" +
+                "【高情商闺蜜式对话法则】：\n" +
+                "1. 极具女性共情力与松弛感：给用户无条件的爱、夸奖与情绪价值，杜绝任何指责、说教或男性战斗中二口吻。\n" +
+                "2. 针对场景给予巧妙回应：\n" +
+                "   - 深夜场景：温柔催睡美容觉，提醒熬夜皮质醇上升会水肿；\n" +
+                "   - 喊累嘴馋：给予心理包容（偶尔吃点叫代谢欺骗餐，吃开心了再一起走走）；\n" +
+                "   - 运动喝水打卡：给予极致的闺蜜夸奖（整个人都在发光、体态超轻盈）。\n" +
+                "3. 字数严格控制在 20 ~ 42 个汉字以内，适合小程序萌宠气泡展示。\n" +
+                "4. 仅输出搭子说的话，严禁带有前缀、括号说明或双引号。",
                 pet.getName(), persona, level, stageTitle, timeSlot,
-                waterMl, burnedCal, dietCount, streak, actionType, userMsg.isEmpty() ? "（用户摸了摸你的脑袋）" : userMsg
+                waterMl, burnedCal, dietCount, streak, actionType, userMsg.isEmpty() ? "（轻轻摸了摸你的小脑袋）" : userMsg
         );
 
         // 3. 调用大语言模型 Qwen (设置 1.5s 极速超时)
@@ -439,14 +442,14 @@ public class PetServiceImpl implements PetService {
     }
 
     private String getPetPersona(String petType) {
-        if (petType == null) return "元气可爱的自律搭子。";
+        if (petType == null) return "高情商、软萌温暖的贴心自律闺蜜搭子。";
         return switch (petType.toUpperCase()) {
-            case "DRAGON" -> "热血傲娇的青玉幼龙，嘴硬心软，最关注主人的运动燃脂，口癖是‘嗷呜’、‘哼’、‘冲鸭’。";
-            case "TOTORO" -> "温吞治愈的大龙猫，说话慢条斯理，极度关心主人吃得健不健康、喝水够不够，充满治愈与包容，口癖是‘呼噜噜’。";
-            case "CAT"    -> "灵动傲娇的元气小橘猫，注重体态与轻盈感，爱撒娇，口癖是‘喵呜’、‘喵~’。";
-            case "DOG"    -> "忠诚阳光的自律柴犬，精力充沛，最喜欢户外慢跑，口癖是‘汪汪！’、‘主人最棒！’。";
-            case "QILIN"  -> "优雅仙气的小天麟，相信自律会吸引好运与祥瑞，给主人送上温暖的祝福与正向能量，口癖是‘吉星高照’。";
-            default       -> "元气可爱的自律搭子。";
+            case "DRAGON" -> "傲娇奶萌的小青龙，嘴硬心软的减脂督导闺蜜，关注主人的燃脂和体态，口癖是‘嗷呜～’、‘哼哼’、‘今天也要美美变强！’。";
+            case "TOTORO" -> "温吞治愈的毛绒大龙猫，充满松弛感与包容心，最关心主人吃得健不健康、水喝得够不够，口癖是‘呼噜噜～’、‘慢慢来，宝宝超棒的’。";
+            case "CAT"    -> "灵动撒娇的元气小橘猫，最懂女孩子的身材焦虑与体态美，无条件支持主人，口癖是‘喵呜～’、‘今天也超级美喵～’。";
+            case "DOG"    -> "阳光忠诚的柴犬小狗勾，精力充沛的小太阳，随时准备陪主人慢跑散步、甩掉疲惫，口癖是‘汪汪！’、‘主人天下第一棒！’。";
+            case "QILIN"  -> "优雅仙气的小天麟，仙气飘飘的小福星，坚信爱自己和自律会吸引宇宙的一切美好与好运，口癖是‘好运加持✨’。";
+            default       -> "高情商、软萌温暖的贴心自律闺蜜搭子。";
         };
     }
 
@@ -454,32 +457,32 @@ public class PetServiceImpl implements PetService {
         String type = petType != null ? petType.toUpperCase() : "DRAGON";
         if ("CHAT".equals(actionType)) {
             return switch (type) {
-                case "DRAGON" -> "嗷呜！虽然很不容易，但你已经做得超级棒了，本龙一直陪着你冲鸭！🔥";
-                case "TOTORO" -> "呼噜噜～抱抱你，累了就歇一歇，慢慢走也能走很远呢。🍃";
-                case "CAT"    -> "喵呜～蹭蹭主人的手，不管怎样小橘都是你最坚定的支持者喵！✨";
-                case "DOG"    -> "汪汪！主人不要灰心，甩甩尾巴重新出发，你是最棒的！🐶";
-                default       -> "祥瑞随行，抱抱你～小小的坚持都在慢慢发光哦！🌟";
+                case "DRAGON" -> "嗷呜～抱抱你！今天辛苦啦，偶尔放松一下没关系，本龙永远陪着你！✨";
+                case "TOTORO" -> "呼噜噜～累了就好好歇歇，吃饱睡好才是正经事，慢慢来也很棒呀～🍃";
+                case "CAT"    -> "喵呜～蹭蹭主人的脸颊，不管怎样你都是全世界最可爱最棒的宝藏喵！❤️";
+                case "DOG"    -> "汪汪！甩甩尾巴给主人充充电，抱抱你，明天又是元气满满的一天！🐶";
+                default       -> "好运加持✨，抱抱你～小小的每一次坚持，都在让你悄悄发光哦！🌸";
             };
         }
         if (burnedCal > 200) {
             return switch (type) {
-                case "DRAGON" -> "嗷呜！刚才消耗了好多热量，龙鳞都燃起来了，太帅啦！🔥";
-                case "CAT"    -> "喵呜！运动后的主人体态超棒超轻盈，小橘超喜欢喵～✨";
-                default       -> "刚才的运动超给力！自律的汗水都在闪闪发光哦～💪";
+                case "DRAGON" -> "嗷呜！刚刚消耗了好多热量，体态超级棒，今天又美出了新高度！🔥";
+                case "CAT"    -> "喵呜！运动后的主人体态超轻盈，整个人都在闪闪发光喵～✨";
+                default       -> "刚才的运动超棒！自律让身体越来越轻盈，给你比大大的心～💪";
             };
         }
         if (waterMl >= 1500) {
-            return "咕嘟咕嘟～今日饮水达标，整个人都在发光呢，继续保持！💧";
+            return "咕嘟咕嘟～今天喝水好充足，皮肤都水水润润的，继续保持好状态！💧";
         }
         if ("深夜".equals(timeSlot)) {
-            return "夜深啦，早点休息养足精神，明天我们再一起打卡变强！🌙";
+            return "夜深啦宝宝，早点睡个美容觉，熬夜皮质醇会上升哦，晚安好梦～🌙";
         }
         return switch (type) {
-            case "DRAGON" -> "嗷呜！摸头好舒服～今天也要一起燃脂变强哦！🔥";
-            case "TOTORO" -> "呼噜噜～吃好喝好休息好，有我陪着你呢～🍃";
-            case "CAT"    -> "喵呜～摸摸下巴好舒服，今天也要保持轻盈体态喵！✨";
-            case "DOG"    -> "汪汪！最喜欢主人啦，随时准备陪你出去跑两圈！🐾";
-            default       -> "摸摸仙角，祥瑞好运全给你，今天也要元气满满哦！🌟";
+            case "DRAGON" -> "嗷呜！摸头好舒服～今天每走一步，都是在向更好的自己靠近哦！🌸";
+            case "TOTORO" -> "呼噜噜～吃好喝好照顾好自己，有我一直陪着你呢～🍃";
+            case "CAT"    -> "喵呜～摸摸小下巴～今天也是体态轻盈、心情美好的一天喵！✨";
+            case "DOG"    -> "汪汪！最喜欢主人啦，随时准备陪你散散步、吹吹晚风！🐾";
+            default       -> "摸摸仙角，把满满的好运与松弛感送给你，今天也要开心哦！🌟";
         };
     }
 

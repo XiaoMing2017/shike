@@ -7,40 +7,40 @@ const TYPE_CONFIG = {
     icon: '🐉',
     eggEmoji: '🟢',
     eggName: '青玉龙灵之卵',
-    name: '青玉小幼龙',
-    tag: '燃脂蜕变',
+    name: '木木小龙',
+    tag: '燃脂闺蜜',
     food: '🍎',
-    quote: '我不自律，小龙就没饭吃！',
+    quote: '今天每走1000步，小龙饭碗里就多添一颗甜苹果🍎～',
     themeBg: '#ECFDF5',
     themeColor: '#047857',
     defaultName: '木木',
     stages: [
       {
         rank: 1,
-        name: '青玉小幼龙',
-        stageTitle: '幼年期 · 萌新搭子',
+        name: '破壳萌新 · 木木',
+        stageTitle: '阶段1 · 破壳萌新',
         reqText: 'Lv.1 破壳解锁',
         image: '/images/pets/pet_dragon_stage1.png',
-        quote: '刚破壳的幼龙宝宝，圆滚滚毛茸茸，最喜欢吃红苹果！',
-        desc: '初始幼龙形态，体态小巧软萌，每天陪你开启运动打卡！'
+        quote: '圆滚滚的幼龙宝宝，趴在小草垫上最爱吃甜苹果！',
+        desc: '初始软萌形态，小巧可爱，每天陪你开启运动燃脂与轻盈生活！'
       },
       {
         rank: 2,
-        name: '碧霄灵风龙',
-        stageTitle: '成长期 · 进阶神兽',
+        name: '元气陪伴 · 碧霄灵龙',
+        stageTitle: '阶段2 · 元气陪伴',
         reqText: 'Lv.5 解锁',
         image: '/images/pets/pet_dragon_stage2.png',
-        quote: '长出翡翠龙角与修长羽翼，自律让我更有力量！',
-        desc: '进阶为敏捷的碧霄灵龙，长出坚硬的翡翠龙角与羽翼，周身环绕翡翠符文！'
+        quote: '戴上翠绿发带，身披灵动羽翼，今天也要美美冲鸭！',
+        desc: '进阶为元气灵龙，长出漂亮的翡翠龙角与修长羽翼，活力满满！'
       },
       {
         rank: 3,
-        name: '青天应龙神',
-        stageTitle: '究极体 · 传奇守护神',
+        name: '蜕变闺蜜 · 青天应龙',
+        stageTitle: '阶段3 · 蜕变闺蜜',
         reqText: 'Lv.10 解锁',
         image: '/images/pets/pet_dragon_stage3.png',
-        quote: '达成终极进化！身披金鳞流光，成为顶级自律守护神！',
-        desc: '自律蜕变巅峰！身披紫青流云与黄金龙鳞，手握神圣宝珠，掌控祥瑞神力！'
+        quote: '达成蜕变！身披祥云霞光，做你永远最贴心的自律闺蜜！',
+        desc: '终极形态！身披紫青流云与金辉光芒，手捧能量宝珠，守护你的好体态！'
       }
     ]
   },
@@ -49,40 +49,40 @@ const TYPE_CONFIG = {
     icon: '🍃',
     eggEmoji: '⚪',
     eggName: '灵木龙猫之卵',
-    name: '治愈大龙猫',
-    tag: '温馨陪伴',
+    name: '呼噜龙猫',
+    tag: '治愈松弛',
     food: '🥝',
-    quote: '吃饱才有力气自律，记得按时吃减脂餐哦～',
+    quote: '吃饱睡好才是正经事，慢慢来，宝宝超棒的～',
     themeBg: '#F1F5F9',
     themeColor: '#334155',
-    defaultName: '大龙猫',
+    defaultName: '呼噜噜',
     stages: [
       {
         rank: 1,
-        name: '灵木小幼兽',
-        stageTitle: '幼年期 · 萌新搭子',
+        name: '破壳萌新 · 龙猫仔',
+        stageTitle: '阶段1 · 破壳萌新',
         reqText: 'Lv.1 破壳解锁',
         image: '/images/pets/pet_totoro_stage1.png',
-        quote: '圆滚滚毛茸茸，最爱吃新鲜奇异果～',
-        desc: '可爱的灵木幼兽，喜欢趴在草坡上打盹晒太阳。'
+        quote: '毛茸茸圆球幼兽，抱着新鲜奇异果打盹～',
+        desc: '纯真可爱的小龙猫，最喜欢趴在草坡上晒太阳打呼噜。'
       },
       {
         rank: 2,
-        name: '苍林守护使',
-        stageTitle: '成长期 · 进阶神兽',
+        name: '元气陪伴 · 森林使者',
+        stageTitle: '阶段2 · 元气陪伴',
         reqText: 'Lv.5 解锁',
         image: '/images/pets/pet_totoro_stage2.png',
-        quote: '披上绿叶披风，手握水晶法杖守护你的健康！',
-        desc: '进阶为森林守护者，身披橡木绿叶斗篷，手握发光水晶法杖！'
+        quote: '披上绿叶小斗篷，手握水晶法杖守护你的好心情！',
+        desc: '进阶为森林守护者，身披橡木绿叶斗篷，充满治愈力量！'
       },
       {
         rank: 3,
-        name: '神域龙猫尊',
-        stageTitle: '究极体 · 传奇守护神',
+        name: '蜕变闺蜜 · 治愈神鹿',
+        stageTitle: '阶段3 · 蜕变闺蜜',
         reqText: 'Lv.10 解锁',
         image: '/images/pets/pet_totoro_stage3.png',
-        quote: '头戴百花神冠，掌控自然与治愈的奇迹之力！',
-        desc: '龙猫之神！头戴水晶花冠，手捧森罗万象神球，庇佑你的自律之路！'
+        quote: '头戴百花水晶花冠，带来治愈与温暖好状态！',
+        desc: '终极形态！头戴水晶花冠，手捧森罗万象神球，庇佑你的身心平衡！'
       }
     ]
   },
@@ -91,40 +91,40 @@ const TYPE_CONFIG = {
     icon: '🐱',
     eggEmoji: '🟡',
     eggName: '元气灵猫之卵',
-    name: '软萌元气猫',
-    tag: '灵动轻盈',
+    name: '元气小橘',
+    tag: '轻盈体态',
     food: '🍊',
-    quote: '动作要轻盈，体态要挺拔，今天打卡超棒喵～',
+    quote: '动作要轻盈，体态要挺拔，今天也超级美喵～',
     themeBg: '#FFF7ED',
     themeColor: '#C2410C',
     defaultName: '小橘',
     stages: [
       {
         rank: 1,
-        name: '软萌元气猫',
-        stageTitle: '幼年期 · 萌新搭子',
+        name: '破壳萌新 · 奶橘',
+        stageTitle: '阶段1 · 破壳萌新',
         reqText: 'Lv.1 破壳解锁',
         image: '/images/pets/pet_cat_stage1.png',
-        quote: '今天也要轻盈起跳，体态棒棒喵～',
-        desc: '活泼好动的小橘猫，抱着大甜橙满地打滚。'
+        quote: '抱着大甜橙的软萌小橘猫，满地打滚求摸头喵～',
+        desc: '活泼好动的小猫咪，最懂女孩子的身材焦虑与体态美。'
       },
       {
         rank: 2,
-        name: '赤焰灵猫使',
-        stageTitle: '成长期 · 进阶神兽',
+        name: '元气陪伴 · 灵猫使',
+        stageTitle: '阶段2 · 元气陪伴',
         reqText: 'Lv.5 解锁',
         image: '/images/pets/pet_cat_stage2.png',
-        quote: '系上赤红金铃，步态如风敏捷轻盈！',
-        desc: '进阶为赤焰灵猫，系上招财赤红金铃，周身环绕金色星火！'
+        quote: '系上招财赤红金铃，步态如风轻盈美美喵！',
+        desc: '进阶为赤焰灵猫，系上赤红小铃铛，周身环绕金色星火！'
       },
       {
         rank: 3,
-        name: '九尾天焰神猫',
-        stageTitle: '究极体 · 传奇守护神',
+        name: '蜕变闺蜜 · 天焰金猫',
+        stageTitle: '阶段3 · 蜕变闺蜜',
         reqText: 'Lv.10 解锁',
         image: '/images/pets/pet_cat_stage3.png',
-        quote: '九尾金焰绽放！神装加身，成为体态与优雅的化身！',
-        desc: '究极神兽！九条华丽金焰尾羽展开，身穿鎏金战甲，威风凛凛！'
+        quote: '九尾金焰绽放！做你专属的体态与优雅化身喵！',
+        desc: '终极形态！九条华丽金羽流光战袍，体态与优雅的极致呈现！'
       }
     ]
   },
@@ -133,40 +133,40 @@ const TYPE_CONFIG = {
     icon: '🐶',
     eggEmoji: '🟤',
     eggName: '忠义玄犬之卵',
-    name: '忠诚自律狗',
-    tag: '户外自律',
+    name: '旺财柴柴',
+    tag: '户外元气',
     food: '🍓',
-    quote: '主人快走！去公园跑两圈，今天的狗粮就有啦汪！',
+    quote: '甩甩尾巴给主人充充电，随时陪你散步吹晚风汪！',
     themeBg: '#FEF3C7',
     themeColor: '#B45309',
     defaultName: '旺财',
     stages: [
       {
         rank: 1,
-        name: '忠诚自律狗',
-        stageTitle: '幼年期 · 萌新搭子',
+        name: '破壳萌新 · 柴柴幼崽',
+        stageTitle: '阶段1 · 破壳萌新',
         reqText: 'Lv.1 破壳解锁',
         image: '/images/pets/pet_dog_stage1.png',
-        quote: '去公园跑两圈，今天也有大草莓吃汪！',
-        desc: '忠厚可爱的柴犬幼崽，最喜欢陪主人户外慢跑。'
+        quote: '抱着大草莓的憨萌柴犬小奶狗，最爱陪主人慢跑！',
+        desc: '忠诚可爱的柴犬幼崽，陪伴你度过每一个自律清晨。'
       },
       {
         rank: 2,
-        name: '疾风御行犬',
-        stageTitle: '成长期 · 进阶神兽',
+        name: '元气陪伴 · 疾风柴柴',
+        stageTitle: '阶段2 · 元气陪伴',
         reqText: 'Lv.5 解锁',
         image: '/images/pets/pet_dog_stage2.png',
-        quote: '系上疾风领巾，陪你跑赢每一个自律清晨！',
-        desc: '进阶为健壮潇洒的疾风猎犬，系着飘扬的红色领巾，奔跑如风！'
+        quote: '系上疾风小领巾，陪你跑出满满的多巴胺汪！',
+        desc: '进阶为健壮潇洒的疾风小猎犬，系着飘扬的红色领巾，奔跑如风！'
       },
       {
         rank: 3,
-        name: '天威烈焰神犬',
-        stageTitle: '究极体 · 传奇守护神',
+        name: '蜕变闺蜜 · 烈焰圣犬',
+        stageTitle: '阶段3 · 蜕变闺蜜',
         reqText: 'Lv.10 解锁',
         image: '/images/pets/pet_dog_stage3.png',
-        quote: '身披太阳神铠，掌控烈焰与奔腾神威！',
-        desc: '哮天神威圣犬！身披炽金太阳重铠，神威凛凛，无坚不摧！'
+        quote: '身披暖阳披风，做永远守护你、给你充能的小太阳！',
+        desc: '终极形态！身披暖阳神圣披风，神采奕奕，给你无限元气！'
       }
     ]
   },
@@ -175,44 +175,53 @@ const TYPE_CONFIG = {
     icon: '✨',
     eggEmoji: '🟣',
     eggName: '祥瑞天麟之卵',
-    name: '祥瑞小麒麟',
-    tag: '祥瑞好运',
+    name: '仙贝麟仔',
+    tag: '好运加持',
     food: '🍑',
-    quote: '自律者自带祥瑞，坚持打卡，好身材和好运一起来！',
+    quote: '自律者自带祥瑞，爱自己会吸引宇宙一切美好✨',
     themeBg: '#F5F3FF',
     themeColor: '#6D28D9',
-    defaultName: '瑞瑞',
+    defaultName: '仙贝',
     stages: [
       {
         rank: 1,
-        name: '祥瑞小麒麟',
-        stageTitle: '幼年期 · 萌新搭子',
+        name: '破壳萌新 · 麟宝宝',
+        stageTitle: '阶段1 · 破壳萌新',
         reqText: 'Lv.1 破壳解锁',
         image: '/images/pets/pet_qilin_stage1.png',
-        quote: '自律者自带祥瑞，今天也吃甜桃子～',
+        quote: '踏云初生的紫曜小麟仔，捧着甜桃子送好运～',
         desc: '天生灵秀的紫曜幼麟，踏云而生，带来健康与好运。'
       },
       {
         rank: 2,
-        name: '踏云紫灵麟',
-        stageTitle: '成长期 · 进阶神兽',
+        name: '元气陪伴 · 踏云仙麟',
+        stageTitle: '阶段2 · 元气陪伴',
         reqText: 'Lv.5 解锁',
         image: '/images/pets/pet_qilin_stage2.png',
-        quote: '犄角生辉、彩云流转，自律之光愈发耀眼！',
+        quote: '水晶金角璀璨生辉，驾驭七彩祥云陪你变好！',
         desc: '进阶为踏云仙麟，水晶金角璀璨生辉，踏祥云而行！'
       },
       {
         rank: 3,
-        name: '乾坤紫曜麒麟圣皇',
-        stageTitle: '究极体 · 传奇守护神',
+        name: '蜕变闺蜜 · 乾坤麒麟圣皇',
+        stageTitle: '阶段3 · 蜕变闺蜜',
         reqText: 'Lv.10 解锁',
         image: '/images/pets/pet_qilin_stage3.png',
-        quote: '星河为鬃、神龙为甲！以至高祥瑞守护每一位坚持自律的勇者！',
-        desc: '顶级麒麟圣皇！身穿真龙金甲，鬃毛如星云银河流动，至高无上！'
+        quote: '星河为鬃！把全宇宙满满的好运与光芒都送给你！',
+        desc: '终极形态！鬃毛如星云银河流动，至高祥瑞守护你的自律之路！'
       }
     ]
   }
 };
+
+const POLAROID_QUOTES = [
+  '今日份轻盈已到账 🍃',
+  '慢慢来，每一次坚持都在发光 ✨',
+  '自律是爱自己的最高形式 ❤️',
+  '好好吃饭，好好喝水，好好生活 🌸',
+  '今天也是体态轻盈、心情美好的一天 🌟',
+  '和搭子一起变轻变好的日常 🍃'
+];
 
 Page({
   data: {
@@ -229,19 +238,24 @@ Page({
     heartAnim: false,
     foodIcon: '🍎',
 
-    // 破壳孵化仪式状态
+    // 破壳仪式
     hatchingStep: 0,
 
-    // 3 阶形态进化系统
+    // 3 阶成长系统
     petStageRank: 1,
     currentStageInfo: null,
     activePetImage: '/images/pets/pet_dragon_stage1.png',
-    nextStageGoalText: 'Lv.5 解锁成长期形态',
+    nextStageGoalText: 'Lv.5 解锁元气陪伴形态',
     petStageProgressText: '1/5',
     showEvolutionModal: false,
     showDexModal: false,
 
-    // 🌟 合规 AI 动态交互
+    // 📸 自律拍立得小红书分享
+    showPolaroidModal: false,
+    polaroidQuote: '今日份轻盈已到账 🍃',
+    polaroidDateText: '',
+
+    // AI 动态交互
     aiThinking: false,
     petDialogue: '',
 
@@ -250,15 +264,15 @@ Page({
     selectedBadge: null,
     unlockedBadgeCount: 1,
     badgeList: [
-      { id: 'hatch', icon: '🥚', name: '破壳启航', req: '领养搭子', desc: '成功孵化破壳属于你的第一只 3D 自律神兽！', unlocked: true },
+      { id: 'hatch', icon: '🥚', name: '破壳启航', req: '领养搭子', desc: '成功孵化唤醒属于你的第一只自律闺蜜搭子！', unlocked: true },
       { id: 'streak_7', icon: '🔥', name: '自律之星', req: '连续 7 天', desc: '连续陪伴打卡满 7 天，养成自律生活好习惯！', unlocked: false },
-      { id: 'feed_20', icon: '🥣', name: '合格铲屎官', req: '投喂 20 次', desc: '累计为搭子投喂 20 次营养健康餐，爱意满满！', unlocked: false },
+      { id: 'feed_20', icon: '🥣', name: '贴心投喂', req: '投喂 20 次', desc: '累计为搭子投喂 20 次健康零食，爱意满满！', unlocked: false },
       { id: 'calorie_5k', icon: '🏃', name: '燃脂达人', req: '消耗 5000kcal', desc: '通过自律运动累计为身体燃脂 5000 大卡！', unlocked: false },
-      { id: 'evo_stage2', icon: '👑', name: '神兽进阶', req: '达到 Lv.5', desc: '搭子成长蜕变，成功解锁成长期高阶神兽形态！', unlocked: false },
-      { id: 'evo_stage3', icon: '🌟', name: '传奇守护神', req: '达到 Lv.10', desc: '搭子达成 Lv.10 究极进化，身披祥瑞光芒！', unlocked: false }
+      { id: 'evo_stage2', icon: '🌸', name: '元气陪伴', req: '达到 Lv.5', desc: '搭子成长蜕变，成功解锁元气陪伴高阶形态！', unlocked: false },
+      { id: 'evo_stage3', icon: '💖', name: '蜕变闺蜜', req: '达到 Lv.10', desc: '搭子达成 Lv.10 蜕变闺蜜，身披光芒守护！', unlocked: false }
     ],
 
-    // 每日赚粮任务状态
+    // 每日赚粮任务
     foodTasks: {
       checkin: false,
       exercise: false,
@@ -268,24 +282,32 @@ Page({
     },
     earnedFoodCount: 0,
 
-    candidateNames: ['木木', '小燃', '豆豆', '卡卡', '饭团'],
+    candidateNames: ['木木', '小燃', '豆豆', '卡卡', '饭团', '泡泡', '嘟嘟'],
     types: [
-      { type: 'DRAGON', icon: '🐉', eggEmoji: '🟢', name: '小幼龙' },
-      { type: 'TOTORO', icon: '🍃', eggEmoji: '⚪', name: '大龙猫' },
-      { type: 'CAT', icon: '🐱', eggEmoji: '🟡', name: '元气猫' },
-      { type: 'DOG', icon: '🐶', eggEmoji: '🟤', name: '自律狗' },
-      { type: 'QILIN', icon: '✨', eggEmoji: '🟣', name: '小麒麟' }
+      { type: 'DRAGON', icon: '🐉', eggEmoji: '🟢', name: '木木龙' },
+      { type: 'TOTORO', icon: '🍃', eggEmoji: '⚪', name: '呼噜猫' },
+      { type: 'CAT', icon: '🐱', eggEmoji: '🟡', name: '元气橘' },
+      { type: 'DOG', icon: '🐶', eggEmoji: '🟤', name: '柴柴狗' },
+      { type: 'QILIN', icon: '✨', eggEmoji: '🟣', name: '小仙麟' }
     ]
   },
 
   onLoad(options) {
     this.checkToggleAndLoad();
+    this.initPolaroidDate();
   },
 
   onShow() {
     this.checkToggleAndLoad();
     this.updateCustomTabBar();
     this.fetchFoodTasks();
+  },
+
+  initPolaroidDate() {
+    const d = new Date();
+    const m = d.getMonth() + 1;
+    const day = d.getDate();
+    this.setData({ polaroidDateText: `${m}月${day}日` });
   },
 
   onPullDownRefresh() {
@@ -387,7 +409,6 @@ Page({
     });
   },
 
-  /* 查询今日赚粮任务进度 */
   fetchFoodTasks() {
     const user = app.globalData.userInfo;
     if (!user || !user.id) return;
@@ -409,7 +430,6 @@ Page({
     });
   },
 
-  /* 每日一键签到 */
   onDailyCheckin() {
     const user = app.globalData.userInfo;
     if (!user || !user.id) {
@@ -440,23 +460,22 @@ Page({
     });
   },
 
-  /* 计算 3 阶形态进化与成就勋章 */
   calculateEvolutionAndBadges(pet) {
     const lvl = pet.level || 1;
     const typeInfo = TYPE_CONFIG[pet.petType] || TYPE_CONFIG['DRAGON'];
     const stages = typeInfo.stages || [];
 
     let rank = 1;
-    let nextGoal = 'Lv.5 解锁成长期形态';
+    let nextGoal = 'Lv.5 解锁元气陪伴形态';
     let progressText = `${lvl}/5`;
 
     if (lvl >= 10) {
       rank = 3;
-      nextGoal = '已达顶级究极形态 ✨';
+      nextGoal = '已达终极蜕变闺蜜 ✨';
       progressText = 'MAX';
     } else if (lvl >= 5) {
       rank = 2;
-      nextGoal = 'Lv.10 解锁究极形态';
+      nextGoal = 'Lv.10 解锁蜕变闺蜜形态';
       progressText = `${lvl}/10`;
     }
 
@@ -583,16 +602,15 @@ Page({
     });
   },
 
-  /* 立即投喂：检测升级与 3 阶形态进化 */
   onFeedPet() {
     const user = app.globalData.userInfo;
     if (!user || !user.id || !this.data.pet) return;
 
     if (this.data.pet.foodCount <= 0) {
       wx.showModal({
-        title: '食物不足',
-        content: '小家伙的饭碗空空啦！完成下方「赚粮任务」（每日签到/运动/饮食打卡）就能免费获得食物哦～',
-        confirmText: '立即签到',
+        title: '零食袋空空啦',
+        content: '小家伙的零食袋空空啦！完成下方「赚粮任务」（运动/记餐/喝水打卡）就能免费获得食物哦～',
+        confirmText: '去签到',
         cancelText: '稍后再说',
         success: (modalRes) => {
           if (modalRes.confirm && !this.data.foodTasks.checkin) {
@@ -624,7 +642,7 @@ Page({
               wx.vibrateShort({ type: 'heavy' });
             }, 600);
           } else {
-            wx.showToast({ title: '投喂成功！+10 经验 ✨', icon: 'none' });
+            wx.showToast({ title: '投喂成功！+10 能量 ✨', icon: 'none' });
           }
         } else {
           wx.showToast({ title: (res.data && res.data.message) || '投喂失败', icon: 'none' });
@@ -641,7 +659,6 @@ Page({
     });
   },
 
-  /* 🌟 轻触抚摸：触发点击物理弹跳 + 异步 AI 动态拟人搭话 */
   onTapPet() {
     if (!this.data.pet || this.data.isFeeding) return;
 
@@ -658,18 +675,15 @@ Page({
       });
     }, 600);
 
-    // 触发 AI 交互 (TOUCH)
     this.callAiInteraction('TOUCH', '');
   },
 
-  /* 🎋 自律心声胶囊点击（100% 微信合规，受控指令） */
   onTapQuickPrompt(e) {
     const prompt = e.currentTarget.dataset.prompt;
     if (!prompt) return;
     this.callAiInteraction('CHAT', prompt);
   },
 
-  /* 核心：调用后端 AI 动态拟人互动 API */
   callAiInteraction(actionType, userMessage) {
     const user = app.globalData.userInfo;
     if (!user || !user.id || !this.data.pet) return;
@@ -703,7 +717,34 @@ Page({
     });
   },
 
-  /* 形态图鉴弹窗 */
+  /* 📸 自律拍立得小红书分享 */
+  onOpenPolaroidModal() {
+    const randomQuote = POLAROID_QUOTES[Math.floor(Math.random() * POLAROID_QUOTES.length)];
+    this.setData({
+      showPolaroidModal: true,
+      polaroidQuote: randomQuote
+    });
+    wx.vibrateShort({ type: 'medium' });
+  },
+
+  onClosePolaroidModal() {
+    this.setData({ showPolaroidModal: false });
+  },
+
+  onSavePolaroidToAlbum() {
+    wx.showLoading({ title: '正在生成拍立得...' });
+    setTimeout(() => {
+      wx.hideLoading();
+      wx.showModal({
+        title: '📸 拍立得已就绪',
+        content: '拍立得卡片已生成！您可以直接截图保存，分享至小红书或微信朋友圈，晒出你的松弛感自律日常～✨',
+        showCancel: false,
+        confirmText: '知道啦 💖'
+      });
+      wx.vibrateShort({ type: 'heavy' });
+    }, 600);
+  },
+
   onOpenDexModal() {
     this.setData({ showDexModal: true });
   },
@@ -712,7 +753,6 @@ Page({
     this.setData({ showDexModal: false });
   },
 
-  /* 勋章馆弹窗 */
   onOpenBadgeModal() {
     const first = this.data.badgeList[0];
     this.setData({
@@ -735,7 +775,6 @@ Page({
     this.setData({ showEvolutionModal: false });
   },
 
-  /* 任务快捷跳转 */
   onGoExercise() { wx.switchTab({ url: '/pages/index/index' }); },
   onGoDiet() { wx.switchTab({ url: '/pages/index/index' }); },
   onGoWater() { wx.switchTab({ url: '/pages/index/index' }); },
