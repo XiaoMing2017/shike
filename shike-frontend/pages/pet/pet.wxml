@@ -73,7 +73,7 @@
         </text>
       </view>
 
-      <!-- 🌟 Finch 3D 浮岛直选展台（直接展示活生生的软萌幼宠） -->
+            <!-- 🌟 Finch 3D 浮岛直选展台（直接展示活生生的软萌幼宠） -->
       <view class="adopt-3d-stage-box flex flex-col align-center">
         <!-- 3D 沉浸式阳光原木自律小屋背景 -->
         <image class="world-scene-bg" src="/images/pets/scene_room_bg.jpg" mode="aspectFill" />
@@ -91,8 +91,6 @@
           <view class="adopt-pet-anchor pet-breathe-anim" bindtap="onTapPreviewPet">
             <image class="adopt-pet-img" src="{{currentTypeInfo.stages[0].image}}" mode="aspectFit" />
             <view class="pet-dynamic-shadow"></view>
-          </view>
-
           </view>
         </view>
 
@@ -159,7 +157,7 @@
         <view class="stage-rank-tag stage-rank-{{petStageRank}}">{{currentStageInfo.stageTitle}}</view>
       </view>
 
-      <!-- 🌟 3D 核心景深互动舞台 -->
+            <!-- 🌟 3D 核心景深互动舞台 -->
       <view class="virtual-3d-world">
         
         <!-- 3D 沉浸式阳光原木自律小屋生活场景 -->
@@ -207,8 +205,6 @@
           <view class="pet-mesh-container stage-size-{{petStageRank}} {{isFeeding ? 'animate-pet-chew' : (isTouched ? 'animate-pet-squish' : 'animate-idle-breathe')}}">
             <image class="pet-cutout-img" src="{{activePetImage}}" mode="aspectFit"></image>
             <view class="pet-floor-shadow {{isFeeding ? 'shadow-chew' : (isTouched ? 'shadow-squish' : 'shadow-breathe')}}"></view>
-          </view>
-
           </view>
 
         </view>
