@@ -67,8 +67,23 @@ public class Pet {
     @Column(name = "last_feed_date")
     private LocalDate lastFeedDate;
 
+    @Column(name = "last_checkin_date")
+    private LocalDate lastCheckinDate;
+
     @Column(name = "last_exercise_date")
     private LocalDate lastExerciseDate;
+
+    @Column(name = "last_diet_date")
+    private LocalDate lastDietDate;
+
+    @Column(name = "last_water_date")
+    private LocalDate lastWaterDate;
+
+    @Column(name = "last_weight_date")
+    private LocalDate lastWeightDate;
+
+    @Column(name = "last_fullness_calc_time")
+    private LocalDateTime lastFullnessCalcTime;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

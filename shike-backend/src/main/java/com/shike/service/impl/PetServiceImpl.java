@@ -23,6 +23,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -56,14 +57,57 @@ public class PetServiceImpl implements PetService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public PetDTO getMyPet(Long userId) {
         checkPetFeatureEnabled();
         Pet pet = petRepository.findByUserId(userId).orElse(null);
         if (pet == null) {
             return null;
         }
+        // 核心：基于真实时间结算自然饥饿与饱食度下降
+        applyFullnessDecay(pet);
         return convertToDTO(pet, userId);
+    }
+
+    /**
+     * 饱食度自然消耗算法：
+     * 随着真实时间流逝（如过夜 8~12 小时），饱食度自然平滑下降（每小时约消耗 3.5 点），
+     * 饱食度低于 30 自动进入饥饿 HUNGRY 状态，强化自律运动投喂的情感动力！
+     */
+    private void applyFullnessDecay(Pet pet) {
+        if (pet == null) return;
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime lastCalc = pet.getLastFullnessCalcTime();
+        if (lastCalc == null) {
+            lastCalc = pet.getUpdatedAt() != null ? pet.getUpdatedAt() : pet.getCreatedAt();
+        }
+
+        if (lastCalc != null) {
+            long minutesPassed = Duration.between(lastCalc, now).toMinutes();
+            if (minutesPassed >= 15) { // 每 15 分钟平滑结算一次
+                double hoursPassed = minutesPassed / 60.0;
+                int decay = (int) Math.round(hoursPassed * 3.5); // 基础代谢率：3.5 点/小时
+                if (decay > 0) {
+                    int currentFullness = pet.getFullness() != null ? pet.getFullness() : 60;
+                    int newFullness = Math.max(0, currentFullness - decay);
+                    pet.setFullness(newFullness);
+                    pet.setLastFullnessCalcTime(now);
+
+                    // 饱食度低自动触发饥饿状态
+                    if (newFullness < 30) {
+                        pet.setMood("HUNGRY");
+                    } else if ("HUNGRY".equals(pet.getMood()) && newFullness >= 30) {
+                        pet.setMood("NORMAL");
+                    }
+                    petRepository.save(pet);
+                    log.info("Fullness decay applied for userId={}: elapsed {} min, decayed -{} pts, remaining fullness={}",
+                            pet.getUserId(), minutesPassed, decay, newFullness);
+                }
+            }
+        } else {
+            pet.setLastFullnessCalcTime(now);
+            petRepository.save(pet);
+        }
     }
 
     @Override
@@ -106,6 +150,7 @@ public class PetServiceImpl implements PetService {
                 .foodCount(1) // 初始赠送 1 份食物
                 .mood("NORMAL")
                 .streakDays(1)
+                .lastFullnessCalcTime(LocalDateTime.now())
                 .build();
 
         Pet saved = petRepository.save(pet);
@@ -122,15 +167,20 @@ public class PetServiceImpl implements PetService {
 
         int currentFood = pet.getFoodCount() != null ? pet.getFoodCount() : 0;
         if (currentFood <= 0) {
-            throw new BizException(400, "暂无可投喂的食物，去完成运动、记录饮食或每日签到赚取食物吧！");
+            throw new BizException(400, "暂无可投喂的食物，完成运动、记餐或每日签到赚取食物吧！");
         }
+
+        // 先计算截至当前的自然消耗
+        applyFullnessDecay(pet);
 
         LocalDate today = LocalDate.now();
         pet.setFoodCount(currentFood - 1);
 
         // 饱食度 +30 (上限 100)
         int currentFullness = pet.getFullness() != null ? pet.getFullness() : 60;
-        pet.setFullness(Math.min(100, currentFullness + 30));
+        int newFullness = Math.min(100, currentFullness + 30);
+        pet.setFullness(newFullness);
+        pet.setLastFullnessCalcTime(LocalDateTime.now());
 
         // 亲密度 +5
         int currentIntimacy = pet.getIntimacy() != null ? pet.getIntimacy() : 10;
@@ -152,7 +202,7 @@ public class PetServiceImpl implements PetService {
             pet.setExp(newExp);
         }
 
-        // 连续天数计算
+        // 连续陪伴天数计算
         LocalDate lastFeed = pet.getLastFeedDate();
         int streak = pet.getStreakDays() != null ? pet.getStreakDays() : 0;
         if (lastFeed != null && lastFeed.equals(today.minusDays(1))) {
@@ -162,7 +212,7 @@ public class PetServiceImpl implements PetService {
         }
 
         pet.setLastFeedDate(today);
-        pet.setMood("HAPPY");
+        pet.setMood(newFullness >= 60 ? "HAPPY" : "NORMAL");
 
         Pet updated = petRepository.save(pet);
         return convertToDTO(updated, userId);
@@ -184,23 +234,49 @@ public class PetServiceImpl implements PetService {
 
         LocalDate targetDate = date != null ? date : LocalDate.now();
         String sourceUpper = source != null ? source.toUpperCase() : "GENERAL";
-        String redisKey = "pet:food_reward:" + userId + ":" + sourceUpper + ":" + targetDate;
 
-        // 检查今日是否已通过该渠道获得过食物
-        try {
-            Boolean isNew = stringRedisTemplate.opsForValue().setIfAbsent(redisKey, "1", Duration.ofDays(2));
-            if (Boolean.FALSE.equals(isNew)) {
-                log.info("User {} already claimed {} food reward for today: {}", userId, sourceUpper, targetDate);
-                return false;
-            }
-        } catch (Exception e) {
-            log.warn("Redis check failed, fallback: {}", e.getMessage());
+        // 数据库级别严格防重：每天每种自律行为只能领取 1 次食物
+        switch (sourceUpper) {
+            case "CHECKIN":
+                if (pet.getLastCheckinDate() != null && pet.getLastCheckinDate().equals(targetDate)) {
+                    log.info("User {} already checkin today: {}", userId, targetDate);
+                    return false;
+                }
+                pet.setLastCheckinDate(targetDate);
+                break;
+            case "EXERCISE":
+                if (pet.getLastExerciseDate() != null && pet.getLastExerciseDate().equals(targetDate)) {
+                    log.info("User {} already got exercise food today: {}", userId, targetDate);
+                    return false;
+                }
+                pet.setLastExerciseDate(targetDate);
+                break;
+            case "DIET":
+                if (pet.getLastDietDate() != null && pet.getLastDietDate().equals(targetDate)) {
+                    log.info("User {} already got diet food today: {}", userId, targetDate);
+                    return false;
+                }
+                pet.setLastDietDate(targetDate);
+                break;
+            case "WATER":
+                if (pet.getLastWaterDate() != null && pet.getLastWaterDate().equals(targetDate)) {
+                    log.info("User {} already got water food today: {}", userId, targetDate);
+                    return false;
+                }
+                pet.setLastWaterDate(targetDate);
+                break;
+            case "WEIGHT":
+                if (pet.getLastWeightDate() != null && pet.getLastWeightDate().equals(targetDate)) {
+                    log.info("User {} already got weight food today: {}", userId, targetDate);
+                    return false;
+                }
+                pet.setLastWeightDate(targetDate);
+                break;
+            default:
+                break;
         }
 
         pet.setFoodCount((pet.getFoodCount() != null ? pet.getFoodCount() : 0) + 1);
-        if ("EXERCISE".equals(sourceUpper)) {
-            pet.setLastExerciseDate(targetDate);
-        }
         petRepository.save(pet);
         log.info("Awarded 1 pet food to userId={} from source={}", userId, sourceUpper);
         return true;
@@ -224,20 +300,25 @@ public class PetServiceImpl implements PetService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<String, Object> getTodayFoodTasks(Long userId) {
         LocalDate today = LocalDate.now();
         Map<String, Object> res = new HashMap<>();
-
-        String[] sources = {"CHECKIN", "EXERCISE", "DIET", "WATER", "WEIGHT"};
         Map<String, Boolean> taskStatus = new HashMap<>();
 
-        for (String s : sources) {
-            String key = "pet:food_reward:" + userId + ":" + s + ":" + today;
-            boolean completed = false;
-            try {
-                completed = Boolean.TRUE.equals(stringRedisTemplate.hasKey(key));
-            } catch (Exception e) {}
-            taskStatus.put(s.toLowerCase(), completed);
+        Pet pet = petRepository.findByUserId(userId).orElse(null);
+        if (pet != null) {
+            taskStatus.put("checkin", today.equals(pet.getLastCheckinDate()));
+            taskStatus.put("exercise", today.equals(pet.getLastExerciseDate()));
+            taskStatus.put("diet", today.equals(pet.getLastDietDate()));
+            taskStatus.put("water", today.equals(pet.getLastWaterDate()));
+            taskStatus.put("weight", today.equals(pet.getLastWeightDate()));
+        } else {
+            taskStatus.put("checkin", false);
+            taskStatus.put("exercise", false);
+            taskStatus.put("diet", false);
+            taskStatus.put("water", false);
+            taskStatus.put("weight", false);
         }
 
         res.put("tasks", taskStatus);
@@ -357,8 +438,8 @@ public class PetServiceImpl implements PetService {
         int maxExp = level * 50;
 
         String dialogue = "今天也是充满活力的一天！一起来自律打卡吧～";
-        if ("HUNGRY".equals(pet.getMood())) {
-            dialogue = "肚子有点咕咕叫啦，记得运动打卡给我带点好吃的哦～";
+        if ("HUNGRY".equals(pet.getMood()) || (pet.getFullness() != null && pet.getFullness() < 30)) {
+            dialogue = "肚子咕咕叫啦，记得运动打卡给我带点好吃的哦～";
         } else if ("HAPPY".equals(pet.getMood())) {
             dialogue = "吃饱饱超满足！今天也要元气满满哦～";
         }
@@ -376,13 +457,14 @@ public class PetServiceImpl implements PetService {
                 .intimacy(pet.getIntimacy() != null ? pet.getIntimacy() : 10)
                 .foodCount(pet.getFoodCount() != null ? pet.getFoodCount() : 0)
                 .mood(pet.getMood() != null ? pet.getMood() : "NORMAL")
-                .moodText(getMoodText(pet.getMood()))
+                .moodText(getMoodText(pet.getMood(), pet.getFullness()))
                 .streakDays(pet.getStreakDays() != null ? pet.getStreakDays() : 1)
                 .dialogue(dialogue)
                 .build();
     }
 
-    private String getMoodText(String mood) {
+    private String getMoodText(String mood, Integer fullness) {
+        if (fullness != null && fullness < 30) return "饥肠辘辘";
         if (mood == null) return "悠然自得";
         return switch (mood) {
             case "HAPPY" -> "开心雀跃";
