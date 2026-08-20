@@ -1266,3 +1266,44 @@
   line-height: 1.4;
   margin-top: 6rpx;
 }
+
+/* 🎨 场景按钮增强样式 */
+.scene-hud-pill {
+  background: #ECFDF5;
+  border: 1.5rpx solid #10B981;
+  padding: 4rpx 14rpx;
+  border-radius: 20rpx;
+  box-shadow: 0 2rpx 8rpx rgba(16, 185, 129, 0.15);
+}
+
+.scene-hud-text {
+  font-size: 20rpx;
+  font-weight: 800;
+  color: #047857;
+}
+
+/* 场景右上角悬浮毛玻璃胶囊 */
+.floating-scene-bubble {
+  position: absolute;
+  top: 24rpx;
+  right: 24rpx;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  border: 1.5rpx solid rgba(226, 232, 240, 0.9);
+  padding: 10rpx 20rpx;
+  border-radius: 30rpx;
+  box-shadow: 0 6rpx 20rpx rgba(15, 23, 42, 0.1);
+  z-index: 35;
+  transition: transform 0.2s ease;
+}
+
+.floating-scene-bubble:active {
+  transform: scale(0.94);
+  background: #ECFDF5;
+}
+
+.floating-scene-text {
+  font-size: 22rpx;
+  font-weight: 800;
+  color: #0F172A;
+}

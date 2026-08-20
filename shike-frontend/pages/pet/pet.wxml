@@ -11,10 +11,15 @@
       </view>
     </view>
     
-    <view class="flex align-center nav-actions-wrap" style="gap: 10rpx;">
+    <view class="flex align-center nav-actions-wrap" style="gap: 8rpx;">
+      <!-- 🎨 换场景入口 -->
+      <view class="scene-nav-pill flex align-center" bindtap="onOpenSceneModal" wx:if="{{hasPet}}">
+        <text style="font-size: 20rpx; margin-right: 4rpx;">🎨</text>
+        <text class="pill-text-emerald">换场景</text>
+      </view>
       <!-- 📸 小红书自律拍立得入口 -->
       <view class="polaroid-nav-pill flex align-center" bindtap="onOpenPolaroidModal" wx:if="{{hasPet}}">
-        <text style="font-size: 22rpx; margin-right: 4rpx;">📸</text>
+        <text style="font-size: 20rpx; margin-right: 4rpx;">📸</text>
         <text class="pill-text-rose">拍立得</text>
       </view>
       <!-- 形态图鉴入口 -->
