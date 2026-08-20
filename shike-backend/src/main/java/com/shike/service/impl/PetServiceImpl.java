@@ -24,6 +24,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
@@ -42,11 +43,11 @@ public class PetServiceImpl implements PetService {
     private String aiApiKey;
 
     private static final Map<String, String> PRESET_AVATARS = Map.of(
-            "DRAGON", "/images/pets/pet_dragon.png",
-            "TOTORO", "/images/pets/pet_totoro.png",
-            "CAT", "/images/pets/pet_cat.png",
-            "DOG", "/images/pets/pet_dog.png",
-            "QILIN", "/images/pets/pet_qilin.png"
+            "DRAGON", "/images/pets/pet_dragon_stage1.png",
+            "TOTORO", "/images/pets/pet_totoro_stage1.png",
+            "CAT", "/images/pets/pet_cat_stage1.png",
+            "DOG", "/images/pets/pet_dog_stage1.png",
+            "QILIN", "/images/pets/pet_qilin_stage1.png"
     );
 
     private void checkPetFeatureEnabled() {
@@ -64,19 +65,27 @@ public class PetServiceImpl implements PetService {
         if (pet == null) {
             return null;
         }
-        // 核心：基于真实时间结算自然饥饿与饱食度下降
-        applyFullnessDecay(pet);
+        // 核心：基于真实时间结算自然饥饿、怠惰惩罚、经验流失与生命状态
+        applyLifeCycleAndSlackPenalty(pet);
         return convertToDTO(pet, userId);
     }
 
     /**
-     * 饱食度自然消耗算法：
-     * 随着真实时间流逝（如过夜 8~12 小时），饱食度自然平滑下降（每小时约消耗 3.5 点），
-     * 饱食度低于 30 自动进入饥饿 HUNGRY 状态，强化自律运动投喂的情感动力！
+     * 核心：搭子生命周期与怠惰衰减体系（Natural Hunger & Slack Penalties）
+     * 1. 饱食度自然消耗：每小时自然代谢 -3.5 点（8小时过夜消耗 28点，24小时消耗 84点）
+     * 2. 饱食度 < 30 -> 进入 HUNGRY 状态
+     * 3. 连续 > 48 小时未打卡投喂：
+     *    - 饱食度降为 0
+     *    - 进入 虚弱生病 SICK 状态（台词虚弱求救，立绘虚脱滤镜）
+     *    - 亲密度每日流失 -5 点（保底 0 点）
+     *    - 当前级经验 EXP 每日流失 -10 点（设有 Lv.1 / Lv.5 / Lv.10 阶段形态保底，绝不退化外观形态）
+     * 4. 连续自律天数判定：若昨日未打卡投喂，Streak 自动重置为 1
      */
-    private void applyFullnessDecay(Pet pet) {
+    private void applyLifeCycleAndSlackPenalty(Pet pet) {
         if (pet == null) return;
         LocalDateTime now = LocalDateTime.now();
+        LocalDate today = LocalDate.now();
+
         LocalDateTime lastCalc = pet.getLastFullnessCalcTime();
         if (lastCalc == null) {
             lastCalc = pet.getUpdatedAt() != null ? pet.getUpdatedAt() : pet.getCreatedAt();
@@ -86,22 +95,66 @@ public class PetServiceImpl implements PetService {
             long minutesPassed = Duration.between(lastCalc, now).toMinutes();
             if (minutesPassed >= 15) { // 每 15 分钟平滑结算一次
                 double hoursPassed = minutesPassed / 60.0;
-                int decay = (int) Math.round(hoursPassed * 3.5); // 基础代谢率：3.5 点/小时
+                int decay = (int) Math.round(hoursPassed * 3.5);
                 if (decay > 0) {
                     int currentFullness = pet.getFullness() != null ? pet.getFullness() : 60;
                     int newFullness = Math.max(0, currentFullness - decay);
                     pet.setFullness(newFullness);
                     pet.setLastFullnessCalcTime(now);
 
-                    // 饱食度低自动触发饥饿状态
-                    if (newFullness < 30) {
+                    // 1. 饱食度与心情判定
+                    if (newFullness <= 0) {
+                        // 如果饱食度归零，检查是否已饥饿超过 24 小时
+                        LocalDate lastFeed = pet.getLastFeedDate();
+                        if (lastFeed != null && ChronoUnit.DAYS.between(lastFeed, today) >= 2) {
+                            pet.setMood("SICK"); // 虚弱生病
+                        } else {
+                            pet.setMood("HUNGRY");
+                        }
+                    } else if (newFullness < 30) {
                         pet.setMood("HUNGRY");
                     } else if ("HUNGRY".equals(pet.getMood()) && newFullness >= 30) {
                         pet.setMood("NORMAL");
                     }
+
+                    // 2. 连续 48 小时未自律投喂 -> 触发经验与亲密度怠惰流失 (带有 Lv.1 / Lv.5 / Lv.10 形态保底)
+                    LocalDate lastFeed = pet.getLastFeedDate();
+                    if (lastFeed != null && ChronoUnit.DAYS.between(lastFeed, today) >= 2) {
+                        pet.setMood("SICK");
+                        long daysNeglected = ChronoUnit.DAYS.between(lastFeed, today) - 1;
+                        if (daysNeglected > 0) {
+                            // 亲密度流失
+                            int currentIntimacy = pet.getIntimacy() != null ? pet.getIntimacy() : 10;
+                            pet.setIntimacy((int) Math.max(0, currentIntimacy - daysNeglected * 5));
+
+                            // 经验流失（保底当前阶段初始等级）
+                            int currentExp = pet.getExp() != null ? pet.getExp() : 0;
+                            int currentLvl = pet.getLevel() != null ? pet.getLevel() : 1;
+                            int expLoss = (int) (daysNeglected * 10);
+                            
+                            int newExp = currentExp - expLoss;
+                            if (newExp < 0) {
+                                // 经验扣减至 0，如果有降级余地且不在保底形态节点（Lv.1, Lv.5, Lv.10）
+                                if (currentLvl > 1 && currentLvl != 5 && currentLvl != 10) {
+                                    pet.setLevel(currentLvl - 1);
+                                    pet.setExp(Math.max(0, (currentLvl - 1) * 50 + newExp));
+                                } else {
+                                    pet.setExp(0);
+                                }
+                            } else {
+                                pet.setExp(newExp);
+                            }
+                            log.warn("Pet neglected for {} days! userId={}, applied EXP/Intimacy decay. New level={}, exp={}",
+                                    daysNeglected, pet.getUserId(), pet.getLevel(), pet.getExp());
+                        }
+                    }
+
+                    // 3. 断签判定：昨日未投喂且今日未投喂，连签归 1
+                    if (lastFeed != null && !lastFeed.equals(today) && !lastFeed.equals(today.minusDays(1))) {
+                        pet.setStreakDays(1);
+                    }
+
                     petRepository.save(pet);
-                    log.info("Fullness decay applied for userId={}: elapsed {} min, decayed -{} pts, remaining fullness={}",
-                            pet.getUserId(), minutesPassed, decay, newFullness);
                 }
             }
         } else {
@@ -115,7 +168,7 @@ public class PetServiceImpl implements PetService {
     public PetDTO createPet(Long userId, PetCreateDTO dto) {
         checkPetFeatureEnabled();
         log.info("Creating pet for userId={}, name={}, type={}", userId, dto.getName(), dto.getPetType());
-        
+
         Optional<Pet> existingOpt = petRepository.findByUserId(userId);
         if (existingOpt.isPresent()) {
             Pet existing = existingOpt.get();
@@ -134,7 +187,7 @@ public class PetServiceImpl implements PetService {
         String typeUpper = dto.getPetType() != null ? dto.getPetType().toUpperCase() : "DRAGON";
         String avatarUrl = dto.getAvatarUrl();
         if (avatarUrl == null || avatarUrl.isBlank()) {
-            avatarUrl = PRESET_AVATARS.getOrDefault(typeUpper, "/images/pets/pet_dragon.png");
+            avatarUrl = PRESET_AVATARS.getOrDefault(typeUpper, "/images/pets/pet_dragon_stage1.png");
         }
 
         Pet pet = Pet.builder()
@@ -170,8 +223,8 @@ public class PetServiceImpl implements PetService {
             throw new BizException(400, "暂无可投喂的食物，完成运动、记餐或每日签到赚取食物吧！");
         }
 
-        // 先计算截至当前的自然消耗
-        applyFullnessDecay(pet);
+        // 先计算截至当前的自然消耗与怠惰流失
+        applyLifeCycleAndSlackPenalty(pet);
 
         LocalDate today = LocalDate.now();
         pet.setFoodCount(currentFood - 1);
@@ -212,7 +265,14 @@ public class PetServiceImpl implements PetService {
         }
 
         pet.setLastFeedDate(today);
-        pet.setMood(newFullness >= 60 ? "HAPPY" : "NORMAL");
+
+        // 核心：若此前处于虚弱生病 SICK 状态，投喂立即触发【自律治愈复苏】
+        if ("SICK".equals(pet.getMood())) {
+            log.info("Pet recovered from sickness via feeding! userId={}", userId);
+            pet.setMood(newFullness >= 60 ? "HAPPY" : "NORMAL");
+        } else {
+            pet.setMood(newFullness >= 60 ? "HAPPY" : "NORMAL");
+        }
 
         Pet updated = petRepository.save(pet);
         return convertToDTO(updated, userId);
@@ -340,7 +400,7 @@ public class PetServiceImpl implements PetService {
         }
 
         if (generatedUrl == null || generatedUrl.isBlank()) {
-            generatedUrl = PRESET_AVATARS.getOrDefault(typeUpper, "/images/pets/pet_dragon.png");
+            generatedUrl = PRESET_AVATARS.getOrDefault(typeUpper, "/images/pets/pet_dragon_stage1.png");
         }
 
         Map<String, Object> res = new HashMap<>();
@@ -438,8 +498,10 @@ public class PetServiceImpl implements PetService {
         int maxExp = level * 50;
 
         String dialogue = "今天也是充满活力的一天！一起来自律打卡吧～";
-        if ("HUNGRY".equals(pet.getMood()) || (pet.getFullness() != null && pet.getFullness() < 30)) {
-            dialogue = "肚子咕咕叫啦，记得运动打卡给我带点好吃的哦～";
+        if ("SICK".equals(pet.getMood())) {
+            dialogue = "好几天没见到主人啦，小家伙生病虚弱中……快去运动打卡救救它吧！💔";
+        } else if ("HUNGRY".equals(pet.getMood()) || (pet.getFullness() != null && pet.getFullness() < 30)) {
+            dialogue = "肚子咕咕叫啦，记得打卡给我带点好吃的哦～";
         } else if ("HAPPY".equals(pet.getMood())) {
             dialogue = "吃饱饱超满足！今天也要元气满满哦～";
         }
@@ -464,11 +526,13 @@ public class PetServiceImpl implements PetService {
     }
 
     private String getMoodText(String mood, Integer fullness) {
+        if ("SICK".equals(mood)) return "虚弱生病";
         if (fullness != null && fullness < 30) return "饥肠辘辘";
         if (mood == null) return "悠然自得";
         return switch (mood) {
             case "HAPPY" -> "开心雀跃";
             case "HUNGRY" -> "饥肠辘辘";
+            case "SICK" -> "虚弱生病";
             case "WANT_EXERCISE" -> "渴望运动";
             default -> "悠然自得";
         };
