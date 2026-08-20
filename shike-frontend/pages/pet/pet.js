@@ -211,6 +211,174 @@ const TYPE_CONFIG = {
         desc: '终极形态！头戴星花王冠，至高祥瑞守护你的自律之路！'
       }
     ]
+  },
+  RABBIT: {
+    type: 'RABBIT',
+    icon: '🐰',
+    eggEmoji: '🌸',
+    eggName: '粉樱甜兔之卵',
+    name: '糯糯小兔',
+    tag: '甜美治愈',
+    food: '🍓',
+    quote: '蹦蹦跳跳甩掉卡路里，今天也要开心自律哦～',
+    themeBg: '#FFF1F2',
+    themeColor: '#E11D48',
+    defaultName: '糯糯',
+    stages: [
+      {
+        rank: 1,
+        name: '破壳萌新 · 糯糯兔',
+        stageTitle: '阶段1 · 破壳萌新',
+        reqText: 'Lv.1 破壳解锁',
+        image: '/images/pets/pet_rabbit_stage1.png',
+        quote: '粉白长耳软萌垂耳兔，两颊粉扑扑，最爱抱大草莓！',
+        desc: '软萌纯真的小兔兔，每天陪你跳操、喝水与健康轻食！'
+      },
+      {
+        rank: 2,
+        name: '元气陪伴 · 甜心兔',
+        stageTitle: '阶段2 · 元气陪伴',
+        reqText: 'Lv.5 解锁',
+        image: '/images/pets/pet_rabbit_stage2.png',
+        quote: '戴上粉色郁金香遮阳帽，背上小黄包，元气满满冲鸭！',
+        desc: '进阶为甜心小兔，戴着可爱遮阳帽与小背包，充满活力！'
+      },
+      {
+        rank: 3,
+        name: '蜕变闺蜜 · 治愈仙兔',
+        stageTitle: '阶段3 · 蜕变闺蜜',
+        reqText: 'Lv.10 解锁',
+        image: '/images/pets/pet_rabbit_stage3.png',
+        quote: '头戴樱花水晶花冠，手捧热茶，做你永远的贴心小棉袄！',
+        desc: '终极形态！身披星芒与樱花花冠，用无条件的爱守护你！'
+      }
+    ]
+  },
+  PANDA: {
+    type: 'PANDA',
+    icon: '🐼',
+    eggEmoji: '🎋',
+    eggName: '青竹翠玉之卵',
+    name: '墩墩熊猫',
+    tag: '松弛无忧',
+    food: '🎋',
+    quote: '多吃新鲜绿叶蔬菜，每天都像大熊猫一样快乐无忧～',
+    themeBg: '#F0FDF4',
+    themeColor: '#15803D',
+    defaultName: '墩墩',
+    stages: [
+      {
+        rank: 1,
+        name: '破壳萌新 · 小墩墩',
+        stageTitle: '阶段1 · 破壳萌新',
+        reqText: 'Lv.1 破壳解锁',
+        image: '/images/pets/pet_panda_stage1.png',
+        quote: '黑白圆滚滚小团子，抱着鲜嫩脆竹笋打滚～',
+        desc: '慢条斯理的国宝小熊猫，教你享受健康轻食与松弛节奏。'
+      },
+      {
+        rank: 2,
+        name: '元气陪伴 · 功夫墩',
+        stageTitle: '阶段2 · 元气陪伴',
+        reqText: 'Lv.5 解锁',
+        image: '/images/pets/pet_panda_stage2.png',
+        quote: '披上翠绿斗篷，穿上探险鞋，吃饱动起来超健康！',
+        desc: '进阶为元气小熊猫，活力满满，督促你规律三餐与运动！'
+      },
+      {
+        rank: 3,
+        name: '蜕变闺蜜 · 仙境竹仙',
+        stageTitle: '阶段3 · 蜕变闺蜜',
+        reqText: 'Lv.10 解锁',
+        image: '/images/pets/pet_panda_stage3.png',
+        quote: '头戴翠竹神冠，手提暖灯，守护你的一生从容与健康！',
+        desc: '终极形态！化身仙境竹神，给你最踏实安宁的松弛力量！'
+      }
+    ]
+  },
+  BEAR: {
+    type: 'BEAR',
+    icon: '🐻',
+    eggEmoji: '🍯',
+    eggName: '暖阳焦糖之卵',
+    name: '焦糖暖熊',
+    tag: '温暖依靠',
+    food: '🍯',
+    quote: '给你一个超大的暖心熊抱，今天无论如何你都很棒！',
+    themeBg: '#FFFBEB',
+    themeColor: '#B45309',
+    defaultName: '波波',
+    stages: [
+      {
+        rank: 1,
+        name: '破壳萌新 · 小暖熊',
+        stageTitle: '阶段1 · 破壳萌新',
+        reqText: 'Lv.1 破壳解锁',
+        image: '/images/pets/pet_bear_stage1.png',
+        quote: '毛茸茸的焦糖色小熊仔，抱着蜂蜜罐甜甜地笑～',
+        desc: '温暖厚实的泰迪小熊，给你最充沛的安全感与陪伴。'
+      },
+      {
+        rank: 2,
+        name: '元气陪伴 · 探险熊',
+        stageTitle: '阶段2 · 元气陪伴',
+        reqText: 'Lv.5 解锁',
+        image: '/images/pets/pet_bear_stage2.png',
+        quote: '系上红格子领巾，穿上小皮鞋，陪你探索更棒的自己！',
+        desc: '进阶为探险暖熊，精力充沛，随时给你充气打劲！'
+      },
+      {
+        rank: 3,
+        name: '蜕变闺蜜 · 守护大白熊',
+        stageTitle: '阶段3 · 蜕变闺蜜',
+        reqText: 'Lv.10 解锁',
+        image: '/images/pets/pet_bear_stage3.png',
+        quote: '花冠加身，做你永远最温暖有力的靠山与后盾！',
+        desc: '终极形态！头戴璀璨花环，给你无限的包容与爱！'
+      }
+    ]
+  },
+  PENGUIN: {
+    type: 'PENGUIN',
+    icon: '🐧',
+    eggEmoji: '❄️',
+    eggName: '极地冰晶之卵',
+    name: '皮皮企鹅',
+    tag: '清爽轻盈',
+    food: '🐟',
+    quote: '摇摇摆摆走一万步，甩掉油腻，今天又是清爽的一天！',
+    themeBg: '#F0F9FF',
+    themeColor: '#0369A1',
+    defaultName: '皮皮',
+    stages: [
+      {
+        rank: 1,
+        name: '破壳萌新 · 小皮皮',
+        stageTitle: '阶段1 · 破壳萌新',
+        reqText: 'Lv.1 破壳解锁',
+        image: '/images/pets/pet_penguin_stage1.png',
+        quote: '圆滚滚的冰蓝小企鹅，扑棱小短翅求抱抱～',
+        desc: '清凉可爱的小企鹅，最喜欢陪你喝足八杯水、保持清爽！'
+      },
+      {
+        rank: 2,
+        name: '元气陪伴 · 破浪企鹅',
+        stageTitle: '阶段2 · 元气陪伴',
+        reqText: 'Lv.5 解锁',
+        image: '/images/pets/pet_penguin_stage2.png',
+        quote: '戴上探险帽背上行囊，迈着小碎步轻快前行！',
+        desc: '进阶为破浪小企鹅，轻快敏捷，甩掉疲劳与水肿！'
+      },
+      {
+        rank: 3,
+        name: '蜕变闺蜜 · 极光圣企鹅',
+        stageTitle: '阶段3 · 蜕变闺蜜',
+        reqText: 'Lv.10 解锁',
+        image: '/images/pets/pet_penguin_stage3.png',
+        quote: '头戴冰晶花冠，手捧极光暖茶，轻盈变美永不停步！',
+        desc: '终极形态！周身环绕极光与冰晶星芒，轻盈优雅！'
+      }
+    ]
   }
 };
 
@@ -283,12 +451,16 @@ Page({
     earnedFoodCount: 0,
 
     candidateNames: ['木木', '小燃', '豆豆', '卡卡', '饭团', '泡泡', '嘟嘟'],
-                types: [
+                    types: [
       { type: 'DRAGON', icon: '🐉', eggEmoji: '🟢', name: '木木小龙' },
       { type: 'TOTORO', icon: '🍃', eggEmoji: '⚪', name: '呼噜龙猫' },
       { type: 'CAT', icon: '🐱', eggEmoji: '🟡', name: '元气小橘' },
       { type: 'DOG', icon: '🐶', eggEmoji: '🟤', name: '旺财柴柴' },
-      { type: 'QILIN', icon: '✨', eggEmoji: '🟣', name: '仙贝小麟' }
+      { type: 'QILIN', icon: '✨', eggEmoji: '🟣', name: '仙贝小麟' },
+      { type: 'RABBIT', icon: '🐰', eggEmoji: '🌸', name: '糯糯小兔' },
+      { type: 'PANDA', icon: '🐼', eggEmoji: '🎋', name: '墩墩熊猫' },
+      { type: 'BEAR', icon: '🐻', eggEmoji: '🍯', name: '焦糖暖熊' },
+      { type: 'PENGUIN', icon: '🐧', eggEmoji: '❄️', name: '皮皮企鹅' }
     ]
   },
 
