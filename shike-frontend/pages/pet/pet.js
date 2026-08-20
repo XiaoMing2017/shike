@@ -172,43 +172,43 @@ const TYPE_CONFIG = {
   },
   QILIN: {
     type: 'QILIN',
-    icon: '✨',
-    eggEmoji: '🟣',
-    eggName: '祥瑞天麟之卵',
-    name: '仙贝麟仔',
-    tag: '好运加持',
-    food: '🍑',
-    quote: '自律者自带祥瑞，爱自己会吸引宇宙一切美好✨',
-    themeBg: '#F5F3FF',
-    themeColor: '#6D28D9',
-    defaultName: '仙贝',
+    icon: '🐰',
+    eggEmoji: '🌸',
+    eggName: '粉樱甜兔之卵',
+    name: '糯糯小兔',
+    tag: '甜美治愈',
+    food: '🍓',
+    quote: '蹦蹦跳跳甩掉卡路里，今天也要开心自律哦～',
+    themeBg: '#FFF1F2',
+    themeColor: '#E11D48',
+    defaultName: '糯糯',
     stages: [
       {
         rank: 1,
-        name: '破壳萌新 · 麟宝宝',
+        name: '破壳萌新 · 糯糯兔',
         stageTitle: '阶段1 · 破壳萌新',
         reqText: 'Lv.1 破壳解锁',
         image: '/images/pets/pet_qilin_stage1.png',
-        quote: '踏云初生的紫曜小麟仔，捧着甜桃子送好运～',
-        desc: '天生灵秀的紫曜幼麟，踏云而生，带来健康与好运。'
+        quote: '圆滚滚的纯白长耳小兔，两颊粉扑扑，抱着甜草莓！',
+        desc: '软萌初生的小白兔，最喜欢陪你跳操、喝水与健康轻食！'
       },
       {
         rank: 2,
-        name: '元气陪伴 · 踏云仙麟',
+        name: '元气陪伴 · 甜心兔',
         stageTitle: '阶段2 · 元气陪伴',
         reqText: 'Lv.5 解锁',
         image: '/images/pets/pet_qilin_stage2.png',
-        quote: '水晶金角璀璨生辉，驾驭七彩祥云陪你变好！',
-        desc: '进阶为踏云仙麟，水晶金角璀璨生辉，踏祥云而行！'
+        quote: '戴上郁金香遮阳帽，背上小黄包，今天也是元气满满！',
+        desc: '进阶为甜心小兔，戴着可爱遮阳帽与小背包，充满活力！'
       },
       {
         rank: 3,
-        name: '蜕变闺蜜 · 乾坤麒麟圣皇',
+        name: '蜕变闺蜜 · 治愈仙兔',
         stageTitle: '阶段3 · 蜕变闺蜜',
         reqText: 'Lv.10 解锁',
         image: '/images/pets/pet_qilin_stage3.png',
-        quote: '星河为鬃！把全宇宙满满的好运与光芒都送给你！',
-        desc: '终极形态！鬃毛如星云银河流动，至高祥瑞守护你的自律之路！'
+        quote: '头戴樱花水晶花冠！做你永远最贴心可爱的减脂闺蜜！',
+        desc: '终极形态！身披星芒与樱花花冠，用无条件的爱守护你的身心健康！'
       }
     ]
   }
@@ -288,7 +288,7 @@ Page({
       { type: 'TOTORO', icon: '🍃', eggEmoji: '⚪', name: '呼噜猫' },
       { type: 'CAT', icon: '🐱', eggEmoji: '🟡', name: '元气橘' },
       { type: 'DOG', icon: '🐶', eggEmoji: '🟤', name: '柴柴狗' },
-      { type: 'QILIN', icon: '✨', eggEmoji: '🟣', name: '小仙麟' }
+      { type: 'QILIN', icon: '🐰', eggEmoji: '🌸', name: '糯糯兔' }
     ]
   },
 
