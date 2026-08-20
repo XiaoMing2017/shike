@@ -181,8 +181,41 @@ const POLAROID_QUOTES = [
   '和搭子一起变轻变好的日常 🍃'
 ];
 
+const SCENE_LIST = [
+  {
+    id: 'room',
+    name: '阳光原木小屋',
+    tag: '日式温馨',
+    icon: '🌿',
+    image: '/images/pets/scene_room_bg.jpg',
+    desc: '落地阳光窗、原木地板与软糯米白地毯，温馨治愈。'
+  },
+  {
+    id: 'island',
+    name: '云端浮空仙岛',
+    tag: '奇幻治愈',
+    icon: '☁️',
+    image: '/images/pets/scene_island_bg.jpg',
+    desc: '漂浮在云海之上的梦幻仙境岛屿，花树清泉环绕。'
+  },
+  {
+    id: 'yard',
+    name: '阳光露台花园',
+    tag: '活力运动',
+    icon: '☀️',
+    image: '/images/pets/scene_yard_bg.jpg',
+    desc: '石砌欧式阳光露台与绿茵草坪，适合户外运动。'
+  }
+];
+
 Page({
   data: {
+    // 🎨 3D 沉浸式场景切换系统
+    sceneList: SCENE_LIST,
+    currentSceneId: 'room',
+    currentSceneBg: '/images/pets/scene_room_bg.jpg',
+    showSceneModal: false,
+
     loading: true,
     petSystemEnabled: true,
     hasPet: false,
@@ -252,6 +285,7 @@ Page({
   onLoad(options) {
     this.checkToggleAndLoad();
     this.initPolaroidDate();
+    this.initSavedScene();
   },
 
   onShow() {
@@ -385,6 +419,40 @@ Page({
         }
       }
     });
+  },
+
+
+  initSavedScene() {
+    const saved = wx.getStorageSync('shike_pet_scene') || 'room';
+    const found = SCENE_LIST.find(s => s.id === saved) || SCENE_LIST[0];
+    this.setData({
+      currentSceneId: found.id,
+      currentSceneBg: found.image
+    });
+  },
+
+  onOpenSceneModal() {
+    this.setData({ showSceneModal: true });
+    wx.vibrateShort({ type: 'light' });
+  },
+
+  onCloseSceneModal() {
+    this.setData({ showSceneModal: false });
+  },
+
+  onSelectScene(e) {
+    const sceneId = e.currentTarget.dataset.id;
+    const found = SCENE_LIST.find(s => s.id === sceneId);
+    if (!found) return;
+
+    this.setData({
+      currentSceneId: found.id,
+      currentSceneBg: found.image,
+      showSceneModal: false
+    });
+    wx.setStorageSync('shike_pet_scene', found.id);
+    wx.vibrateShort({ type: 'medium' });
+    wx.showToast({ title: `已切换至「${found.name}」✨`, icon: 'none', duration: 2000 });
   },
 
   onDailyCheckin() {
@@ -545,6 +613,12 @@ Page({
       url: `${app.globalData.baseUrl}/pet/create`,
       method: 'POST',
       data: {
+    // 🎨 3D 沉浸式场景切换系统
+    sceneList: SCENE_LIST,
+    currentSceneId: 'room',
+    currentSceneBg: '/images/pets/scene_room_bg.jpg',
+    showSceneModal: false,
+
         userId: userId,
         name: name,
         petType: this.data.selectedType,
@@ -669,6 +743,12 @@ Page({
       url: `${app.globalData.baseUrl}/pet/interact`,
       method: 'POST',
       data: {
+    // 🎨 3D 沉浸式场景切换系统
+    sceneList: SCENE_LIST,
+    currentSceneId: 'room',
+    currentSceneBg: '/images/pets/scene_room_bg.jpg',
+    showSceneModal: false,
+
         userId: user.id,
         actionType: actionType,
         userMessage: userMessage

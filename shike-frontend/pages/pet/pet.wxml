@@ -76,7 +76,7 @@
             <!-- 🌟 Finch 3D 浮岛直选展台（直接展示活生生的软萌幼宠） -->
       <view class="adopt-3d-stage-box flex flex-col align-center">
         <!-- 3D 沉浸式阳光原木自律小屋背景 -->
-        <image class="world-scene-bg" src="/images/pets/scene_room_bg.jpg" mode="aspectFill" />
+        <image class="world-scene-bg" src="{{currentSceneBg || '/images/pets/scene_room_bg.jpg'}}" mode="aspectFill" />
         
         <!-- 搭子初见台词气泡 -->
         <view class="adopt-speech-bubble">
@@ -161,7 +161,7 @@
       <view class="virtual-3d-world">
         
         <!-- 3D 沉浸式阳光原木自律小屋生活场景 -->
-        <image class="world-scene-bg" src="/images/pets/scene_room_bg.jpg" mode="aspectFill" />
+        <image class="world-scene-bg" src="{{currentSceneBg || '/images/pets/scene_room_bg.jpg'}}" mode="aspectFill" />
         
         <!-- 环境光效与微尘粒子 -->
         <view class="world-sun-ray"></view>
@@ -584,6 +584,45 @@
       <button class="btn-evo-confirm" bindtap="onCloseEvolutionModal">
         💖 收到！继续保持自律好习惯
       </button>
+    </view>
+  </view>
+
+
+  <!-- 🎨 3D 沉浸式场景切换 Sheet 弹窗 -->
+  <view class="scene-modal-backdrop {{showSceneModal ? 'show' : ''}}" bindtap="onCloseSceneModal">
+    <view class="scene-modal-sheet" catchtap="true">
+      <view class="sheet-header flex align-center justify-between">
+        <view class="flex align-center" style="gap: 12rpx;">
+          <text style="font-size: 32rpx;">🎨</text>
+          <text class="sheet-title">更换搭子生活场景</text>
+        </view>
+        <view class="sheet-close" bindtap="onCloseSceneModal">✕</view>
+      </view>
+      <text class="sheet-subtitle">为你的自律搭子挑选一个心仪的温馨生活空间，打卡陪伴更治愈</text>
+
+      <view class="scene-cards-list">
+        <view wx:for="{{sceneList}}" wx:key="id" 
+              class="scene-card-item {{currentSceneId === item.id ? 'active' : ''}}"
+              bindtap="onSelectScene" data-id="{{item.id}}">
+          
+          <view class="scene-thumb-box">
+            <image class="scene-thumb-img" src="{{item.image}}" mode="aspectFill" />
+            <view class="scene-active-badge" wx:if="{{currentSceneId === item.id}}">
+              <text>✓ 使用中</text>
+            </view>
+            <view class="scene-tag-pill">{{item.tag}}</view>
+          </view>
+
+          <view class="scene-info-box flex flex-col justify-center">
+            <view class="flex align-center" style="gap: 8rpx;">
+              <text style="font-size: 28rpx;">{{item.icon}}</text>
+              <text class="scene-title">{{item.name}}</text>
+            </view>
+            <text class="scene-desc">{{item.desc}}</text>
+          </view>
+        </view>
+      </view>
+
     </view>
   </view>
 
