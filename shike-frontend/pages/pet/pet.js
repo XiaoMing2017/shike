@@ -535,7 +535,7 @@ Page({
       success: (res) => {
         this.setData({ adopting: false });
         if (res.data && res.data.code === 200) {
-          wx.showToast({ title: '破壳成功！🎉', icon: 'success' });
+          wx.showToast({ title: '领养成功！🎉', icon: 'success' });
           const pet = res.data.data;
           const info = TYPE_CONFIG[pet.petType] || TYPE_CONFIG['DRAGON'];
           this.setData({

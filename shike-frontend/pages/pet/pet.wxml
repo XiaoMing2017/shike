@@ -58,34 +58,40 @@
     </view>
   </block>
 
-  <!-- 状态 A：未领养状态（神兽蛋破壳孵化向导） -->
+  <!-- 状态 A：未领养状态（Finch 原生萌宠直选与领养向导） -->
   <block wx:elif="{{!hasPet}}">
     <view class="adopt-showcase-flow">
       
       <!-- 引导标语 -->
       <view class="adopt-banner-card">
         <view class="flex align-center" style="gap: 10rpx; margin-bottom: 8rpx;">
-          <text style="font-size: 32rpx;">🥚</text>
-          <text style="font-size: 30rpx; font-weight: 900; color: #0F172A;">唤醒你的专属自律搭子</text>
+          <text style="font-size: 32rpx;">✨</text>
+          <text style="font-size: 30rpx; font-weight: 900; color: #0F172A;">选择你的专属自律闺蜜搭子</text>
         </view>
         <text class="banner-desc">
-          每位认真生活的女孩子，都有一只专属守护小搭子。完成每日健康打卡为它注入能量，陪你一起变轻、变美、变从容！
+          每位认真自律的女孩子，都有一只专属小精灵。每天记录饮食、运动与喝水，陪你一起变轻、变美、变从容！
         </text>
       </view>
 
-      <!-- 3D 浮岛神兽蛋展台 -->
+      <!-- 🌟 Finch 3D 浮岛直选展台（直接展示活生生的软萌幼宠） -->
       <view class="adopt-3d-stage-box flex flex-col align-center">
         
+        <!-- 搭子初见台词气泡 -->
+        <view class="adopt-speech-bubble">
+          <text class="adopt-bubble-text">“{{currentTypeInfo.quote}}”</text>
+          <view class="adopt-bubble-arrow"></view>
+        </view>
+
         <view class="stage-3d-viewport flex align-center justify-center">
           <view class="ambient-sunbeam"></view>
           
-          <view class="egg-model-anchor {{hatchingStep > 0 ? 'egg-cracking-shake' : 'egg-idle-wobble'}}" bindtap="onTapEgg">
-            <text class="egg-large-emoji">{{currentTypeInfo.eggEmoji}}</text>
-            <view class="egg-crack-overlay" wx:if="{{hatchingStep >= 1}}">✨</view>
-            <view class="egg-shine-glow" wx:if="{{hatchingStep >= 2}}"></view>
+          <!-- 幼宠直观立绘与轻柔呼吸动画 -->
+          <view class="adopt-pet-anchor pet-breathe-anim" bindtap="onTapPreviewPet">
+            <image class="adopt-pet-img" src="{{currentTypeInfo.stages[0].image}}" mode="aspectFit" />
             <view class="pet-dynamic-shadow"></view>
           </view>
 
+          <!-- 浮岛底座 -->
           <view class="stage-3d-island-disc">
             <view class="disc-top-ring"></view>
             <view class="disc-bottom-base"></view>
@@ -93,27 +99,29 @@
         </view>
 
         <view class="type-capsule" style="background: {{currentTypeInfo.themeBg}}; color: {{currentTypeInfo.themeColor}};">
-          <text>{{currentTypeInfo.eggName}} · {{currentTypeInfo.tag}}</text>
+          <text>{{currentTypeInfo.name}} · {{currentTypeInfo.tag}}</text>
         </view>
-        <text class="type-motto">“{{currentTypeInfo.quote}}”</text>
       </view>
 
-      <!-- 5 大神兽蛋选择 -->
+      <!-- 4 大萌宠直观选择栏 (Finch 样式) -->
       <view class="type-switch-panel">
-        <text class="panel-label">选择你想领养的搭子萌宠：</text>
-        <view class="type-grid">
+        <text class="panel-label">点击挑选与你有缘的搭子：</text>
+        <view class="type-grid-finch">
           <view wx:for="{{types}}" wx:key="type" 
-                class="type-item {{selectedType === item.type ? 'active' : ''}}" 
+                class="finch-pet-pill {{selectedType === item.type ? 'active' : ''}}" 
                 bindtap="onSelectType" data-type="{{item.type}}">
-            <text class="type-icon">{{item.eggEmoji}}</text>
-            <text class="type-text">{{item.name}}</text>
+            <text class="pill-icon">{{item.icon}}</text>
+            <view class="flex flex-col">
+              <text class="pill-name">{{item.name}}</text>
+            </view>
+            <view class="pill-check" wx:if="{{selectedType === item.type}}">✓</view>
           </view>
         </view>
       </view>
 
       <!-- 起名面板 -->
       <view class="name-edit-panel">
-        <text class="panel-label">给即将破壳的小家伙起个爱称：</text>
+        <text class="panel-label">给新搭子起个好听的爱称：</text>
         <view class="input-row flex align-center">
           <input class="name-ipt" type="text" placeholder="例如：木木 / 泡泡 / 饭团" value="{{petName}}" bindinput="onInputName" maxlength="12" />
           <view class="dice-btn" bindtap="onRandomName">
@@ -129,10 +137,10 @@
         </view>
       </view>
 
-      <!-- 孵化按钮 -->
+      <!-- 直接领养按钮 -->
       <view class="adopt-btn-wrap">
-        <button class="btn-3d-adopt" bindtap="onStartHatchCeremony" loading="{{adopting}}">
-          🥚 开启破壳仪式 · 唤醒搭子
+        <button class="btn-3d-adopt" bindtap="onDirectAdopt" loading="{{adopting}}">
+          💖 领养 {{petName || currentTypeInfo.name}} · 开启温暖陪伴
         </button>
       </view>
 
