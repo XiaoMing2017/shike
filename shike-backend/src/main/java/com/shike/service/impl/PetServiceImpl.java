@@ -4,10 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shike.common.BizException;
 import com.shike.model.dto.PetCreateDTO;
 import com.shike.model.dto.PetDTO;
+import com.shike.model.dto.PetInteractDTO;
+import com.shike.model.entity.ExerciseRecord;
 import com.shike.model.entity.Pet;
+import com.shike.model.entity.WaterRecord;
+import com.shike.model.vo.PetInteractVO;
+import com.shike.repository.DietRecordRepository;
 import com.shike.repository.ExerciseRecordRepository;
 import com.shike.repository.PetRepository;
 import com.shike.repository.UserRepository;
+import com.shike.repository.WaterRecordRepository;
 import com.shike.service.AdminService;
 import com.shike.service.PetService;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +30,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -34,6 +41,8 @@ public class PetServiceImpl implements PetService {
 
     private final PetRepository petRepository;
     private final ExerciseRecordRepository exerciseRecordRepository;
+    private final DietRecordRepository dietRecordRepository;
+    private final WaterRecordRepository waterRecordRepository;
     private final UserRepository userRepository;
     private final StringRedisTemplate stringRedisTemplate;
     private final ObjectMapper objectMapper;
@@ -41,6 +50,12 @@ public class PetServiceImpl implements PetService {
 
     @Value("${ai.api-key:sk-ws-H.EDLLDHH.13Vh.MEUCIQCd-Whyz9sUcrs2stiBRtDQmCdalFSF2Igm9p_OIF80tgIgTLbsTfpaWGgUcncGzCS7Dbsx5eEPy0mcT-wC5WMxApk}")
     private String aiApiKey;
+
+    @Value("${ai.model:qwen-turbo}")
+    private String aiModel;
+
+    @Value("${ai.endpoint:https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions}")
+    private String aiEndpoint;
 
     private static final Map<String, String> PRESET_AVATARS = Map.of(
             "DRAGON", "/images/pets/pet_dragon_stage1.png",
@@ -65,23 +80,20 @@ public class PetServiceImpl implements PetService {
         if (pet == null) {
             return null;
         }
-        // 核心：基于真实时间结算自然饥饿、怠惰惩罚、经验流失与生命状态
-        applyLifeCycleAndSlackPenalty(pet);
+        // 核心：基于真实时间结算自然饱食度消耗，去惩罚化（永不倒扣等级与经验！）
+        applyFullnessDecayNoPenalty(pet);
         return convertToDTO(pet, userId);
     }
 
     /**
-     * 核心：搭子生命周期与怠惰衰减体系（Natural Hunger & Slack Penalties）
-     * 1. 饱食度自然消耗：每小时自然代谢 -3.5 点（8小时过夜消耗 28点，24小时消耗 84点）
-     * 2. 饱食度 < 30 -> 进入 HUNGRY 状态
-     * 3. 连续 > 48 小时未打卡投喂：
-     *    - 饱食度降为 0
-     *    - 进入 虚弱生病 SICK 状态（台词虚弱求救，立绘虚脱滤镜）
-     *    - 亲密度每日流失 -5 点（保底 0 点）
-     *    - 当前级经验 EXP 每日流失 -10 点（设有 Lv.1 / Lv.5 / Lv.10 阶段形态保底，绝不退化外观形态）
-     * 4. 连续自律天数判定：若昨日未打卡投喂，Streak 自动重置为 1
+     * 去惩罚化生命系统（心理减负设计）：
+     * 1. 饱食度自然代谢：每小时 -3.5 点（过夜 8~10 小时约消耗 28~35 点）。
+     * 2. 饱食度 < 30 进入 HUNGRY 状态。
+     * 3. 彻底移除扣经验、扣亲密度与 SICK 生病等挫败感机制！
+     *    用户哪怕忙碌断更 1 个月，努力积累的等级与形态 100% 永久保留。
+     * 4. 超过 48 小时未打开进入 WAITING（思念休眠）状态，温暖守候用户归来。
      */
-    private void applyLifeCycleAndSlackPenalty(Pet pet) {
+    private void applyFullnessDecayNoPenalty(Pet pet) {
         if (pet == null) return;
         LocalDateTime now = LocalDateTime.now();
         LocalDate today = LocalDate.now();
@@ -102,54 +114,17 @@ public class PetServiceImpl implements PetService {
                     pet.setFullness(newFullness);
                     pet.setLastFullnessCalcTime(now);
 
-                    // 1. 饱食度与心情判定
-                    if (newFullness <= 0) {
-                        // 如果饱食度归零，检查是否已饥饿超过 24 小时
-                        LocalDate lastFeed = pet.getLastFeedDate();
-                        if (lastFeed != null && ChronoUnit.DAYS.between(lastFeed, today) >= 2) {
-                            pet.setMood("SICK"); // 虚弱生病
-                        } else {
-                            pet.setMood("HUNGRY");
-                        }
+                    // 心情状态判定：去负罪感化
+                    LocalDate lastFeed = pet.getLastFeedDate();
+                    if (lastFeed != null && ChronoUnit.DAYS.between(lastFeed, today) >= 2) {
+                        pet.setMood("WAITING"); // 思念休眠，而非生病虚弱
                     } else if (newFullness < 30) {
                         pet.setMood("HUNGRY");
                     } else if ("HUNGRY".equals(pet.getMood()) && newFullness >= 30) {
                         pet.setMood("NORMAL");
                     }
 
-                    // 2. 连续 48 小时未自律投喂 -> 触发经验与亲密度怠惰流失 (带有 Lv.1 / Lv.5 / Lv.10 形态保底)
-                    LocalDate lastFeed = pet.getLastFeedDate();
-                    if (lastFeed != null && ChronoUnit.DAYS.between(lastFeed, today) >= 2) {
-                        pet.setMood("SICK");
-                        long daysNeglected = ChronoUnit.DAYS.between(lastFeed, today) - 1;
-                        if (daysNeglected > 0) {
-                            // 亲密度流失
-                            int currentIntimacy = pet.getIntimacy() != null ? pet.getIntimacy() : 10;
-                            pet.setIntimacy((int) Math.max(0, currentIntimacy - daysNeglected * 5));
-
-                            // 经验流失（保底当前阶段初始等级）
-                            int currentExp = pet.getExp() != null ? pet.getExp() : 0;
-                            int currentLvl = pet.getLevel() != null ? pet.getLevel() : 1;
-                            int expLoss = (int) (daysNeglected * 10);
-                            
-                            int newExp = currentExp - expLoss;
-                            if (newExp < 0) {
-                                // 经验扣减至 0，如果有降级余地且不在保底形态节点（Lv.1, Lv.5, Lv.10）
-                                if (currentLvl > 1 && currentLvl != 5 && currentLvl != 10) {
-                                    pet.setLevel(currentLvl - 1);
-                                    pet.setExp(Math.max(0, (currentLvl - 1) * 50 + newExp));
-                                } else {
-                                    pet.setExp(0);
-                                }
-                            } else {
-                                pet.setExp(newExp);
-                            }
-                            log.warn("Pet neglected for {} days! userId={}, applied EXP/Intimacy decay. New level={}, exp={}",
-                                    daysNeglected, pet.getUserId(), pet.getLevel(), pet.getExp());
-                        }
-                    }
-
-                    // 3. 断签判定：昨日未投喂且今日未投喂，连签归 1
+                    // 连续陪伴天数判定
                     if (lastFeed != null && !lastFeed.equals(today) && !lastFeed.equals(today.minusDays(1))) {
                         pet.setStreakDays(1);
                     }
@@ -223,8 +198,7 @@ public class PetServiceImpl implements PetService {
             throw new BizException(400, "暂无可投喂的食物，完成运动、记餐或每日签到赚取食物吧！");
         }
 
-        // 先计算截至当前的自然消耗与怠惰流失
-        applyLifeCycleAndSlackPenalty(pet);
+        applyFullnessDecayNoPenalty(pet);
 
         LocalDate today = LocalDate.now();
         pet.setFoodCount(currentFood - 1);
@@ -265,14 +239,7 @@ public class PetServiceImpl implements PetService {
         }
 
         pet.setLastFeedDate(today);
-
-        // 核心：若此前处于虚弱生病 SICK 状态，投喂立即触发【自律治愈复苏】
-        if ("SICK".equals(pet.getMood())) {
-            log.info("Pet recovered from sickness via feeding! userId={}", userId);
-            pet.setMood(newFullness >= 60 ? "HAPPY" : "NORMAL");
-        } else {
-            pet.setMood(newFullness >= 60 ? "HAPPY" : "NORMAL");
-        }
+        pet.setMood(newFullness >= 60 ? "HAPPY" : "NORMAL");
 
         Pet updated = petRepository.save(pet);
         return convertToDTO(updated, userId);
@@ -295,39 +262,33 @@ public class PetServiceImpl implements PetService {
         LocalDate targetDate = date != null ? date : LocalDate.now();
         String sourceUpper = source != null ? source.toUpperCase() : "GENERAL";
 
-        // 数据库级别严格防重：每天每种自律行为只能领取 1 次食物
         switch (sourceUpper) {
             case "CHECKIN":
                 if (pet.getLastCheckinDate() != null && pet.getLastCheckinDate().equals(targetDate)) {
-                    log.info("User {} already checkin today: {}", userId, targetDate);
                     return false;
                 }
                 pet.setLastCheckinDate(targetDate);
                 break;
             case "EXERCISE":
                 if (pet.getLastExerciseDate() != null && pet.getLastExerciseDate().equals(targetDate)) {
-                    log.info("User {} already got exercise food today: {}", userId, targetDate);
                     return false;
                 }
                 pet.setLastExerciseDate(targetDate);
                 break;
             case "DIET":
                 if (pet.getLastDietDate() != null && pet.getLastDietDate().equals(targetDate)) {
-                    log.info("User {} already got diet food today: {}", userId, targetDate);
                     return false;
                 }
                 pet.setLastDietDate(targetDate);
                 break;
             case "WATER":
                 if (pet.getLastWaterDate() != null && pet.getLastWaterDate().equals(targetDate)) {
-                    log.info("User {} already got water food today: {}", userId, targetDate);
                     return false;
                 }
                 pet.setLastWaterDate(targetDate);
                 break;
             case "WEIGHT":
                 if (pet.getLastWeightDate() != null && pet.getLastWeightDate().equals(targetDate)) {
-                    log.info("User {} already got weight food today: {}", userId, targetDate);
                     return false;
                 }
                 pet.setLastWeightDate(targetDate);
@@ -384,6 +345,177 @@ public class PetServiceImpl implements PetService {
         res.put("tasks", taskStatus);
         res.put("date", today.toString());
         return res;
+    }
+
+    /**
+     * 🌟 核心新功能：AI 动态拟人互动与自律树洞对话
+     */
+    @Override
+    @Transactional
+    public PetInteractVO interactWithAi(Long userId, PetInteractDTO dto) {
+        checkPetFeatureEnabled();
+        Pet pet = petRepository.findByUserId(userId)
+                .orElseThrow(() -> new BizException(404, "尚未领养自律搭子，请先领养一只吧！"));
+
+        LocalDate today = LocalDate.now();
+
+        // 1. 上下文健康数据聚合
+        int waterMl = 0;
+        Optional<WaterRecord> waterOpt = waterRecordRepository.findByUserIdAndRecordDate(userId, today);
+        if (waterOpt.isPresent()) {
+            waterMl = waterOpt.get().getAmount() != null ? waterOpt.get().getAmount() : 0;
+        }
+
+        double burnedCal = 0.0;
+        List<ExerciseRecord> exercises = exerciseRecordRepository.findByUserIdAndRecordDate(userId, today);
+        if (exercises != null && !exercises.isEmpty()) {
+            for (ExerciseRecord r : exercises) {
+                if (r.getCaloriesBurned() != null) {
+                    burnedCal += r.getCaloriesBurned();
+                }
+            }
+        }
+
+        Long dietCountLong = dietRecordRepository.countByUserIdAndRecordDate(userId, today);
+        int dietCount = dietCountLong != null ? dietCountLong.intValue() : 0;
+
+        int streak = pet.getStreakDays() != null ? pet.getStreakDays() : 1;
+        int level = pet.getLevel() != null ? pet.getLevel() : 1;
+
+        // 时段判断
+        int hour = LocalTime.now().getHour();
+        String timeSlot = hour < 9 ? "清晨" : (hour < 12 ? "上午" : (hour < 14 ? "中午" : (hour < 18 ? "下午" : (hour < 23 ? "晚上" : "深夜"))));
+
+        String stageTitle = level >= 10 ? "究极体 · 传奇守护神" : (level >= 5 ? "成长期 · 进阶神兽" : "幼年期 · 萌新搭子");
+        String persona = getPetPersona(pet.getPetType());
+        String actionType = dto.getActionType() != null ? dto.getActionType() : "TOUCH";
+        String userMsg = dto.getUserMessage() != null ? dto.getUserMessage().trim() : "";
+
+        // 2. 组装 System Prompt
+        String systemPrompt = String.format(
+                "你现在是用户的专属自律搭子【%s】。\n" +
+                "【性格特征】：%s\n" +
+                "【当前阶段】：等级 Lv.%d，形态【%s】\n" +
+                "【当前时段】：%s\n" +
+                "【用户今日真实健康数据】：\n" +
+                "- 今日饮水：%d ml\n" +
+                "- 运动消耗：%.0f kcal\n" +
+                "- 记录三餐：%d 次\n" +
+                "- 连续自律陪伴：%d 天\n" +
+                "- 触发动作：%s\n" +
+                "- 用户对你说的话：%s\n\n" +
+                "【输出要求】：\n" +
+                "1. 必须完全符合你的性格人设和口癖。\n" +
+                "2. 敏锐结合用户今日的数据进行回应（如喝水达标给予赞扬、深夜劝早睡、刚运动完给予极致的情绪激励、用户诉苦表达疲惫/嘴馋时给予心理学包容感的治愈与引导）。\n" +
+                "3. 字数严格控制在 20 ~ 45 个汉字以内，适合展示在移动端气泡中。\n" +
+                "4. 只输出宠物说的话，不要带任何前缀、引号或解释说明。",
+                pet.getName(), persona, level, stageTitle, timeSlot,
+                waterMl, burnedCal, dietCount, streak, actionType, userMsg.isEmpty() ? "（用户摸了摸你的脑袋）" : userMsg
+        );
+
+        // 3. 调用大语言模型 Qwen (设置 1.5s 极速超时)
+        String reply = null;
+        try {
+            reply = callQwenLLM(systemPrompt);
+        } catch (Exception e) {
+            log.warn("LLM dynamic interact call failed: {}, fallback to persona preset", e.getMessage());
+        }
+
+        if (reply == null || reply.isBlank()) {
+            reply = getFallbackDialogue(pet.getPetType(), actionType, timeSlot, waterMl, burnedCal);
+        }
+
+        // 清洗文案
+        reply = reply.replace("\"", "").replace("“", "").replace("”", "").trim();
+
+        return PetInteractVO.builder()
+                .dialogue(reply)
+                .mood(pet.getMood())
+                .actionAnim("jellySquishPop")
+                .soundEffect("purr")
+                .foodCount(pet.getFoodCount())
+                .isHealed(false)
+                .build();
+    }
+
+    private String getPetPersona(String petType) {
+        if (petType == null) return "元气可爱的自律搭子。";
+        return switch (petType.toUpperCase()) {
+            case "DRAGON" -> "热血傲娇的青玉幼龙，嘴硬心软，最关注主人的运动燃脂，口癖是‘嗷呜’、‘哼’、‘冲鸭’。";
+            case "TOTORO" -> "温吞治愈的大龙猫，说话慢条斯理，极度关心主人吃得健不健康、喝水够不够，充满治愈与包容，口癖是‘呼噜噜’。";
+            case "CAT"    -> "灵动傲娇的元气小橘猫，注重体态与轻盈感，爱撒娇，口癖是‘喵呜’、‘喵~’。";
+            case "DOG"    -> "忠诚阳光的自律柴犬，精力充沛，最喜欢户外慢跑，口癖是‘汪汪！’、‘主人最棒！’。";
+            case "QILIN"  -> "优雅仙气的小天麟，相信自律会吸引好运与祥瑞，给主人送上温暖的祝福与正向能量，口癖是‘吉星高照’。";
+            default       -> "元气可爱的自律搭子。";
+        };
+    }
+
+    private String getFallbackDialogue(String petType, String actionType, String timeSlot, int waterMl, double burnedCal) {
+        String type = petType != null ? petType.toUpperCase() : "DRAGON";
+        if ("CHAT".equals(actionType)) {
+            return switch (type) {
+                case "DRAGON" -> "嗷呜！虽然很不容易，但你已经做得超级棒了，本龙一直陪着你冲鸭！🔥";
+                case "TOTORO" -> "呼噜噜～抱抱你，累了就歇一歇，慢慢走也能走很远呢。🍃";
+                case "CAT"    -> "喵呜～蹭蹭主人的手，不管怎样小橘都是你最坚定的支持者喵！✨";
+                case "DOG"    -> "汪汪！主人不要灰心，甩甩尾巴重新出发，你是最棒的！🐶";
+                default       -> "祥瑞随行，抱抱你～小小的坚持都在慢慢发光哦！🌟";
+            };
+        }
+        if (burnedCal > 200) {
+            return switch (type) {
+                case "DRAGON" -> "嗷呜！刚才消耗了好多热量，龙鳞都燃起来了，太帅啦！🔥";
+                case "CAT"    -> "喵呜！运动后的主人体态超棒超轻盈，小橘超喜欢喵～✨";
+                default       -> "刚才的运动超给力！自律的汗水都在闪闪发光哦～💪";
+            };
+        }
+        if (waterMl >= 1500) {
+            return "咕嘟咕嘟～今日饮水达标，整个人都在发光呢，继续保持！💧";
+        }
+        if ("深夜".equals(timeSlot)) {
+            return "夜深啦，早点休息养足精神，明天我们再一起打卡变强！🌙";
+        }
+        return switch (type) {
+            case "DRAGON" -> "嗷呜！摸头好舒服～今天也要一起燃脂变强哦！🔥";
+            case "TOTORO" -> "呼噜噜～吃好喝好休息好，有我陪着你呢～🍃";
+            case "CAT"    -> "喵呜～摸摸下巴好舒服，今天也要保持轻盈体态喵！✨";
+            case "DOG"    -> "汪汪！最喜欢主人啦，随时准备陪你出去跑两圈！🐾";
+            default       -> "摸摸仙角，祥瑞好运全给你，今天也要元气满满哦！🌟";
+        };
+    }
+
+    private String callQwenLLM(String systemPrompt) throws Exception {
+        Map<String, Object> payload = Map.of(
+                "model", "qwen-turbo",
+                "messages", List.of(
+                        Map.of("role", "system", "content", systemPrompt),
+                        Map.of("role", "user", "content", "请以自律搭子的口吻做出回应。")
+                ),
+                "max_tokens", 80,
+                "temperature", 0.7
+        );
+
+        HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofMillis(1500)).build();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(aiEndpoint))
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + aiApiKey)
+                .timeout(Duration.ofMillis(1800))
+                .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(payload)))
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() == 200) {
+            Map<?, ?> resMap = objectMapper.readValue(response.body(), Map.class);
+            List<?> choices = (List<?>) resMap.get("choices");
+            if (choices != null && !choices.isEmpty()) {
+                Map<?, ?> firstChoice = (Map<?, ?>) choices.get(0);
+                Map<?, ?> message = (Map<?, ?>) firstChoice.get("message");
+                if (message != null) {
+                    return (String) message.get("content");
+                }
+            }
+        }
+        return null;
     }
 
     @Override
@@ -498,8 +630,8 @@ public class PetServiceImpl implements PetService {
         int maxExp = level * 50;
 
         String dialogue = "今天也是充满活力的一天！一起来自律打卡吧～";
-        if ("SICK".equals(pet.getMood())) {
-            dialogue = "好几天没见到主人啦，小家伙生病虚弱中……快去运动打卡救救它吧！💔";
+        if ("WAITING".equals(pet.getMood())) {
+            dialogue = "主人忙碌时小家伙在乖乖守候，随时等你回来打卡哦～✨";
         } else if ("HUNGRY".equals(pet.getMood()) || (pet.getFullness() != null && pet.getFullness() < 30)) {
             dialogue = "肚子咕咕叫啦，记得打卡给我带点好吃的哦～";
         } else if ("HAPPY".equals(pet.getMood())) {
@@ -526,13 +658,13 @@ public class PetServiceImpl implements PetService {
     }
 
     private String getMoodText(String mood, Integer fullness) {
-        if ("SICK".equals(mood)) return "虚弱生病";
+        if ("WAITING".equals(mood)) return "思念等待";
         if (fullness != null && fullness < 30) return "饥肠辘辘";
         if (mood == null) return "悠然自得";
         return switch (mood) {
             case "HAPPY" -> "开心雀跃";
             case "HUNGRY" -> "饥肠辘辘";
-            case "SICK" -> "虚弱生病";
+            case "WAITING" -> "思念等待";
             case "WANT_EXERCISE" -> "渴望运动";
             default -> "悠然自得";
         };

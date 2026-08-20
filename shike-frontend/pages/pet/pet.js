@@ -241,6 +241,11 @@ Page({
     showEvolutionModal: false,
     showDexModal: false,
 
+    // 🌟 AI 动态交互与自律树洞
+    aiThinking: false,
+    petDialogue: '',
+    chatInputText: '',
+
     // 勋章馆
     showBadgeModal: false,
     selectedBadge: null,
@@ -354,6 +359,7 @@ Page({
           this.setData({
             hasPet: true,
             pet: pet,
+            petDialogue: pet.dialogue || '',
             currentTypeInfo: info,
             foodIcon: info.food || '🍎',
             loading: false
@@ -435,7 +441,7 @@ Page({
     });
   },
 
-  /* 核心：计算 3 阶形态进化与成就勋章 */
+  /* 计算 3 阶形态进化与成就勋章 */
   calculateEvolutionAndBadges(pet) {
     const lvl = pet.level || 1;
     const typeInfo = TYPE_CONFIG[pet.petType] || TYPE_CONFIG['DRAGON'];
@@ -637,7 +643,7 @@ Page({
     });
   },
 
-  /* 轻触抚摸 */
+  /* 🌟 轻触抚摸：触发点击物理弹跳 + 异步 AI 动态拟人搭话 */
   onTapPet() {
     if (!this.data.pet || this.data.isFeeding) return;
 
@@ -647,28 +653,71 @@ Page({
     });
     wx.vibrateShort({ type: 'light' });
 
-    const stageQuote = (this.data.currentStageInfo && this.data.currentStageInfo.quote) || '自律最酷啦，今天也要一起加油哦！🔥';
-    const quotes = [
-      stageQuote,
-      '吃饱饱，今天陪你一起燃脂！💪',
-      '我不自律，小家伙就没饭吃啦！快去打卡～🏃',
-      '少油少盐多喝水，体态越来越棒啦！💧',
-      '你今天超自律！本搭子超级开心～✨',
-      '今天又多消耗了卡路里，我们都在变强！🌟',
-      '呼噜噜～摸摸头好舒服呀！❤️'
-    ];
-
-    const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-    this.setData({
-      'pet.dialogue': randomQuote
-    });
-
     setTimeout(() => {
       this.setData({
         isTouched: false,
         heartAnim: false
       });
     }, 600);
+
+    // 触发 AI 交互
+    this.callAiInteraction('TOUCH', '');
+  },
+
+  /* 🎋 自律树洞：快捷倾诉胶囊点击 */
+  onTapQuickPrompt(e) {
+    const prompt = e.currentTarget.dataset.prompt;
+    if (!prompt) return;
+    this.callAiInteraction('CHAT', prompt);
+  },
+
+  onInputChatText(e) {
+    this.setData({ chatInputText: e.detail.value });
+  },
+
+  /* 🎋 自律树洞：发送自定义消息 */
+  onSendChatMessage() {
+    const text = this.data.chatInputText ? this.data.chatInputText.trim() : '';
+    if (!text) {
+      wx.showToast({ title: '请输入你想对搭子说的话', icon: 'none' });
+      return;
+    }
+    this.setData({ chatInputText: '' });
+    this.callAiInteraction('CHAT', text);
+  },
+
+  /* 核心：调用后端 AI 动态拟人互动 API */
+  callAiInteraction(actionType, userMessage) {
+    const user = app.globalData.userInfo;
+    if (!user || !user.id || !this.data.pet) return;
+
+    this.setData({ aiThinking: true });
+
+    wx.request({
+      url: `${app.globalData.baseUrl}/pet/interact`,
+      method: 'POST',
+      data: {
+        userId: user.id,
+        actionType: actionType,
+        userMessage: userMessage
+      },
+      success: (res) => {
+        if (res.data && res.data.code === 200 && res.data.data) {
+          const vo = res.data.data;
+          this.setData({
+            petDialogue: vo.dialogue,
+            aiThinking: false
+          });
+          wx.vibrateShort({ type: 'light' });
+        } else {
+          this.setData({ aiThinking: false });
+        }
+      },
+      fail: (err) => {
+        console.warn('AI interact request failed, using fallback', err);
+        this.setData({ aiThinking: false });
+      }
+    });
   },
 
   /* 形态图鉴弹窗 */

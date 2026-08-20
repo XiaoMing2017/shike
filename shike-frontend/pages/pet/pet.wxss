@@ -1228,3 +1228,76 @@
   color: #475569;
   line-height: 1.5;
 }
+
+
+/* 🎋 自律树洞样式 */
+.treehole-chat-deck {
+  background: #FFFFFF;
+  border-radius: 28rpx;
+  padding: 24rpx;
+  margin-top: 24rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04);
+  border: 1.5rpx solid #F1F5F9;
+}
+
+.treehole-quick-scroll {
+  display: flex;
+  flex-direction: row;
+  white-space: nowrap;
+  gap: 12rpx;
+  padding: 8rpx 0 16rpx;
+  width: 100%;
+}
+
+.quick-chip {
+  display: inline-flex;
+  align-items: center;
+  background: #F8FAFC;
+  border: 1rpx solid #E2E8F0;
+  padding: 10rpx 22rpx;
+  border-radius: 30rpx;
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #334155;
+  flex-shrink: 0;
+  margin-right: 12rpx;
+  transition: all 0.2s ease;
+}
+
+.quick-chip:active {
+  background: #EEF2FF;
+  border-color: #6366F1;
+  color: #6366F1;
+  transform: scale(0.96);
+}
+
+.treehole-input-row {
+  background: #F8FAFC;
+  border: 1.5rpx solid #E2E8F0;
+  border-radius: 24rpx;
+  padding: 8rpx 12rpx 8rpx 20rpx;
+  gap: 12rpx;
+}
+
+.treehole-input {
+  flex: 1;
+  font-size: 24rpx;
+  color: #0F172A;
+  height: 64rpx;
+}
+
+.btn-send-chat {
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  color: #FFFFFF;
+  border-radius: 20rpx;
+  padding: 0 28rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  margin: 0;
+  font-size: 24rpx;
+}
+
+.bubble-thinking {
+  background: #F5F3FF !important;
+  border-color: #C7D2FE !important;
+}

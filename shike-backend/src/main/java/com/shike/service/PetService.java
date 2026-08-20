@@ -2,6 +2,8 @@ package com.shike.service;
 
 import com.shike.model.dto.PetCreateDTO;
 import com.shike.model.dto.PetDTO;
+import com.shike.model.dto.PetInteractDTO;
+import com.shike.model.vo.PetInteractVO;
 
 import java.time.LocalDate;
 import java.util.Map;
@@ -18,9 +20,11 @@ public interface PetService {
 
     boolean awardPetFood(Long userId, String source, LocalDate date);
 
+    Map<String, Object> generateAvatar(Long userId, String petType, String promptHint);
+
     Map<String, Object> checkin(Long userId);
 
     Map<String, Object> getTodayFoodTasks(Long userId);
 
-    Map<String, Object> generateAvatar(Long userId, String petType, String promptHint);
+    PetInteractVO interactWithAi(Long userId, PetInteractDTO dto);
 }
