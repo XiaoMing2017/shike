@@ -7,15 +7,20 @@
       <text style="font-size: 38rpx;">🐾</text>
       <view class="flex flex-col">
         <text class="brand-title">自律搭子 · 3D养成乐园</text>
-        <text class="brand-sub">Our Teacher 陪伴进化体系</text>
+        <text class="brand-sub">Our Teacher 3阶形态进化体系</text>
       </view>
     </view>
     
-    <view class="flex align-center" style="gap: 12rpx;">
+    <view class="flex align-center" style="gap: 10rpx;">
+      <!-- 形态图鉴入口 -->
+      <view class="stage-dex-pill flex align-center" bindtap="onOpenDexModal" wx:if="{{hasPet}}">
+        <text style="font-size: 24rpx; margin-right: 4rpx;">📖</text>
+        <text style="font-size: 22rpx; font-weight: 800; color: #6366F1;">形态图鉴</text>
+      </view>
       <!-- 勋章馆入口 -->
       <view class="badge-nav-pill flex align-center" bindtap="onOpenBadgeModal" wx:if="{{hasPet}}">
-        <text style="font-size: 24rpx; margin-right: 6rpx;">🏅</text>
-        <text style="font-size: 22rpx; font-weight: 800; color: #D97706;">勋章馆 ({{unlockedBadgeCount}}/6)</text>
+        <text style="font-size: 24rpx; margin-right: 4rpx;">🏅</text>
+        <text style="font-size: 22rpx; font-weight: 800; color: #D97706;">勋章 ({{unlockedBadgeCount}}/6)</text>
       </view>
       <!-- 刷新按钮 -->
       <view class="refresh-pill" bindtap="onRefreshPage">
@@ -59,7 +64,7 @@
           <text style="font-size: 30rpx; font-weight: 900; color: #0F172A;">孵化你的 3D 神兽搭子</text>
         </view>
         <text class="banner-desc">
-          每位自律者都拥有一颗专属神兽蛋。通过每日打卡注入能量，见证它从破壳幼体蜕变为终极传奇神兽！
+          每位自律者都拥有一颗专属神兽蛋。通过每日自律打卡注入能量，见证它从破壳幼体逐步进化蜕变为终极传奇神兽！
         </text>
       </view>
 
@@ -140,14 +145,10 @@
       <view class="floating-hud-bar flex align-center justify-between">
         <view class="flex align-center" style="gap: 12rpx;">
           <text class="hud-pet-name">{{pet.name}}</text>
+          <text class="hud-species-tag">{{currentStageInfo.name}}</text>
           <view class="hud-level-tag">Lv.{{pet.level}}</view>
-          <!-- 进化阶数徽章 -->
-          <view class="stage-rank-tag stage-rank-{{petStageRank}}">{{petStageName}}</view>
         </view>
-        <view class="hud-streak-tag flex align-center">
-          <text style="font-size: 24rpx; margin-right: 6rpx;">🔥</text>
-          <text style="font-size: 22rpx; font-weight: 800; color: #EA580C;">陪伴第 {{pet.streakDays}} 天</text>
-        </view>
+        <view class="stage-rank-tag stage-rank-{{petStageRank}}">{{currentStageInfo.stageTitle}}</view>
       </view>
 
       <!-- 🌟 Our Teacher 风格 3D 核心景深互动舞台 -->
@@ -186,9 +187,9 @@
             <text class="exp-text">+10 EXP ✨</text>
           </view>
 
-          <!-- 3D 活体宠物模型（支持待机呼吸、触碰Q弹、干饭咀嚼） -->
-          <view class="pet-mesh-container {{isFeeding ? 'animate-pet-chew' : (isTouched ? 'animate-pet-squish' : 'animate-idle-breathe')}}">
-            <image class="pet-cutout-img" src="{{pet.avatarUrl}}" mode="aspectFit"></image>
+          <!-- 3D 活体宠物模型（根据等级实时渲染 1阶幼年/2阶进阶/3阶究极体立绘！） -->
+          <view class="pet-mesh-container stage-size-{{petStageRank}} {{isFeeding ? 'animate-pet-chew' : (isTouched ? 'animate-pet-squish' : 'animate-idle-breathe')}}">
+            <image class="pet-cutout-img" src="{{activePetImage}}" mode="aspectFit"></image>
             <view class="pet-floor-shadow {{isFeeding ? 'shadow-chew' : (isTouched ? 'shadow-squish' : 'shadow-breathe')}}"></view>
           </view>
 
@@ -200,11 +201,15 @@
 
         </view>
 
-        <!-- 心情胶囊栏 -->
-        <view class="mood-bar-row flex align-center justify-center">
+        <!-- 心情胶囊栏与陪伴天数 -->
+        <view class="mood-bar-row flex align-center justify-center" style="gap: 14rpx;">
           <view class="mood-pill mood-{{pet.mood}} flex align-center">
             <text class="mood-icon">{{pet.mood === 'HAPPY' ? '😄' : (pet.mood === 'HUNGRY' ? '🥺' : (pet.mood === 'WANT_EXERCISE' ? '🏃' : '🌱'))}}</text>
             <text class="mood-text">{{pet.moodText}}</text>
+          </view>
+          <view class="hud-streak-tag flex align-center">
+            <text style="font-size: 22rpx; margin-right: 4rpx;">🔥</text>
+            <text style="font-size: 20rpx; font-weight: 800; color: #EA580C;">连续自律第 {{pet.streakDays}} 天</text>
           </view>
         </view>
 
@@ -223,7 +228,7 @@
           <view class="flex justify-between align-center" style="margin-bottom: 10rpx;">
             <view class="flex align-center" style="gap: 10rpx;">
               <text style="font-size: 28rpx;">🍖</text>
-              <text class="gauge-name">饱食度 (不自律就挨饿哦)</text>
+              <text class="gauge-name">饱食度 (随时间自然消耗，不自律会挨饿哦)</text>
             </view>
             <text class="gauge-number" style="color: {{pet.fullness < 30 ? '#EF4444' : '#10B981'}};">{{pet.fullness}} / 100</text>
           </view>
@@ -245,7 +250,7 @@
             <view class="gauge-fill" style="width: {{(pet.exp / pet.maxExp) * 100}}%; background: linear-gradient(90deg, #6366F1, #8B5CF6);"></view>
           </view>
           <view class="evolution-next-tip flex align-center justify-between" style="margin-top: 10rpx;">
-            <text style="font-size: 20rpx; color: #64748B;">下一形态：{{nextStageGoalText}}</text>
+            <text style="font-size: 20rpx; color: #64748B;">形态目标：{{nextStageGoalText}}</text>
             <text style="font-size: 20rpx; font-weight: 700; color: #8B5CF6;">{{petStageProgressText}}</text>
           </view>
         </view>
@@ -370,6 +375,44 @@
     </view>
   </block>
 
+  <!-- 🌟 3阶形态进化图鉴弹窗 (Evolution Codex Modal) -->
+  <view class="dex-modal-backdrop {{showDexModal ? 'show' : ''}}" bindtap="onCloseDexModal">
+    <view class="dex-modal-sheet" catchtap="noBubble">
+      
+      <view class="sheet-header flex justify-between align-center">
+        <view class="flex align-center" style="gap: 10rpx;">
+          <text style="font-size: 36rpx;">📖</text>
+          <text class="sheet-title">神兽形态进化图鉴</text>
+        </view>
+        <text class="sheet-close" bindtap="onCloseDexModal">✕</text>
+      </view>
+      <text class="sheet-subtitle">坚持自律打卡，见证搭子的 3 阶华丽蜕变！</text>
+
+      <view class="dex-stage-cards">
+        <view wx:for="{{currentTypeInfo.stages}}" wx:key="rank" 
+              class="dex-card {{petStageRank >= item.rank ? 'unlocked' : 'locked'}} {{petStageRank === item.rank ? 'current' : ''}}">
+          
+          <view class="dex-card-top flex justify-between align-center">
+            <view class="flex align-center" style="gap: 8rpx;">
+              <text class="dex-rank-badge">阶段 {{item.rank}}</text>
+              <text class="dex-stage-name">{{item.name}}</text>
+            </view>
+            <view class="dex-status-pill {{petStageRank >= item.rank ? 'active' : ''}}">
+              {{petStageRank === item.rank ? '🌟 当前形态' : (petStageRank > item.rank ? '✓ 已解锁' : item.reqText)}}
+            </view>
+          </view>
+
+          <view class="dex-avatar-preview flex align-center justify-center">
+            <image class="dex-avatar-img {{petStageRank < item.rank ? 'silhouette' : ''}}" src="{{item.image}}" mode="aspectFit"></image>
+          </view>
+
+          <text class="dex-stage-desc">{{item.desc}}</text>
+        </view>
+      </view>
+
+    </view>
+  </view>
+
   <!-- 🌟 勋章馆弹窗 (Badge Showcase Modal) -->
   <view class="badge-modal-backdrop {{showBadgeModal ? 'show' : ''}}" bindtap="onCloseBadgeModal">
     <view class="badge-modal-sheet" catchtap="noBubble">
@@ -383,7 +426,6 @@
       </view>
       <text class="sheet-subtitle">每一次打卡与投喂，都在见证你与搭子的蜕变！</text>
 
-      <!-- 勋章网格列表 -->
       <view class="badge-grid-list">
         <view wx:for="{{badgeList}}" wx:key="id" 
               class="badge-card-item {{item.unlocked ? 'unlocked' : 'locked'}}" 
@@ -400,7 +442,6 @@
         </view>
       </view>
 
-      <!-- 选中勋章详情展示卡 -->
       <view class="badge-detail-card flex align-center" wx:if="{{selectedBadge}}">
         <text style="font-size: 54rpx; margin-right: 18rpx;">{{selectedBadge.icon}}</text>
         <view class="flex flex-col flex-1">
@@ -426,13 +467,13 @@
 
       <view class="evo-stage-avatar-box">
         <view class="evo-radiant-glow"></view>
-        <image class="evo-pet-avatar" src="{{pet.avatarUrl}}" mode="aspectFit"></image>
+        <image class="evo-pet-avatar" src="{{activePetImage}}" mode="aspectFit"></image>
       </view>
 
       <view class="evo-rank-badge">
-        <text style="font-size: 28rpx; font-weight: 900; color: #FFFFFF;">🌟 {{petStageName}} 🌟</text>
+        <text style="font-size: 28rpx; font-weight: 900; color: #FFFFFF;">🌟 {{currentStageInfo.name}} · {{currentStageInfo.stageTitle}} 🌟</text>
       </view>
-      <text class="evo-quote">“多亏了主人的每天自律，我变得更强更有力量啦！”</text>
+      <text class="evo-quote">“{{currentStageInfo.quote}}”</text>
 
       <button class="btn-evo-confirm" bindtap="onCloseEvolutionModal">
         💪 收到！继续保持自律

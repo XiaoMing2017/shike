@@ -9,12 +9,40 @@ const TYPE_CONFIG = {
     eggName: '青玉龙灵之卵',
     name: '青玉小幼龙',
     tag: '燃脂蜕变',
-    image: '/images/pets/pet_dragon.png',
     food: '🍎',
-    quote: '我不运动，小龙就没饭吃！',
+    quote: '我不自律，小龙就没饭吃！',
     themeBg: '#ECFDF5',
     themeColor: '#047857',
-    defaultName: '木木'
+    defaultName: '木木',
+    stages: [
+      {
+        rank: 1,
+        name: '青玉小幼龙',
+        stageTitle: '幼年期 · 萌新搭子',
+        reqText: 'Lv.1 破壳解锁',
+        image: '/images/pets/pet_dragon_stage1.png',
+        quote: '刚破壳的幼龙宝宝，圆滚滚毛茸茸，最喜欢吃红苹果！',
+        desc: '初始幼龙形态，体态小巧软萌，每天陪你开启运动打卡！'
+      },
+      {
+        rank: 2,
+        name: '碧霄灵风龙',
+        stageTitle: '成长期 · 进阶神兽',
+        reqText: 'Lv.5 解锁',
+        image: '/images/pets/pet_dragon_stage2.png',
+        quote: '长出翡翠龙角与修长羽翼，自律让我更有力量！',
+        desc: '进阶为敏捷的碧霄灵龙，长出坚硬的翡翠龙角与羽翼，周身环绕翡翠符文！'
+      },
+      {
+        rank: 3,
+        name: '青天应龙神',
+        stageTitle: '究极体 · 传奇守护神',
+        reqText: 'Lv.10 解锁',
+        image: '/images/pets/pet_dragon_stage3.png',
+        quote: '达成终极进化！身披金鳞流光，成为顶级自律守护神！',
+        desc: '自律蜕变巅峰！身披紫青流云与黄金龙鳞，手握神圣宝珠，掌控祥瑞神力！'
+      }
+    ]
   },
   TOTORO: {
     type: 'TOTORO',
@@ -23,12 +51,40 @@ const TYPE_CONFIG = {
     eggName: '灵木龙猫之卵',
     name: '治愈大龙猫',
     tag: '温馨陪伴',
-    image: '/images/pets/pet_totoro.png',
     food: '🥝',
     quote: '吃饱才有力气自律，记得按时吃减脂餐哦～',
     themeBg: '#F1F5F9',
     themeColor: '#334155',
-    defaultName: '大龙猫'
+    defaultName: '大龙猫',
+    stages: [
+      {
+        rank: 1,
+        name: '灵木小幼兽',
+        stageTitle: '幼年期 · 萌新搭子',
+        reqText: 'Lv.1 破壳解锁',
+        image: '/images/pets/pet_totoro_stage1.png',
+        quote: '圆滚滚毛茸茸，最爱吃新鲜奇异果～',
+        desc: '可爱的灵木幼兽，喜欢趴在草坡上打盹晒太阳。'
+      },
+      {
+        rank: 2,
+        name: '苍林守护使',
+        stageTitle: '成长期 · 进阶神兽',
+        reqText: 'Lv.5 解锁',
+        image: '/images/pets/pet_totoro_stage2.png',
+        quote: '披上绿叶披风，手握水晶法杖守护你的健康！',
+        desc: '进阶为森林守护者，身披橡木绿叶斗篷，手握发光水晶法杖！'
+      },
+      {
+        rank: 3,
+        name: '神域龙猫尊',
+        stageTitle: '究极体 · 传奇守护神',
+        reqText: 'Lv.10 解锁',
+        image: '/images/pets/pet_totoro_stage3.png',
+        quote: '头戴百花神冠，掌控自然与治愈的奇迹之力！',
+        desc: '龙猫之神！头戴水晶花冠，手捧森罗万象神球，庇佑你的自律之路！'
+      }
+    ]
   },
   CAT: {
     type: 'CAT',
@@ -37,12 +93,40 @@ const TYPE_CONFIG = {
     eggName: '元气灵猫之卵',
     name: '软萌元气猫',
     tag: '灵动轻盈',
-    image: '/images/pets/pet_cat.png',
     food: '🍊',
     quote: '动作要轻盈，体态要挺拔，今天打卡超棒喵～',
     themeBg: '#FFF7ED',
     themeColor: '#C2410C',
-    defaultName: '小橘'
+    defaultName: '小橘',
+    stages: [
+      {
+        rank: 1,
+        name: '软萌元气猫',
+        stageTitle: '幼年期 · 萌新搭子',
+        reqText: 'Lv.1 破壳解锁',
+        image: '/images/pets/pet_cat_stage1.png',
+        quote: '今天也要轻盈起跳，体态棒棒喵～',
+        desc: '活泼好动的小橘猫，抱着大甜橙满地打滚。'
+      },
+      {
+        rank: 2,
+        name: '赤焰灵猫使',
+        stageTitle: '成长期 · 进阶神兽',
+        reqText: 'Lv.5 解锁',
+        image: '/images/pets/pet_cat_stage2.png',
+        quote: '系上赤红金铃，步态如风敏捷轻盈！',
+        desc: '进阶为赤焰灵猫，系上招财赤红金铃，周身环绕金色星火！'
+      },
+      {
+        rank: 3,
+        name: '九尾天焰神猫',
+        stageTitle: '究极体 · 传奇守护神',
+        reqText: 'Lv.10 解锁',
+        image: '/images/pets/pet_cat_stage3.png',
+        quote: '九尾金焰绽放！神装加身，成为体态与优雅的化身！',
+        desc: '究极神兽！九条华丽金焰尾羽展开，身穿鎏金战甲，威风凛凛！'
+      }
+    ]
   },
   DOG: {
     type: 'DOG',
@@ -51,12 +135,40 @@ const TYPE_CONFIG = {
     eggName: '忠义玄犬之卵',
     name: '忠诚自律狗',
     tag: '户外自律',
-    image: '/images/pets/pet_dog.png',
     food: '🍓',
     quote: '主人快走！去公园跑两圈，今天的狗粮就有啦汪！',
     themeBg: '#FEF3C7',
     themeColor: '#B45309',
-    defaultName: '旺财'
+    defaultName: '旺财',
+    stages: [
+      {
+        rank: 1,
+        name: '忠诚自律狗',
+        stageTitle: '幼年期 · 萌新搭子',
+        reqText: 'Lv.1 破壳解锁',
+        image: '/images/pets/pet_dog_stage1.png',
+        quote: '去公园跑两圈，今天也有大草莓吃汪！',
+        desc: '忠厚可爱的柴犬幼崽，最喜欢陪主人户外慢跑。'
+      },
+      {
+        rank: 2,
+        name: '疾风御行犬',
+        stageTitle: '成长期 · 进阶神兽',
+        reqText: 'Lv.5 解锁',
+        image: '/images/pets/pet_dog_stage2.png',
+        quote: '系上疾风领巾，陪你跑赢每一个自律清晨！',
+        desc: '进阶为健壮潇洒的疾风猎犬，系着飘扬的红色领巾，奔跑如风！'
+      },
+      {
+        rank: 3,
+        name: '天威烈焰神犬',
+        stageTitle: '究极体 · 传奇守护神',
+        reqText: 'Lv.10 解锁',
+        image: '/images/pets/pet_dog_stage3.png',
+        quote: '身披太阳神铠，掌控烈焰与奔腾神威！',
+        desc: '哮天神威圣犬！身披炽金太阳重铠，神威凛凛，无坚不摧！'
+      }
+    ]
   },
   QILIN: {
     type: 'QILIN',
@@ -65,12 +177,40 @@ const TYPE_CONFIG = {
     eggName: '祥瑞天麟之卵',
     name: '祥瑞小麒麟',
     tag: '祥瑞好运',
-    image: '/images/pets/pet_qilin.png',
     food: '🍑',
     quote: '自律者自带祥瑞，坚持打卡，好身材和好运一起来！',
     themeBg: '#F5F3FF',
     themeColor: '#6D28D9',
-    defaultName: '瑞瑞'
+    defaultName: '瑞瑞',
+    stages: [
+      {
+        rank: 1,
+        name: '祥瑞小麒麟',
+        stageTitle: '幼年期 · 萌新搭子',
+        reqText: 'Lv.1 破壳解锁',
+        image: '/images/pets/pet_qilin_stage1.png',
+        quote: '自律者自带祥瑞，今天也吃甜桃子～',
+        desc: '天生灵秀的紫曜幼麟，踏云而生，带来健康与好运。'
+      },
+      {
+        rank: 2,
+        name: '踏云紫灵麟',
+        stageTitle: '成长期 · 进阶神兽',
+        reqText: 'Lv.5 解锁',
+        image: '/images/pets/pet_qilin_stage2.png',
+        quote: '犄角生辉、彩云流转，自律之光愈发耀眼！',
+        desc: '进阶为踏云仙麟，水晶金角璀璨生辉，踏祥云而行！'
+      },
+      {
+        rank: 3,
+        name: '乾坤紫曜麒麟圣皇',
+        stageTitle: '究极体 · 传奇守护神',
+        reqText: 'Lv.10 解锁',
+        image: '/images/pets/pet_qilin_stage3.png',
+        quote: '星河为鬃、神龙为甲！以至高祥瑞守护每一位坚持自律的勇者！',
+        desc: '顶级麒麟圣皇！身穿真龙金甲，鬃毛如星云银河流动，至高无上！'
+      }
+    ]
   }
 };
 
@@ -92,12 +232,14 @@ Page({
     // 破壳孵化仪式状态
     hatchingStep: 0,
 
-    // 进化形态数据
+    // 3 阶形态进化系统
     petStageRank: 1,
-    petStageName: '幼年期 · 萌新搭子',
+    currentStageInfo: null,
+    activePetImage: '/images/pets/pet_dragon_stage1.png',
     nextStageGoalText: 'Lv.5 解锁成长期形态',
     petStageProgressText: '1/5',
     showEvolutionModal: false,
+    showDexModal: false,
 
     // 勋章馆
     showBadgeModal: false,
@@ -293,25 +435,27 @@ Page({
     });
   },
 
-  /* 计算进化阶段与成就勋章 */
+  /* 核心：计算 3 阶形态进化与成就勋章 */
   calculateEvolutionAndBadges(pet) {
     const lvl = pet.level || 1;
+    const typeInfo = TYPE_CONFIG[pet.petType] || TYPE_CONFIG['DRAGON'];
+    const stages = typeInfo.stages || [];
+
     let rank = 1;
-    let name = '幼年期 · 萌新搭子';
     let nextGoal = 'Lv.5 解锁成长期形态';
     let progressText = `${lvl}/5`;
 
     if (lvl >= 10) {
       rank = 3;
-      name = '究极体 · 传奇守护神';
       nextGoal = '已达顶级究极形态 ✨';
       progressText = 'MAX';
     } else if (lvl >= 5) {
       rank = 2;
-      name = '成长期 · 进阶神兽';
       nextGoal = 'Lv.10 解锁究极形态';
       progressText = `${lvl}/10`;
     }
+
+    const currentStage = stages[rank - 1] || stages[0];
 
     const badges = [...this.data.badgeList];
     badges[0].unlocked = true;
@@ -325,7 +469,8 @@ Page({
 
     this.setData({
       petStageRank: rank,
-      petStageName: name,
+      currentStageInfo: currentStage,
+      activePetImage: currentStage.image,
       nextStageGoalText: nextGoal,
       petStageProgressText: progressText,
       badgeList: badges,
@@ -404,7 +549,7 @@ Page({
         userId: userId,
         name: name,
         petType: this.data.selectedType,
-        avatarUrl: this.data.currentTypeInfo.image
+        avatarUrl: this.data.currentTypeInfo.stages[0].image
       },
       success: (res) => {
         this.setData({ adopting: false });
@@ -433,7 +578,7 @@ Page({
     });
   },
 
-  /* 立即投喂：检测升级与进化 */
+  /* 立即投喂：检测升级与 3 阶形态进化 */
   onFeedPet() {
     const user = app.globalData.userInfo;
     if (!user || !user.id || !this.data.pet) return;
@@ -468,6 +613,7 @@ Page({
           this.setData({ pet: updated });
           this.calculateEvolutionAndBadges(updated);
 
+          // 触发形态进化庆祝弹窗 (突破 Lv.5 或 Lv.10)
           if ((oldLevel < 5 && newLevel >= 5) || (oldLevel < 10 && newLevel >= 10)) {
             setTimeout(() => {
               this.setData({ showEvolutionModal: true });
@@ -501,10 +647,11 @@ Page({
     });
     wx.vibrateShort({ type: 'light' });
 
+    const stageQuote = (this.data.currentStageInfo && this.data.currentStageInfo.quote) || '自律最酷啦，今天也要一起加油哦！🔥';
     const quotes = [
+      stageQuote,
       '吃饱饱，今天陪你一起燃脂！💪',
       '我不自律，小家伙就没饭吃啦！快去打卡～🏃',
-      '自律最酷啦，今天也要一起加油哦！🔥',
       '少油少盐多喝水，体态越来越棒啦！💧',
       '你今天超自律！本搭子超级开心～✨',
       '今天又多消耗了卡路里，我们都在变强！🌟',
@@ -524,14 +671,16 @@ Page({
     }, 600);
   },
 
-  /* 任务快捷跳转 */
-  onGoExercise() { wx.switchTab({ url: '/pages/index/index' }); },
-  onGoDiet() { wx.switchTab({ url: '/pages/index/index' }); },
-  onGoWater() { wx.switchTab({ url: '/pages/index/index' }); },
-  onGoWeight() { wx.switchTab({ url: '/pages/index/index' }); },
-  onGoHome() { wx.switchTab({ url: '/pages/index/index' }); },
+  /* 形态图鉴弹窗 */
+  onOpenDexModal() {
+    this.setData({ showDexModal: true });
+  },
 
-  /* 勋章馆 */
+  onCloseDexModal() {
+    this.setData({ showDexModal: false });
+  },
+
+  /* 勋章馆弹窗 */
   onOpenBadgeModal() {
     const first = this.data.badgeList[0];
     this.setData({
@@ -554,5 +703,11 @@ Page({
     this.setData({ showEvolutionModal: false });
   },
 
+  /* 任务快捷跳转 */
+  onGoExercise() { wx.switchTab({ url: '/pages/index/index' }); },
+  onGoDiet() { wx.switchTab({ url: '/pages/index/index' }); },
+  onGoWater() { wx.switchTab({ url: '/pages/index/index' }); },
+  onGoWeight() { wx.switchTab({ url: '/pages/index/index' }); },
+  onGoHome() { wx.switchTab({ url: '/pages/index/index' }); },
   noBubble() {}
 });
