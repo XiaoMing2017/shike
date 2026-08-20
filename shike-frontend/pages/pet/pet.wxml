@@ -93,10 +93,6 @@
             <view class="pet-dynamic-shadow"></view>
           </view>
 
-          <!-- 浮岛底座 -->
-          <view class="stage-3d-island-disc">
-            <view class="disc-top-ring"></view>
-            <view class="disc-bottom-base"></view>
           </view>
         </view>
 
@@ -213,10 +209,6 @@
             <view class="pet-floor-shadow {{isFeeding ? 'shadow-chew' : (isTouched ? 'shadow-squish' : 'shadow-breathe')}}"></view>
           </view>
 
-          <!-- 3D 悬浮草木浮岛底座 -->
-          <view class="stage-3d-island-disc">
-            <view class="disc-top-ring"></view>
-            <view class="disc-bottom-base"></view>
           </view>
 
         </view>

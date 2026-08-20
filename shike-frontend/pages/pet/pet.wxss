@@ -982,3 +982,160 @@
 .virtual-3d-world .world-scene-bg {
   border-radius: 0;
 }
+
+/* ================= 3D 沉浸式阳光原木小屋精细排版 ================= */
+.virtual-3d-world {
+  position: relative;
+  width: 100%;
+  height: 580rpx;
+  background: #FDFBF7;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.world-scene-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* 窗户倾泻的晨曦阳光 */
+.world-sun-ray {
+  position: absolute;
+  top: -40rpx;
+  left: 10%;
+  width: 460rpx;
+  height: 580rpx;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 245, 230, 0.2) 50%, rgba(255, 255, 255, 0) 80%);
+  transform: rotate(18deg);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* 宠物在房间地毯上的落座舞台 */
+.pet-3d-character-stage {
+  position: relative;
+  width: 100%;
+  height: 380rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 70rpx;
+  z-index: 10;
+  cursor: pointer;
+}
+
+.pet-mesh-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.pet-cutout-img {
+  width: 220rpx;
+  height: 220rpx;
+  filter: drop-shadow(0 6rpx 14rpx rgba(15, 23, 42, 0.08));
+}
+
+/* 地毯真实软阴影 */
+.pet-floor-shadow {
+  position: absolute;
+  bottom: 6rpx;
+  width: 160rpx;
+  height: 24rpx;
+  background: radial-gradient(ellipse at center, rgba(30, 20, 10, 0.32) 0%, rgba(30, 20, 10, 0.1) 50%, rgba(30, 20, 10, 0) 75%);
+  border-radius: 50%;
+  z-index: 5;
+}
+
+/* 悬浮台词气泡 (高质感毛玻璃圆角) */
+.speech-bubble-3d {
+  position: absolute;
+  top: 24rpx;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  border: 1.5rpx solid rgba(226, 232, 240, 0.9);
+  border-radius: 28rpx;
+  padding: 14rpx 28rpx;
+  box-shadow: 0 8rpx 28rpx rgba(15, 23, 42, 0.08);
+  z-index: 25;
+  max-width: 580rpx;
+  text-align: center;
+}
+
+.bubble-msg {
+  font-size: 24rpx;
+  font-weight: 800;
+  color: #1E293B;
+  line-height: 1.4;
+}
+
+.bubble-arrow {
+  position: absolute;
+  bottom: -10rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10rpx solid transparent;
+  border-right: 10rpx solid transparent;
+  border-top: 12rpx solid rgba(255, 255, 255, 0.96);
+}
+
+/* 领养向导展台排版优化 */
+.adopt-3d-stage-box {
+  position: relative;
+  width: 100%;
+  height: 480rpx;
+  background: #FDFBF7;
+  border-radius: 28rpx;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 24rpx;
+}
+
+.adopt-pet-anchor {
+  position: relative;
+  width: 220rpx;
+  height: 220rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  cursor: pointer;
+  margin-bottom: 20rpx;
+}
+
+.adopt-pet-img {
+  width: 210rpx;
+  height: 210rpx;
+  filter: drop-shadow(0 6rpx 14rpx rgba(15, 23, 42, 0.08));
+}
+
+.adopt-speech-bubble {
+  position: absolute;
+  top: 20rpx;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  border: 1.5rpx solid rgba(226, 232, 240, 0.9);
+  border-radius: 24rpx;
+  padding: 12rpx 26rpx;
+  box-shadow: 0 6rpx 20rpx rgba(15, 23, 42, 0.08);
+  z-index: 25;
+  max-width: 560rpx;
+  text-align: center;
+}
