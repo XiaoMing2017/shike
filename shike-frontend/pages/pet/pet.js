@@ -379,6 +379,132 @@ const TYPE_CONFIG = {
         desc: '终极形态！周身环绕极光与冰晶星芒，轻盈优雅！'
       }
     ]
+  },
+  REDPANDA: {
+    type: 'REDPANDA',
+    icon: '🍁',
+    eggEmoji: '🍂',
+    eggName: '红枫栗栗之卵',
+    name: '栗栗小熊猫',
+    tag: '元气萌主',
+    food: '🍎',
+    quote: '摇一摇毛茸茸的大尾巴，今天也是活力满满的一天！',
+    themeBg: '#FFF7ED',
+    themeColor: '#EA580C',
+    defaultName: '栗栗',
+    stages: [
+      {
+        rank: 1,
+        name: '破壳萌新 · 栗栗仔',
+        stageTitle: '阶段1 · 破壳萌新',
+        reqText: 'Lv.1 破壳解锁',
+        image: '/images/pets/pet_redpanda_stage1.png',
+        quote: '红褐色毛茸茸的小熊猫，大眼睛扑闪扑闪抱苹果～',
+        desc: '活泼好动的小熊猫宝宝，每天陪你快乐轻食与自律打卡！'
+      },
+      {
+        rank: 2,
+        name: '元气陪伴 · 枫叶小熊猫',
+        stageTitle: '阶段2 · 元气陪伴',
+        reqText: 'Lv.5 解锁',
+        image: '/images/pets/pet_redpanda_stage2.png',
+        quote: '戴上甜美遮阳帽，系上小金铃铛，活力无限！',
+        desc: '进阶为枫叶小熊猫，戴上帽子与小背包，充满探险精神！'
+      },
+      {
+        rank: 3,
+        name: '蜕变闺蜜 · 灵枫守护仙',
+        stageTitle: '阶段3 · 蜕变闺蜜',
+        reqText: 'Lv.10 解锁',
+        image: '/images/pets/pet_redpanda_stage3.png',
+        quote: '头戴雏菊贝雷帽与小围巾，守护你的自信与好身材！',
+        desc: '终极形态！戴上优雅贝雷帽与暖心水壶，做你最骄傲的搭子！'
+      }
+    ]
+  },
+  RACCOON: {
+    type: 'RACCOON',
+    icon: '🦝',
+    eggEmoji: '🌰',
+    eggName: '暖灰软糖之卵',
+    name: '软糖小浣熊',
+    tag: '机灵贴心',
+    food: '🍇',
+    quote: '洗洗小爪子吃健康餐，自律让生活变得超级有仪式感！',
+    themeBg: '#F1F5F9',
+    themeColor: '#475569',
+    defaultName: '软糖',
+    stages: [
+      {
+        rank: 1,
+        name: '破壳萌新 · 软糖仔',
+        stageTitle: '阶段1 · 破壳萌新',
+        reqText: 'Lv.1 破壳解锁',
+        image: '/images/pets/pet_raccoon_stage1.png',
+        quote: '带眼罩花纹的暖灰小浣熊，乖巧地抱着小星星～',
+        desc: '机灵可爱的小浣熊，特别注重生活习惯与饮食仪式感。'
+      },
+      {
+        rank: 2,
+        name: '元气陪伴 · 侦探小浣熊',
+        stageTitle: '阶段2 · 元气陪伴',
+        reqText: 'Lv.5 解锁',
+        image: '/images/pets/pet_raccoon_stage2.png',
+        quote: '披上绿叶斗篷，穿上小雨靴，做你身边的健康小侦探！',
+        desc: '进阶为小侦探，敏锐感知你的心情与打卡进度！'
+      },
+      {
+        rank: 3,
+        name: '蜕变闺蜜 · 森林暖灯使',
+        stageTitle: '阶段3 · 蜕变闺蜜',
+        reqText: 'Lv.10 解锁',
+        image: '/images/pets/pet_raccoon_stage3.png',
+        quote: '戴上复古贝雷帽，穿上爱心毛衣，手提暖灯照亮自律路！',
+        desc: '终极形态！复古优雅，用爱与包容守护你的每一天！'
+      }
+    ]
+  },
+  OTTER: {
+    type: 'OTTER',
+    icon: '🦦',
+    eggEmoji: '🌊',
+    eggName: '清波水灵之卵',
+    name: '嘟嘟小水獭',
+    tag: '松弛治愈',
+    food: '🐚',
+    quote: '仰泳漂在水面上晒太阳，今天也要喝足八杯水哦～',
+    themeBg: '#F0F9FF',
+    themeColor: '#0284C7',
+    defaultName: '嘟嘟',
+    stages: [
+      {
+        rank: 1,
+        name: '破壳萌新 · 小嘟嘟',
+        stageTitle: '阶段1 · 破壳萌新',
+        reqText: 'Lv.1 破壳解锁',
+        image: '/images/pets/pet_otter_stage1.png',
+        quote: '可可色圆滚滚小水獭，双手捧着新鲜大草莓～',
+        desc: '超级松弛治愈的小水獭，最喜欢督促你多喝水、多放松！'
+      },
+      {
+        rank: 2,
+        name: '元气陪伴 · 水手小水獭',
+        stageTitle: '阶段2 · 元气陪伴',
+        reqText: 'Lv.5 解锁',
+        image: '/images/pets/pet_otter_stage2.png',
+        quote: '系上红白领巾穿上跑鞋，迈着轻盈步伐甩掉水肿！',
+        desc: '进阶为活力小水手，充满朝气，陪你跑出好状态！'
+      },
+      {
+        rank: 3,
+        name: '蜕变闺蜜 · 碧波仙水獭',
+        stageTitle: '阶段3 · 蜕变闺蜜',
+        reqText: 'Lv.10 解锁',
+        image: '/images/pets/pet_otter_stage3.png',
+        quote: '樱花花环加身，手捧热香茶，带来如水般的温柔与从容！',
+        desc: '终极形态！周身环绕水灵星芒，做你永远最松弛的灵魂搭子！'
+      }
+    ]
   }
 };
 
@@ -451,7 +577,7 @@ Page({
     earnedFoodCount: 0,
 
     candidateNames: ['木木', '小燃', '豆豆', '卡卡', '饭团', '泡泡', '嘟嘟'],
-                    types: [
+                        types: [
       { type: 'DRAGON', icon: '🐉', eggEmoji: '🟢', name: '木木小龙' },
       { type: 'TOTORO', icon: '🍃', eggEmoji: '⚪', name: '呼噜龙猫' },
       { type: 'CAT', icon: '🐱', eggEmoji: '🟡', name: '元气小橘' },
@@ -460,7 +586,10 @@ Page({
       { type: 'RABBIT', icon: '🐰', eggEmoji: '🌸', name: '糯糯小兔' },
       { type: 'PANDA', icon: '🐼', eggEmoji: '🎋', name: '墩墩熊猫' },
       { type: 'BEAR', icon: '🐻', eggEmoji: '🍯', name: '焦糖暖熊' },
-      { type: 'PENGUIN', icon: '🐧', eggEmoji: '❄️', name: '皮皮企鹅' }
+      { type: 'PENGUIN', icon: '🐧', eggEmoji: '❄️', name: '皮皮企鹅' },
+      { type: 'REDPANDA', icon: '🍁', eggEmoji: '🍂', name: '栗栗小熊猫' },
+      { type: 'RACCOON', icon: '🦝', eggEmoji: '🌰', name: '软糖小浣熊' },
+      { type: 'OTTER', icon: '🦦', eggEmoji: '🌊', name: '嘟嘟小水獭' }
     ]
   },
 
