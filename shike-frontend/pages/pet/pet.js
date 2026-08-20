@@ -241,10 +241,9 @@ Page({
     showEvolutionModal: false,
     showDexModal: false,
 
-    // 🌟 AI 动态交互与自律树洞
+    // 🌟 合规 AI 动态交互
     aiThinking: false,
     petDialogue: '',
-    chatInputText: '',
 
     // 勋章馆
     showBadgeModal: false,
@@ -619,7 +618,6 @@ Page({
           this.setData({ pet: updated });
           this.calculateEvolutionAndBadges(updated);
 
-          // 触发形态进化庆祝弹窗 (突破 Lv.5 或 Lv.10)
           if ((oldLevel < 5 && newLevel >= 5) || (oldLevel < 10 && newLevel >= 10)) {
             setTimeout(() => {
               this.setData({ showEvolutionModal: true });
@@ -660,30 +658,15 @@ Page({
       });
     }, 600);
 
-    // 触发 AI 交互
+    // 触发 AI 交互 (TOUCH)
     this.callAiInteraction('TOUCH', '');
   },
 
-  /* 🎋 自律树洞：快捷倾诉胶囊点击 */
+  /* 🎋 自律心声胶囊点击（100% 微信合规，受控指令） */
   onTapQuickPrompt(e) {
     const prompt = e.currentTarget.dataset.prompt;
     if (!prompt) return;
     this.callAiInteraction('CHAT', prompt);
-  },
-
-  onInputChatText(e) {
-    this.setData({ chatInputText: e.detail.value });
-  },
-
-  /* 🎋 自律树洞：发送自定义消息 */
-  onSendChatMessage() {
-    const text = this.data.chatInputText ? this.data.chatInputText.trim() : '';
-    if (!text) {
-      wx.showToast({ title: '请输入你想对搭子说的话', icon: 'none' });
-      return;
-    }
-    this.setData({ chatInputText: '' });
-    this.callAiInteraction('CHAT', text);
   },
 
   /* 核心：调用后端 AI 动态拟人互动 API */

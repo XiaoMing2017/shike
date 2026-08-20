@@ -160,10 +160,10 @@
         <!-- 进阶光环粒子 -->
         <view class="evolution-aura-ring evo-{{petStageRank}}" wx:if="{{petStageRank >= 2}}"></view>
 
-        <!-- 🌟 悬浮 AI 动态台词气泡（带实时思考 Loading 动效） -->
+        <!-- 🌟 悬浮动态台词气泡（带实时思考 Loading 动效） -->
         <view class="speech-bubble-3d animate-bubble-float {{aiThinking ? 'bubble-thinking' : ''}}">
           <view class="flex align-center" wx:if="{{aiThinking}}">
-            <text class="bubble-msg" style="color: #6366F1;">💭 搭子正在思考中...</text>
+            <text class="bubble-msg" style="color: #6366F1;">💭 搭子正在组织语言中...</text>
           </view>
           <block wx:else>
             <text class="bubble-msg">“{{petDialogue || pet.dialogue}}”</text>
@@ -222,41 +222,48 @@
 
       </view>
 
-      <!-- 🎋 自律树洞 · 随时向搭子倾诉 (心理减负互动区) -->
+      <!-- 🎋 自律心声与情绪互动（100% 微信合规受控模式，零自由文本输入） -->
       <view class="treehole-chat-deck">
-        <view class="flex justify-between align-center" style="margin-bottom: 14rpx;">
+        <view class="flex justify-between align-center" style="margin-bottom: 16rpx;">
           <view class="flex align-center" style="gap: 8rpx;">
             <text style="font-size: 30rpx;">🎋</text>
-            <text style="font-size: 26rpx; font-weight: 900; color: #0F172A;">自律树洞 · 随时倾诉</text>
+            <text style="font-size: 26rpx; font-weight: 900; color: #0F172A;">自律心声 · 点击搭子即刻回应</text>
           </view>
-          <text style="font-size: 20rpx; color: #6366F1; font-weight: 700;">AI 大模型实时回应 ✨</text>
+          <text style="font-size: 20rpx; color: #6366F1; font-weight: 700;">智能情绪共鸣 ✨</text>
         </view>
+        <text style="font-size: 22rpx; color: #64748B; margin-bottom: 16rpx; display: block;">选择你当下的心情或自律进展，听听搭子怎么对你说：</text>
 
-        <!-- 快捷倾诉胶囊标签 -->
-        <scroll-view class="treehole-quick-scroll" scroll-x="true" enable-flex="true">
-          <view class="quick-chip" bindtap="onTapQuickPrompt" data-prompt="今天上班好累呀，抱抱我">
-            <text>🥺 今天好累</text>
+        <!-- 丰富的情绪与自律心声胶囊矩阵 -->
+        <view class="interactive-chips-grid">
+          <view class="chip-action-btn" bindtap="onTapQuickPrompt" data-prompt="今天按时完成了运动燃脂，快夸夸我！">
+            <text class="chip-emoji">🏃</text>
+            <text class="chip-title">运动打卡求表扬</text>
           </view>
-          <view class="quick-chip" bindtap="onTapQuickPrompt" data-prompt="减脂期好想吃炸鸡奶茶，怎么办">
-            <text>🍗 嘴馋想吃炸鸡</text>
-          </view>
-          <view class="quick-chip" bindtap="onTapQuickPrompt" data-prompt="今天坚持自律了，快夸夸我！">
-            <text>✨ 夸夸我</text>
-          </view>
-          <view class="quick-chip" bindtap="onTapQuickPrompt" data-prompt="提醒我今天喝足够的水哦">
-            <text>💧 提醒喝水</text>
-          </view>
-          <view class="quick-chip" bindtap="onTapQuickPrompt" data-prompt="陪我一起做运动燃脂吧！">
-            <text>🏃 陪我运动</text>
-          </view>
-        </scroll-view>
 
-        <!-- 自定义对话输入框 -->
-        <view class="treehole-input-row flex align-center">
-          <input class="treehole-input" type="text" placeholder="向搭子倾诉你的心情或减脂压力..." value="{{chatInputText}}" bindinput="onInputChatText" confirm-type="send" bindconfirm="onSendChatMessage" />
-          <button class="btn-send-chat flex align-center justify-center" bindtap="onSendChatMessage" loading="{{aiThinking}}">
-            <text style="font-size: 24rpx; font-weight: 800;">发送</text>
-          </button>
+          <view class="chip-action-btn" bindtap="onTapQuickPrompt" data-prompt="今天喝了好多水，感觉身体很轻盈！">
+            <text class="chip-emoji">💧</text>
+            <text class="chip-title">饮水充足求夸奖</text>
+          </view>
+
+          <view class="chip-action-btn" bindtap="onTapQuickPrompt" data-prompt="今天工作好累好想偷懒，快给我一点坚持下去的动力！">
+            <text class="chip-emoji">🥺</text>
+            <text class="chip-title">今天好累求鼓励</text>
+          </view>
+
+          <view class="chip-action-btn" bindtap="onTapQuickPrompt" data-prompt="晚上特别嘴馋想吃高热量炸鸡宵夜，快帮我稳住心态！">
+            <text class="chip-emoji">🍗</text>
+            <text class="chip-title">嘴馋想吃宵夜</text>
+          </view>
+
+          <view class="chip-action-btn" bindtap="onTapQuickPrompt" data-prompt="按时吃了健康的减脂餐，打卡完毕！">
+            <text class="chip-emoji">🥗</text>
+            <text class="chip-title">吃完减脂餐打卡</text>
+          </view>
+
+          <view class="chip-action-btn" bindtap="onTapQuickPrompt" data-prompt="准备睡觉啦，晚安！明天也要一起加油哦！">
+            <text class="chip-emoji">🌙</text>
+            <text class="chip-title">互道晚安明天见</text>
+          </view>
         </view>
       </view>
 

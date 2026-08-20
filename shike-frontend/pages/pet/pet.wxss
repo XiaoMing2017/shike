@@ -1230,7 +1230,9 @@
 }
 
 
-/* 🎋 自律树洞样式 */
+
+
+/* 🎋 自律心声面板 (100% 合规受控模式) */
 .treehole-chat-deck {
   background: #FFFFFF;
   border-radius: 28rpx;
@@ -1240,61 +1242,37 @@
   border: 1.5rpx solid #F1F5F9;
 }
 
-.treehole-quick-scroll {
-  display: flex;
-  flex-direction: row;
-  white-space: nowrap;
-  gap: 12rpx;
-  padding: 8rpx 0 16rpx;
-  width: 100%;
+.interactive-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14rpx;
 }
 
-.quick-chip {
-  display: inline-flex;
-  align-items: center;
+.chip-action-btn {
   background: #F8FAFC;
-  border: 1rpx solid #E2E8F0;
-  padding: 10rpx 22rpx;
-  border-radius: 30rpx;
-  font-size: 22rpx;
-  font-weight: 700;
-  color: #334155;
-  flex-shrink: 0;
-  margin-right: 12rpx;
+  border: 1.5rpx solid #E2E8F0;
+  border-radius: 20rpx;
+  padding: 18rpx 16rpx;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
   transition: all 0.2s ease;
 }
 
-.quick-chip:active {
+.chip-action-btn:active {
   background: #EEF2FF;
   border-color: #6366F1;
-  color: #6366F1;
-  transform: scale(0.96);
+  transform: scale(0.97);
 }
 
-.treehole-input-row {
-  background: #F8FAFC;
-  border: 1.5rpx solid #E2E8F0;
-  border-radius: 24rpx;
-  padding: 8rpx 12rpx 8rpx 20rpx;
-  gap: 12rpx;
+.chip-emoji {
+  font-size: 32rpx;
 }
 
-.treehole-input {
-  flex: 1;
+.chip-title {
   font-size: 24rpx;
-  color: #0F172A;
-  height: 64rpx;
-}
-
-.btn-send-chat {
-  background: linear-gradient(135deg, #6366F1, #8B5CF6);
-  color: #FFFFFF;
-  border-radius: 20rpx;
-  padding: 0 28rpx;
-  height: 64rpx;
-  line-height: 64rpx;
-  margin: 0;
-  font-size: 24rpx;
+  font-weight: 800;
+  color: #334155;
 }
 
 .bubble-thinking {
