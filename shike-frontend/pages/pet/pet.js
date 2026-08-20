@@ -4,52 +4,52 @@ const app = getApp();
 const TYPE_CONFIG = {
   DRAGON: {
     type: 'DRAGON',
-    icon: '🍃',
+    icon: '🐉',
     eggEmoji: '🟢',
-    eggName: '薄荷生机之卵',
-    name: '薄荷小啾',
-    tag: '元气燃脂',
+    eggName: '青玉龙灵之卵',
+    name: '木木小龙',
+    tag: '燃脂闺蜜',
     food: '🍎',
-    quote: '今天每走1000步，小啾碗里就多添一颗甜苹果🍎～',
+    quote: '今天每走1000步，小龙饭碗里就多添一颗甜苹果🍎～',
     themeBg: '#ECFDF5',
     themeColor: '#047857',
     defaultName: '木木',
     stages: [
       {
         rank: 1,
-        name: '破壳萌新 · 薄荷小啾',
+        name: '破壳萌新 · 木木',
         stageTitle: '阶段1 · 破壳萌新',
         reqText: 'Lv.1 破壳解锁',
         image: '/images/pets/pet_dragon_stage1.png',
-        quote: '圆滚滚的薄荷绿小肥啾，两颊粉扑扑，最爱吃红苹果！',
-        desc: '软萌纯净的芬奇小肥啾，小巧可爱，每天陪你开启自律打卡！'
+        quote: '薄荷绿软萌小奶龙，趴在小草垫上最爱吃甜苹果！',
+        desc: '初始软萌形态，小巧可爱，每天陪你开启运动燃脂与轻盈生活！'
       },
       {
         rank: 2,
-        name: '元气陪伴 · 探险小啾',
+        name: '元气陪伴 · 碧霄灵龙',
         stageTitle: '阶段2 · 元气陪伴',
         reqText: 'Lv.5 解锁',
         image: '/images/pets/pet_dragon_stage2.png',
-        quote: '戴上探险遮阳帽，背上小黄包，今天也要元气满满！',
-        desc: '进阶为探险小啾，戴上遮阳帽背起行囊，探索更自律的自己！'
+        quote: '戴上粉色蝴蝶结发带，背上小黄包，今天也要美美冲鸭！',
+        desc: '进阶为元气灵龙，长出漂亮的翡翠龙角与修长羽翼，活力满满！'
       },
       {
         rank: 3,
-        name: '蜕变闺蜜 · 优雅小啾',
+        name: '蜕变闺蜜 · 青天应龙',
         stageTitle: '阶段3 · 蜕变闺蜜',
         reqText: 'Lv.10 解锁',
         image: '/images/pets/pet_dragon_stage3.png',
-        quote: '戴上法式贝雷帽与爱心暖围巾，做你永远最贴心的闺蜜！',
-        desc: '终极形态！身披优雅法式贝雷帽与柔和围巾，温暖陪伴你的日常！'
+        quote: '樱花花环加身，手捧热香茶，做你永远最贴心的自律闺蜜！',
+        desc: '终极形态！身披紫青流云与金辉光芒，守护你的好体态！'
       }
     ]
   },
   TOTORO: {
     type: 'TOTORO',
-    icon: '🌾',
+    icon: '🍃',
     eggEmoji: '⚪',
-    eggName: '燕麦温润之卵',
-    name: '燕麦小啾',
+    eggName: '灵木龙猫之卵',
+    name: '呼噜龙猫',
     tag: '治愈松弛',
     food: '🥝',
     quote: '吃饱睡好才是正经事，慢慢来，宝宝超棒的～',
@@ -59,156 +59,156 @@ const TYPE_CONFIG = {
     stages: [
       {
         rank: 1,
-        name: '破壳萌新 · 燕麦小啾',
+        name: '破壳萌新 · 龙猫仔',
         stageTitle: '阶段1 · 破壳萌新',
         reqText: 'Lv.1 破壳解锁',
         image: '/images/pets/pet_totoro_stage1.png',
-        quote: '软糯暖灰色的毛绒小啾，乖乖待在小窝里～',
-        desc: '温润治愈的小肥啾，喜欢安静陪伴你度过每个自律时刻。'
+        quote: '毛茸茸圆球小兽捧星星，抱着新鲜奇异果打盹～',
+        desc: '纯真可爱的小龙猫，最喜欢趴在草坡上晒太阳打呼噜。'
       },
       {
         rank: 2,
-        name: '元气陪伴 · 森系小啾',
+        name: '元气陪伴 · 森林使者',
         stageTitle: '阶段2 · 元气陪伴',
         reqText: 'Lv.5 解锁',
         image: '/images/pets/pet_totoro_stage2.png',
-        quote: '戴上鼠尾草绿小帽，今天也要好好喝水、按时记餐哦！',
-        desc: '进阶为森系小啾，清爽自然，守护你的饮食与作息！'
+        quote: '绿叶小斗篷加身，穿上小雨靴，手握四叶草守护你的好心情！',
+        desc: '进阶为森林守护者，身披橡木绿叶斗篷，充满治愈力量！'
       },
       {
         rank: 3,
-        name: '蜕变闺蜜 · 暖冬小啾',
+        name: '蜕变闺蜜 · 治愈神鹿',
         stageTitle: '阶段3 · 蜕变闺蜜',
         reqText: 'Lv.10 解锁',
         image: '/images/pets/pet_totoro_stage3.png',
-        quote: '系上温暖明黄围巾，给你无条件的爱与情绪价值！',
-        desc: '终极形态！戴上复古贝雷帽与暖冬围巾，带来满满的治愈感！'
+        quote: '戴上浆果贝雷帽，穿上爱心毛衣，手提暖灯温暖相伴！',
+        desc: '终极形态！头戴浆果贝雷帽，手提温暖小灯，庇佑你的身心平衡！'
       }
     ]
   },
   CAT: {
     type: 'CAT',
-    icon: '🍑',
+    icon: '🐱',
     eggEmoji: '🟡',
-    eggName: '蜜桃元气之卵',
-    name: '蜜桃小啾',
+    eggName: '元气灵猫之卵',
+    name: '元气小橘',
     tag: '轻盈体态',
     food: '🍊',
-    quote: '动作要轻盈，体态要挺拔，今天也超级好看啾～',
+    quote: '动作要轻盈，体态要挺拔，今天也超级美喵～',
     themeBg: '#FFF7ED',
     themeColor: '#C2410C',
     defaultName: '小橘',
     stages: [
       {
         rank: 1,
-        name: '破壳萌新 · 蜜桃小啾',
+        name: '破壳萌新 · 奶橘',
         stageTitle: '阶段1 · 破壳萌新',
         reqText: 'Lv.1 破壳解锁',
         image: '/images/pets/pet_cat_stage1.png',
-        quote: '杏橙色软萌小啾，大眼睛眨呀眨求夸夸啾～',
-        desc: '灵动可爱的小蜜桃，最懂女孩子的身材焦虑与体态美。'
+        quote: '奶橘圆球大眼萌猫，抱着大甜橙满地打滚求摸头喵～',
+        desc: '活泼好动的小猫咪，最懂女孩子的身材焦虑与体态美。'
       },
       {
         rank: 2,
-        name: '元气陪伴 · 草莓小啾',
+        name: '元气陪伴 · 灵猫使',
         stageTitle: '阶段2 · 元气陪伴',
         reqText: 'Lv.5 解锁',
         image: '/images/pets/pet_cat_stage2.png',
-        quote: '戴上草莓遮阳帽，步态轻盈美美运动打卡啾！',
-        desc: '进阶为草莓小啾，戴上甜美遮阳帽，活力加倍！'
+        quote: '戴上草莓遮阳帽，系上招财赤红小金铃，步态如风轻盈美美喵！',
+        desc: '进阶为赤焰灵猫，系上赤红小铃铛，周身环绕金色星火！'
       },
       {
         rank: 3,
-        name: '蜕变闺蜜 · 雏菊小啾',
+        name: '蜕变闺蜜 · 天焰金猫',
         stageTitle: '阶段3 · 蜕变闺蜜',
         reqText: 'Lv.10 解锁',
         image: '/images/pets/pet_cat_stage3.png',
-        quote: '雏菊贝雷帽加身！做你专属的轻盈与优雅化身啾！',
-        desc: '终极形态！戴上优雅雏菊贝雷帽与薰衣草小围巾，体态轻盈！'
+        quote: '戴上雏菊贝雷帽与小围巾，手握小水壶，做你专属的优雅化身喵！',
+        desc: '终极形态！戴上优雅雏菊贝雷帽与小围巾，体态轻盈！'
       }
     ]
   },
   DOG: {
     type: 'DOG',
-    icon: '☀️',
+    icon: '🐶',
     eggEmoji: '🟤',
-    eggName: '暖阳活力之卵',
-    name: '暖阳小啾',
-    tag: '活力户外',
+    eggName: '忠义玄犬之卵',
+    name: '旺财柴柴',
+    tag: '户外元气',
     food: '🍓',
-    quote: '扑棱小翅膀给主人充充电，随时陪你散步吹晚风啾！',
+    quote: '甩甩尾巴给主人充充电，随时陪你散步吹晚风汪！',
     themeBg: '#FEF3C7',
     themeColor: '#B45309',
     defaultName: '旺财',
     stages: [
       {
         rank: 1,
-        name: '破壳萌新 · 暖阳小啾',
+        name: '破壳萌新 · 柴柴幼崽',
         stageTitle: '阶段1 · 破壳萌新',
         reqText: 'Lv.1 破壳解锁',
         image: '/images/pets/pet_dog_stage1.png',
-        quote: '蜜糖金黄的小肥啾，精力充沛的小太阳！',
-        desc: '阳光忠诚的小搭子，陪伴你度过每一个自律清晨。'
+        quote: '吐舌憨萌柴犬宝宝，抱着大草莓，最爱陪主人慢跑！',
+        desc: '忠诚可爱的柴犬幼崽，陪伴你度过每一个自律清晨。'
       },
       {
         rank: 2,
-        name: '元气陪伴 · 运动小啾',
+        name: '元气陪伴 · 疾风柴柴',
         stageTitle: '阶段2 · 元气陪伴',
         reqText: 'Lv.5 解锁',
         image: '/images/pets/pet_dog_stage2.png',
-        quote: '戴上运动遮阳帽，陪你跑出满满的多巴胺啾！',
-        desc: '进阶为运动小啾，戴上遮阳帽背起小包，活力满满！'
+        quote: '系上红白格子领巾，穿上运动跑鞋，陪你跑出满满的多巴胺汪！',
+        desc: '进阶为健壮潇洒的疾风小猎犬，系着飘扬的红色领巾，奔跑如风！'
       },
       {
         rank: 3,
-        name: '蜕变闺蜜 · 暖阳守护啾',
+        name: '蜕变闺蜜 · 烈焰圣犬',
         stageTitle: '阶段3 · 蜕变闺蜜',
         reqText: 'Lv.10 解锁',
         image: '/images/pets/pet_dog_stage3.png',
-        quote: '红白围巾加身，做永远守护你、给你无限正能量的小太阳！',
-        desc: '终极形态！身披暖阳贝雷帽与热烈围巾，给你源源不断的动力！'
+        quote: '花环头饰加身，手握金光闪闪奖章，做永远守护你的小太阳！',
+        desc: '终极形态！身披暖阳花环与金色奖章，给你无限元气！'
       }
     ]
   },
   QILIN: {
     type: 'QILIN',
-    icon: '🌸',
+    icon: '✨',
     eggEmoji: '🟣',
-    eggName: '粉樱甜梦之卵',
-    name: '粉樱小啾',
-    tag: '甜美治愈',
-    food: '🍓',
-    quote: '扑棱小翅膀甩掉烦恼，今天也是开心自律的一天🌸～',
-    themeBg: '#FFF1F2',
-    themeColor: '#E11D48',
-    defaultName: '糖糖',
+    eggName: '祥瑞天麟之卵',
+    name: '仙贝小麟',
+    tag: '好运加持',
+    food: '🍑',
+    quote: '自律者自带祥瑞，爱自己会吸引宇宙一切美好✨',
+    themeBg: '#F5F3FF',
+    themeColor: '#6D28D9',
+    defaultName: '仙贝',
     stages: [
       {
         rank: 1,
-        name: '破壳萌新 · 粉樱小啾',
+        name: '破壳萌新 · 麟宝宝',
         stageTitle: '阶段1 · 破壳萌新',
         reqText: 'Lv.1 破壳解锁',
         image: '/images/pets/pet_qilin_stage1.png',
-        quote: '圆滚滚的淡粉紫小肥啾，两颊粉扑扑超治愈！',
-        desc: '甜美温柔的小肥啾，最喜欢陪你跳操、喝水与健康轻食！'
+        quote: '淡紫圆滚小仙麟，双手捧着仙桃送好运～',
+        desc: '天生灵秀的紫曜幼麟，踏云而生，带来健康与好运。'
       },
       {
         rank: 2,
-        name: '元气陪伴 · 甜心小啾',
+        name: '元气陪伴 · 踏云仙麟',
         stageTitle: '阶段2 · 元气陪伴',
         reqText: 'Lv.5 解锁',
         image: '/images/pets/pet_qilin_stage2.png',
-        quote: '戴上奶油黄遮阳帽，背上小黄包，今天也是元气满满！',
-        desc: '进阶为甜心小啾，戴着明亮小帽子与小背包，充满活力！'
+        quote: '系上彩虹小围巾，戴上星光发卡，脚踏白云朵陪你变好！',
+        desc: '进阶为踏云仙麟，水晶金角璀璨生辉，踏祥云而行！'
       },
       {
         rank: 3,
-        name: '蜕变闺蜜 · 仙境小啾',
+        name: '蜕变闺蜜 · 乾坤麒麟圣皇',
         stageTitle: '阶段3 · 蜕变闺蜜',
         reqText: 'Lv.10 解锁',
         image: '/images/pets/pet_qilin_stage3.png',
-        quote: '粉樱贝雷帽加身！用无条件的爱守护你的身心健康！',
-        desc: '终极形态！戴上粉樱法式贝雷帽与粉嫩爱心围巾，甜美至极！'
+        quote: '晶莹星花王冠加身！把全宇宙满满的好运与光芒都送给你！',
+        desc: '终极形态！头戴星花王冠，至高祥瑞守护你的自律之路！'
       }
     ]
   }
@@ -283,12 +283,12 @@ Page({
     earnedFoodCount: 0,
 
     candidateNames: ['木木', '小燃', '豆豆', '卡卡', '饭团', '泡泡', '嘟嘟'],
-        types: [
-      { type: 'DRAGON', icon: '🍃', eggEmoji: '🟢', name: '薄荷小啾' },
-      { type: 'TOTORO', icon: '🌾', eggEmoji: '⚪', name: '燕麦小啾' },
-      { type: 'CAT', icon: '🍑', eggEmoji: '🟡', name: '蜜桃小啾' },
-      { type: 'DOG', icon: '☀️', eggEmoji: '🟤', name: '暖阳小啾' },
-      { type: 'QILIN', icon: '🌸', eggEmoji: '🟣', name: '粉樱小啾' }
+                types: [
+      { type: 'DRAGON', icon: '🐉', eggEmoji: '🟢', name: '木木小龙' },
+      { type: 'TOTORO', icon: '🍃', eggEmoji: '⚪', name: '呼噜龙猫' },
+      { type: 'CAT', icon: '🐱', eggEmoji: '🟡', name: '元气小橘' },
+      { type: 'DOG', icon: '🐶', eggEmoji: '🟤', name: '旺财柴柴' },
+      { type: 'QILIN', icon: '✨', eggEmoji: '🟣', name: '仙贝小麟' }
     ]
   },
 
