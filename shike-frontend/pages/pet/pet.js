@@ -509,10 +509,14 @@ Page({
 
 
   init3DWorld() {
+    if (this._is3DInitializing) return;
+    this._is3DInitializing = true;
+
     const query = wx.createSelectorQuery().in(this);
     query.select('#petWorldCanvas')
       .fields({ node: true, size: true })
       .exec((res) => {
+        this._is3DInitializing = false;
         if (!res || !res[0] || !res[0].node) {
           console.warn('Cannot find #petWorldCanvas node');
           return;
@@ -526,7 +530,16 @@ Page({
         canvas.width = width * dpr;
         canvas.height = height * dpr;
 
-        const THREE = createScopedThreejs(canvas);
+        let THREE = this.THREE_INSTANCE;
+        if (!THREE) {
+          try {
+            THREE = createScopedThreejs(canvas);
+            this.THREE_INSTANCE = THREE;
+          } catch (e) {
+            console.error('createScopedThreejs error:', e);
+          }
+        }
+        if (!THREE) return;
 
         if (this.world3D) {
           this.world3D.destroy();
