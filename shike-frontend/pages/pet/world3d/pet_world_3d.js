@@ -61,10 +61,10 @@ class PetWorld3D {
 
   loadLayers() {
     const layerConfigs = [
-      { key: 'island', path: 'images/pets/world_layers/layer_island_base.png', fallback: '../../images/pets/world_layers/layer_island_base.png' },
-      { key: 'tree', path: 'images/pets/world_layers/layer_tree.png', fallback: '../../images/pets/world_layers/layer_tree.png' },
-      { key: 'bridge', path: 'images/pets/world_layers/layer_bridge.png', fallback: '../../images/pets/world_layers/layer_bridge.png' },
-      { key: 'foreground', path: 'images/pets/world_layers/layer_foreground.png', fallback: '../../images/pets/world_layers/layer_foreground.png' }
+      { key: 'island', path: '/images/pets/world_layers/layer_island_base.png', fallback: '../../images/pets/world_layers/layer_island_base.png' },
+      { key: 'tree', path: '/images/pets/world_layers/layer_tree.png', fallback: '../../images/pets/world_layers/layer_tree.png' },
+      { key: 'bridge', path: '/images/pets/world_layers/layer_bridge.png', fallback: '../../images/pets/world_layers/layer_bridge.png' },
+      { key: 'foreground', path: '/images/pets/world_layers/layer_foreground.png', fallback: '../../images/pets/world_layers/layer_foreground.png' }
     ];
 
     layerConfigs.forEach(cfg => {

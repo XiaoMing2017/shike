@@ -56,8 +56,7 @@ class PetEntity3D {
       fallbackImg.onload = () => { this.img = fallbackImg; };
       fallbackImg.src = `../../images/pets/${fileName}`;
     };
-    // 微信优先标准相对路径
-    img.src = `images/pets/${fileName}`;
+    img.src = `/images/pets/${fileName}`;
   }
 
   setSpecies(species, stageRank) {
