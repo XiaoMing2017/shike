@@ -1,9 +1,10 @@
 // pet_entity_3d.js - 2.5D 自主生命萌宠实体与状态机
 class PetEntity3D {
-  constructor(canvas, species = 'DRAGON', stageRank = 1) {
+  constructor(canvas, species = 'DRAGON', stageRank = 1, onLoaded = null) {
     this.canvas = canvas;
     this.species = species;
     this.stageRank = stageRank;
+    this.onLoaded = onLoaded;
 
     // 空间坐标与导航 (以浮岛 600x496 为基准坐标系)
     this.x = 270;
@@ -49,11 +50,14 @@ class PetEntity3D {
     const img = this.canvas.createImage();
     img.onload = () => {
       this.img = img;
+      if (typeof this.onLoaded === 'function') this.onLoaded();
     };
     img.onerror = () => {
-      // 容错备用路径尝试
       const fallbackImg = this.canvas.createImage();
-      fallbackImg.onload = () => { this.img = fallbackImg; };
+      fallbackImg.onload = () => { 
+        this.img = fallbackImg; 
+        if (typeof this.onLoaded === 'function') this.onLoaded();
+      };
       fallbackImg.src = `../../images/pets/${fileName}`;
     };
     img.src = `/images/pets/${fileName}`;
@@ -198,7 +202,6 @@ class PetEntity3D {
     if (this.img) {
       ctx.drawImage(this.img, -w / 2, -h / 2, w, h);
     } else {
-      // 备用纯色治愈小精灵
       ctx.beginPath();
       ctx.arc(0, 0, w * 0.4, 0, Math.PI * 2);
       ctx.fillStyle = '#86EFAC';

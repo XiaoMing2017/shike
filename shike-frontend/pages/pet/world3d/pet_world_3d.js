@@ -21,7 +21,7 @@ class PetWorld3D {
     this.targetPanX = 0;
     this.targetPanY = 0;
     this.time = 0;
-    this.lastTimestamp = 0;
+    this.lastTimestamp = Date.now();
 
     // 远景漂浮云层 (3D 空间独立对象)
     this.clouds = [
@@ -52,11 +52,18 @@ class PetWorld3D {
     this.loadLayers();
 
     // 创建 3D 萌宠自主实体
-    this.pet = new PetEntity3D(canvas, options.species || 'DRAGON', options.stageRank || 1);
+    this.pet = new PetEntity3D(canvas, options.species || 'DRAGON', options.stageRank || 1, () => {
+      this.renderScene(0);
+    });
 
-    // 启动 60FPS 渲染循环
+    // 🌟 同步首帧即时绘制，拒绝任何加载黑白闪烁
+    this.renderScene(0);
+
+    // 启动 60FPS 跨端稳定渲染循环
     this.animate = this.animate.bind(this);
-    this.rafId = this.requestFrame(this.animate);
+    this.timerId = setInterval(() => {
+      this.animate();
+    }, 16);
   }
 
   loadLayers() {
@@ -72,10 +79,14 @@ class PetWorld3D {
         const img = this.canvas.createImage();
         img.onload = () => {
           this.layers[cfg.key] = img;
+          this.renderScene(0);
         };
         img.onerror = () => {
           const fb = this.canvas.createImage();
-          fb.onload = () => { this.layers[cfg.key] = fb; };
+          fb.onload = () => { 
+            this.layers[cfg.key] = fb; 
+            this.renderScene(0);
+          };
           fb.src = cfg.fallback;
         };
         img.src = cfg.path;
@@ -140,15 +151,14 @@ class PetWorld3D {
   setSpecies(species, stageRank) {
     if (this.pet) {
       this.pet.setSpecies(species, stageRank);
+      this.renderScene(0);
     }
   }
 
-  animate(timestamp) {
+  animate() {
     if (this.isDestroyed) return;
-    this.rafId = this.requestFrame(this.animate);
 
-    if (!this.lastTimestamp) this.lastTimestamp = timestamp || Date.now();
-    const now = timestamp || Date.now();
+    const now = Date.now();
     const dt = Math.min(0.1, (now - this.lastTimestamp) / 1000 || 0.016);
     this.lastTimestamp = now;
     this.time += dt;
@@ -180,7 +190,7 @@ class PetWorld3D {
     this.renderScene(idleSway);
   }
 
-  renderScene(idleSway) {
+  renderScene(idleSway = 0) {
     const ctx = this.ctx;
     if (!ctx) return;
 
@@ -232,7 +242,6 @@ class PetWorld3D {
         496 * baseScale
       );
     } else {
-      // 备用即时平滑底座
       ctx.save();
       ctx.fillStyle = '#86EFAC';
       ctx.beginPath();
@@ -336,25 +345,11 @@ class PetWorld3D {
     });
   }
 
-  requestFrame(cb) {
-    if (this.canvas && typeof this.canvas.requestAnimationFrame === 'function') {
-      return this.canvas.requestAnimationFrame(cb);
-    }
-    return setTimeout(cb, 16);
-  }
-
-  cancelFrame(id) {
-    if (this.canvas && typeof this.canvas.cancelAnimationFrame === 'function') {
-      this.canvas.cancelAnimationFrame(id);
-    } else {
-      clearTimeout(id);
-    }
-  }
-
   destroy() {
     this.isDestroyed = true;
-    if (this.rafId) {
-      this.cancelFrame(this.rafId);
+    if (this.timerId) {
+      clearInterval(this.timerId);
+      this.timerId = null;
     }
   }
 }
