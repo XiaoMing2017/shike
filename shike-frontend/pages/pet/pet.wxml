@@ -159,24 +159,20 @@
         <view class="stage-rank-tag stage-rank-{{petStageRank}}">{{currentStageInfo.stageTitle}}</view>
       </view>
 
-            <!-- 🌟 真正 2.5D 卡通 3D 浮空岛微缩世界 (WebGL 硬件加速 + 真实深度遮挡) -->
+            <!-- 🌟 2.5D 卡通浮空岛微缩世界 -->
       <view class="virtual-3d-world">
-        
-        <!-- 2.5D 3D 空间微缩交互画布 -->
+        <!-- Canvas 正常文档流，原生组件正确渲染 -->
         <canvas type="2d" id="petWorldCanvas" class="pet-3d-webgl-canvas"
                 bindtouchstart="onWorldTouchStart"
                 bindtouchmove="onWorldTouchMove"
                 bindtouchend="onWorldTouchEnd"
                 bindtap="onTapWorldCanvas">
         </canvas>
-
-        <!-- 3D 视差拖拽指引角标 -->
+        <!-- 悬浮 UI 叠加 -->
         <view class="parallax-hint-badge">
           <text class="hint-icon">👆</text>
           <text class="hint-text">滑动体验 3D 空间视差</text>
         </view>
-
-        <!-- 🌟 悬浮动态闺蜜台词气泡（带实时思考 Loading 动效） -->
         <view class="speech-bubble-3d animate-bubble-float {{aiThinking ? 'bubble-thinking' : ''}}">
           <view class="flex align-center" wx:if="{{aiThinking}}">
             <text class="bubble-msg" style="color: #EC4899;">💭 搭子正在组织温暖的语言...</text>
@@ -186,44 +182,35 @@
           </block>
           <view class="bubble-arrow"></view>
         </view>
-
-        <!-- 飞行动画食物 (投喂抛物线) -->
         <view class="flying-food-projectile {{isFeeding ? 'animate-food-parabola' : ''}}" wx:if="{{isFeeding}}">
           <text class="food-emoji">{{foodIcon}}</text>
         </view>
-
-        <!-- 浮动 EXP 飘字 -->
         <view class="floating-exp-gain {{isFeeding ? 'animate-exp-up' : ''}}" wx:if="{{isFeeding}}">
           <text class="exp-text">+10 能量 ✨</text>
         </view>
+      </view>
 
-        <!-- 🛋️ 3D 浮空岛点位智能漫步导览条 -->
-        <view class="room-spot-dock-bar flex align-center justify-center">
-          <view wx:for="{{roomSpots}}" wx:key="id" 
-                class="spot-dock-item {{currentSpotId === item.id ? 'active' : ''}}"
-                bindtap="onSelectRoomSpot" data-id="{{item.id}}">
-            <text class="dock-icon">{{item.icon}}</text>
-            <text class="dock-name">{{item.name}}</text>
-          </view>
+      <!-- 导览条与状态（canvas 容器外部，避免原生组件层叠冲突） -->
+      <view class="room-spot-dock-bar flex align-center justify-center">
+        <view wx:for="{{roomSpots}}" wx:key="id" 
+              class="spot-dock-item {{currentSpotId === item.id ? 'active' : ''}}"
+              bindtap="onSelectRoomSpot" data-id="{{item.id}}">
+          <text class="dock-icon">{{item.icon}}</text>
+          <text class="dock-name">{{item.name}}</text>
         </view>
-
-        <!-- 心情胶囊栏与陪伴天数 -->
-        <view class="mood-bar-row flex align-center justify-center" style="gap: 14rpx;">
-          <view class="mood-pill mood-{{pet.mood}} flex align-center">
-            <text class="mood-icon">{{pet.mood === 'HAPPY' ? '😄' : (pet.mood === 'WAITING' ? '💭' : (pet.mood === 'HUNGRY' ? '🥺' : '🌸'))}}</text>
-            <text class="mood-text">{{pet.moodText}}</text>
-          </view>
-          <view class="hud-streak-tag flex align-center">
-            <text style="font-size: 22rpx; margin-right: 4rpx;">🔥</text>
-            <text style="font-size: 20rpx; font-weight: 800; color: #EA580C;">连续自律第 {{pet.streakDays}} 天</text>
-          </view>
+      </view>
+      <view class="mood-bar-row flex align-center justify-center" style="gap: 14rpx;">
+        <view class="mood-pill mood-{{pet.mood}} flex align-center">
+          <text class="mood-icon">{{pet.mood === 'HAPPY' ? '😄' : (pet.mood === 'WAITING' ? '💭' : (pet.mood === 'HUNGRY' ? '🥺' : '🌸'))}}</text>
+          <text class="mood-text">{{pet.moodText}}</text>
         </view>
-
-        <!-- 互动指引 -->
-        <view class="touch-hint-label">
-          <text>👆 轻触抚摸它，它会结合你今日真实自律数据温暖回应</text>
+        <view class="hud-streak-tag flex align-center">
+          <text style="font-size: 22rpx; margin-right: 4rpx;">🔥</text>
+          <text style="font-size: 20rpx; font-weight: 800; color: #EA580C;">连续自律第 {{pet.streakDays}} 天</text>
         </view>
-
+      </view>
+      <view class="touch-hint-label">
+        <text>👆 轻触抚摸它，它会结合你今日真实自律数据温暖回应</text>
       </view>
 
       <!-- 🎋 自律心声与闺蜜互动（受控合规模式） -->
