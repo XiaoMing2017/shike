@@ -238,7 +238,8 @@ export class PetEntity3D {
       rEar.position.set(0.22, 0.42, 0);
       rEar.rotation.z = 0.25;
       this.headGroup.add(rEar);
-      // 萌耳
+    } else if (this.species === 'CAT' || this.species === 'DOG') {
+      // 猫咪/柴犬萌耳
       const earGeo = new THREE.ConeGeometry(0.12, 0.24, 6);
       const lEar = new THREE.Mesh(earGeo, this.bodyMat);
       lEar.position.set(-0.26, 0.36, 0);
