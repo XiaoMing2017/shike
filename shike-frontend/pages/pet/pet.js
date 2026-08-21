@@ -1,3 +1,5 @@
+const { createScopedThreejs } = require('../../utils/threejs-miniprogram');
+import { PetWorld3D } from './world3d/pet_world_3d.js';
 // pages/pet/pet.js
 const app = getApp();
 
@@ -209,45 +211,40 @@ const SCENE_LIST = [
 ];
 
 const ROOM_SPOTS = {
+  RUG: {
+    id: 'RUG',
+    name: '软糯地毯',
+    icon: '🧶',
+    tag: '阳光小憩',
+    quote: '坐在浮空岛软乎乎的地毯上晒太阳，感觉整个人都被治愈了～'
+  },
   SOFA: {
     id: 'SOFA',
-    name: '客厅沙发',
+    name: '原木沙发',
     icon: '🛋️',
-    bottom: '160rpx',
-    left: '24%',
-    scale: '0.78',
     tag: '惬意阅读',
-    quote: '窝在客厅沙发里看绘本，享受不被打扰的自律时光！'
+    quote: '窝在沙发里翻翻绘本，享受不被打扰的自律时光！'
   },
-  GARDEN: {
-    id: 'GARDEN',
-    name: '阳台花园',
-    icon: '🌿',
-    bottom: '60rpx',
-    left: '42%',
-    scale: '0.82',
-    tag: '清新散步',
-    quote: '站在阳台小草坪上吹微风看花，多巴胺满满！'
+  FITNESS: {
+    id: 'FITNESS',
+    name: '运动瑜伽垫',
+    icon: '🧘',
+    tag: '燃脂拉伸',
+    quote: '铺开瑜伽垫拉伸一下，多巴胺分泌满满，体态越来越轻盈！'
   },
-  BED: {
-    id: 'BED',
-    name: '卧室大床',
-    icon: '🛏️',
-    bottom: '120rpx',
-    left: '74%',
-    scale: '0.80',
-    tag: '舒心小憩',
-    quote: '钻进软乎乎的小被窝里打个盹，好好休息才能更好自律～'
+  POND: {
+    id: 'POND',
+    name: '清泉瀑布',
+    icon: '🌊',
+    tag: '补水解渴',
+    quote: '瀑布潺潺，清泉叮咚，今天也要喝足八杯水哦～'
   },
-  DESK: {
-    id: 'DESK',
-    name: '学习书桌',
-    icon: '📖',
-    bottom: '240rpx',
-    left: '62%',
-    scale: '0.75',
-    tag: '专注学习',
-    quote: '坐在书桌前专心致志，每一次积累都在悄悄发光✨！'
+  FLOWER: {
+    id: 'FLOWER',
+    name: '盛开花丛',
+    icon: '🌸',
+    tag: '驻足闻花',
+    quote: '走在花丛小道上，闻一闻粉红花朵的清香，心情大好！'
   }
 };
 
@@ -341,6 +338,7 @@ Page({
     this.checkToggleAndLoad();
     this.updateCustomTabBar();
     this.fetchFoodTasks();
+    setTimeout(() => { if (this.data.hasPet) this.init3DWorld(); }, 150);
   },
 
   initPolaroidDate() {
@@ -350,9 +348,17 @@ Page({
     this.setData({ polaroidDateText: `${m}月${day}日` });
   },
 
+  onUnload() {
+    if (this.world3D) {
+      this.world3D.destroy();
+      this.world3D = null;
+    }
+  },
+
   onPullDownRefresh() {
     this.checkToggleAndLoad(() => {
       this.fetchFoodTasks();
+    setTimeout(() => { if (this.data.hasPet) this.init3DWorld(); }, 150);
       wx.stopPullDownRefresh();
     });
   },
@@ -360,6 +366,7 @@ Page({
   onRefreshPage() {
     this.checkToggleAndLoad();
     this.fetchFoodTasks();
+    setTimeout(() => { if (this.data.hasPet) this.init3DWorld(); }, 150);
   },
 
   updateCustomTabBar() {
@@ -488,16 +495,15 @@ Page({
 
     const targetSpot = ROOM_SPOTS[spotId];
     this.setData({
-      isMovingSpot: true,
       currentSpotId: spotId,
       currentSpot: targetSpot,
       petDialogue: targetSpot.quote
     });
     wx.vibrateShort({ type: 'medium' });
 
-    setTimeout(() => {
-      this.setData({ isMovingSpot: false });
-    }, 600);
+    if (this.world3D) {
+      this.world3D.navigateToSpot(spotId);
+    }
   },
 
   syncSpotWithHabits(tasks) {
@@ -521,6 +527,53 @@ Page({
         petDialogue: ROOM_SPOTS[targetId].quote
       });
     }
+  },
+
+
+  init3DWorld() {
+    const query = wx.createSelectorQuery().in(this);
+    query.select('#petWorldCanvas')
+      .node()
+      .exec((res) => {
+        if (!res || !res[0] || !res[0].node) {
+          console.warn('Cannot find #petWorldCanvas node');
+          return;
+        }
+        const canvas = res[0].node;
+        const THREE = createScopedThreejs(canvas);
+        const sysInfo = wx.getSystemInfoSync();
+
+        if (this.world3D) {
+          this.world3D.destroy();
+        }
+
+        const species = (this.data.pet && this.data.pet.petType) || this.data.selectedType || 'DRAGON';
+        const rank = this.data.petStageRank || 1;
+
+        this.world3D = new PetWorld3D(canvas, THREE, {
+          pixelRatio: sysInfo.pixelRatio || 2,
+          species: species,
+          stageRank: rank
+        });
+        console.log('3D WebGL World Engine initialized successfully!');
+      });
+  },
+
+  onWorldTouchStart(e) {
+    if (this.world3D) this.world3D.onTouchStart(e);
+  },
+
+  onWorldTouchMove(e) {
+    if (this.world3D) this.world3D.onTouchMove(e);
+  },
+
+  onWorldTouchEnd(e) {
+    if (this.world3D) this.world3D.onTouchEnd(e);
+  },
+
+  onTapWorldCanvas() {
+    if (this.world3D) this.world3D.triggerPetTap();
+    this.onTapPet();
   },
 
   onOpenSceneModal() {
@@ -566,6 +619,7 @@ Page({
           wx.vibrateShort({ type: 'medium' });
           this.fetchPetInfo();
           this.fetchFoodTasks();
+    setTimeout(() => { if (this.data.hasPet) this.init3DWorld(); }, 150);
         } else {
           wx.showToast({ title: (res.data && res.data.message) || '签到失败', icon: 'none' });
         }
@@ -737,6 +791,7 @@ Page({
           });
           this.calculateEvolutionAndBadges(pet);
           this.fetchFoodTasks();
+    setTimeout(() => { if (this.data.hasPet) this.init3DWorld(); }, 150);
           wx.vibrateShort({ type: 'heavy' });
         } else {
           wx.showToast({ title: (res.data && res.data.message) || '孵化失败', icon: 'none' });
@@ -770,6 +825,7 @@ Page({
 
     const oldLevel = this.data.pet.level || 1;
     this.setData({ isFeeding: true });
+    if (this.world3D) this.world3D.triggerPetFeed();
     wx.vibrateShort({ type: 'medium' });
 
     wx.request({

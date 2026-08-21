@@ -276,7 +276,7 @@ Page({
         }
 
         // 如果用户今天上传了真实餐食图片，使用真实图片；否则使用本地沙拉海报图片兜底
-        let bgUrl = '/images/poster_bg.png';
+        let bgUrl = '/images/poster_bg.jpg';
         let isRemoteBg = false;
         if (foodImgUrl) {
           if (foodImgUrl.startsWith('/uploads')) {
