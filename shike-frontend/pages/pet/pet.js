@@ -183,28 +183,20 @@ const POLAROID_QUOTES = [
 
 const SCENE_LIST = [
   {
-    id: 'apartment',
-    name: '温馨手绘三居室',
-    tag: '2.5D 手绘全景',
-    icon: '🏡',
-    image: '/images/pets/scene_cozy_apartment.jpg',
-    desc: '客厅沙发区、阳台露天小花园、卧室大床与学习书桌，应有尽有。'
-  },
-  {
-    id: 'room',
-    name: '阳光原木小屋',
-    tag: '日式温馨',
-    icon: '🌿',
-    image: '/images/pets/scene_isometric_room.jpg',
-    desc: '落地阳光窗、原木地板与软糯米白地毯，温馨治愈。'
-  },
-  {
     id: 'island',
     name: '云端浮空仙岛',
     tag: '奇幻治愈',
     icon: '☁️',
     image: '/images/pets/scene_island_bg.jpg',
     desc: '漂浮在云海之上的梦幻仙境岛屿，花树清泉环绕。'
+  },
+  {
+    id: 'room',
+    name: '阳光原木小屋',
+    tag: '日式温馨',
+    icon: '🌿',
+    image: '/images/pets/scene_room_bg.jpg',
+    desc: '落地阳光窗、原木地板与软糯米白地毯，温馨治愈。'
   }
 ];
 
@@ -724,18 +716,6 @@ Page({
       url: `${app.globalData.baseUrl}/pet/create`,
       method: 'POST',
       data: {
-    // 🛋️ 2.5D 等轴测家具点位系统
-    roomSpots: Object.values(ROOM_SPOTS),
-    currentSpotId: 'GARDEN',
-    currentSpot: ROOM_SPOTS['GARDEN'],
-    isMovingSpot: false,
-
-    // 🎨 3D 沉浸式场景切换系统
-    sceneList: SCENE_LIST,
-    currentSceneId: 'apartment',
-    currentSceneBg: '/images/pets/scene_cozy_apartment.jpg',
-    showSceneModal: false,
-
         userId: userId,
         name: name,
         petType: this.data.selectedType,
