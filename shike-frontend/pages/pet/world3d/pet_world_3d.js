@@ -13,6 +13,21 @@ class PetWorld3D {
     this.height = options.height || 300;
     this.dpr = options.pixelRatio || 2;
 
+    // 🔴 最基础的直绘测试（确认 ctx 能把颜色写到屏幕）
+    if (this.ctx) {
+      try {
+        const cw = this.canvas.width;
+        const ch = this.canvas.height;
+        this.ctx.fillStyle = '#BAE6FD';
+        this.ctx.fillRect(0, 0, cw, ch);
+        this.ctx.fillStyle = '#10B981';
+        this.ctx.fillRect(cw * 0.1, ch * 0.1, cw * 0.8, ch * 0.8);
+        console.log('[PetWorld3D] ✅ Basic draw test executed, cw=', cw, 'ch=', ch);
+      } catch (e) {
+        console.error('[PetWorld3D] ❌ Basic draw test FAILED:', e && e.message);
+      }
+    }
+
     // 空间视差摄像机与阻尼系统
     this.isDragging = false;
     this.touchStartX = 0;
@@ -195,155 +210,150 @@ class PetWorld3D {
     const ctx = this.ctx;
     if (!ctx) return;
 
-    const cw = this.canvas.width;
-    const ch = this.canvas.height;
-    ctx.clearRect(0, 0, cw, ch);
+    try {
+      const cw = this.canvas.width;
+      const ch = this.canvas.height;
 
-    const baseScale = (cw / 600);
-    const originX = (cw - 600 * baseScale) / 2;
-    const originY = (ch - 496 * baseScale) / 2 + 10 * baseScale;
+      if (!cw || !ch) {
+        console.warn('[PetWorld3D] cw/ch is 0:', cw, ch);
+        return;
+      }
 
-    // ☁️ 1. 远景天幕与云层 (0.15x 视差)
-    const skyPanX = (this.panX + idleSway) * 0.15;
-    const skyPanY = this.panY * 0.15;
+      ctx.clearRect(0, 0, cw, ch);
 
-    const skyGrad = ctx.createLinearGradient(0, 0, 0, ch);
-    skyGrad.addColorStop(0, '#93C5FD');
-    skyGrad.addColorStop(0.55, '#BAE6FD');
-    skyGrad.addColorStop(1.0, '#E0F2FE');
-    ctx.fillStyle = skyGrad;
-    ctx.fillRect(0, 0, cw, ch);
+      const baseScale = (cw / 600);
+      const originX = (cw - 600 * baseScale) / 2;
+      const originY = (ch - 496 * baseScale) / 2 + 10 * baseScale;
 
-    this.clouds.forEach(cloud => {
+      // ☁️ 1. 天空渐变背景
+      const skyPanX = (this.panX + idleSway) * 0.15;
+      const skyPanY = this.panY * 0.15;
+
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, ch);
+      skyGrad.addColorStop(0, '#93C5FD');
+      skyGrad.addColorStop(0.55, '#BAE6FD');
+      skyGrad.addColorStop(1.0, '#E0F2FE');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, cw, ch);
+
+      // ☁️ 云层
+      this.clouds.forEach(cloud => {
+        ctx.save();
+        const cx = (cloud.x + skyPanX) * baseScale;
+        const cy = (cloud.y + skyPanY) * baseScale;
+        const s = cloud.scale * baseScale;
+        ctx.fillStyle = `rgba(255, 255, 255, ${cloud.opacity})`;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 22 * s, 0, Math.PI * 2);
+        ctx.arc(cx + 18 * s, cy - 6 * s, 26 * s, 0, Math.PI * 2);
+        ctx.arc(cx + 42 * s, cy - 2 * s, 20 * s, 0, Math.PI * 2);
+        ctx.arc(cx + 26 * s, cy + 8 * s, 18 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      // 🏝️ 2. 浮空岛基底
+      const islandPanX = this.panX + idleSway;
+      const islandPanY = this.panY;
+
+      if (this.layers.island) {
+        ctx.drawImage(
+          this.layers.island,
+          originX + islandPanX * baseScale,
+          originY + islandPanY * baseScale,
+          600 * baseScale,
+          496 * baseScale
+        );
+      } else {
+        ctx.save();
+        ctx.fillStyle = '#86EFAC';
+        ctx.beginPath();
+        ctx.ellipse(originX + (300 + islandPanX) * baseScale, originY + (280 + islandPanY) * baseScale, 240 * baseScale, 140 * baseScale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // 🌊 3. 水波微光
       ctx.save();
-      const cx = (cloud.x + skyPanX) * baseScale;
-      const cy = (cloud.y + skyPanY) * baseScale;
-      const s = cloud.scale * baseScale;
-
-      ctx.fillStyle = `rgba(255, 255, 255, ${cloud.opacity})`;
+      const shimmerAlpha = 0.25 + Math.sin(this.time * 4.5) * 0.15;
+      ctx.fillStyle = `rgba(255, 255, 255, ${shimmerAlpha})`;
+      const pondX = originX + (250 + islandPanX) * baseScale;
+      const pondY = originY + (240 + islandPanY) * baseScale;
       ctx.beginPath();
-      ctx.arc(cx, cy, 22 * s, 0, Math.PI * 2);
-      ctx.arc(cx + 18 * s, cy - 6 * s, 26 * s, 0, Math.PI * 2);
-      ctx.arc(cx + 42 * s, cy - 2 * s, 20 * s, 0, Math.PI * 2);
-      ctx.arc(cx + 26 * s, cy + 8 * s, 18 * s, 0, Math.PI * 2);
+      ctx.ellipse(pondX, pondY, 40 * baseScale, 18 * baseScale, -0.2, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
-    });
 
-    // 🏝️ 2. 中景浮空岛地形基底 (1.0x 正常视差)
-    const islandPanX = this.panX + idleSway;
-    const islandPanY = this.panY;
+      // 🌲 4. 深度排序遮挡
+      const renderQueue = [];
 
-    if (this.layers.island) {
-      ctx.drawImage(
-        this.layers.island,
-        originX + islandPanX * baseScale,
-        originY + islandPanY * baseScale,
-        600 * baseScale,
-        496 * baseScale
-      );
-    } else {
-      ctx.save();
-      ctx.fillStyle = '#86EFAC';
-      ctx.beginPath();
-      ctx.ellipse(originX + (300 + islandPanX) * baseScale, originY + (280 + islandPanY) * baseScale, 240 * baseScale, 140 * baseScale, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
-
-    // 🌊 3. 动态水波与瀑布微光
-    ctx.save();
-    const shimmerAlpha = 0.25 + Math.sin(this.time * 4.5) * 0.15;
-    ctx.fillStyle = `rgba(255, 255, 255, ${shimmerAlpha})`;
-    const pondX = originX + (250 + islandPanX) * baseScale;
-    const pondY = originY + (240 + islandPanY) * baseScale;
-    ctx.beginPath();
-    ctx.ellipse(pondX, pondY, 40 * baseScale, 18 * baseScale, -0.2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    // 🌲 4. 空间深度排序与真实物理遮挡 (Z-Buffer Depth Sorting)
-    const renderQueue = [];
-
-    renderQueue.push({
-      type: 'TREE',
-      depth: 295,
-      render: () => {
-        if (this.layers.tree) {
-          ctx.drawImage(
-            this.layers.tree,
-            originX + (348 + islandPanX) * baseScale,
-            originY + (85 + islandPanY) * baseScale,
-            229 * baseScale,
-            279 * baseScale
-          );
-        }
-      }
-    });
-
-    renderQueue.push({
-      type: 'BRIDGE',
-      depth: 350,
-      render: () => {
-        if (this.layers.bridge) {
-          ctx.drawImage(
-            this.layers.bridge,
-            originX + (317 + islandPanX) * baseScale,
-            originY + (270 + islandPanY) * baseScale,
-            152 * baseScale,
-            132 * baseScale
-          );
-        }
-      }
-    });
-
-    if (this.pet) {
       renderQueue.push({
-        type: 'PET',
-        depth: this.pet.y + 20,
+        type: 'TREE', depth: 295,
         render: () => {
-          this.pet.render(ctx, originX / baseScale + islandPanX, originY / baseScale + islandPanY, baseScale);
+          if (this.layers.tree) {
+            ctx.drawImage(this.layers.tree,
+              originX + (348 + islandPanX) * baseScale, originY + (85 + islandPanY) * baseScale,
+              229 * baseScale, 279 * baseScale);
+          }
         }
       });
-    }
 
-    renderQueue.sort((a, b) => a.depth - b.depth);
-    renderQueue.forEach(item => item.render());
+      renderQueue.push({
+        type: 'BRIDGE', depth: 350,
+        render: () => {
+          if (this.layers.bridge) {
+            ctx.drawImage(this.layers.bridge,
+              originX + (317 + islandPanX) * baseScale, originY + (270 + islandPanY) * baseScale,
+              152 * baseScale, 132 * baseScale);
+          }
+        }
+      });
 
-    // 🌿 5. 前景花丛遮挡层 (强视差 1.45x)
-    const fgPanX = (this.panX + idleSway) * 1.45;
-    const fgPanY = this.panY * 1.45;
-    if (this.layers.foreground) {
-      ctx.drawImage(
-        this.layers.foreground,
-        originX + (50 + fgPanX) * baseScale,
-        originY + (335 + fgPanY) * baseScale,
-        539 * baseScale,
-        139 * baseScale
-      );
-    }
-
-    // ✨ 6. 飘落樱花瓣与梦幻金粉粒子
-    this.particles.forEach(p => {
-      ctx.save();
-      const px = originX + (p.x + islandPanX * 0.7) * baseScale;
-      const py = originY + (p.y + islandPanY * 0.7) * baseScale;
-      ctx.translate(px, py);
-      ctx.rotate(p.rot);
-
-      if (p.type === 'PETAL') {
-        ctx.fillStyle = `rgba(244, 114, 182, ${p.alpha})`;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, p.size * baseScale, (p.size * 0.55) * baseScale, 0, 0, Math.PI * 2);
-        ctx.fill();
-      } else {
-        ctx.fillStyle = `rgba(253, 224, 71, ${p.alpha})`;
-        ctx.beginPath();
-        ctx.arc(0, 0, (p.size * 0.45) * baseScale, 0, Math.PI * 2);
-        ctx.fill();
+      if (this.pet) {
+        renderQueue.push({
+          type: 'PET', depth: this.pet.y + 20,
+          render: () => {
+            this.pet.render(ctx, originX / baseScale + islandPanX, originY / baseScale + islandPanY, baseScale);
+          }
+        });
       }
-      ctx.restore();
-    });
+
+      renderQueue.sort((a, b) => a.depth - b.depth);
+      renderQueue.forEach(item => item.render());
+
+      // 🌿 5. 前景花丛
+      const fgPanX = (this.panX + idleSway) * 1.45;
+      const fgPanY = this.panY * 1.45;
+      if (this.layers.foreground) {
+        ctx.drawImage(this.layers.foreground,
+          originX + (50 + fgPanX) * baseScale, originY + (335 + fgPanY) * baseScale,
+          539 * baseScale, 139 * baseScale);
+      }
+
+      // ✨ 6. 飘落樱花瓣与金粉粒子
+      this.particles.forEach(p => {
+        ctx.save();
+        const px = originX + (p.x + islandPanX * 0.7) * baseScale;
+        const py = originY + (p.y + islandPanY * 0.7) * baseScale;
+        ctx.translate(px, py);
+        ctx.rotate(p.rot);
+        if (p.type === 'PETAL') {
+          ctx.fillStyle = `rgba(244, 114, 182, ${p.alpha})`;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, p.size * baseScale, p.size * 0.55 * baseScale, 0, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.fillStyle = `rgba(253, 224, 71, ${p.alpha})`;
+          ctx.beginPath();
+          ctx.arc(0, 0, p.size * 0.45 * baseScale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      });
+
+    } catch (err) {
+      console.error('[PetWorld3D] ❌ renderScene ERROR:', err && err.message, err && err.stack);
+    }
   }
 
   destroy() {
