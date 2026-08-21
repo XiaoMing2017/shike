@@ -715,14 +715,14 @@ Page({
       isTouched: true,
       heartAnim: true
     });
-    wx.vibrateShort({ type: 'light' });
+    wx.vibrateShort({ type: 'medium' });
 
     setTimeout(() => {
       this.setData({
         isTouched: false,
         heartAnim: false
       });
-    }, 600);
+    }, 850);
 
     this.callAiInteraction('TOUCH', '');
   },
@@ -743,12 +743,6 @@ Page({
       url: `${app.globalData.baseUrl}/pet/interact`,
       method: 'POST',
       data: {
-    // 🎨 3D 沉浸式场景切换系统
-    sceneList: SCENE_LIST,
-    currentSceneId: 'room',
-    currentSceneBg: '/images/pets/scene_room_bg.jpg',
-    showSceneModal: false,
-
         userId: user.id,
         actionType: actionType,
         userMessage: userMessage

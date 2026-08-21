@@ -1307,3 +1307,215 @@
   font-weight: 800;
   color: #0F172A;
 }
+
+/* ================= 🌟 2.5D 活体骨骼与灵动微动系统 ================= */
+
+/* 2.5D 自然 Q 弹呼吸与肢体起伏 (Squash & Stretch) */
+.animate-25d-breath {
+  animation: pet25DBreath 4.2s ease-in-out infinite;
+  transform-origin: 50% 90%;
+  will-change: transform;
+}
+
+@keyframes pet25DBreath {
+  0%, 100% {
+    transform: translateY(0) scale(1, 1) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-8rpx) scale(1.025, 0.98) rotate(-0.8deg);
+  }
+  50% {
+    transform: translateY(-13rpx) scale(1.038, 0.965) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-5rpx) scale(0.99, 1.012) rotate(0.8deg);
+  }
+}
+
+/* 2.5D 触碰欢快弹跳与开心摇摆 (Joy Bounce) */
+.animate-25d-joy {
+  animation: pet25DJoy 0.85s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transform-origin: 50% 90%;
+  will-change: transform;
+}
+
+@keyframes pet25DJoy {
+  0% {
+    transform: translateY(0) scale(1, 1) rotate(0deg);
+  }
+  15% {
+    transform: translateY(8rpx) scale(1.16, 0.84) rotate(0deg);
+  }
+  40% {
+    transform: translateY(-28rpx) scale(0.92, 1.14) rotate(-3.5deg);
+  }
+  65% {
+    transform: translateY(-6rpx) scale(1.06, 0.95) rotate(2.5deg);
+  }
+  85% {
+    transform: translateY(-2rpx) scale(0.98, 1.02) rotate(-1deg);
+  }
+  100% {
+    transform: translateY(0) scale(1, 1) rotate(0deg);
+  }
+}
+
+/* 🌟 2.5D 灵动眨眼蒙皮层 */
+.pet-25d-eyelid-overlay {
+  position: absolute;
+  top: 36%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 130rpx;
+  height: 24rpx;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 12;
+}
+
+.eyelid-mask {
+  width: 22rpx;
+  height: 8rpx;
+  background: #1E293B;
+  border-radius: 6rpx;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.eyes-blink-loop .eyelid-mask {
+  animation: eyeBlinkLoop 3.8s ease-in-out infinite;
+}
+
+@keyframes eyeBlinkLoop {
+  0%, 88%, 94%, 100% {
+    opacity: 0;
+    transform: scaleY(0);
+  }
+  90%, 92% {
+    opacity: 0.88;
+    transform: scaleY(1);
+  }
+}
+
+/* 开心眯眼笑 ^_^ */
+.eyes-joy-smile .eyelid-mask {
+  opacity: 0.95;
+  height: 6rpx;
+  border-radius: 0 0 10rpx 10rpx;
+  transform: scale(1.1) translateY(2rpx);
+}
+
+/* 🌟 2.5D 脸颊粉晕微呼吸动效 */
+.pet-25d-blush-aura {
+  position: absolute;
+  top: 48%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 170rpx;
+  height: 24rpx;
+  background: radial-gradient(ellipse at 15% 50%, rgba(254, 205, 211, 0.6) 0%, rgba(254, 205, 211, 0) 70%),
+              radial-gradient(ellipse at 85% 50%, rgba(254, 205, 211, 0.6) 0%, rgba(254, 205, 211, 0) 70%);
+  pointer-events: none;
+  z-index: 11;
+  animation: blushPulse 4.2s ease-in-out infinite alternate;
+}
+
+@keyframes blushPulse {
+  0% { opacity: 0.4; transform: translateX(-50%) scale(0.95); }
+  100% { opacity: 0.85; transform: translateX(-50%) scale(1.08); }
+}
+
+.blush-excited {
+  opacity: 1 !important;
+  transform: translateX(-50%) scale(1.2) !important;
+}
+
+/* 🌟 2.5D 配件微动粒子 */
+.pet-25d-acc-fx {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 14;
+}
+
+.acc-sparkle-dot {
+  position: absolute;
+  color: #FBBF24;
+  font-size: 20rpx;
+  animation: accTwinkle 2.5s ease-in-out infinite alternate;
+}
+.acc-sparkle-dot.s1 { top: 12%; left: 24%; animation-delay: 0.3s; }
+.acc-sparkle-dot.s2 { top: 16%; right: 22%; animation-delay: 1.2s; }
+
+@keyframes accTwinkle {
+  0% { opacity: 0.2; transform: scale(0.7) rotate(0deg); }
+  100% { opacity: 0.95; transform: scale(1.25) rotate(45deg); }
+}
+
+/* 阶段 3 暖茶气雾升腾 */
+.steam-flow-wrap {
+  position: absolute;
+  bottom: 38%;
+  right: 18%;
+  width: 30rpx;
+  height: 50rpx;
+  display: flex;
+  gap: 6rpx;
+}
+
+.steam-line {
+  width: 4rpx;
+  height: 24rpx;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 100%);
+  border-radius: 4rpx;
+  animation: steamRise 2s ease-out infinite;
+}
+.steam-line.st1 { animation-delay: 0s; }
+.steam-line.st2 { animation-delay: 0.8s; }
+
+@keyframes steamRise {
+  0% { transform: translateY(0) scaleX(0.8); opacity: 0.8; }
+  100% { transform: translateY(-30rpx) scaleX(1.8); opacity: 0; }
+}
+
+/* 🌟 2.5D 地面真实接触物理阴影 */
+.shadow-25d-breath {
+  animation: shadow25DBreath 4.2s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes shadow25DBreath {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  25% {
+    transform: scale(0.92);
+    opacity: 0.65;
+  }
+  50% {
+    transform: scale(0.85);
+    opacity: 0.5;
+  }
+  75% {
+    transform: scale(0.96);
+    opacity: 0.75;
+  }
+}
+
+.shadow-joy {
+  animation: shadow25DJoy 0.85s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes shadow25DJoy {
+  0% { transform: scale(1); opacity: 0.85; }
+  15% { transform: scale(1.2); opacity: 0.95; }
+  40% { transform: scale(0.65); opacity: 0.35; }
+  65% { transform: scale(1.08); opacity: 0.9; }
+  85% { transform: scale(0.95); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 0.85; }
+}

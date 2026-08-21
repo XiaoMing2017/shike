@@ -206,10 +206,34 @@
             <text class="exp-text">+10 能量 ✨</text>
           </view>
 
-          <!-- 3D 活体宠物模型 -->
-          <view class="pet-mesh-container stage-size-{{petStageRank}} {{isFeeding ? 'animate-pet-chew' : (isTouched ? 'animate-pet-squish' : 'animate-idle-breathe')}}">
+          <!-- 🌟 2.5D 活体骨骼与多层微动系统 -->
+          <view class="pet-mesh-container stage-size-{{petStageRank}} {{isFeeding ? 'animate-pet-chew' : (isTouched ? 'animate-25d-joy' : 'animate-25d-breath')}}">
+            
+            <!-- 2.5D 手绘主体立绘 -->
             <image class="pet-cutout-img" src="{{activePetImage}}" mode="aspectFit"></image>
-            <view class="pet-floor-shadow {{isFeeding ? 'shadow-chew' : (isTouched ? 'shadow-squish' : 'shadow-breathe')}}"></view>
+
+            <!-- 🌟 2.5D 灵动自然眨眼蒙皮层 -->
+            <view class="pet-25d-eyelid-overlay {{isTouched ? 'eyes-joy-smile' : 'eyes-blink-loop'}}">
+              <view class="eyelid-mask eye-left"></view>
+              <view class="eyelid-mask eye-right"></view>
+            </view>
+
+            <!-- 🌟 2.5D 脸颊粉晕微呼吸动效 -->
+            <view class="pet-25d-blush-aura {{isTouched ? 'blush-excited' : ''}}"></view>
+
+            <!-- 🌟 2.5D 高阶配件微动粒子 (热气升腾 / 樱花星芒) -->
+            <view class="pet-25d-acc-fx" wx:if="{{petStageRank >= 2}}">
+              <view class="acc-sparkle-dot s1">✦</view>
+              <view class="acc-sparkle-dot s2">✦</view>
+              <!-- 阶段3 暖茶气雾升腾 -->
+              <view class="steam-flow-wrap" wx:if="{{petStageRank >= 3}}">
+                <view class="steam-line st1"></view>
+                <view class="steam-line st2"></view>
+              </view>
+            </view>
+
+            <!-- 🌟 2.5D 地面真实接触物理阴影（随呼吸与弹跳精准物理联动） -->
+            <view class="pet-floor-shadow {{isFeeding ? 'shadow-chew' : (isTouched ? 'shadow-joy' : 'shadow-25d-breath')}}"></view>
           </view>
 
         </view>
