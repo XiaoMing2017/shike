@@ -60,21 +60,25 @@ class PetWorld3D {
   }
 
   loadLayers() {
-    const layerFiles = {
-      sky: '/images/pets/world_layers/layer_sky.png',
-      island: '/images/pets/world_layers/layer_island_base.png',
-      tree: '/images/pets/world_layers/layer_tree.png',
-      bridge: '/images/pets/world_layers/layer_bridge.png',
-      foreground: '/images/pets/world_layers/layer_foreground.png'
-    };
+    const layerConfigs = [
+      { key: 'island', path: 'images/pets/world_layers/layer_island_base.png', fallback: '../../images/pets/world_layers/layer_island_base.png' },
+      { key: 'tree', path: 'images/pets/world_layers/layer_tree.png', fallback: '../../images/pets/world_layers/layer_tree.png' },
+      { key: 'bridge', path: 'images/pets/world_layers/layer_bridge.png', fallback: '../../images/pets/world_layers/layer_bridge.png' },
+      { key: 'foreground', path: 'images/pets/world_layers/layer_foreground.png', fallback: '../../images/pets/world_layers/layer_foreground.png' }
+    ];
 
-    Object.keys(layerFiles).forEach(key => {
+    layerConfigs.forEach(cfg => {
       if (this.canvas && typeof this.canvas.createImage === 'function') {
         const img = this.canvas.createImage();
-        img.src = layerFiles[key];
         img.onload = () => {
-          this.layers[key] = img;
+          this.layers[cfg.key] = img;
         };
+        img.onerror = () => {
+          const fb = this.canvas.createImage();
+          fb.onload = () => { this.layers[cfg.key] = fb; };
+          fb.src = cfg.fallback;
+        };
+        img.src = cfg.path;
       }
     });
   }
@@ -96,7 +100,6 @@ class PetWorld3D {
     }
   }
 
-  // 🎮 手势视差交互
   onTouchStart(e) {
     if (!e.touches || e.touches.length === 0) return;
     this.isDragging = true;
@@ -111,7 +114,6 @@ class PetWorld3D {
     this.touchStartX = e.touches[0].clientX;
     this.touchStartY = e.touches[0].clientY;
 
-    // 阻尼拖拽位移 (限制在安全微缩范围内)
     this.targetPanX = Math.max(-28, Math.min(28, this.targetPanX + dx * 0.45));
     this.targetPanY = Math.max(-18, Math.min(18, this.targetPanY + dy * 0.35));
   }
@@ -141,7 +143,6 @@ class PetWorld3D {
     }
   }
 
-  // 🌟 60FPS 主渲染循环
   animate(timestamp) {
     if (this.isDestroyed) return;
     this.rafId = this.requestFrame(this.animate);
@@ -152,25 +153,20 @@ class PetWorld3D {
     this.lastTimestamp = now;
     this.time += dt;
 
-    // 平滑阻尼回弹插值
     this.panX += (this.targetPanX - this.panX) * 0.12;
     this.panY += (this.targetPanY - this.panY) * 0.12;
 
-    // 自主柔和呼吸视差
     const idleSway = Math.sin(this.time * 0.8) * 2.5;
 
-    // 驱动萌宠自主生命
     if (this.pet) {
       this.pet.update(dt, this.waypoints);
     }
 
-    // 驱动云层飘动
     this.clouds.forEach(c => {
       c.x += c.speed * dt;
       if (c.x > 620) c.x = -80;
     });
 
-    // 驱动飘落花瓣与光子
     this.particles.forEach(p => {
       p.x += p.speedX * dt;
       p.y += p.speedY * dt;
@@ -181,26 +177,25 @@ class PetWorld3D {
       }
     });
 
-    // 绘制全场景
     this.renderScene(idleSway);
   }
 
   renderScene(idleSway) {
     const ctx = this.ctx;
+    if (!ctx) return;
+
     const cw = this.canvas.width;
     const ch = this.canvas.height;
     ctx.clearRect(0, 0, cw, ch);
 
-    // 计算微缩浮岛基础缩放比 (将 600x496 居中投射到画布)
     const baseScale = (cw / 600);
     const originX = (cw - 600 * baseScale) / 2;
     const originY = (ch - 496 * baseScale) / 2 + 10 * baseScale;
 
-    // ☁️ 1. 远景天幕与云层 (产生极微视差: 0.15x)
+    // ☁️ 1. 远景天幕与云层 (0.15x 视差)
     const skyPanX = (this.panX + idleSway) * 0.15;
     const skyPanY = this.panY * 0.15;
 
-    // 天空渐变
     const skyGrad = ctx.createLinearGradient(0, 0, 0, ch);
     skyGrad.addColorStop(0, '#93C5FD');
     skyGrad.addColorStop(0.55, '#BAE6FD');
@@ -208,7 +203,6 @@ class PetWorld3D {
     ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, cw, ch);
 
-    // 绘制 3D 蓬蓬白云
     this.clouds.forEach(cloud => {
       ctx.save();
       const cx = (cloud.x + skyPanX) * baseScale;
@@ -237,6 +231,14 @@ class PetWorld3D {
         600 * baseScale,
         496 * baseScale
       );
+    } else {
+      // 备用即时平滑底座
+      ctx.save();
+      ctx.fillStyle = '#86EFAC';
+      ctx.beginPath();
+      ctx.ellipse(originX + (300 + islandPanX) * baseScale, originY + (280 + islandPanY) * baseScale, 240 * baseScale, 140 * baseScale, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
 
     // 🌊 3. 动态水波与瀑布微光
@@ -251,10 +253,8 @@ class PetWorld3D {
     ctx.restore();
 
     // 🌲 4. 空间深度排序与真实物理遮挡 (Z-Buffer Depth Sorting)
-    // 收集场景中具有遮挡关系的 3D 实体对象
     const renderQueue = [];
 
-    // (1) 右侧大树 (树干根部基准深度: y = 295)
     renderQueue.push({
       type: 'TREE',
       depth: 295,
@@ -271,7 +271,6 @@ class PetWorld3D {
       }
     });
 
-    // (2) 小木桥 (桥梁基准深度: y = 350)
     renderQueue.push({
       type: 'BRIDGE',
       depth: 350,
@@ -288,7 +287,6 @@ class PetWorld3D {
       }
     });
 
-    // (3) 3D 自主萌宠实体 (深度由萌宠脚底位置决定: pet.y + 20)
     if (this.pet) {
       renderQueue.push({
         type: 'PET',
@@ -299,11 +297,10 @@ class PetWorld3D {
       });
     }
 
-    // 按空间深度从后向前精准排序并渲染 (实现宠物走进大树/木桥后方的真实物理遮挡)
     renderQueue.sort((a, b) => a.depth - b.depth);
     renderQueue.forEach(item => item.render());
 
-    // 🌿 5. 前景花丛遮挡层 (强视差 1.45x + 绝对最前排深度遮挡)
+    // 🌿 5. 前景花丛遮挡层 (强视差 1.45x)
     const fgPanX = (this.panX + idleSway) * 1.45;
     const fgPanY = this.panY * 1.45;
     if (this.layers.foreground) {
@@ -316,7 +313,7 @@ class PetWorld3D {
       );
     }
 
-    // ✨ 6. 飘落樱花瓣与梦幻金粉粒子 (最上层)
+    // ✨ 6. 飘落樱花瓣与梦幻金粉粒子
     this.particles.forEach(p => {
       ctx.save();
       const px = originX + (p.x + islandPanX * 0.7) * baseScale;
