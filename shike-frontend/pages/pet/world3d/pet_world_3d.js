@@ -1,479 +1,102 @@
-// pet_world_3d.js - 2.5D 卡通 3D 浮空岛微缩世界引擎
+// pet_world_3d.js - 2.5D 卡通 3D 浮空岛微缩世界引擎 (分层物理遮挡 + 视差阻尼 + 自主萌宠生命)
 const { PetEntity3D } = require('./pet_entity_3d');
 
 class PetWorld3D {
-  constructor(canvas, THREE, options = {}) {
+  constructor(canvas, options = {}) {
     this.canvas = canvas;
-    this.THREE = THREE;
+    this.ctx = canvas.getContext('2d');
     this.options = options;
     this.isDestroyed = false;
 
-    // 时间与帧率
-    this.clock = new THREE.Clock();
-    this.time = 0;
+    this.width = options.width || 375;
+    this.height = options.height || 300;
+    this.dpr = options.pixelRatio || 2;
 
-    // 交互与视差摄像机控制
+    // 空间视差摄像机与阻尼系统
     this.isDragging = false;
     this.touchStartX = 0;
     this.touchStartY = 0;
-    this.yaw = 0.785; // 45度
-    this.pitch = 0.68; // 约40度俯视
-    this.targetYaw = 0.785;
-    this.targetPitch = 0.68;
-    this.cameraDistance = 12.5;
+    this.panX = 0;
+    this.panY = 0;
+    this.targetPanX = 0;
+    this.targetPanY = 0;
+    this.time = 0;
+    this.lastTimestamp = 0;
 
-    // 初始化渲染管线与场景图
-    this.initRenderer();
-    this.initScene();
-    this.initCamera();
-    this.initLights();
+    // 远景漂浮云层 (3D 空间独立对象)
+    this.clouds = [
+      { x: 30, y: 35, scale: 0.85, speed: 4.5, opacity: 0.85 },
+      { x: 220, y: 25, scale: 1.15, speed: 3.2, opacity: 0.90 },
+      { x: 440, y: 40, scale: 0.95, speed: 5.0, opacity: 0.80 },
+      { x: 120, y: 70, scale: 0.70, speed: 2.8, opacity: 0.75 }
+    ];
 
-    // 构建 3D 微缩世界场景对象
-    this.buildSkyAndClouds();
-    this.buildFloatingIslandTerrain();
-    this.buildWaterAndRiver();
-    this.buildBridgeAndArchitecture();
-    this.buildTreesAndFlowers();
-    this.buildForegroundFlora();
+    // 樱花飘落与金粉粒子系统
+    this.particles = [];
+    this.initParticles();
 
-    // 创建 3D 独立萌宠实体
-    this.initPetEntity(options.species || 'DRAGON', options.stageRank || 1);
+    // 浮岛兴趣点导航网络 (Waypoints)
+    this.waypoints = [
+      { name: 'RUG', x: 270, y: 310, action: 'IDLE' },
+      { name: 'POND', x: 230, y: 245, action: 'DRINK_WATER' },
+      { name: 'FLOWER', x: 165, y: 215, action: 'SNIFF_FLOWER' },
+      { name: 'BEHIND_TREE', x: 420, y: 195, action: 'IDLE' }, // 走到大树后方，触发真实遮挡
+      { name: 'SOFA', x: 385, y: 330, action: 'REST_SIT' },
+      { name: 'BRIDGE', x: 350, y: 300, action: 'WANDER' },
+      { name: 'GARDEN', x: 240, y: 365, action: 'JOY_BOUNCE' }
+    ];
+    this.foodBowlPos = { x: 200, y: 335 };
+
+    // 载入各独立空间图层
+    this.layers = {};
+    this.loadLayers();
+
+    // 创建 3D 萌宠自主实体
+    this.pet = new PetEntity3D(canvas, options.species || 'DRAGON', options.stageRank || 1);
 
     // 启动 60FPS 渲染循环
     this.animate = this.animate.bind(this);
     this.rafId = this.requestFrame(this.animate);
   }
 
-  initRenderer() {
-    const THREE = this.THREE;
-    this.renderer = new THREE.WebGLRenderer({
-      canvas: this.canvas,
-      antialias: true,
-      alpha: true,
-      powerPreference: 'high-performance'
-    });
-    this.renderer.setSize(this.canvas.width, this.canvas.height, false);
-    // 启用原生深度测试与软阴影
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  }
-
-  initScene() {
-    const THREE = this.THREE;
-    this.scene = new THREE.Scene();
-    this.scene.fog = new THREE.FogExp2(0xFDFBF7, 0.025);
-  }
-
-  initCamera() {
-    const THREE = this.THREE;
-    const aspect = this.canvas.width / this.canvas.height;
-    this.camera = new THREE.PerspectiveCamera(36, aspect, 0.2, 100);
-    this.updateCameraPosition();
-  }
-
-  initLights() {
-    const THREE = this.THREE;
-    // 1. 全局明亮环境光 (确保所有 3D 几何体与材质通透鲜活)
-    const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.85);
-    this.scene.add(ambientLight);
-
-    // 2. 半球环境光 (温暖天空光 + 柔和地面反光)
-    this.hemiLight = new THREE.HemisphereLight(0xFFF7ED, 0x93C5FD, 0.75);
-    this.scene.add(this.hemiLight);
-
-    // 3. 主太阳方向光 (产生柔和深度阴影)
-    this.dirLight = new THREE.DirectionalLight(0xFFFAF0, 0.95);
-    this.dirLight.position.set(9, 15, 7);
-    this.dirLight.castShadow = true;
-    this.scene.add(this.dirLight);
-
-    // 4. 侧面柔和补光
-    const fillLight = new THREE.DirectionalLight(0xFEF08A, 0.45);
-    fillLight.position.set(-8, 6, -6);
-    this.scene.add(fillLight);
-  }
-
-  // ☁️ 1. 天空与远景 3D 云层
-  buildSkyAndClouds() {
-    const THREE = this.THREE;
-    this.cloudsGroup = new THREE.Group();
-    this.scene.add(this.cloudsGroup);
-
-    const cloudMat = new THREE.MeshLambertMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.88 });
-
-    // 生成 5 朵由三维多球体组合的立体白云
-    this.clouds = [];
-    const cloudConfigs = [
-      { x: -6, y: 5.2, z: -8, scale: 1.2, speed: 0.15 },
-      { x: 2, y: 6.0, z: -9, scale: 0.9, speed: 0.12 },
-      { x: 7, y: 4.8, z: -7, scale: 1.1, speed: 0.18 },
-      { x: -2, y: 6.8, z: -10, scale: 1.4, speed: 0.10 },
-      { x: 5, y: 5.5, z: -6, scale: 0.8, speed: 0.14 }
-    ];
-
-    cloudConfigs.forEach(cfg => {
-      const cloud = new THREE.Group();
-      const numPuffs = 4 + Math.floor(Math.random() * 3);
-      for (let i = 0; i < numPuffs; i++) {
-        const puffGeo = new THREE.SphereGeometry(0.5 + Math.random() * 0.4, 12, 10);
-        const puff = new THREE.Mesh(puffGeo, cloudMat);
-        puff.position.set((i - numPuffs / 2) * 0.55, (Math.random() - 0.5) * 0.2, (Math.random() - 0.5) * 0.3);
-        cloud.add(puff);
-      }
-      cloud.position.set(cfg.x, cfg.y, cfg.z);
-      cloud.scale.setScalar(cfg.scale);
-      cloud.userData = { speed: cfg.speed, baseZ: cfg.z };
-      this.cloudsGroup.add(cloud);
-      this.clouds.push(cloud);
-    });
-  }
-
-  // 🏝️ 2. 浮空岛主体地形与地毯小径
-  buildFloatingIslandTerrain() {
-    const THREE = this.THREE;
-    this.terrainGroup = new THREE.Group();
-    this.scene.add(this.terrainGroup);
-
-    // 顶层草坪地块 (等轴测圆角浮岛多边形)
-    const islandShape = new THREE.Shape();
-    const r = 4.2;
-    for (let i = 0; i < 8; i++) {
-      const angle = (i / 8) * Math.PI * 2;
-      const radius = r + (Math.sin(angle * 3) * 0.35);
-      const px = Math.cos(angle) * radius;
-      const py = Math.sin(angle) * radius;
-      if (i === 0) islandShape.moveTo(px, py);
-      else islandShape.lineTo(px, py);
-    }
-    islandShape.closePath();
-
-    const extrudeSettings = {
-      depth: 1.4,
-      bevelEnabled: true,
-      bevelSegments: 4,
-      steps: 1,
-      bevelSize: 0.3,
-      bevelThickness: 0.3
+  loadLayers() {
+    const layerFiles = {
+      sky: '/images/pets/world_layers/layer_sky.png',
+      island: '/images/pets/world_layers/layer_island_base.png',
+      tree: '/images/pets/world_layers/layer_tree.png',
+      bridge: '/images/pets/world_layers/layer_bridge.png',
+      foreground: '/images/pets/world_layers/layer_foreground.png'
     };
 
-    const islandGeo = new THREE.ExtrudeGeometry(islandShape, extrudeSettings);
-    islandGeo.rotateX(Math.PI / 2);
-
-    const grassMat = new THREE.MeshLambertMaterial({ color: 0x86EFAC });
-    this.islandTop = new THREE.Mesh(islandGeo, grassMat);
-    this.islandTop.position.y = 0;
-    this.islandTop.receiveShadow = true;
-    this.terrainGroup.add(this.islandTop);
-
-    // 悬浮泥土岩石断层
-    const rockBaseGeo = new THREE.ConeGeometry(3.6, 3.2, 8);
-    rockBaseGeo.rotateX(Math.PI);
-    const rockMat = new THREE.MeshLambertMaterial({ color: 0x78716C });
-    const rockBase = new THREE.Mesh(rockBaseGeo, rockMat);
-    rockBase.position.set(0, -2.4, 0);
-    this.terrainGroup.add(rockBase);
-
-    // 鹅卵石小径 (Cobblestone Paths)
-    const pathMat = new THREE.MeshLambertMaterial({ color: 0xF5F5F4 });
-    const pathCoords = [
-      [0, 0.46, 0.2], [-0.5, 0.46, 0.6], [-1.0, 0.46, 1.1],
-      [0.6, 0.46, -0.4], [1.2, 0.46, -1.0], [1.8, 0.46, -1.6],
-      [0.7, 0.46, 0.8], [1.4, 0.46, 1.4], [2.1, 0.46, 1.8]
-    ];
-
-    pathCoords.forEach(([x, y, z]) => {
-      const stoneGeo = new THREE.CylinderGeometry(0.35 + Math.random() * 0.1, 0.4, 0.05, 7);
-      const stone = new THREE.Mesh(stoneGeo, pathMat);
-      stone.position.set(x, y - 0.44, z);
-      stone.rotation.y = Math.random() * Math.PI;
-      stone.receiveShadow = true;
-      this.terrainGroup.add(stone);
+    Object.keys(layerFiles).forEach(key => {
+      if (this.canvas && typeof this.canvas.createImage === 'function') {
+        const img = this.canvas.createImage();
+        img.src = layerFiles[key];
+        img.onload = () => {
+          this.layers[key] = img;
+        };
+      }
     });
-
-    // 软糯米白大圆地毯 (居中)
-    const rugGeo = new THREE.CylinderGeometry(1.2, 1.25, 0.04, 24);
-    const rugMat = new THREE.MeshLambertMaterial({ color: 0xFEF3C7 });
-    const rug = new THREE.Mesh(rugGeo, rugMat);
-    rug.position.set(0, 0.03, 0.4);
-    rug.receiveShadow = true;
-    this.terrainGroup.add(rug);
   }
 
-  // 🌊 3. 水池、河流与瀑布
-  buildWaterAndRiver() {
-    const THREE = this.THREE;
-    this.waterGroup = new THREE.Group();
-    this.scene.add(this.waterGroup);
-
-    // 曲线水池平面
-    const pondGeo = new THREE.CylinderGeometry(1.4, 1.5, 0.15, 18);
-    this.waterMat = new THREE.MeshLambertMaterial({
-      color: 0x38BDF8,
-      transparent: true,
-      opacity: 0.82
-    });
-    this.pondMesh = new THREE.Mesh(pondGeo, this.waterMat);
-    this.pondMesh.position.set(-2.0, -0.05, 1.3);
-    this.waterGroup.add(this.pondMesh);
-
-    // 瀑布 (悬崖边倾泻而下的水流)
-    const waterFallGeo = new THREE.BoxGeometry(0.8, 2.6, 0.12);
-    const waterfallMat = new THREE.MeshLambertMaterial({
-      color: 0x7DD3FC,
-      transparent: true,
-      opacity: 0.75
-    });
-    this.waterfallMesh = new THREE.Mesh(waterFallGeo, waterfallMat);
-    this.waterfallMesh.position.set(-3.6, -1.2, 1.3);
-    this.waterfallMesh.rotation.z = 0.18;
-    this.waterGroup.add(this.waterfallMesh);
-
-    // 睡莲叶与花朵
-    const lilyPadGeo = new THREE.CircleGeometry(0.22, 10);
-    lilyPadGeo.rotateX(-Math.PI / 2);
-    const lilyPadMat = new THREE.MeshLambertMaterial({ color: 0x22C55E });
-    const lilyPad = new THREE.Mesh(lilyPadGeo, lilyPadMat);
-    lilyPad.position.set(-1.8, 0.04, 1.1);
-    this.waterGroup.add(lilyPad);
-
-    const lilyFlowerGeo = new THREE.SphereGeometry(0.08, 8, 6);
-    const lilyFlowerMat = new THREE.MeshLambertMaterial({ color: 0xF472B6 });
-    const lilyFlower = new THREE.Mesh(lilyFlowerGeo, lilyFlowerMat);
-    lilyFlower.position.set(-1.8, 0.10, 1.1);
-    this.waterGroup.add(lilyFlower);
-  }
-
-  // 🌉 4. 木质拱桥与小屋家具
-  buildBridgeAndArchitecture() {
-    const THREE = this.THREE;
-    this.archGroup = new THREE.Group();
-    this.scene.add(this.archGroup);
-
-    // 木拱桥 (跨越小溪)
-    const bridgeGroup = new THREE.Group();
-    bridgeGroup.position.set(-1.4, 0.05, -0.4);
-    bridgeGroup.rotation.y = 0.65;
-
-    const woodMat = new THREE.MeshLambertMaterial({ color: 0xD97706 });
-    const plankMat = new THREE.MeshLambertMaterial({ color: 0xB45309 });
-
-    // 拱桥踏板 (7 块木板拼成弧线)
-    for (let i = 0; i < 7; i++) {
-      const t = (i - 3) / 3;
-      const py = (1 - t * t) * 0.18;
-      const pz = t * 0.9;
-      const plankGeo = new THREE.BoxGeometry(0.9, 0.05, 0.16);
-      const plank = new THREE.Mesh(plankGeo, plankMat);
-      plank.position.set(0, py + 0.05, pz);
-      plank.rotation.x = -t * 0.35;
-      plank.castShadow = true;
-      plank.receiveShadow = true;
-      bridgeGroup.add(plank);
-    }
-
-    // 4 根立柱护栏
-    const postGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.45, 6);
-    const postCoords = [[-0.42, 0.4], [0.42, 0.4], [-0.42, -0.4], [0.42, -0.4]];
-    postCoords.forEach(([px, pz]) => {
-      const post = new THREE.Mesh(postGeo, woodMat);
-      post.position.set(px, 0.22, pz);
-      post.castShadow = true;
-      bridgeGroup.add(post);
-    });
-
-    this.archGroup.add(bridgeGroup);
-
-    // 阳光小屋与原木沙发
-    const sofaGroup = new THREE.Group();
-    sofaGroup.position.set(2.4, 0.02, -1.4);
-    sofaGroup.rotation.y = -0.55;
-
-    const sofaMat = new THREE.MeshLambertMaterial({ color: 0xFEF08A });
-    const seatGeo = new THREE.BoxGeometry(1.4, 0.35, 0.65);
-    const seat = new THREE.Mesh(seatGeo, sofaMat);
-    seat.position.y = 0.2;
-    seat.castShadow = true;
-    seat.receiveShadow = true;
-    sofaGroup.add(seat);
-
-    const backGeo = new THREE.BoxGeometry(1.4, 0.55, 0.2);
-    const back = new THREE.Mesh(backGeo, sofaMat);
-    back.position.set(0, 0.55, -0.22);
-    back.castShadow = true;
-    sofaGroup.add(back);
-
-    this.archGroup.add(sofaGroup);
-
-    // 运动瑜伽垫与哑铃
-    const matGeo = new THREE.BoxGeometry(0.7, 0.02, 1.3);
-    const yogaMat = new THREE.Mesh(matGeo, new THREE.MeshLambertMaterial({ color: 0x38BDF8 }));
-    yogaMat.position.set(2.3, 0.02, 0.9);
-    yogaMat.rotation.y = 0.35;
-    yogaMat.receiveShadow = true;
-    this.archGroup.add(yogaMat);
-
-    // 食盆 (Food Bowl)
-    const bowlGeo = new THREE.CylinderGeometry(0.24, 0.18, 0.12, 12);
-    const bowl = new THREE.Mesh(bowlGeo, new THREE.MeshLambertMaterial({ color: 0xFB923C }));
-    bowl.position.set(-0.8, 0.06, 0.9);
-    bowl.castShadow = true;
-    this.archGroup.add(bowl);
-    this.foodBowlPos = new THREE.Vector3(-0.8, 0.45, 0.9);
-  }
-
-  // 🌲 5. 3D 蓬蓬树木与花草群 (具有真实空间体积与遮挡能力)
-  buildTreesAndFlowers() {
-    const THREE = this.THREE;
-    this.floraGroup = new THREE.Group();
-    this.scene.add(this.floraGroup);
-
-    const trunkMat = new THREE.MeshLambertMaterial({ color: 0x78350F });
-    const leafMats = [
-      new THREE.MeshLambertMaterial({ color: 0x22C55E }),
-      new THREE.MeshLambertMaterial({ color: 0x16A34A }),
-      new THREE.MeshLambertMaterial({ color: 0x4ADE80 }),
-      new THREE.MeshLambertMaterial({ color: 0xF472B6 }) // 樱花粉树
-    ];
-
-    // 3 棵不同位置的大树 (产生自然遮挡)
-    const treePositions = [
-      { x: -2.8, z: -1.8, h: 2.2, colorIdx: 0 },
-      { x: 0.8, z: -3.2, h: 2.5, colorIdx: 1 },
-      { x: 3.4, z: 1.6, h: 2.1, colorIdx: 3 } // 右侧樱花粉树
-    ];
-
-    treePositions.forEach(cfg => {
-      const tree = new THREE.Group();
-      tree.position.set(cfg.x, 0, cfg.z);
-
-      // 树干
-      const trunkGeo = new THREE.CylinderGeometry(0.16, 0.24, cfg.h, 8);
-      const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-      trunk.position.y = cfg.h / 2;
-      trunk.castShadow = true;
-      trunk.receiveShadow = true;
-      tree.add(trunk);
-
-      // 蓬蓬球形树冠 (3~4 个多边形球体交错)
-      const leafMat = leafMats[cfg.colorIdx];
-      const foliageGroup = new THREE.Group();
-      foliageGroup.position.y = cfg.h - 0.2;
-
-      const offsets = [
-        [0, 0.6, 0, 0.95],
-        [-0.4, 0.2, 0.2, 0.75],
-        [0.4, 0.1, -0.2, 0.80],
-        [0.1, 0.2, 0.4, 0.70]
-      ];
-
-      offsets.forEach(([ox, oy, oz, r]) => {
-        const puffGeo = new THREE.SphereGeometry(r, 12, 10);
-        const puff = new THREE.Mesh(puffGeo, leafMat);
-        puff.position.set(ox, oy, oz);
-        puff.castShadow = true;
-        puff.receiveShadow = true;
-        foliageGroup.add(puff);
+  initParticles() {
+    this.particles = [];
+    for (let i = 0; i < 18; i++) {
+      this.particles.push({
+        x: Math.random() * 600,
+        y: Math.random() * 450,
+        size: 3 + Math.random() * 4,
+        speedX: -15 - Math.random() * 20,
+        speedY: 10 + Math.random() * 15,
+        rot: Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 2,
+        alpha: 0.4 + Math.random() * 0.5,
+        type: i % 3 === 0 ? 'SPARKLE' : 'PETAL'
       });
-
-      tree.add(foliageGroup);
-      this.floraGroup.add(tree);
-    });
-
-    // 散落在草坪上的彩色花朵
-    const flowerColors = [0xF43F5E, 0xFBBF24, 0xA855F7, 0x38BDF8];
-    const flowerCoords = [
-      [-1.2, 0.02, -1.6], [-2.2, 0.02, -0.6], [1.4, 0.02, 2.3],
-      [2.6, 0.02, 2.1], [-0.4, 0.02, 2.4], [1.8, 0.02, -2.6]
-    ];
-
-    flowerCoords.forEach(([fx, fy, fz], idx) => {
-      const fGroup = new THREE.Group();
-      fGroup.position.set(fx, fy, fz);
-
-      const fStemGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.24, 4);
-      const fStem = new THREE.Mesh(fStemGeo, trunkMat);
-      fStem.position.y = 0.12;
-      fGroup.add(fStem);
-
-      const fHeadGeo = new THREE.SphereGeometry(0.12, 8, 6);
-      const fHead = new THREE.Mesh(fHeadGeo, new THREE.MeshLambertMaterial({ color: flowerColors[idx % flowerColors.length] }));
-      fHead.position.y = 0.24;
-      fHead.castShadow = true;
-      fGroup.add(fHead);
-
-      this.floraGroup.add(fGroup);
-    });
-  }
-
-  // 🌿 6. 前景遮挡植物 (产生剧烈视差与空间深度)
-  buildForegroundFlora() {
-    const THREE = this.THREE;
-    this.foregroundGroup = new THREE.Group();
-    this.scene.add(this.foregroundGroup);
-
-    const fgMat = new THREE.MeshLambertMaterial({ color: 0x15803D });
-
-    // 前景左侧大叶片与右侧花枝
-    const fgBush1 = new THREE.Group();
-    fgBush1.position.set(-3.2, -0.2, 3.8); // 靠近摄像机视锥近端
-    for (let i = 0; i < 3; i++) {
-      const leafGeo = new THREE.SphereGeometry(0.45 + i * 0.1, 10, 8);
-      leafGeo.scale(0.5, 1.2, 0.3);
-      const leaf = new THREE.Mesh(leafGeo, fgMat);
-      leaf.position.set(i * 0.3, i * 0.2, 0);
-      leaf.rotation.z = -0.4 + i * 0.2;
-      fgBush1.add(leaf);
     }
-    this.foregroundGroup.add(fgBush1);
-
-    const fgBush2 = new THREE.Group();
-    fgBush2.position.set(3.4, -0.2, 3.6);
-    for (let i = 0; i < 3; i++) {
-      const leafGeo = new THREE.SphereGeometry(0.45 + i * 0.1, 10, 8);
-      leafGeo.scale(0.5, 1.2, 0.3);
-      const leaf = new THREE.Mesh(leafGeo, fgMat);
-      leaf.position.set(-i * 0.3, i * 0.2, 0);
-      leaf.rotation.z = 0.4 - i * 0.2;
-      fgBush2.add(leaf);
-    }
-    this.foregroundGroup.add(fgBush2);
   }
 
-  // 🐾 7. 初始化 3D 萌宠实体
-  initPetEntity(species, stageRank) {
-    this.pet = new PetEntity3D(this.THREE, species, stageRank);
-    this.scene.add(this.pet.root);
-
-    // 空间生活巡逻兴趣点 (Waypoints)
-    this.waypoints = [
-      { name: 'RUG', x: 0, z: 0.4, action: 'IDLE' },
-      { name: 'SOFA', x: 1.8, z: -1.2, action: 'REST_SIT' },
-      { name: 'FITNESS', x: 2.1, z: 0.8, action: 'JOY_BOUNCE' },
-      { name: 'POND', x: -1.6, z: 1.2, action: 'DRINK_WATER' },
-      { name: 'FLOWER', x: -1.2, z: -1.6, action: 'SNIFF_FLOWER' },
-      { name: 'GARDEN', x: 1.2, z: 2.2, action: 'IDLE' }
-    ];
-  }
-
-  // 📸 摄像机坐标更新 (支持视差轨道阻尼与柔和呼吸)
-  updateCameraPosition() {
-    // 平滑阻尼插值
-    this.yaw += (this.targetYaw - this.yaw) * 0.08;
-    this.pitch += (this.targetPitch - this.pitch) * 0.08;
-
-    // 自主轻微呼吸摇摆
-    const sway = Math.sin(this.time * 0.4) * 0.03;
-    const currentYaw = this.yaw + sway;
-
-    const x = Math.sin(currentYaw) * Math.cos(this.pitch) * this.cameraDistance;
-    const y = Math.sin(this.pitch) * this.cameraDistance;
-    const z = Math.cos(currentYaw) * Math.cos(this.pitch) * this.cameraDistance;
-
-    this.camera.position.set(x, y, z);
-    this.camera.lookAt(0, 0.4, 0);
-  }
-
-  // 🎮 触摸手势控制摄像机视差
+  // 🎮 手势视差交互
   onTouchStart(e) {
     if (!e.touches || e.touches.length === 0) return;
     this.isDragging = true;
@@ -488,47 +111,15 @@ class PetWorld3D {
     this.touchStartX = e.touches[0].clientX;
     this.touchStartY = e.touches[0].clientY;
 
-    // 限制视差旋转范围，保持 2.5D 稳定视角
-    this.targetYaw -= dx * 0.005;
-    this.targetPitch = Math.max(0.45, Math.min(0.95, this.targetPitch + dy * 0.004));
+    // 阻尼拖拽位移 (限制在安全微缩范围内)
+    this.targetPanX = Math.max(-28, Math.min(28, this.targetPanX + dx * 0.45));
+    this.targetPanY = Math.max(-18, Math.min(18, this.targetPanY + dy * 0.35));
   }
 
   onTouchEnd() {
     this.isDragging = false;
   }
 
-  // 🌟 60FPS 主渲染循环
-  animate() {
-    if (this.isDestroyed) return;
-    this.rafId = this.requestFrame(this.animate);
-
-    const deltaTime = Math.min(0.1, this.clock.getDelta());
-    this.time += deltaTime;
-
-    // 1. 驱动云层极慢视差飘动
-    this.clouds.forEach(cloud => {
-      cloud.position.x += cloud.userData.speed * deltaTime;
-      if (cloud.position.x > 12) cloud.position.x = -12;
-    });
-
-    // 2. 驱动水面与瀑布流动微波
-    if (this.waterfallMesh) {
-      this.waterfallMesh.scale.y = 1.0 + Math.sin(this.time * 8.0) * 0.05;
-    }
-
-    // 3. 驱动 3D 萌宠自主生命状态机与寻路
-    if (this.pet) {
-      this.pet.update(deltaTime, this.waypoints);
-    }
-
-    // 4. 更新 2.5D 视差摄像机
-    this.updateCameraPosition();
-
-    // 5. WebGL 硬件加速绘制
-    this.renderer.render(this.scene, this.camera);
-  }
-
-  // 互动指令分发
   triggerPetTap() {
     if (this.pet) this.pet.triggerTapReaction();
   }
@@ -540,15 +131,212 @@ class PetWorld3D {
   navigateToSpot(spotName) {
     const found = this.waypoints.find(w => w.name === spotName);
     if (found && this.pet) {
-      this.pet.navigateTo(found.x, found.z, found.action);
+      this.pet.navigateTo(found.x, found.y, found.action);
     }
   }
 
   setSpecies(species, stageRank) {
     if (this.pet) {
-      this.scene.remove(this.pet.root);
+      this.pet.setSpecies(species, stageRank);
     }
-    this.initPetEntity(species, stageRank);
+  }
+
+  // 🌟 60FPS 主渲染循环
+  animate(timestamp) {
+    if (this.isDestroyed) return;
+    this.rafId = this.requestFrame(this.animate);
+
+    if (!this.lastTimestamp) this.lastTimestamp = timestamp || Date.now();
+    const now = timestamp || Date.now();
+    const dt = Math.min(0.1, (now - this.lastTimestamp) / 1000 || 0.016);
+    this.lastTimestamp = now;
+    this.time += dt;
+
+    // 平滑阻尼回弹插值
+    this.panX += (this.targetPanX - this.panX) * 0.12;
+    this.panY += (this.targetPanY - this.panY) * 0.12;
+
+    // 自主柔和呼吸视差
+    const idleSway = Math.sin(this.time * 0.8) * 2.5;
+
+    // 驱动萌宠自主生命
+    if (this.pet) {
+      this.pet.update(dt, this.waypoints);
+    }
+
+    // 驱动云层飘动
+    this.clouds.forEach(c => {
+      c.x += c.speed * dt;
+      if (c.x > 620) c.x = -80;
+    });
+
+    // 驱动飘落花瓣与光子
+    this.particles.forEach(p => {
+      p.x += p.speedX * dt;
+      p.y += p.speedY * dt;
+      p.rot += p.rotSpeed * dt;
+      if (p.x < -20 || p.y > 480) {
+        p.x = 550 + Math.random() * 80;
+        p.y = -20 + Math.random() * 40;
+      }
+    });
+
+    // 绘制全场景
+    this.renderScene(idleSway);
+  }
+
+  renderScene(idleSway) {
+    const ctx = this.ctx;
+    const cw = this.canvas.width;
+    const ch = this.canvas.height;
+    ctx.clearRect(0, 0, cw, ch);
+
+    // 计算微缩浮岛基础缩放比 (将 600x496 居中投射到画布)
+    const baseScale = (cw / 600);
+    const originX = (cw - 600 * baseScale) / 2;
+    const originY = (ch - 496 * baseScale) / 2 + 10 * baseScale;
+
+    // ☁️ 1. 远景天幕与云层 (产生极微视差: 0.15x)
+    const skyPanX = (this.panX + idleSway) * 0.15;
+    const skyPanY = this.panY * 0.15;
+
+    // 天空渐变
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, ch);
+    skyGrad.addColorStop(0, '#93C5FD');
+    skyGrad.addColorStop(0.55, '#BAE6FD');
+    skyGrad.addColorStop(1.0, '#E0F2FE');
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, cw, ch);
+
+    // 绘制 3D 蓬蓬白云
+    this.clouds.forEach(cloud => {
+      ctx.save();
+      const cx = (cloud.x + skyPanX) * baseScale;
+      const cy = (cloud.y + skyPanY) * baseScale;
+      const s = cloud.scale * baseScale;
+
+      ctx.fillStyle = `rgba(255, 255, 255, ${cloud.opacity})`;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 22 * s, 0, Math.PI * 2);
+      ctx.arc(cx + 18 * s, cy - 6 * s, 26 * s, 0, Math.PI * 2);
+      ctx.arc(cx + 42 * s, cy - 2 * s, 20 * s, 0, Math.PI * 2);
+      ctx.arc(cx + 26 * s, cy + 8 * s, 18 * s, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+
+    // 🏝️ 2. 中景浮空岛地形基底 (1.0x 正常视差)
+    const islandPanX = this.panX + idleSway;
+    const islandPanY = this.panY;
+
+    if (this.layers.island) {
+      ctx.drawImage(
+        this.layers.island,
+        originX + islandPanX * baseScale,
+        originY + islandPanY * baseScale,
+        600 * baseScale,
+        496 * baseScale
+      );
+    }
+
+    // 🌊 3. 动态水波与瀑布微光
+    ctx.save();
+    const shimmerAlpha = 0.25 + Math.sin(this.time * 4.5) * 0.15;
+    ctx.fillStyle = `rgba(255, 255, 255, ${shimmerAlpha})`;
+    const pondX = originX + (250 + islandPanX) * baseScale;
+    const pondY = originY + (240 + islandPanY) * baseScale;
+    ctx.beginPath();
+    ctx.ellipse(pondX, pondY, 40 * baseScale, 18 * baseScale, -0.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 🌲 4. 空间深度排序与真实物理遮挡 (Z-Buffer Depth Sorting)
+    // 收集场景中具有遮挡关系的 3D 实体对象
+    const renderQueue = [];
+
+    // (1) 右侧大树 (树干根部基准深度: y = 295)
+    renderQueue.push({
+      type: 'TREE',
+      depth: 295,
+      render: () => {
+        if (this.layers.tree) {
+          ctx.drawImage(
+            this.layers.tree,
+            originX + (348 + islandPanX) * baseScale,
+            originY + (85 + islandPanY) * baseScale,
+            229 * baseScale,
+            279 * baseScale
+          );
+        }
+      }
+    });
+
+    // (2) 小木桥 (桥梁基准深度: y = 350)
+    renderQueue.push({
+      type: 'BRIDGE',
+      depth: 350,
+      render: () => {
+        if (this.layers.bridge) {
+          ctx.drawImage(
+            this.layers.bridge,
+            originX + (317 + islandPanX) * baseScale,
+            originY + (270 + islandPanY) * baseScale,
+            152 * baseScale,
+            132 * baseScale
+          );
+        }
+      }
+    });
+
+    // (3) 3D 自主萌宠实体 (深度由萌宠脚底位置决定: pet.y + 20)
+    if (this.pet) {
+      renderQueue.push({
+        type: 'PET',
+        depth: this.pet.y + 20,
+        render: () => {
+          this.pet.render(ctx, originX / baseScale + islandPanX, originY / baseScale + islandPanY, baseScale);
+        }
+      });
+    }
+
+    // 按空间深度从后向前精准排序并渲染 (实现宠物走进大树/木桥后方的真实物理遮挡)
+    renderQueue.sort((a, b) => a.depth - b.depth);
+    renderQueue.forEach(item => item.render());
+
+    // 🌿 5. 前景花丛遮挡层 (强视差 1.45x + 绝对最前排深度遮挡)
+    const fgPanX = (this.panX + idleSway) * 1.45;
+    const fgPanY = this.panY * 1.45;
+    if (this.layers.foreground) {
+      ctx.drawImage(
+        this.layers.foreground,
+        originX + (50 + fgPanX) * baseScale,
+        originY + (335 + fgPanY) * baseScale,
+        539 * baseScale,
+        139 * baseScale
+      );
+    }
+
+    // ✨ 6. 飘落樱花瓣与梦幻金粉粒子 (最上层)
+    this.particles.forEach(p => {
+      ctx.save();
+      const px = originX + (p.x + islandPanX * 0.7) * baseScale;
+      const py = originY + (p.y + islandPanY * 0.7) * baseScale;
+      ctx.translate(px, py);
+      ctx.rotate(p.rot);
+
+      if (p.type === 'PETAL') {
+        ctx.fillStyle = `rgba(244, 114, 182, ${p.alpha})`;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, p.size * baseScale, (p.size * 0.55) * baseScale, 0, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = `rgba(253, 224, 71, ${p.alpha})`;
+        ctx.beginPath();
+        ctx.arc(0, 0, (p.size * 0.45) * baseScale, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    });
   }
 
   requestFrame(cb) {
@@ -570,9 +358,6 @@ class PetWorld3D {
     this.isDestroyed = true;
     if (this.rafId) {
       this.cancelFrame(this.rafId);
-    }
-    if (this.renderer) {
-      this.renderer.dispose();
     }
   }
 }

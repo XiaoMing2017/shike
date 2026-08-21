@@ -1,4 +1,3 @@
-const { createScopedThreejs } = require('../../utils/threejs-miniprogram');
 const { PetWorld3D } = require('./world3d/pet_world_3d');
 // pages/pet/pet.js
 const app = getApp();
@@ -509,14 +508,10 @@ Page({
 
 
   init3DWorld() {
-    if (this._is3DInitializing) return;
-    this._is3DInitializing = true;
-
     const query = wx.createSelectorQuery().in(this);
     query.select('#petWorldCanvas')
       .fields({ node: true, size: true })
       .exec((res) => {
-        this._is3DInitializing = false;
         if (!res || !res[0] || !res[0].node) {
           console.warn('Cannot find #petWorldCanvas node');
           return;
@@ -530,17 +525,6 @@ Page({
         canvas.width = width * dpr;
         canvas.height = height * dpr;
 
-        let THREE = this.THREE_INSTANCE;
-        if (!THREE) {
-          try {
-            THREE = createScopedThreejs(canvas);
-            this.THREE_INSTANCE = THREE;
-          } catch (e) {
-            console.error('createScopedThreejs error:', e);
-          }
-        }
-        if (!THREE) return;
-
         if (this.world3D) {
           this.world3D.destroy();
         }
@@ -548,14 +532,14 @@ Page({
         const species = (this.data.pet && this.data.pet.petType) || this.data.selectedType || 'DRAGON';
         const rank = this.data.petStageRank || 1;
 
-        this.world3D = new PetWorld3D(canvas, THREE, {
+        this.world3D = new PetWorld3D(canvas, {
           width: width,
           height: height,
           pixelRatio: dpr,
           species: species,
           stageRank: rank
         });
-        console.log('3D WebGL World Engine initialized successfully!');
+        console.log('2.5D Fairy Miniature Island Engine initialized successfully!');
       });
   },
 

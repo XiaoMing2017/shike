@@ -162,8 +162,8 @@
             <!-- 🌟 真正 2.5D 卡通 3D 浮空岛微缩世界 (WebGL 硬件加速 + 真实深度遮挡) -->
       <view class="virtual-3d-world">
         
-        <!-- WebGL 3D 交互画布 -->
-        <canvas type="webgl" id="petWorldCanvas" class="pet-3d-webgl-canvas"
+        <!-- 2.5D 3D 空间微缩交互画布 -->
+        <canvas type="2d" id="petWorldCanvas" class="pet-3d-webgl-canvas"
                 bindtouchstart="onWorldTouchStart"
                 bindtouchmove="onWorldTouchMove"
                 bindtouchend="onWorldTouchEnd"
