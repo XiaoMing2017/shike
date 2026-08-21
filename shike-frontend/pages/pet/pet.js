@@ -501,15 +501,22 @@ Page({
   init3DWorld() {
     const query = wx.createSelectorQuery().in(this);
     query.select('#petWorldCanvas')
-      .node()
+      .fields({ node: true, size: true })
       .exec((res) => {
         if (!res || !res[0] || !res[0].node) {
           console.warn('Cannot find #petWorldCanvas node');
           return;
         }
         const canvas = res[0].node;
-        const THREE = createScopedThreejs(canvas);
         const sysInfo = wx.getSystemInfoSync();
+        const dpr = sysInfo.pixelRatio || 2;
+        const width = res[0].width || sysInfo.windowWidth || 375;
+        const height = res[0].height || 300;
+
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+
+        const THREE = createScopedThreejs(canvas);
 
         if (this.world3D) {
           this.world3D.destroy();
@@ -519,7 +526,9 @@ Page({
         const rank = this.data.petStageRank || 1;
 
         this.world3D = new PetWorld3D(canvas, THREE, {
-          pixelRatio: sysInfo.pixelRatio || 2,
+          width: width,
+          height: height,
+          pixelRatio: dpr,
           species: species,
           stageRank: rank
         });

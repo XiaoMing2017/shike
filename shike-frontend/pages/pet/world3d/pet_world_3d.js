@@ -52,8 +52,7 @@ export class PetWorld3D {
       alpha: true,
       powerPreference: 'high-performance'
     });
-    this.renderer.setSize(this.canvas.width, this.canvas.height);
-    this.renderer.setPixelRatio(this.options.pixelRatio || 2);
+    this.renderer.setSize(this.canvas.width, this.canvas.height, false);
     // 启用原生深度测试与软阴影
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;

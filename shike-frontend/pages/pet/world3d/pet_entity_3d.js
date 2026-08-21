@@ -203,20 +203,41 @@ export class PetEntity3D {
       rHorn.rotation.x = -0.2;
       this.headGroup.add(rHorn);
 
-      // 小龙翼
+      // 小龙翼 (采用圆润卡通薄翼 Shape)
       this.wings = new THREE.Group();
-      this.wings.position.set(0, 0.08, -0.42);
-      const wingGeo = new THREE.BufferGeometry();
-      const vertices = new Float32Array([
-        0, 0, 0,  -0.35, 0.25, -0.05,  -0.15, -0.15, -0.02,
-        0, 0, 0,   0.35, 0.25, -0.05,   0.15, -0.15, -0.02
-      ]);
-      wingGeo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-      wingGeo.computeVertexNormals();
-      const wingMesh = new THREE.Mesh(wingGeo, this.wingMat);
-      this.wings.add(wingMesh);
+      this.wings.position.set(0, 0.08, -0.38);
+
+      const wingShape = new THREE.Shape();
+      wingShape.moveTo(0, 0);
+      wingShape.quadraticCurveTo(-0.25, 0.28, -0.42, 0.22);
+      wingShape.quadraticCurveTo(-0.22, 0.06, -0.15, -0.12);
+      wingShape.closePath();
+
+      const wingGeo = new THREE.ShapeGeometry(wingShape);
+
+      const lWing = new THREE.Mesh(wingGeo, this.wingMat);
+      lWing.position.set(-0.06, 0, 0);
+      lWing.rotation.y = 0.25;
+      this.wings.add(lWing);
+
+      const rWing = new THREE.Mesh(wingGeo, this.wingMat);
+      rWing.position.set(0.06, 0, 0);
+      rWing.rotation.y = Math.PI - 0.25;
+      this.wings.add(rWing);
+
       this.model.add(this.wings);
-    } else if (this.species === 'CAT' || this.species === 'DOG') {
+    } else if (this.species === 'TOTORO') {
+      // 龙猫萌耳
+      const earGeo = new THREE.ConeGeometry(0.09, 0.28, 8);
+      const lEar = new THREE.Mesh(earGeo, this.bodyMat);
+      lEar.position.set(-0.22, 0.42, 0);
+      lEar.rotation.z = -0.25;
+      this.headGroup.add(lEar);
+
+      const rEar = new THREE.Mesh(earGeo, this.bodyMat);
+      rEar.position.set(0.22, 0.42, 0);
+      rEar.rotation.z = 0.25;
+      this.headGroup.add(rEar);
       // 萌耳
       const earGeo = new THREE.ConeGeometry(0.12, 0.24, 6);
       const lEar = new THREE.Mesh(earGeo, this.bodyMat);
