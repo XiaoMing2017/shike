@@ -1,7 +1,7 @@
 // pet_world_3d.js - 2.5D 卡通 3D 浮空岛微缩世界引擎
-import { PetEntity3D } from './pet_entity_3d.js';
+const { PetEntity3D } = require('./pet_entity_3d');
 
-export class PetWorld3D {
+class PetWorld3D {
   constructor(canvas, THREE, options = {}) {
     this.canvas = canvas;
     this.THREE = THREE;
@@ -576,3 +576,5 @@ export class PetWorld3D {
     }
   }
 }
+
+module.exports = { PetWorld3D };

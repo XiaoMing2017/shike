@@ -1,5 +1,5 @@
 // pet_entity_3d.js - 3D 独立卡通萌宠实体与自主生命状态机
-export class PetEntity3D {
+class PetEntity3D {
   constructor(THREE, species = 'DRAGON', stageRank = 1) {
     this.THREE = THREE;
     this.species = species;
@@ -478,3 +478,5 @@ export class PetEntity3D {
     }
   }
 }
+
+module.exports = { PetEntity3D };

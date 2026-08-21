@@ -1,5 +1,5 @@
 const { createScopedThreejs } = require('../../utils/threejs-miniprogram');
-import { PetWorld3D } from './world3d/pet_world_3d.js';
+const { PetWorld3D } = require('./world3d/pet_world_3d');
 // pages/pet/pet.js
 const app = getApp();
 
