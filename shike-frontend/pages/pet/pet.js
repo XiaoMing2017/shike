@@ -183,11 +183,19 @@ const POLAROID_QUOTES = [
 
 const SCENE_LIST = [
   {
+    id: 'apartment',
+    name: '温馨手绘三居室',
+    tag: '2.5D 手绘全景',
+    icon: '🏡',
+    image: '/images/pets/scene_cozy_apartment.jpg',
+    desc: '客厅沙发区、阳台露天小花园、卧室大床与学习书桌，应有尽有。'
+  },
+  {
     id: 'room',
     name: '阳光原木小屋',
     tag: '日式温馨',
     icon: '🌿',
-    image: '/images/pets/scene_room_bg.jpg',
+    image: '/images/pets/scene_isometric_room.jpg',
     desc: '落地阳光窗、原木地板与软糯米白地毯，温馨治愈。'
   },
   {
@@ -197,67 +205,49 @@ const SCENE_LIST = [
     icon: '☁️',
     image: '/images/pets/scene_island_bg.jpg',
     desc: '漂浮在云海之上的梦幻仙境岛屿，花树清泉环绕。'
-  },
-  {
-    id: 'yard',
-    name: '阳光露台花园',
-    tag: '活力运动',
-    icon: '☀️',
-    image: '/images/pets/scene_yard_bg.jpg',
-    desc: '石砌欧式阳光露台与绿茵草坪，适合户外运动。'
   }
 ];
 
 const ROOM_SPOTS = {
-  RUG: {
-    id: 'RUG',
-    name: '毛绒地毯',
-    icon: '🧶',
-    bottom: '90rpx',
-    left: '50%',
-    scale: '1',
-    tag: '悠闲待机',
-    quote: '坐在软乎乎的羊毛地毯上晒太阳，感觉整个人都被治愈了～'
-  },
   SOFA: {
     id: 'SOFA',
-    name: '米白沙发',
+    name: '客厅沙发',
     icon: '🛋️',
-    bottom: '220rpx',
-    left: '66%',
-    scale: '0.92',
+    bottom: '160rpx',
+    left: '24%',
+    scale: '0.78',
     tag: '惬意阅读',
-    quote: '窝在沙发里翻翻绘本，享受不被打扰的自律时光！'
+    quote: '窝在客厅沙发里看绘本，享受不被打扰的自律时光！'
   },
-  FITNESS: {
-    id: 'FITNESS',
-    name: '运动瑜伽垫',
-    icon: '🧘',
-    bottom: '80rpx',
+  GARDEN: {
+    id: 'GARDEN',
+    name: '阳台花园',
+    icon: '🌿',
+    bottom: '60rpx',
+    left: '42%',
+    scale: '0.82',
+    tag: '清新散步',
+    quote: '站在阳台小草坪上吹微风看花，多巴胺满满！'
+  },
+  BED: {
+    id: 'BED',
+    name: '卧室大床',
+    icon: '🛏️',
+    bottom: '120rpx',
     left: '74%',
-    scale: '0.94',
-    tag: '燃脂拉伸',
-    quote: '铺开瑜伽垫拉伸一下，多巴胺分泌满满，体态越来越轻盈！'
+    scale: '0.80',
+    tag: '舒心小憩',
+    quote: '钻进软乎乎的小被窝里打个盹，好好休息才能更好自律～'
   },
-  WINDOW: {
-    id: 'WINDOW',
-    name: '阳光落地窗',
-    icon: '☀️',
-    bottom: '260rpx',
-    left: '28%',
-    scale: '0.88',
-    tag: '晨曦远眺',
-    quote: '趴在窗台看蓝天白云，今天也是充满希望的一天！'
-  },
-  DINING: {
-    id: 'DINING',
-    name: '健康轻食角',
-    icon: '🥗',
-    bottom: '100rpx',
-    left: '26%',
-    scale: '0.94',
-    tag: '科学轻食',
-    quote: '好好吃饭是爱自己的第一步，低卡营养无负担！'
+  DESK: {
+    id: 'DESK',
+    name: '学习书桌',
+    icon: '📖',
+    bottom: '240rpx',
+    left: '62%',
+    scale: '0.75',
+    tag: '专注学习',
+    quote: '坐在书桌前专心致志，每一次积累都在悄悄发光✨！'
   }
 };
 
@@ -265,14 +255,14 @@ Page({
   data: {
     // 🛋️ 2.5D 等轴测家具点位系统
     roomSpots: Object.values(ROOM_SPOTS),
-    currentSpotId: 'RUG',
-    currentSpot: ROOM_SPOTS['RUG'],
+    currentSpotId: 'GARDEN',
+    currentSpot: ROOM_SPOTS['GARDEN'],
     isMovingSpot: false,
 
     // 🎨 3D 沉浸式场景切换系统
     sceneList: SCENE_LIST,
-    currentSceneId: 'room',
-    currentSceneBg: '/images/pets/scene_room_bg.jpg',
+    currentSceneId: 'apartment',
+    currentSceneBg: '/images/pets/scene_cozy_apartment.jpg',
     showSceneModal: false,
 
     loading: true,
@@ -483,7 +473,7 @@ Page({
 
 
   initSavedScene() {
-    const saved = wx.getStorageSync('shike_pet_scene') || 'room';
+    const saved = wx.getStorageSync('shike_pet_scene') || 'apartment';
     const found = SCENE_LIST.find(s => s.id === saved) || SCENE_LIST[0];
     this.setData({
       currentSceneId: found.id,
@@ -717,14 +707,14 @@ Page({
       data: {
     // 🛋️ 2.5D 等轴测家具点位系统
     roomSpots: Object.values(ROOM_SPOTS),
-    currentSpotId: 'RUG',
-    currentSpot: ROOM_SPOTS['RUG'],
+    currentSpotId: 'GARDEN',
+    currentSpot: ROOM_SPOTS['GARDEN'],
     isMovingSpot: false,
 
     // 🎨 3D 沉浸式场景切换系统
     sceneList: SCENE_LIST,
-    currentSceneId: 'room',
-    currentSceneBg: '/images/pets/scene_room_bg.jpg',
+    currentSceneId: 'apartment',
+    currentSceneBg: '/images/pets/scene_cozy_apartment.jpg',
     showSceneModal: false,
 
         userId: userId,
@@ -853,8 +843,8 @@ Page({
       data: {
     // 🛋️ 2.5D 等轴测家具点位系统
     roomSpots: Object.values(ROOM_SPOTS),
-    currentSpotId: 'RUG',
-    currentSpot: ROOM_SPOTS['RUG'],
+    currentSpotId: 'GARDEN',
+    currentSpot: ROOM_SPOTS['GARDEN'],
     isMovingSpot: false,
 
         userId: user.id,

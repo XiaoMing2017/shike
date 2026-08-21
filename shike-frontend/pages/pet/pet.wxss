@@ -1591,3 +1591,60 @@
 .spot-dock-item.active .dock-name {
   color: #047857;
 }
+
+/* 🛋️ 2.5D 房间家具横向导览底栏 (修复竖排折行) */
+.room-spot-dock-bar {
+  position: absolute;
+  bottom: 14rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(14px);
+  border: 1.5rpx solid rgba(226, 232, 240, 0.9);
+  padding: 8rpx 18rpx;
+  border-radius: 36rpx;
+  box-shadow: 0 8rpx 28rpx rgba(15, 23, 42, 0.12);
+  z-index: 30;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  white-space: nowrap !important;
+}
+
+.spot-dock-item {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 6rpx;
+  padding: 8rpx 18rpx;
+  border-radius: 20rpx;
+  background: #F8FAFC;
+  border: 1rpx solid #E2E8F0;
+  flex-shrink: 0;
+  white-space: nowrap !important;
+  transition: all 0.2s ease;
+}
+
+.spot-dock-item.active {
+  background: #ECFDF5;
+  border-color: #10B981;
+  box-shadow: 0 4rpx 14rpx rgba(16, 185, 129, 0.2);
+  transform: scale(1.05);
+}
+
+.spot-dock-item .dock-name {
+  font-size: 20rpx;
+  font-weight: 800;
+  color: #64748B;
+  white-space: nowrap !important;
+}
+
+.spot-dock-item.active .dock-name {
+  color: #047857;
+}
+
+.virtual-3d-world {
+  height: 520rpx !important;
+}
