@@ -5,6 +5,7 @@ class PetWorld3D {
   constructor(canvas, options = {}) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
+    console.log('[PetWorld3D] canvas.width:', canvas.width, 'canvas.height:', canvas.height, 'ctx:', !!this.ctx);
     this.options = options;
     this.isDestroyed = false;
 

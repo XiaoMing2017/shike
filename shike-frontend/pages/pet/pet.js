@@ -512,18 +512,24 @@ Page({
     query.select('#petWorldCanvas')
       .fields({ node: true, size: true })
       .exec((res) => {
+        console.log('[2.5D] init3DWorld exec res:', JSON.stringify(res && res[0] ? { width: res[0].width, height: res[0].height, hasNode: !!res[0].node } : null));
         if (!res || !res[0] || !res[0].node) {
-          console.warn('Cannot find #petWorldCanvas node');
+          console.warn('[2.5D] Cannot find #petWorldCanvas node, retrying in 500ms...');
+          setTimeout(() => this.init3DWorld(), 500);
           return;
         }
         const canvas = res[0].node;
         const sysInfo = wx.getSystemInfoSync();
         const dpr = sysInfo.pixelRatio || 2;
         const width = res[0].width || sysInfo.windowWidth || 375;
-        const height = res[0].height || 300;
+        const height = res[0].height || 280;
 
-        canvas.width = width * dpr;
-        canvas.height = height * dpr;
+        canvas.width = Math.round(width * dpr);
+        canvas.height = Math.round(height * dpr);
+        console.log('[2.5D] Canvas dims set:', canvas.width, 'x', canvas.height, ' dpr:', dpr);
+
+        const ctx = canvas.getContext('2d');
+        console.log('[2.5D] Got ctx:', !!ctx);
 
         if (this.world3D) {
           this.world3D.destroy();
@@ -539,7 +545,7 @@ Page({
           species: species,
           stageRank: rank
         });
-        console.log('2.5D Fairy Miniature Island Engine initialized successfully!');
+        console.log('[2.5D] 2.5D Fairy Miniature Island Engine initialized successfully!');
       });
   },
 
