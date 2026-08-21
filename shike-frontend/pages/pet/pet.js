@@ -1,4 +1,3 @@
-const { PetWorld3D } = require('./world3d/pet_world_3d');
 // pages/pet/pet.js
 const app = getApp();
 
@@ -182,33 +181,71 @@ const POLAROID_QUOTES = [
   '和搭子一起变轻变好的日常 🍃'
 ];
 
+const SCENE_LIST = [
+  {
+    id: 'apartment',
+    name: '温馨手绘三居室',
+    tag: '2.5D 手绘全景',
+    icon: '🏡',
+    image: '/images/pets/scene_cozy_apartment.jpg',
+    desc: '客厅沙发区、阳台露天小花园、卧室大床与学习书桌，应有尽有。'
+  },
+  {
+    id: 'room',
+    name: '阳光原木小屋',
+    tag: '日式温馨',
+    icon: '🌿',
+    image: '/images/pets/scene_isometric_room.jpg',
+    desc: '落地阳光窗、原木地板与软糯米白地毯，温馨治愈。'
+  },
+  {
+    id: 'island',
+    name: '云端浮空仙岛',
+    tag: '奇幻治愈',
+    icon: '☁️',
+    image: '/images/pets/scene_island_bg.jpg',
+    desc: '漂浮在云海之上的梦幻仙境岛屿，花树清泉环绕。'
+  }
+];
 
 const ROOM_SPOTS = {
   RUG: {
     id: 'RUG',
     name: '软糯地毯',
     icon: '🧶',
+    bottom: '22%',
+    left: '50%',
+    scale: 1.0,
     tag: '阳光小憩',
-    quote: '坐在浮空岛软乎乎的地毯上晒太阳，感觉整个人都被治愈了～'
+    quote: '坐在浮空岛软乎乎的草坪上晒太阳，感觉整个人都被治愈了～'
   },
   SOFA: {
     id: 'SOFA',
-    name: '原木沙发',
-    icon: '🛋️',
-    tag: '惬意阅读',
-    quote: '窝在沙发里翻翻绘本，享受不被打扰的自律时光！'
+    name: '原木小桥',
+    icon: '🌉',
+    bottom: '28%',
+    left: '68%',
+    scale: 0.95,
+    tag: '惬意漫步',
+    quote: '坐在小木桥边吹吹微风，享受不被打扰的自律时光！'
   },
   FITNESS: {
     id: 'FITNESS',
-    name: '运动瑜伽垫',
+    name: '石板小径',
     icon: '🧘',
-    tag: '燃脂拉伸',
-    quote: '铺开瑜伽垫拉伸一下，多巴胺分泌满满，体态越来越轻盈！'
+    bottom: '18%',
+    left: '38%',
+    scale: 1.02,
+    tag: '燃脂漫步',
+    quote: '在小径上慢跑拉伸一下，多巴胺分泌满满，体态越来越轻盈！'
   },
   POND: {
     id: 'POND',
     name: '清泉瀑布',
     icon: '🌊',
+    bottom: '36%',
+    left: '42%',
+    scale: 0.90,
     tag: '补水解渴',
     quote: '瀑布潺潺，清泉叮咚，今天也要喝足八杯水哦～'
   },
@@ -216,6 +253,9 @@ const ROOM_SPOTS = {
     id: 'FLOWER',
     name: '盛开花丛',
     icon: '🌸',
+    bottom: '25%',
+    left: '26%',
+    scale: 0.96,
     tag: '驻足闻花',
     quote: '走在花丛小道上，闻一闻粉红花朵的清香，心情大好！'
   }
@@ -225,9 +265,15 @@ Page({
   data: {
     // 🛋️ 2.5D 等轴测家具点位系统
     roomSpots: Object.values(ROOM_SPOTS),
-    currentSpotId: 'GARDEN',
-    currentSpot: ROOM_SPOTS['GARDEN'],
+    currentSpotId: 'RUG',
+    currentSpot: ROOM_SPOTS['RUG'],
     isMovingSpot: false,
+
+    // 🎨 3D 沉浸式场景切换系统
+    sceneList: SCENE_LIST,
+    currentSceneId: 'island',
+    currentSceneBg: '/images/pets/scene_island_bg.jpg',
+    showSceneModal: false,
 
     loading: true,
     petSystemEnabled: true,
@@ -295,24 +341,17 @@ Page({
     ]
   },
 
-  onReady() {
-    if (this.data.hasPet) {
-      this.init3DWorld();
-    }
-  },
-
   onLoad(options) {
     this.checkToggleAndLoad();
     this.initPolaroidDate();
-    
+    this.initSavedScene();
   },
 
   onShow() {
     this.checkToggleAndLoad();
     this.updateCustomTabBar();
     this.fetchFoodTasks();
-    setTimeout(() => { if (this.data.hasPet) this.init3DWorld(); }, 150);
-  },
+    },
 
   initPolaroidDate() {
     const d = new Date();
@@ -331,16 +370,14 @@ Page({
   onPullDownRefresh() {
     this.checkToggleAndLoad(() => {
       this.fetchFoodTasks();
-    setTimeout(() => { if (this.data.hasPet) this.init3DWorld(); }, 150);
-      wx.stopPullDownRefresh();
+    wx.stopPullDownRefresh();
     });
   },
 
   onRefreshPage() {
     this.checkToggleAndLoad();
     this.fetchFoodTasks();
-    setTimeout(() => { if (this.data.hasPet) this.init3DWorld(); }, 150);
-  },
+    },
 
   updateCustomTabBar() {
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
@@ -404,10 +441,6 @@ Page({
             currentTypeInfo: info,
             foodIcon: info.food || '🍎',
             loading: false
-          }, () => {
-            wx.nextTick(() => {
-              this.init3DWorld();
-            });
           });
           this.calculateEvolutionAndBadges(pet);
         } else if (res.data && res.data.code === 403) {
@@ -457,7 +490,7 @@ Page({
 
 
   initSavedScene() {
-    const saved = wx.getStorageSync('shike_pet_scene') || 'apartment';
+    const saved = wx.getStorageSync('shike_pet_scene') || 'island';
     const found = SCENE_LIST.find(s => s.id === saved) || SCENE_LIST[0];
     this.setData({
       currentSceneId: found.id,
@@ -507,64 +540,7 @@ Page({
   },
 
 
-  init3DWorld() {
-    const query = wx.createSelectorQuery().in(this);
-    query.select('#petWorldCanvas')
-      .fields({ node: true, size: true })
-      .exec((res) => {
-        console.log('[2.5D] init3DWorld exec res:', JSON.stringify(res && res[0] ? { width: res[0].width, height: res[0].height, hasNode: !!res[0].node } : null));
-        if (!res || !res[0] || !res[0].node) {
-          console.warn('[2.5D] Cannot find #petWorldCanvas node, retrying in 500ms...');
-          setTimeout(() => this.init3DWorld(), 500);
-          return;
-        }
-        const canvas = res[0].node;
-        const sysInfo = wx.getSystemInfoSync();
-        const dpr = sysInfo.pixelRatio || 2;
-        const width = res[0].width || sysInfo.windowWidth || 375;
-        const height = res[0].height || 280;
-
-        canvas.width = Math.round(width * dpr);
-        canvas.height = Math.round(height * dpr);
-        console.log('[2.5D] Canvas dims set:', canvas.width, 'x', canvas.height, ' dpr:', dpr);
-
-        const ctx = canvas.getContext('2d');
-        console.log('[2.5D] Got ctx:', !!ctx);
-
-        if (this.world3D) {
-          this.world3D.destroy();
-        }
-
-        const species = (this.data.pet && this.data.pet.petType) || this.data.selectedType || 'DRAGON';
-        const rank = this.data.petStageRank || 1;
-
-        this.world3D = new PetWorld3D(canvas, {
-          width: width,
-          height: height,
-          pixelRatio: dpr,
-          species: species,
-          stageRank: rank
-        });
-        console.log('[2.5D] 2.5D Fairy Miniature Island Engine initialized successfully!');
-      });
-  },
-
-  onWorldTouchStart(e) {
-    if (this.world3D) this.world3D.onTouchStart(e);
-  },
-
-  onWorldTouchMove(e) {
-    if (this.world3D) this.world3D.onTouchMove(e);
-  },
-
-  onWorldTouchEnd(e) {
-    if (this.world3D) this.world3D.onTouchEnd(e);
-  },
-
-  onTapWorldCanvas() {
-    if (this.world3D) this.world3D.triggerPetTap();
-    this.onTapPet();
-  },
+  
 
   onOpenSceneModal() {
     this.setData({ showSceneModal: true });
@@ -609,8 +585,7 @@ Page({
           wx.vibrateShort({ type: 'medium' });
           this.fetchPetInfo();
           this.fetchFoodTasks();
-    setTimeout(() => { if (this.data.hasPet) this.init3DWorld(); }, 150);
-        } else {
+    } else {
           wx.showToast({ title: (res.data && res.data.message) || '签到失败', icon: 'none' });
         }
       },
@@ -755,6 +730,12 @@ Page({
     currentSpot: ROOM_SPOTS['GARDEN'],
     isMovingSpot: false,
 
+    // 🎨 3D 沉浸式场景切换系统
+    sceneList: SCENE_LIST,
+    currentSceneId: 'apartment',
+    currentSceneBg: '/images/pets/scene_cozy_apartment.jpg',
+    showSceneModal: false,
+
         userId: userId,
         name: name,
         petType: this.data.selectedType,
@@ -775,8 +756,7 @@ Page({
           });
           this.calculateEvolutionAndBadges(pet);
           this.fetchFoodTasks();
-    setTimeout(() => { if (this.data.hasPet) this.init3DWorld(); }, 150);
-          wx.vibrateShort({ type: 'heavy' });
+    wx.vibrateShort({ type: 'heavy' });
         } else {
           wx.showToast({ title: (res.data && res.data.message) || '孵化失败', icon: 'none' });
         }

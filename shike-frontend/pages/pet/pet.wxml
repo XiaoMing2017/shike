@@ -13,7 +13,10 @@
     
     <view class="flex align-center nav-actions-wrap" style="gap: 8rpx;">
       <!-- 🎨 换场景入口 -->
-      
+      <view class="scene-nav-pill flex align-center" bindtap="onOpenSceneModal" wx:if="{{hasPet}}">
+        <text style="font-size: 20rpx; margin-right: 4rpx;">🎨</text>
+        <text class="pill-text-emerald">换场景</text>
+      </view>
       <!-- 📸 小红书自律拍立得入口 -->
       <view class="polaroid-nav-pill flex align-center" bindtap="onOpenPolaroidModal" wx:if="{{hasPet}}">
         <text style="font-size: 20rpx; margin-right: 4rpx;">📸</text>
@@ -78,7 +81,7 @@
             <!-- 🌟 Finch 3D 浮岛直选展台（直接展示活生生的软萌幼宠） -->
       <view class="adopt-3d-stage-box flex flex-col align-center">
         <!-- 3D 沉浸式阳光原木自律小屋背景 -->
-        <!-- 3D 浮空岛微缩世界预览背景 -->
+        <image class="world-scene-bg" src="{{currentSceneBg || '/images/pets/scene_room_bg.jpg'}}" mode="aspectFill" />
         
         <!-- 搭子初见台词气泡 -->
         <view class="adopt-speech-bubble">
@@ -159,20 +162,22 @@
         <view class="stage-rank-tag stage-rank-{{petStageRank}}">{{currentStageInfo.stageTitle}}</view>
       </view>
 
-            <!-- 🌟 2.5D 卡通浮空岛微缩世界 -->
+            <!-- 🌟 3D 核心景深互动舞台 -->
       <view class="virtual-3d-world">
-        <!-- Canvas 正常文档流，原生组件正确渲染 -->
-        <canvas type="2d" id="petWorldCanvas" class="pet-3d-webgl-canvas"
-                bindtouchstart="onWorldTouchStart"
-                bindtouchmove="onWorldTouchMove"
-                bindtouchend="onWorldTouchEnd"
-                bindtap="onTapWorldCanvas">
-        </canvas>
-        <!-- 悬浮 UI 叠加 -->
-        <view class="parallax-hint-badge">
-          <text class="hint-icon">👆</text>
-          <text class="hint-text">滑动体验 3D 空间视差</text>
-        </view>
+        
+        <!-- 3D 沉浸式阳光原木自律小屋生活场景 -->
+        <image class="world-scene-bg" src="{{currentSceneBg || '/images/pets/scene_room_bg.jpg'}}" mode="aspectFill" />
+        
+        <!-- 环境光效与微尘粒子 -->
+        <view class="world-sun-ray"></view>
+        <view class="world-sparkle sp1">✨</view>
+        <view class="world-sparkle sp2">🍃</view>
+        <view class="world-sparkle sp3">🌸</view>
+
+        <!-- 进阶光环粒子 -->
+        <view class="evolution-aura-ring evo-{{petStageRank}}" wx:if="{{petStageRank >= 2}}"></view>
+
+        <!-- 🌟 悬浮动态闺蜜台词气泡（带实时思考 Loading 动效） -->
         <view class="speech-bubble-3d animate-bubble-float {{aiThinking ? 'bubble-thinking' : ''}}">
           <view class="flex align-center" wx:if="{{aiThinking}}">
             <text class="bubble-msg" style="color: #EC4899;">💭 搭子正在组织温暖的语言...</text>
@@ -182,35 +187,86 @@
           </block>
           <view class="bubble-arrow"></view>
         </view>
-        <view class="flying-food-projectile {{isFeeding ? 'animate-food-parabola' : ''}}" wx:if="{{isFeeding}}">
-          <text class="food-emoji">{{foodIcon}}</text>
-        </view>
-        <view class="floating-exp-gain {{isFeeding ? 'animate-exp-up' : ''}}" wx:if="{{isFeeding}}">
-          <text class="exp-text">+10 能量 ✨</text>
-        </view>
-      </view>
 
-      <!-- 导览条与状态（canvas 容器外部，避免原生组件层叠冲突） -->
-      <view class="room-spot-dock-bar flex align-center justify-center">
-        <view wx:for="{{roomSpots}}" wx:key="id" 
-              class="spot-dock-item {{currentSpotId === item.id ? 'active' : ''}}"
-              bindtap="onSelectRoomSpot" data-id="{{item.id}}">
-          <text class="dock-icon">{{item.icon}}</text>
-          <text class="dock-name">{{item.name}}</text>
+        <!-- 🛋️ 2.5D 等轴测动态家具生活点位舞台 -->
+        <view class="pet-25d-dynamic-anchor {{isMovingSpot ? 'pet-hopping-move' : ''}}"
+              style="bottom: {{currentSpot.bottom}}; left: {{currentSpot.left}}; transform: translateX(-50%) scale({{currentSpot.scale}});"
+              bindtap="onTapPet">
+          
+          <!-- 迸发爱心粒子 -->
+          <view class="heart-burst-particle {{heartAnim ? 'animate-heart-fly' : ''}}" wx:if="{{heartAnim}}">
+            <text class="burst-text">❤️</text>
+          </view>
+
+          <!-- 飞行动画食物 (投喂抛物线) -->
+          <view class="flying-food-projectile {{isFeeding ? 'animate-food-parabola' : ''}}" wx:if="{{isFeeding}}">
+            <text class="food-emoji">{{foodIcon}}</text>
+          </view>
+
+          <!-- 浮动 EXP 飘字 -->
+          <view class="floating-exp-gain {{isFeeding ? 'animate-exp-up' : ''}}" wx:if="{{isFeeding}}">
+            <text class="exp-text">+10 能量 ✨</text>
+          </view>
+
+          <!-- 🌟 2.5D 活体骨骼与多层微动系统 -->
+          <view class="pet-mesh-container stage-size-{{petStageRank}} {{isFeeding ? 'animate-pet-chew' : (isTouched ? 'animate-25d-joy' : 'animate-25d-breath')}}">
+            
+            <!-- 2.5D 手绘主体立绘 -->
+            <image class="pet-cutout-img" src="{{activePetImage}}" mode="aspectFit"></image>
+
+            <!-- 🌟 2.5D 灵动自然眨眼蒙皮层 -->
+            <view class="pet-25d-eyelid-overlay {{isTouched ? 'eyes-joy-smile' : 'eyes-blink-loop'}}">
+              <view class="eyelid-mask eye-left"></view>
+              <view class="eyelid-mask eye-right"></view>
+            </view>
+
+            <!-- 🌟 2.5D 脸颊粉晕微呼吸动效 -->
+            <view class="pet-25d-blush-aura {{isTouched ? 'blush-excited' : ''}}"></view>
+
+            <!-- 🌟 2.5D 高阶配件微动粒子 (热气升腾 / 樱花星芒) -->
+            <view class="pet-25d-acc-fx" wx:if="{{petStageRank >= 2}}">
+              <view class="acc-sparkle-dot s1">✦</view>
+              <view class="acc-sparkle-dot s2">✦</view>
+              <!-- 阶段3 暖茶气雾升腾 -->
+              <view class="steam-flow-wrap" wx:if="{{petStageRank >= 3}}">
+                <view class="steam-line st1"></view>
+                <view class="steam-line st2"></view>
+              </view>
+            </view>
+
+            <!-- 🌟 2.5D 地面真实接触物理阴影（随呼吸与弹跳精准物理联动） -->
+            <view class="pet-floor-shadow {{isFeeding ? 'shadow-chew' : (isTouched ? 'shadow-joy' : 'shadow-25d-breath')}}"></view>
+          </view>
+
         </view>
-      </view>
-      <view class="mood-bar-row flex align-center justify-center" style="gap: 14rpx;">
-        <view class="mood-pill mood-{{pet.mood}} flex align-center">
-          <text class="mood-icon">{{pet.mood === 'HAPPY' ? '😄' : (pet.mood === 'WAITING' ? '💭' : (pet.mood === 'HUNGRY' ? '🥺' : '🌸'))}}</text>
-          <text class="mood-text">{{pet.moodText}}</text>
+
+        <!-- 🛋️ 房间家具点位快捷导览条 (2.5D 智能生活导览) -->
+        <view class="room-spot-dock-bar flex align-center justify-center">
+          <view wx:for="{{roomSpots}}" wx:key="id" 
+                class="spot-dock-item {{currentSpotId === item.id ? 'active' : ''}}"
+                bindtap="onSelectRoomSpot" data-id="{{item.id}}">
+            <text class="dock-icon">{{item.icon}}</text>
+            <text class="dock-name">{{item.name}}</text>
+          </view>
         </view>
-        <view class="hud-streak-tag flex align-center">
-          <text style="font-size: 22rpx; margin-right: 4rpx;">🔥</text>
-          <text style="font-size: 20rpx; font-weight: 800; color: #EA580C;">连续自律第 {{pet.streakDays}} 天</text>
+
+        <!-- 心情胶囊栏与陪伴天数 -->
+        <view class="mood-bar-row flex align-center justify-center" style="gap: 14rpx;">
+          <view class="mood-pill mood-{{pet.mood}} flex align-center">
+            <text class="mood-icon">{{pet.mood === 'HAPPY' ? '😄' : (pet.mood === 'WAITING' ? '💭' : (pet.mood === 'HUNGRY' ? '🥺' : '🌸'))}}</text>
+            <text class="mood-text">{{pet.moodText}}</text>
+          </view>
+          <view class="hud-streak-tag flex align-center">
+            <text style="font-size: 22rpx; margin-right: 4rpx;">🔥</text>
+            <text style="font-size: 20rpx; font-weight: 800; color: #EA580C;">连续自律第 {{pet.streakDays}} 天</text>
+          </view>
         </view>
-      </view>
-      <view class="touch-hint-label">
-        <text>👆 轻触抚摸它，它会结合你今日真实自律数据温暖回应</text>
+
+        <!-- 互动指引 -->
+        <view class="touch-hint-label">
+          <text>👆 轻触抚摸它，它会结合你今日真实自律数据温暖回应</text>
+        </view>
+
       </view>
 
       <!-- 🎋 自律心声与闺蜜互动（受控合规模式） -->
