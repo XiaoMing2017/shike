@@ -188,8 +188,10 @@
           <view class="bubble-arrow"></view>
         </view>
 
-        <!-- 3D 宠物本体与触碰物理系统 -->
-        <view class="pet-3d-character-stage flex align-center justify-center" bindtap="onTapPet">
+        <!-- 🛋️ 2.5D 等轴测动态家具生活点位舞台 -->
+        <view class="pet-25d-dynamic-anchor {{isMovingSpot ? 'pet-hopping-move' : ''}}"
+              style="bottom: {{currentSpot.bottom}}; left: {{currentSpot.left}}; transform: translateX(-50%) scale({{currentSpot.scale}});"
+              bindtap="onTapPet">
           
           <!-- 迸发爱心粒子 -->
           <view class="heart-burst-particle {{heartAnim ? 'animate-heart-fly' : ''}}" wx:if="{{heartAnim}}">
@@ -236,6 +238,16 @@
             <view class="pet-floor-shadow {{isFeeding ? 'shadow-chew' : (isTouched ? 'shadow-joy' : 'shadow-25d-breath')}}"></view>
           </view>
 
+        </view>
+
+        <!-- 🛋️ 房间家具点位快捷导览条 (2.5D 智能生活导览) -->
+        <view class="room-spot-dock-bar flex align-center justify-center">
+          <view wx:for="{{roomSpots}}" wx:key="id" 
+                class="spot-dock-item {{currentSpotId === item.id ? 'active' : ''}}"
+                bindtap="onSelectRoomSpot" data-id="{{item.id}}">
+            <text class="dock-icon">{{item.icon}}</text>
+            <text class="dock-name">{{item.name}}</text>
+          </view>
         </view>
 
         <!-- 心情胶囊栏与陪伴天数 -->

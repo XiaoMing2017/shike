@@ -208,8 +208,67 @@ const SCENE_LIST = [
   }
 ];
 
+const ROOM_SPOTS = {
+  RUG: {
+    id: 'RUG',
+    name: '毛绒地毯',
+    icon: '🧶',
+    bottom: '90rpx',
+    left: '50%',
+    scale: '1',
+    tag: '悠闲待机',
+    quote: '坐在软乎乎的羊毛地毯上晒太阳，感觉整个人都被治愈了～'
+  },
+  SOFA: {
+    id: 'SOFA',
+    name: '米白沙发',
+    icon: '🛋️',
+    bottom: '220rpx',
+    left: '66%',
+    scale: '0.92',
+    tag: '惬意阅读',
+    quote: '窝在沙发里翻翻绘本，享受不被打扰的自律时光！'
+  },
+  FITNESS: {
+    id: 'FITNESS',
+    name: '运动瑜伽垫',
+    icon: '🧘',
+    bottom: '80rpx',
+    left: '74%',
+    scale: '0.94',
+    tag: '燃脂拉伸',
+    quote: '铺开瑜伽垫拉伸一下，多巴胺分泌满满，体态越来越轻盈！'
+  },
+  WINDOW: {
+    id: 'WINDOW',
+    name: '阳光落地窗',
+    icon: '☀️',
+    bottom: '260rpx',
+    left: '28%',
+    scale: '0.88',
+    tag: '晨曦远眺',
+    quote: '趴在窗台看蓝天白云，今天也是充满希望的一天！'
+  },
+  DINING: {
+    id: 'DINING',
+    name: '健康轻食角',
+    icon: '🥗',
+    bottom: '100rpx',
+    left: '26%',
+    scale: '0.94',
+    tag: '科学轻食',
+    quote: '好好吃饭是爱自己的第一步，低卡营养无负担！'
+  }
+};
+
 Page({
   data: {
+    // 🛋️ 2.5D 等轴测家具点位系统
+    roomSpots: Object.values(ROOM_SPOTS),
+    currentSpotId: 'RUG',
+    currentSpot: ROOM_SPOTS['RUG'],
+    isMovingSpot: false,
+
     // 🎨 3D 沉浸式场景切换系统
     sceneList: SCENE_LIST,
     currentSceneId: 'room',
@@ -416,6 +475,7 @@ Page({
             foodTasks: tasks,
             earnedFoodCount: count
           });
+          this.syncSpotWithHabits(tasks);
         }
       }
     });
@@ -429,6 +489,48 @@ Page({
       currentSceneId: found.id,
       currentSceneBg: found.image
     });
+  },
+
+
+  onSelectRoomSpot(e) {
+    const spotId = e.currentTarget.dataset.id;
+    if (spotId === this.data.currentSpotId || !ROOM_SPOTS[spotId]) return;
+
+    const targetSpot = ROOM_SPOTS[spotId];
+    this.setData({
+      isMovingSpot: true,
+      currentSpotId: spotId,
+      currentSpot: targetSpot,
+      petDialogue: targetSpot.quote
+    });
+    wx.vibrateShort({ type: 'medium' });
+
+    setTimeout(() => {
+      this.setData({ isMovingSpot: false });
+    }, 600);
+  },
+
+  syncSpotWithHabits(tasks) {
+    const hour = new Date().getHours();
+    let targetId = 'RUG';
+
+    if (hour >= 22 || hour < 7) {
+      targetId = 'SOFA'; // 夜间在沙发休憩
+    } else if (tasks && tasks.exercise) {
+      targetId = 'FITNESS'; // 完成运动后在瑜伽垫
+    } else if (tasks && tasks.diet) {
+      targetId = 'DINING'; // 完成饮食记录后在轻食角
+    } else if (hour >= 7 && hour <= 10) {
+      targetId = 'WINDOW'; // 早晨在阳光窗边
+    }
+
+    if (ROOM_SPOTS[targetId]) {
+      this.setData({
+        currentSpotId: targetId,
+        currentSpot: ROOM_SPOTS[targetId],
+        petDialogue: ROOM_SPOTS[targetId].quote
+      });
+    }
   },
 
   onOpenSceneModal() {
@@ -613,6 +715,12 @@ Page({
       url: `${app.globalData.baseUrl}/pet/create`,
       method: 'POST',
       data: {
+    // 🛋️ 2.5D 等轴测家具点位系统
+    roomSpots: Object.values(ROOM_SPOTS),
+    currentSpotId: 'RUG',
+    currentSpot: ROOM_SPOTS['RUG'],
+    isMovingSpot: false,
+
     // 🎨 3D 沉浸式场景切换系统
     sceneList: SCENE_LIST,
     currentSceneId: 'room',
@@ -743,6 +851,12 @@ Page({
       url: `${app.globalData.baseUrl}/pet/interact`,
       method: 'POST',
       data: {
+    // 🛋️ 2.5D 等轴测家具点位系统
+    roomSpots: Object.values(ROOM_SPOTS),
+    currentSpotId: 'RUG',
+    currentSpot: ROOM_SPOTS['RUG'],
+    isMovingSpot: false,
+
         userId: user.id,
         actionType: actionType,
         userMessage: userMessage
