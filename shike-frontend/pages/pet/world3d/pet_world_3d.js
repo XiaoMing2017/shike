@@ -41,7 +41,7 @@ export class PetWorld3D {
 
     // 启动 60FPS 渲染循环
     this.animate = this.animate.bind(this);
-    this.rafId = canvas.requestAnimationFrame(this.animate);
+    this.rafId = this.requestFrame(this.animate);
   }
 
   initRenderer() {
@@ -73,27 +73,22 @@ export class PetWorld3D {
 
   initLights() {
     const THREE = this.THREE;
-    // 1. 半球环境光 (温暖天空光 + 柔和地面反光)
-    this.hemiLight = new THREE.HemisphereLight(0xFFF7ED, 0x93C5FD, 0.85);
+    // 1. 全局明亮环境光 (确保所有 3D 几何体与材质通透鲜活)
+    const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.85);
+    this.scene.add(ambientLight);
+
+    // 2. 半球环境光 (温暖天空光 + 柔和地面反光)
+    this.hemiLight = new THREE.HemisphereLight(0xFFF7ED, 0x93C5FD, 0.75);
     this.scene.add(this.hemiLight);
 
-    // 2. 主太阳方向光 (产生柔和深度阴影)
-    this.dirLight = new THREE.DirectionalLight(0xFFFBEB, 0.95);
+    // 3. 主太阳方向光 (产生柔和深度阴影)
+    this.dirLight = new THREE.DirectionalLight(0xFFFAF0, 0.95);
     this.dirLight.position.set(9, 15, 7);
     this.dirLight.castShadow = true;
-    this.dirLight.shadow.mapSize.width = 1024;
-    this.dirLight.shadow.mapSize.height = 1024;
-    this.dirLight.shadow.camera.near = 0.5;
-    this.dirLight.shadow.camera.far = 35;
-    const d = 8;
-    this.dirLight.shadow.camera.left = -d;
-    this.dirLight.shadow.camera.right = d;
-    this.dirLight.shadow.camera.top = d;
-    this.dirLight.shadow.camera.bottom = -d;
     this.scene.add(this.dirLight);
 
-    // 3. 温暖补光 (照亮阴影面)
-    const fillLight = new THREE.DirectionalLight(0xFEF08A, 0.35);
+    // 4. 侧面柔和补光
+    const fillLight = new THREE.DirectionalLight(0xFEF08A, 0.45);
     fillLight.position.set(-8, 6, -6);
     this.scene.add(fillLight);
   }
@@ -505,7 +500,7 @@ export class PetWorld3D {
   // 🌟 60FPS 主渲染循环
   animate() {
     if (this.isDestroyed) return;
-    this.rafId = this.canvas.requestAnimationFrame(this.animate);
+    this.rafId = this.requestFrame(this.animate);
 
     const deltaTime = Math.min(0.1, this.clock.getDelta());
     this.time += deltaTime;
@@ -556,10 +551,25 @@ export class PetWorld3D {
     this.initPetEntity(species, stageRank);
   }
 
+  requestFrame(cb) {
+    if (this.canvas && typeof this.canvas.requestAnimationFrame === 'function') {
+      return this.canvas.requestAnimationFrame(cb);
+    }
+    return setTimeout(cb, 16);
+  }
+
+  cancelFrame(id) {
+    if (this.canvas && typeof this.canvas.cancelAnimationFrame === 'function') {
+      this.canvas.cancelAnimationFrame(id);
+    } else {
+      clearTimeout(id);
+    }
+  }
+
   destroy() {
     this.isDestroyed = true;
-    if (this.canvas && this.rafId) {
-      this.canvas.cancelAnimationFrame(this.rafId);
+    if (this.rafId) {
+      this.cancelFrame(this.rafId);
     }
     if (this.renderer) {
       this.renderer.dispose();

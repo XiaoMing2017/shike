@@ -296,6 +296,12 @@ Page({
     ]
   },
 
+  onReady() {
+    if (this.data.hasPet) {
+      this.init3DWorld();
+    }
+  },
+
   onLoad(options) {
     this.checkToggleAndLoad();
     this.initPolaroidDate();
@@ -399,6 +405,10 @@ Page({
             currentTypeInfo: info,
             foodIcon: info.food || '🍎',
             loading: false
+          }, () => {
+            wx.nextTick(() => {
+              this.init3DWorld();
+            });
           });
           this.calculateEvolutionAndBadges(pet);
         } else if (res.data && res.data.code === 403) {
