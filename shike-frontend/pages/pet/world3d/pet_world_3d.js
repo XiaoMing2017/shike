@@ -95,13 +95,19 @@ class PetWorld3D {
         const img = this.canvas.createImage();
         img.onload = () => {
           this.layers[cfg.key] = img;
+          console.log('[PetWorld3D] ✅ Layer loaded:', cfg.key);
           this.renderScene(0);
         };
-        img.onerror = () => {
+        img.onerror = (err) => {
+          console.warn('[PetWorld3D] ⚠️ Layer primary load failed, trying fallback:', cfg.key, err);
           const fb = this.canvas.createImage();
           fb.onload = () => { 
             this.layers[cfg.key] = fb; 
+            console.log('[PetWorld3D] ✅ Layer loaded via fallback:', cfg.key);
             this.renderScene(0);
+          };
+          fb.onerror = (err2) => {
+            console.error('[PetWorld3D] ❌ Layer fallback load failed:', cfg.key, err2);
           };
           fb.src = cfg.fallback;
         };

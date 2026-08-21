@@ -50,13 +50,19 @@ class PetEntity3D {
     const img = this.canvas.createImage();
     img.onload = () => {
       this.img = img;
+      console.log('[PetEntity3D] ✅ Mascot image loaded:', fileName);
       if (typeof this.onLoaded === 'function') this.onLoaded();
     };
-    img.onerror = () => {
+    img.onerror = (err) => {
+      console.warn('[PetEntity3D] ⚠️ Mascot primary image load failed, trying fallback:', fileName, err);
       const fallbackImg = this.canvas.createImage();
       fallbackImg.onload = () => { 
         this.img = fallbackImg; 
+        console.log('[PetEntity3D] ✅ Mascot image loaded via fallback:', fileName);
         if (typeof this.onLoaded === 'function') this.onLoaded();
+      };
+      fallbackImg.onerror = (err2) => {
+        console.error('[PetEntity3D] ❌ Mascot fallback image load failed:', fileName, err2);
       };
       fallbackImg.src = `../../images/pets/${fileName}`;
     };
