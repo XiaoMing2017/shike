@@ -93,40 +93,195 @@
   white-space: nowrap;
 }
 
-/* ================= 3D 等轴测微缩世界核心舞台 ================= */
+/* ================= 2.5D 治愈等轴测微缩自律小屋核心互动舞台 ================= */
 .virtual-3d-world {
   position: relative;
   width: 100%;
-  height: 750rpx;
-  background: #F5F7F6;
+  height: 600rpx;
+  background: #FDFBF7;
   overflow: hidden;
   border-radius: 0 0 24rpx 24rpx;
 }
 
-.iso-canvas {
+.world-scene-bg {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+  object-fit: cover;
   z-index: 1;
-}
-
-/* 覆盖层 UI 通用定位 */
-.heart-burst-overlay {
-  position: absolute;
-  top: 30%;
-  left: 50%;
-  z-index: 15;
   pointer-events: none;
 }
 
-.floating-exp-overlay {
+/* 🌸 全景常驻温馨萌宠小伙伴 (Roommates NPCs) */
+.room-npc-anchor {
   position: absolute;
-  top: 25%;
-  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 8;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.npc-bear-sofa {
+  bottom: 44%;
+  left: 24%;
+  transform: translate(-50%, 0) scale(0.9);
+}
+.npc-dog-hallway {
+  bottom: 54%;
+  left: 47%;
+  transform: translate(-50%, 0) scale(0.88);
+}
+.npc-cat-bed {
+  bottom: 45%;
+  left: 72%;
+  transform: translate(-50%, 0) scale(0.92);
+}
+.npc-sprite-img {
+  width: 110rpx;
+  height: 110rpx;
+}
+.npc-mini-shadow {
+  width: 80rpx;
+  height: 14rpx;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.22) 0%, transparent 70%);
+  border-radius: 50%;
+  margin-top: -6rpx;
+}
+.npc-action-tag {
+  font-size: 16rpx;
+  font-weight: 800;
+  color: #475569;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(6px);
+  padding: 2rpx 10rpx;
+  border-radius: 12rpx;
+  border: 1rpx solid rgba(226, 232, 240, 0.85);
+  margin-top: 4rpx;
+}
+.floating-zz-bubble {
+  position: absolute;
+  top: -16rpx;
+  right: 4rpx;
+  font-size: 20rpx;
+  font-weight: 900;
+  color: #6366F1;
+  animation: floatZz 2.4s ease-in-out infinite;
+}
+@keyframes floatZz {
+  0% { transform: translate(0, 0) scale(0.6); opacity: 0; }
+  50% { transform: translate(10rpx, -16rpx) scale(1.1); opacity: 1; }
+  100% { transform: translate(20rpx, -32rpx) scale(0.8); opacity: 0; }
+}
+.npc-gentle-breathe {
+  animation: npcBreathe 3s ease-in-out infinite;
+}
+@keyframes npcBreathe {
+  0%, 100% { transform: translate(-50%, 0) scale(0.9); }
+  50% { transform: translate(-50%, -4rpx) scale(0.91, 0.89); }
+}
+.npc-jog-anim {
+  animation: npcJog 0.8s ease-in-out infinite alternate;
+}
+@keyframes npcJog {
+  0% { transform: translate(-50%, 0) rotate(-2deg); }
+  100% { transform: translate(-50%, -8rpx) rotate(2deg); }
+}
+.npc-sleep-breathe {
+  animation: npcSleep 3.6s ease-in-out infinite;
+}
+@keyframes npcSleep {
+  0%, 100% { transform: translate(-50%, 0) scale(0.92, 0.90); }
+  50% { transform: translate(-50%, -2rpx) scale(0.92, 0.93); }
+}
+.npc-tap-joy {
+  animation: npcJoyJump 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes npcJoyJump {
+  0% { transform: translate(-50%, 0) scale(0.9); }
+  40% { transform: translate(-50%, -24rpx) scale(1.05, 0.95); }
+  70% { transform: translate(-50%, -6rpx) scale(0.95, 1.05); }
+  100% { transform: translate(-50%, 0) scale(0.9); }
+}
+
+/* 🌟 活体主宠（如小白兔）跳跃漫步与动画 */
+.pet-25d-dynamic-anchor {
+  position: absolute;
+  z-index: 12;
+  transition: bottom 0.6s cubic-bezier(0.34, 1.3, 0.64, 1), left 0.6s cubic-bezier(0.34, 1.3, 0.64, 1), transform 0.6s cubic-bezier(0.34, 1.3, 0.64, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.pet-hopping-move {
+  animation: petParabolicHop 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+@keyframes petParabolicHop {
+  0% { transform: translateX(-50%) translateY(0) scale(1); }
+  35% { transform: translateX(-50%) translateY(-55rpx) scale(1.15, 0.88); }
+  70% { transform: translateX(-50%) translateY(-15rpx) scale(0.92, 1.1); }
+  100% { transform: translateX(-50%) translateY(0) scale(1); }
+}
+.animate-bunny-breathe {
+  animation: bunnyBreathe 2.4s ease-in-out infinite;
+}
+@keyframes bunnyBreathe {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  50% { transform: translateY(-6rpx) scale(1.02, 0.97); }
+}
+.animate-bunny-joy {
+  animation: bunnyJoyBounce 0.85s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes bunnyJoyBounce {
+  0% { transform: translateY(0) scale(1, 1); }
+  25% { transform: translateY(-40rpx) scale(0.95, 1.1); }
+  55% { transform: translateY(0) scale(1.08, 0.88); }
+  75% { transform: translateY(-16rpx) scale(0.98, 1.04); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+
+/* 兔子专属摇耳物理微动 */
+.bunny-ear-twitch-layer {
+  position: absolute;
+  top: 10rpx;
+  width: 100rpx;
+  height: 50rpx;
+  pointer-events: none;
+}
+.ears-sway-loop {
+  animation: earSway 3.2s ease-in-out infinite;
+}
+@keyframes earSway {
+  0%, 100% { transform: rotate(0deg); }
+  30% { transform: rotate(-3deg); }
+  70% { transform: rotate(3deg); }
+}
+.ears-excited {
+  animation: earExcited 0.5s ease-in-out infinite alternate;
+}
+@keyframes earExcited {
+  0% { transform: scale(1.05) rotate(-6deg); }
+  100% { transform: scale(1.05) rotate(6deg); }
+}
+
+/* 家具专属小道具 */
+.spot-prop-item {
+  position: absolute;
+  font-size: 26rpx;
   z-index: 15;
   pointer-events: none;
+  animation: propFloat 2.5s ease-in-out infinite alternate;
+}
+.prop-book { top: 30%; right: -14rpx; }
+.prop-sleep-zz { top: 0; right: -10rpx; color: #6366F1; }
+.prop-desk-study { top: 20%; right: -16rpx; }
+.prop-garden-flower { top: 10%; left: -14rpx; }
+@keyframes propFloat {
+  0% { transform: translateY(0) scale(0.95); }
+  100% { transform: translateY(-10rpx) scale(1.1); }
 }
 
 .world-sun-ray {

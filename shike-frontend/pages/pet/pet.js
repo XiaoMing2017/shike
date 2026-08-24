@@ -3,6 +3,48 @@ const app = getApp();
 const { IsometricWorld, SPOTS_3D } = require('../../utils/iso-world');
 
 const TYPE_CONFIG = {
+  BUNNY: {
+    type: 'BUNNY',
+    icon: '🐰',
+    eggEmoji: '🌸',
+    eggName: '灵花萌兔之卵',
+    name: '棉花糖兔',
+    tag: '治愈甜心',
+    food: '🥕',
+    quote: '在小花园草坪上晒晒太阳闻闻花香，今天也要开开心心自律哦～',
+    themeBg: '#FFF1F2',
+    themeColor: '#E11D48',
+    defaultName: '糖糖',
+    stages: [
+      {
+        rank: 1,
+        name: '破壳萌新 · 糖糖',
+        stageTitle: '阶段1 · 破壳萌新',
+        reqText: 'Lv.1 破壳解锁',
+        image: '/images/pets/sprite_bunny.png',
+        quote: '雪白软萌长耳兔，在小花园草坪上蹦蹦跳跳超治愈！',
+        desc: '软萌雪白的小兔子，两只长耳朵会灵动摇晃，最喜欢在小花园晒太阳。'
+      },
+      {
+        rank: 2,
+        name: '元气陪伴 · 花环灵兔',
+        stageTitle: '阶段2 · 元气陪伴',
+        reqText: 'Lv.5 解锁',
+        image: '/images/pets/sprite_bunny.png',
+        quote: '粉色小花环+小斜挎包，今天也是轻盈元气美少女！',
+        desc: '进阶为花环灵兔，头戴粉嫩花环，活泼可爱！'
+      },
+      {
+        rank: 3,
+        name: '蜕变闺蜜 · 心愿仙兔',
+        stageTitle: '阶段3 · 蜕变闺蜜',
+        reqText: 'Lv.10 解锁',
+        image: '/images/pets/sprite_bunny.png',
+        quote: '星芒灵羽+手捧热香茶，永远陪你健康轻盈！',
+        desc: '终极形态！身披柔和光芒，做你一辈子的贴心自律闺蜜！'
+      }
+    ]
+  },
   DRAGON: {
     type: 'DRAGON',
     icon: '🐉',
@@ -340,8 +382,10 @@ Page({
     },
     earnedFoodCount: 0,
 
-    candidateNames: ['木木', '小燃', '豆豆', '卡卡', '饭团', '泡泡', '嘟嘟'],
-                            types: [
+    activeNpcId: null,
+    candidateNames: ['糖糖', '木木', '小燃', '豆豆', '卡卡', '饭团', '泡泡', '嘟嘟'],
+    types: [
+      { type: 'BUNNY', icon: '🐰', eggEmoji: '🌸', name: '棉花糖兔' },
       { type: 'DRAGON', icon: '🐉', eggEmoji: '🟢', name: '木木小龙' },
       { type: 'TOTORO', icon: '🍃', eggEmoji: '⚪', name: '呼噜龙猫' },
       { type: 'CAT', icon: '🐱', eggEmoji: '🟡', name: '元气小橘' },
@@ -919,6 +963,26 @@ Page({
     }, 850);
 
     this.callAiInteraction('TOUCH', '');
+  },
+
+  onTapNpc(e) {
+    const npc = e.currentTarget.dataset.npc;
+    this.setData({ activeNpcId: npc });
+    wx.vibrateShort({ type: 'medium' });
+
+    let msg = '';
+    if (npc === 'BEAR') {
+      msg = '小熊正在沙发上专注读一本好书，沉浸在自律时光里 📖';
+    } else if (npc === 'DOG') {
+      msg = '小狗系紧了运动发带，刚跑完步元气满满，为你打气汪！🏃';
+    } else if (npc === 'CAT') {
+      msg = '小猫咪在暖烘烘的苹果绿被窝里做着香甜美梦，早睡身体棒 💤';
+    }
+
+    this.setData({ petDialogue: msg });
+    setTimeout(() => {
+      this.setData({ activeNpcId: null });
+    }, 1200);
   },
 
   onTapQuickPrompt(e) {
