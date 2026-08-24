@@ -230,7 +230,8 @@ const SCENE_LIST = [
     name: '2.5D 治愈微缩小屋',
     tag: '手绘等轴测微缩',
     icon: '🏡',
-    image: '/images/pets/scene_cozy_diorama.jpg',
+    image: '/images/pets/scene_cozy_diorama_clean.jpg',
+    nightImage: '/images/pets/scene_cozy_diorama_clean_night.jpg',
     desc: '沙发阅读角、复古木雕大床、绿意小花园与黑胶唱机，温馨满分。'
   },
   {
@@ -258,19 +259,21 @@ const ROOM_SPOTS = {
     icon: '🪴',
     bottom: '22%',
     left: '36%',
-    scale: 1.0,
+    scale: 1.05,
     tag: '日光浴',
-    quote: '在露台小草坪上晒晒太阳、闻闻小花，惬意满分！'
+    actionState: 'SUNBATHING',
+    quote: '在露台小草坪上晒晒太阳、闻闻小花，惬意满分！🌸'
   },
   SOFA: {
     id: 'SOFA',
     name: '客厅沙发',
     icon: '🛋️',
-    bottom: '40%',
+    bottom: '39%',
     left: '24%',
     scale: 0.95,
     tag: '安静阅读',
-    quote: '窝在米白软沙发里翻翻绘本，享受不被打扰的自律时光！'
+    actionState: 'READING',
+    quote: '窝在米白软沙发里翻翻绘本，享受不被打扰的自律时光！📖'
   },
   BED: {
     id: 'BED',
@@ -280,7 +283,8 @@ const ROOM_SPOTS = {
     left: '73%',
     scale: 0.96,
     tag: '安睡打卡',
-    quote: '今晚按时早睡，钻进暖烘烘的苹果绿被窝做一个香甜的好梦～'
+    actionState: 'SLEEPING',
+    quote: '今晚按时早睡，钻进暖烘烘的苹果绿被窝做一个香甜的好梦～💤'
   },
   DESK: {
     id: 'DESK',
@@ -288,9 +292,10 @@ const ROOM_SPOTS = {
     icon: '📝',
     bottom: '52%',
     left: '60%',
-    scale: 0.90,
+    scale: 0.88,
     tag: '专注打卡',
-    quote: '坐在书桌前把今天的自律小目标逐个搞定，元气满满！'
+    actionState: 'STUDYING',
+    quote: '坐在书桌前把今天的自律小目标逐个搞定，元气满满！✍️'
   },
   DRESSER: {
     id: 'DRESSER',
@@ -298,24 +303,28 @@ const ROOM_SPOTS = {
     icon: '🪞',
     bottom: '55%',
     left: '32%',
-    scale: 0.88,
+    scale: 0.86,
     tag: '身材管理',
-    quote: '对着镜子伸个懒腰，记录晨起体重，越来越自信轻盈！'
+    actionState: 'DRESSING',
+    quote: '对着镜子伸个懒腰，记录晨起体重，越来越自信轻盈！🪞'
   }
 };
 
 Page({
   data: {
-    // 🛋️ 2.5D 等轴测家具点位系统
+    // 🛋️ 2.5D 等轴测家具点位与活体动画状态
     roomSpots: Object.values(ROOM_SPOTS),
     currentSpotId: 'GARDEN',
     currentSpot: ROOM_SPOTS['GARDEN'],
     isMovingSpot: false,
+    petFacing: 'right', // 'left' | 'right'
+    petAnimState: 'SUNBATHING', // 'IDLE' | 'HOPPING' | 'READING' | 'SLEEPING' | 'STUDYING' | 'SUNBATHING' | 'JOY'
+    showDustPuff: false,
 
     // 🎨 3D 沉浸式场景切换系统
     sceneList: SCENE_LIST,
     currentSceneId: 'diorama',
-    currentSceneBg: '/images/pets/scene_cozy_diorama.jpg',
+    currentSceneBg: '/images/pets/scene_cozy_diorama_clean.jpg',
     showSceneModal: false,
 
     // ☀️ 昼夜与光照系统 ('DAY' | 'SUNSET' | 'NIGHT')
@@ -577,25 +586,44 @@ Page({
 
   onSelectRoomSpot(e) {
     const spotId = e.currentTarget.dataset.id;
-    if (spotId === this.data.currentSpotId || !ROOM_SPOTS[spotId]) return;
+    this.moveToSpot(spotId);
+  },
+
+  moveToSpot(spotId) {
+    if (spotId === this.data.currentSpotId || !ROOM_SPOTS[spotId] || this.data.isMovingSpot) return;
 
     const targetSpot = ROOM_SPOTS[spotId];
+    const currSpot = this.data.currentSpot || ROOM_SPOTS['GARDEN'];
+    
+    // 计算移动朝向
+    const currLeft = parseInt(currSpot.left) || 36;
+    const targetLeft = parseInt(targetSpot.left) || 36;
+    const facing = targetLeft >= currLeft ? 'right' : 'left';
+
     this.setData({
-      currentSpotId: spotId,
-      currentSpot: targetSpot,
-      petDialogue: targetSpot.quote,
-      isMovingSpot: true
+      isMovingSpot: true,
+      showDustPuff: true,
+      petFacing: facing,
+      petAnimState: 'HOPPING',
+      petDialogue: '一蹦一跳去' + targetSpot.name + '啦～🐾'
     });
     wx.vibrateShort({ type: 'medium' });
 
-    // 驱动 3D 宠物移动到目标家具
-    if (this.world3D) {
-      this.world3D.setPetTarget(spotId);
-    }
+    setTimeout(() => {
+      this.setData({
+        currentSpotId: spotId,
+        currentSpot: targetSpot,
+        showDustPuff: false
+      });
+    }, 150);
 
     setTimeout(() => {
-      this.setData({ isMovingSpot: false });
-    }, 600);
+      this.setData({
+        isMovingSpot: false,
+        petAnimState: targetSpot.actionState || 'IDLE',
+        petDialogue: targetSpot.quote
+      });
+    }, 650);
   },
 
   syncSpotWithHabits(tasks) {
@@ -612,12 +640,8 @@ Page({
       targetId = 'DESK'; // 白天在书桌专注
     }
 
-    if (ROOM_SPOTS[targetId]) {
-      this.setData({
-        currentSpotId: targetId,
-        currentSpot: ROOM_SPOTS[targetId],
-        petDialogue: ROOM_SPOTS[targetId].quote
-      });
+    if (ROOM_SPOTS[targetId] && targetId !== this.data.currentSpotId) {
+      this.moveToSpot(targetId);
     }
   },
 
@@ -650,14 +674,16 @@ Page({
     if (nextMode === 'SUNSET') dialogue = '晚霞染红了窗台，今天辛苦啦 🌅';
     if (nextMode === 'NIGHT') dialogue = '夜幕降临，床头暖灯已亮起，早点休息哦 🌙';
 
+    const isNight = nextMode === 'NIGHT';
+    const cleanBg = isNight 
+      ? '/images/pets/scene_cozy_diorama_clean_night.jpg' 
+      : '/images/pets/scene_cozy_diorama_clean.jpg';
+
     this.setData({
       lightingMode: nextMode,
+      currentSceneBg: this.data.currentSceneId === 'diorama' ? cleanBg : this.data.currentSceneBg,
       petDialogue: dialogue
     });
-    // 同步 3D 引擎光照
-    if (this.world3D) {
-      this.world3D.setLighting(nextMode);
-    }
     wx.vibrateShort({ type: 'light' });
     wx.showToast({ 
       title: nextMode === 'NIGHT' ? '🌙 夜晚暖光模式' : (nextMode === 'SUNSET' ? '🌅 黄金黄昏模式' : '☀️ 明媚日光模式'),

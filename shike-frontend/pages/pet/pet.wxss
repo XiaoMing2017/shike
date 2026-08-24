@@ -210,36 +210,101 @@
 .pet-25d-dynamic-anchor {
   position: absolute;
   z-index: 12;
-  transition: bottom 0.6s cubic-bezier(0.34, 1.3, 0.64, 1), left 0.6s cubic-bezier(0.34, 1.3, 0.64, 1), transform 0.6s cubic-bezier(0.34, 1.3, 0.64, 1);
+  transition: bottom 0.6s cubic-bezier(0.34, 1.3, 0.64, 1), left 0.6s cubic-bezier(0.34, 1.3, 0.64, 1);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 }
+.pet-facing-right {
+  transform: translateX(-50%) scaleX(1);
+}
+.pet-facing-left {
+  transform: translateX(-50%) scaleX(-1);
+}
+
+/* 起跳扬尘卡通微粒 */
+.dust-puff-anim {
+  position: absolute;
+  bottom: 0;
+  width: 60rpx;
+  height: 20rpx;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.9) 0%, rgba(240, 230, 210, 0.4) 60%, transparent 100%);
+  border-radius: 50%;
+  animation: dustPuff 0.4s ease-out forwards;
+}
+@keyframes dustPuff {
+  0% { transform: scale(0.3); opacity: 1; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
 .pet-hopping-move {
   animation: petParabolicHop 0.6s cubic-bezier(0.25, 1, 0.5, 1);
 }
 @keyframes petParabolicHop {
-  0% { transform: translateX(-50%) translateY(0) scale(1); }
-  35% { transform: translateX(-50%) translateY(-55rpx) scale(1.15, 0.88); }
-  70% { transform: translateX(-50%) translateY(-15rpx) scale(0.92, 1.1); }
-  100% { transform: translateX(-50%) translateY(0) scale(1); }
+  0% { transform: scaleX(var(--face, 1)) translateY(0) scaleY(0.85); }
+  25% { transform: scaleX(var(--face, 1)) translateY(-65rpx) scaleY(1.2); }
+  65% { transform: scaleX(var(--face, 1)) translateY(-15rpx) scaleY(0.9); }
+  100% { transform: scaleX(var(--face, 1)) translateY(0) scaleY(1); }
 }
-.animate-bunny-breathe {
-  animation: bunnyBreathe 2.4s ease-in-out infinite;
+
+/* 🌟 卡通状态机动画 */
+/* 1. 露台日光浴闻花 */
+.state-SUNBATHING {
+  animation: bunnySunbathing 3s ease-in-out infinite;
 }
-@keyframes bunnyBreathe {
+@keyframes bunnySunbathing {
+  0%, 100% { transform: translateY(0) scale(1, 1) rotate(0deg); }
+  35% { transform: translateY(-8rpx) scale(1.03, 0.97) rotate(-2deg); }
+  70% { transform: translateY(-4rpx) scale(0.98, 1.02) rotate(2deg); }
+}
+
+/* 2. 沙发看绘本 */
+.state-READING {
+  animation: bunnyReading 2.8s ease-in-out infinite;
+}
+@keyframes bunnyReading {
+  0%, 100% { transform: translateY(0) scale(0.98, 1.02) rotate(0deg); }
+  50% { transform: translateY(-4rpx) scale(1.02, 0.98) rotate(1deg); }
+}
+
+/* 3. 大床被窝深睡 */
+.state-SLEEPING {
+  animation: bunnySleeping 3.8s ease-in-out infinite;
+}
+@keyframes bunnySleeping {
+  0%, 100% { transform: translateY(2rpx) scale(1.02, 0.95); }
+  50% { transform: translateY(-4rpx) scale(0.98, 1.03); }
+}
+
+/* 4. 书桌专注手账 */
+.state-STUDYING {
+  animation: bunnyStudying 2.2s ease-in-out infinite;
+}
+@keyframes bunnyStudying {
+  0%, 100% { transform: translateY(0) scale(0.97, 1.02); }
+  30% { transform: translateY(-6rpx) scale(1.02, 0.98) rotate(-1deg); }
+  70% { transform: translateY(-2rpx) scale(0.99, 1.01) rotate(1deg); }
+}
+
+/* 5. 梳妆衣柜伸懒腰 */
+.state-DRESSING {
+  animation: bunnyDressing 2.6s ease-in-out infinite;
+}
+@keyframes bunnyDressing {
   0%, 100% { transform: translateY(0) scale(1, 1); }
-  50% { transform: translateY(-6rpx) scale(1.02, 0.97); }
+  50% { transform: translateY(-12rpx) scale(0.95, 1.08); }
 }
+
+/* 6. 触碰开心高跳 */
 .animate-bunny-joy {
   animation: bunnyJoyBounce 0.85s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 @keyframes bunnyJoyBounce {
   0% { transform: translateY(0) scale(1, 1); }
-  25% { transform: translateY(-40rpx) scale(0.95, 1.1); }
-  55% { transform: translateY(0) scale(1.08, 0.88); }
-  75% { transform: translateY(-16rpx) scale(0.98, 1.04); }
+  25% { transform: translateY(-50rpx) scale(0.92, 1.15) rotate(-3deg); }
+  55% { transform: translateY(0) scale(1.12, 0.85) rotate(3deg); }
+  75% { transform: translateY(-20rpx) scale(0.96, 1.06); }
   100% { transform: translateY(0) scale(1, 1); }
 }
 
@@ -256,29 +321,46 @@
 }
 @keyframes earSway {
   0%, 100% { transform: rotate(0deg); }
-  30% { transform: rotate(-3deg); }
-  70% { transform: rotate(3deg); }
+  30% { transform: rotate(-4deg); }
+  70% { transform: rotate(4deg); }
 }
 .ears-excited {
-  animation: earExcited 0.5s ease-in-out infinite alternate;
+  animation: earExcited 0.4s ease-in-out infinite alternate;
 }
 @keyframes earExcited {
-  0% { transform: scale(1.05) rotate(-6deg); }
-  100% { transform: scale(1.05) rotate(6deg); }
+  0% { transform: scale(1.1) rotate(-8deg); }
+  100% { transform: scale(1.1) rotate(8deg); }
+}
+
+/* 深度睡眠闭眼 */
+.eyes-sleeping-closed .eyelid-mask {
+  height: 100% !important;
+  opacity: 1 !important;
+  background: #334155 !important;
+  border-radius: 50% !important;
+  transform: scaleY(0.2) !important;
+}
+
+/* 阴影随起跳缩小 */
+.shadow-hop-shrink {
+  transform: scale(0.4) !important;
+  opacity: 0.1 !important;
+  transition: transform 0.2s, opacity 0.2s;
 }
 
 /* 家具专属小道具 */
 .spot-prop-item {
   position: absolute;
-  font-size: 26rpx;
   z-index: 15;
   pointer-events: none;
   animation: propFloat 2.5s ease-in-out infinite alternate;
 }
-.prop-book { top: 30%; right: -14rpx; }
-.prop-sleep-zz { top: 0; right: -10rpx; color: #6366F1; }
-.prop-desk-study { top: 20%; right: -16rpx; }
-.prop-garden-flower { top: 10%; left: -14rpx; }
+.prop-emoji { font-size: 32rpx; }
+.prop-emoji-zz { font-size: 26rpx; font-weight: 900; color: #6366F1; animation: floatZz 2s infinite; }
+.prop-book { top: 30%; right: -16rpx; }
+.prop-sleep-zz { top: -10rpx; right: -12rpx; }
+.prop-desk-study { top: 20%; right: -18rpx; }
+.prop-garden-flower { top: 10%; left: -16rpx; }
 @keyframes propFloat {
   0% { transform: translateY(0) scale(0.95); }
   100% { transform: translateY(-10rpx) scale(1.1); }

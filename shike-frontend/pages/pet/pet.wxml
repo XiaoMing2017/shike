@@ -165,46 +165,20 @@
       <!-- 🌟 2.5D 治愈等轴测微缩自律小屋核心互动舞台 -->
       <view class="virtual-3d-world">
         
-        <!-- 3D 沉浸式阳光原木自律小屋场景底图 -->
-        <image class="world-scene-bg" src="{{currentSceneBg || '/images/pets/scene_cozy_diorama.jpg'}}" mode="aspectFill" />
+        <!-- 3D 沉浸式阳光原木自律小屋场景底图 (纯净无鬼影) -->
+        <image class="world-scene-bg" src="{{currentSceneBg || '/images/pets/scene_cozy_diorama_clean.jpg'}}" mode="aspectFill" />
 
         <!-- 昼夜光影氛围滤镜层 -->
         <view class="lighting-overlay lighting-{{lightingMode}}"></view>
 
-        <!-- 🌸 全景常驻温馨萌宠小伙伴 (Roommates NPCs) -->
-        <!-- 1. 🐻 沙发看书小熊 (点击可互动) -->
-        <view class="room-npc-anchor npc-bear-sofa {{activeNpcId === 'BEAR' ? 'npc-tap-joy' : 'npc-gentle-breathe'}}"
-              catchtap="onTapNpc" data-npc="BEAR"
-              wx:if="{{currentSpotId !== 'SOFA'}}">
-          <image class="npc-sprite-img" src="/images/pets/sprite_bear.png" mode="aspectFit"></image>
-          <view class="npc-mini-shadow"></view>
-          <view class="npc-action-tag">📖 看书中</view>
-        </view>
-
-        <!-- 2. 🐶 过道慢跑柴柴 (点击可互动) -->
-        <view class="room-npc-anchor npc-dog-hallway {{activeNpcId === 'DOG' ? 'npc-tap-joy' : 'npc-jog-anim'}}"
-              catchtap="onTapNpc" data-npc="DOG"
-              wx:if="{{currentSpotId !== 'DESK' && currentSpotId !== 'DRESSER'}}">
-          <image class="npc-sprite-img" src="/images/pets/sprite_dog.png" mode="aspectFit"></image>
-          <view class="npc-mini-shadow"></view>
-          <view class="npc-action-tag">🏃 燃脂中</view>
-        </view>
-
-        <!-- 3. 🐱 大床安睡小猫 (点击可互动) -->
-        <view class="room-npc-anchor npc-cat-bed {{activeNpcId === 'CAT' ? 'npc-tap-joy' : 'npc-sleep-breathe'}}"
-              catchtap="onTapNpc" data-npc="CAT"
-              wx:if="{{currentSpotId !== 'BED'}}">
-          <image class="npc-sprite-img" src="/images/pets/sprite_cat.png" mode="aspectFit"></image>
-          <view class="npc-mini-shadow"></view>
-          <view class="floating-zz-bubble">zZ</view>
-          <view class="npc-action-tag">💤 早睡中</view>
-        </view>
-
         <!-- 🌟 主角萌宠（如🐰小白兔）在房间各个家具间平滑跳跃漫步与生活互动 -->
-        <view class="pet-25d-dynamic-anchor {{isMovingSpot ? 'pet-hopping-move' : ''}}"
-              style="bottom: {{currentSpot.bottom}}; left: {{currentSpot.left}}; transform: translateX(-50%) scale({{currentSpot.scale}});"
+        <view class="pet-25d-dynamic-anchor {{isMovingSpot ? 'pet-hopping-move' : ''}} pet-facing-{{petFacing}}"
+              style="bottom: {{currentSpot.bottom}}; left: {{currentSpot.left}};"
               catchtap="onTapPet">
           
+          <!-- 起跳/落地可爱卡通扬尘微粒 -->
+          <view class="dust-puff-anim" wx:if="{{showDustPuff}}"></view>
+
           <!-- 迸发爱心粒子 -->
           <view class="heart-burst-particle {{heartAnim ? 'animate-heart-fly' : ''}}" wx:if="{{heartAnim}}">
             <text class="burst-text">❤️</text>
@@ -220,8 +194,8 @@
             <text class="exp-text">+10 能量 ✨</text>
           </view>
 
-          <!-- 🌟 灵动活体萌宠容器 -->
-          <view class="pet-mesh-container stage-size-{{petStageRank}} {{isFeeding ? 'animate-pet-chew' : (isTouched ? 'animate-bunny-joy' : 'animate-bunny-breathe')}}">
+          <!-- 🌟 灵动活体萌宠容器 (根据状态切换卡通动作) -->
+          <view class="pet-mesh-container stage-size-{{petStageRank}} {{isFeeding ? 'animate-pet-chew' : (isTouched ? 'animate-bunny-joy' : ('state-' + petAnimState))}}">
             
             <!-- 手绘精美主体立绘 (如小白兔) -->
             <image class="pet-cutout-img" src="{{activePetImage || '/images/pets/sprite_bunny.png'}}" mode="aspectFit"></image>
@@ -230,7 +204,7 @@
             <view class="bunny-ear-twitch-layer {{isTouched ? 'ears-excited' : 'ears-sway-loop'}}"></view>
 
             <!-- 🌟 自然灵动眨眼蒙皮层 -->
-            <view class="pet-25d-eyelid-overlay {{isTouched ? 'eyes-joy-smile' : 'eyes-blink-loop'}}">
+            <view class="pet-25d-eyelid-overlay {{isTouched ? 'eyes-joy-smile' : (petAnimState === 'SLEEPING' ? 'eyes-sleeping-closed' : 'eyes-blink-loop')}}">
               <view class="eyelid-mask eye-left"></view>
               <view class="eyelid-mask eye-right"></view>
             </view>
@@ -238,18 +212,26 @@
             <!-- 🌟 脸颊粉晕微呼吸动效 -->
             <view class="pet-25d-blush-aura {{isTouched ? 'blush-excited' : ''}}"></view>
 
-            <!-- 家具点位专属道具 -->
+            <!-- 家具点位专属生活道具 -->
             <!-- 沙发：看绘本 -->
-            <view class="spot-prop-item prop-book" wx:if="{{currentSpotId === 'SOFA'}}">📖</view>
+            <view class="spot-prop-item prop-book" wx:if="{{currentSpotId === 'SOFA'}}">
+              <text class="prop-emoji">📖</text>
+            </view>
             <!-- 大床：被窝安睡气泡 -->
-            <view class="spot-prop-item prop-sleep-zz" wx:if="{{currentSpotId === 'BED'}}">💤</view>
+            <view class="spot-prop-item prop-sleep-zz" wx:if="{{currentSpotId === 'BED'}}">
+              <text class="prop-emoji-zz">zZ</text>
+            </view>
             <!-- 书桌：手账与台灯光芒 -->
-            <view class="spot-prop-item prop-desk-study" wx:if="{{currentSpotId === 'DESK'}}">✍️</view>
+            <view class="spot-prop-item prop-desk-study" wx:if="{{currentSpotId === 'DESK'}}">
+              <text class="prop-emoji">✍️</text>
+            </view>
             <!-- 花园：飘落花瓣与日光浴 -->
-            <view class="spot-prop-item prop-garden-flower" wx:if="{{currentSpotId === 'GARDEN'}}">🌸</view>
+            <view class="spot-prop-item prop-garden-flower" wx:if="{{currentSpotId === 'GARDEN'}}">
+              <text class="prop-emoji">🌸</text>
+            </view>
 
             <!-- 🌟 地面真实接触物理阴影（随呼吸与跳跃联动） -->
-            <view class="pet-floor-shadow {{isFeeding ? 'shadow-chew' : (isTouched ? 'shadow-joy' : 'shadow-25d-breath')}}"></view>
+            <view class="pet-floor-shadow {{isMovingSpot ? 'shadow-hop-shrink' : (isFeeding ? 'shadow-chew' : (isTouched ? 'shadow-joy' : 'shadow-25d-breath'))}}"></view>
           </view>
 
         </view>
