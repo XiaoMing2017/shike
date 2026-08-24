@@ -183,6 +183,14 @@ const POLAROID_QUOTES = [
 
 const SCENE_LIST = [
   {
+    id: 'diorama',
+    name: '2.5D 治愈微缩小屋',
+    tag: '手绘等轴测微缩',
+    icon: '🏡',
+    image: '/images/pets/scene_cozy_diorama.jpg',
+    desc: '沙发阅读角、复古木雕大床、绿意小花园与黑胶唱机，温馨满分。'
+  },
+  {
     id: 'island',
     name: '云端浮空仙岛',
     tag: '奇幻治愈',
@@ -201,55 +209,55 @@ const SCENE_LIST = [
 ];
 
 const ROOM_SPOTS = {
-  RUG: {
-    id: 'RUG',
-    name: '软糯地毯',
-    icon: '🧶',
+  GARDEN: {
+    id: 'GARDEN',
+    name: '露台花园',
+    icon: '🪴',
     bottom: '22%',
-    left: '50%',
+    left: '36%',
     scale: 1.0,
-    tag: '阳光小憩',
-    quote: '坐在浮空岛软乎乎的草坪上晒太阳，感觉整个人都被治愈了～'
+    tag: '日光浴',
+    quote: '在露台小草坪上晒晒太阳、闻闻小花，惬意满分！'
   },
   SOFA: {
     id: 'SOFA',
-    name: '原木小桥',
-    icon: '🌉',
-    bottom: '28%',
-    left: '68%',
+    name: '客厅沙发',
+    icon: '🛋️',
+    bottom: '40%',
+    left: '24%',
     scale: 0.95,
-    tag: '惬意漫步',
-    quote: '坐在小木桥边吹吹微风，享受不被打扰的自律时光！'
+    tag: '安静阅读',
+    quote: '窝在米白软沙发里翻翻绘本，享受不被打扰的自律时光！'
   },
-  FITNESS: {
-    id: 'FITNESS',
-    name: '石板小径',
-    icon: '🧘',
-    bottom: '18%',
-    left: '38%',
-    scale: 1.02,
-    tag: '燃脂漫步',
-    quote: '在小径上慢跑拉伸一下，多巴胺分泌满满，体态越来越轻盈！'
-  },
-  POND: {
-    id: 'POND',
-    name: '清泉瀑布',
-    icon: '🌊',
+  BED: {
+    id: 'BED',
+    name: '雕花大床',
+    icon: '🛏️',
     bottom: '36%',
-    left: '42%',
-    scale: 0.90,
-    tag: '补水解渴',
-    quote: '瀑布潺潺，清泉叮咚，今天也要喝足八杯水哦～'
-  },
-  FLOWER: {
-    id: 'FLOWER',
-    name: '盛开花丛',
-    icon: '🌸',
-    bottom: '25%',
-    left: '26%',
+    left: '73%',
     scale: 0.96,
-    tag: '驻足闻花',
-    quote: '走在花丛小道上，闻一闻粉红花朵的清香，心情大好！'
+    tag: '安睡打卡',
+    quote: '今晚按时早睡，钻进暖烘烘的苹果绿被窝做一个香甜的好梦～'
+  },
+  DESK: {
+    id: 'DESK',
+    name: '专注书桌',
+    icon: '📝',
+    bottom: '52%',
+    left: '60%',
+    scale: 0.90,
+    tag: '专注打卡',
+    quote: '坐在书桌前把今天的自律小目标逐个搞定，元气满满！'
+  },
+  DRESSER: {
+    id: 'DRESSER',
+    name: '梳妆衣柜',
+    icon: '🪞',
+    bottom: '55%',
+    left: '32%',
+    scale: 0.88,
+    tag: '身材管理',
+    quote: '对着镜子伸个懒腰，记录晨起体重，越来越自信轻盈！'
   }
 };
 
@@ -257,15 +265,22 @@ Page({
   data: {
     // 🛋️ 2.5D 等轴测家具点位系统
     roomSpots: Object.values(ROOM_SPOTS),
-    currentSpotId: 'RUG',
-    currentSpot: ROOM_SPOTS['RUG'],
+    currentSpotId: 'GARDEN',
+    currentSpot: ROOM_SPOTS['GARDEN'],
     isMovingSpot: false,
 
     // 🎨 3D 沉浸式场景切换系统
     sceneList: SCENE_LIST,
-    currentSceneId: 'island',
-    currentSceneBg: '/images/pets/scene_island_bg.jpg',
+    currentSceneId: 'diorama',
+    currentSceneBg: '/images/pets/scene_cozy_diorama.jpg',
     showSceneModal: false,
+
+    // ☀️ 昼夜与光照系统 ('DAY' | 'SUNSET' | 'NIGHT')
+    lightingMode: 'DAY',
+
+    // 🎵 黑胶唱片机控制
+    isPlayingMusic: false,
+    currentSongName: 'Flower',
 
     loading: true,
     petSystemEnabled: true,
@@ -482,14 +497,13 @@ Page({
 
 
   initSavedScene() {
-    const saved = wx.getStorageSync('shike_pet_scene') || 'island';
+    const saved = wx.getStorageSync('shike_pet_scene') || 'diorama';
     const found = SCENE_LIST.find(s => s.id === saved) || SCENE_LIST[0];
     this.setData({
       currentSceneId: found.id,
       currentSceneBg: found.image
     });
   },
-
 
   onSelectRoomSpot(e) {
     const spotId = e.currentTarget.dataset.id;
@@ -499,27 +513,28 @@ Page({
     this.setData({
       currentSpotId: spotId,
       currentSpot: targetSpot,
-      petDialogue: targetSpot.quote
+      petDialogue: targetSpot.quote,
+      isMovingSpot: true
     });
     wx.vibrateShort({ type: 'medium' });
 
-    if (this.world3D) {
-      this.world3D.navigateToSpot(spotId);
-    }
+    setTimeout(() => {
+      this.setData({ isMovingSpot: false });
+    }, 600);
   },
 
   syncSpotWithHabits(tasks) {
     const hour = new Date().getHours();
-    let targetId = 'RUG';
+    let targetId = 'GARDEN';
 
     if (hour >= 22 || hour < 7) {
-      targetId = 'SOFA'; // 夜间在沙发休憩
+      targetId = 'BED'; // 夜间在雕花大床安睡
     } else if (tasks && tasks.exercise) {
-      targetId = 'FITNESS'; // 完成运动后在瑜伽垫
+      targetId = 'GARDEN'; // 运动后在露台花园
     } else if (tasks && tasks.diet) {
-      targetId = 'DINING'; // 完成饮食记录后在轻食角
-    } else if (hour >= 7 && hour <= 10) {
-      targetId = 'WINDOW'; // 早晨在阳光窗边
+      targetId = 'SOFA'; // 饮食记录后在沙发阅读
+    } else if (hour >= 8 && hour <= 18) {
+      targetId = 'DESK'; // 白天在书桌专注
     }
 
     if (ROOM_SPOTS[targetId]) {
@@ -529,6 +544,47 @@ Page({
         petDialogue: ROOM_SPOTS[targetId].quote
       });
     }
+  },
+
+  onToggleMusicPlayer() {
+    const nextState = !this.data.isPlayingMusic;
+    this.setData({ isPlayingMusic: nextState });
+    wx.vibrateShort({ type: 'light' });
+    if (nextState) {
+      wx.showToast({ title: '🎵 正在播放:《Flower》· 治愈 Lo-Fi', icon: 'none', duration: 2000 });
+      if (!this.audioCtx) {
+        this.audioCtx = wx.createInnerAudioContext();
+        this.audioCtx.loop = true;
+        this.audioCtx.src = 'https://assets.mixkit.co/music/preview/mixkit-dreaming-big-31.mp3';
+      }
+      this.audioCtx.play();
+    } else {
+      if (this.audioCtx) {
+        this.audioCtx.pause();
+      }
+      wx.showToast({ title: '已暂停音乐 ⏸️', icon: 'none', duration: 1200 });
+    }
+  },
+
+  onToggleLightingMode() {
+    const modes = ['DAY', 'SUNSET', 'NIGHT'];
+    const currIdx = modes.indexOf(this.data.lightingMode || 'DAY');
+    const nextMode = modes[(currIdx + 1) % modes.length];
+    
+    let dialogue = '阳光正好，元气满满！☀️';
+    if (nextMode === 'SUNSET') dialogue = '晚霞染红了窗台，今天辛苦啦 🌅';
+    if (nextMode === 'NIGHT') dialogue = '夜幕降临，床头暖灯已亮起，早点休息哦 🌙';
+
+    this.setData({
+      lightingMode: nextMode,
+      petDialogue: dialogue
+    });
+    wx.vibrateShort({ type: 'light' });
+    wx.showToast({ 
+      title: nextMode === 'NIGHT' ? '🌙 夜晚暖光模式' : (nextMode === 'SUNSET' ? '🌅 黄金黄昏模式' : '☀️ 明媚日光模式'),
+      icon: 'none',
+      duration: 1800
+    });
   },
 
 

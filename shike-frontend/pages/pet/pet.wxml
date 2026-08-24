@@ -166,10 +166,13 @@
       <view class="virtual-3d-world">
         
         <!-- 3D 沉浸式阳光原木自律小屋生活场景 -->
-        <image class="world-scene-bg" src="{{currentSceneBg || '/images/pets/scene_room_bg.jpg'}}" mode="aspectFill" />
+        <image class="world-scene-bg" src="{{currentSceneBg || '/images/pets/scene_cozy_diorama.jpg'}}" mode="aspectFill" />
         
+        <!-- 昼夜光影氛围叠加层 -->
+        <view class="lighting-overlay lighting-{{lightingMode}}"></view>
+
         <!-- 环境光效与微尘粒子 -->
-        <view class="world-sun-ray"></view>
+        <view class="world-sun-ray" wx:if="{{lightingMode === 'DAY'}}"></view>
         <view class="world-sparkle sp1">✨</view>
         <view class="world-sparkle sp2">🍃</view>
         <view class="world-sparkle sp3">🌸</view>
@@ -238,6 +241,39 @@
             <view class="pet-floor-shadow {{isFeeding ? 'shadow-chew' : (isTouched ? 'shadow-joy' : 'shadow-25d-breath')}}"></view>
           </view>
 
+        </view>
+
+        <!-- ☀️ 昼夜光影与 📸 拍照快捷浮动条 -->
+        <view class="cozy-tools-dock flex align-center">
+          <view class="tool-btn-pill" bindtap="onToggleLightingMode" hover-class="btn-hover">
+            <text class="tool-icon">{{lightingMode === 'NIGHT' ? '🌙' : (lightingMode === 'SUNSET' ? '🌅' : '☀️')}}</text>
+            <text class="tool-label">{{lightingMode === 'NIGHT' ? '夜光' : (lightingMode === 'SUNSET' ? '黄昏' : '日光')}}</text>
+          </view>
+          <view class="tool-btn-pill" bindtap="onOpenPolaroidModal" hover-class="btn-hover">
+            <text class="tool-icon">📸</text>
+            <text class="tool-label">拍照</text>
+          </view>
+          <view class="tool-btn-pill" bindtap="onOpenSceneModal" hover-class="btn-hover">
+            <text class="tool-icon">🎨</text>
+            <text class="tool-label">换景</text>
+          </view>
+        </view>
+
+        <!-- 🎵 治愈黑胶唱片机组件 -->
+        <view class="cozy-vinyl-dock {{isPlayingMusic ? 'is-playing' : ''}}" bindtap="onToggleMusicPlayer">
+          <view class="vinyl-disc-wrap {{isPlayingMusic ? 'animate-vinyl-spin' : ''}}">
+            <view class="vinyl-grooves"></view>
+            <view class="vinyl-center-label">🌸</view>
+          </view>
+          <view class="vinyl-tonearm {{isPlayingMusic ? 'tonearm-on' : ''}}"></view>
+          <view class="vinyl-track-info flex align-center">
+            <text class="vinyl-track-name">{{currentSongName || 'Flower'}}</text>
+            <text class="vinyl-note-badge" wx:if="{{isPlayingMusic}}">♪</text>
+          </view>
+          <view class="floating-music-notes" wx:if="{{isPlayingMusic}}">
+            <text class="m-note n1">♪</text>
+            <text class="m-note n2">♫</text>
+          </view>
         </view>
 
         <!-- 🛋️ 房间家具点位快捷导览条 (2.5D 智能生活导览) -->
