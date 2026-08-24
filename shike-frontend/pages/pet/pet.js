@@ -1,5 +1,6 @@
 // pages/pet/pet.js
 const app = getApp();
+const { IsometricWorld, SPOTS_3D } = require('../../utils/iso-world');
 
 const TYPE_CONFIG = {
   DRAGON: {
@@ -358,7 +359,32 @@ Page({
     this.checkToggleAndLoad();
     this.updateCustomTabBar();
     this.fetchFoodTasks();
-    },
+    this._init3DWorld();
+  },
+
+  /**
+   * 初始化 3D 等轴测微缩世界
+   */
+  _init3DWorld() {
+    if (this.world3D) return; // 已初始化
+    var self = this;
+    setTimeout(function () {
+      wx.createSelectorQuery().select('#iso-world-canvas')
+        .node()
+        .exec(function (res) {
+          if (!res || !res[0] || !res[0].node) return;
+          var canvas = res[0].node;
+          self.world3D = new IsometricWorld();
+          if (self.world3D.init(canvas)) {
+            var petType = (self.data.pet && self.data.pet.petType) || self.data.selectedType || 'DRAGON';
+            self.world3D.createPet(petType);
+            // 同步当前光照模式
+            self.world3D.setLighting(self.data.lightingMode || 'DAY');
+            console.log('[3D] Isometric world initialized, pet:', petType);
+          }
+        });
+    }, 500);
+  },
 
   initPolaroidDate() {
     const d = new Date();
@@ -518,6 +544,11 @@ Page({
     });
     wx.vibrateShort({ type: 'medium' });
 
+    // 驱动 3D 宠物移动到目标家具
+    if (this.world3D) {
+      this.world3D.setPetTarget(spotId);
+    }
+
     setTimeout(() => {
       this.setData({ isMovingSpot: false });
     }, 600);
@@ -579,6 +610,10 @@ Page({
       lightingMode: nextMode,
       petDialogue: dialogue
     });
+    // 同步 3D 引擎光照
+    if (this.world3D) {
+      this.world3D.setLighting(nextMode);
+    }
     wx.vibrateShort({ type: 'light' });
     wx.showToast({ 
       title: nextMode === 'NIGHT' ? '🌙 夜晚暖光模式' : (nextMode === 'SUNSET' ? '🌅 黄金黄昏模式' : '☀️ 明媚日光模式'),
@@ -871,6 +906,11 @@ Page({
     });
     wx.vibrateShort({ type: 'medium' });
 
+    // 触发 3D 开心跳跃
+    if (this.world3D) {
+      this.world3D.triggerPetJoy();
+    }
+
     setTimeout(() => {
       this.setData({
         isTouched: false,
@@ -989,5 +1029,51 @@ Page({
   onGoWater() { wx.switchTab({ url: '/pages/index/index' }); },
   onGoWeight() { wx.switchTab({ url: '/pages/index/index' }); },
   onGoHome() { wx.switchTab({ url: '/pages/index/index' }); },
+
+  // ============ 3D Canvas 触摸视差控制 ============
+  onCanvasTouchStart(e) {
+    if (!e.touches || !e.touches[0]) return;
+    var t = e.touches[0];
+    this._touchStartX = t.clientX;
+    this._touchStartY = t.clientY;
+    this._touchMoved = false;
+    if (this.world3D) {
+      this.world3D.onTouchStart(t.clientX, t.clientY);
+    }
+  },
+
+  onCanvasTouchMove(e) {
+    if (!e.touches || !e.touches[0]) return;
+    var t = e.touches[0];
+    this._touchMoved = true;
+    if (this.world3D) {
+      this.world3D.onTouchMove(t.clientX, t.clientY);
+    }
+  },
+
+  onCanvasTouchEnd(e) {
+    if (this.world3D) {
+      this.world3D.onTouchRelease();
+    }
+    // 如果没有滑动，视为点击宠物
+    if (!this._touchMoved && this.world3D) {
+      var ct = e.changedTouches && e.changedTouches[0];
+      if (ct) {
+        var query = wx.createSelectorQuery();
+        var self = this;
+        query.select('#iso-world-canvas').boundingClientRect().exec(function (res) {
+          if (!res || !res[0]) return;
+          var rect = res[0];
+          var dpr = wx.getWindowInfo ? wx.getWindowInfo().pixelRatio : 2;
+          var tx = (ct.clientX - rect.left) * dpr;
+          var ty = (ct.clientY - rect.top) * dpr;
+          if (self.world3D.hitTestPet(tx, ty, rect.width * dpr, rect.height * dpr)) {
+            self.onTapPet();
+          }
+        });
+      }
+    }
+  },
+
   noBubble() {}
 });

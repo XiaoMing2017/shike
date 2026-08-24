@@ -148,7 +148,7 @@
     </view>
   </block>
 
-  <!-- 状态 B：已领养状态（莫兰迪 3D 浮岛主舞台） -->
+  <!-- 状态 B：已领养状态 -->
   <block wx:else>
     <view class="living-stage-wrapper">
       
@@ -162,110 +162,53 @@
         <view class="stage-rank-tag stage-rank-{{petStageRank}}">{{currentStageInfo.stageTitle}}</view>
       </view>
 
-            <!-- 🌟 3D 核心景深互动舞台 -->
-      <view class="virtual-3d-world">
+      <!-- 🌟 3D 等轴测微缩世界核心舞台 -->
+      <view class="virtual-3d-world"
+            bindtouchstart="onCanvasTouchStart"
+            bindtouchmove="onCanvasTouchMove"
+            bindtouchend="onCanvasTouchEnd">
         
-        <!-- 3D 沉浸式阳光原木自律小屋生活场景 -->
-        <image class="world-scene-bg" src="{{currentSceneBg || '/images/pets/scene_cozy_diorama.jpg'}}" mode="aspectFill" />
-        
-        <!-- 昼夜光影氛围叠加层 -->
-        <view class="lighting-overlay lighting-{{lightingMode}}"></view>
+        <!-- WebGL 3D 渲染画布 -->
+        <canvas type="webgl" id="iso-world-canvas" class="iso-canvas"></canvas>
 
-        <!-- 环境光效与微尘粒子 -->
-        <view class="world-sun-ray" wx:if="{{lightingMode === 'DAY'}}"></view>
-        <view class="world-sparkle sp1">✨</view>
-        <view class="world-sparkle sp2">🍃</view>
-        <view class="world-sparkle sp3">🌸</view>
-
-        <!-- 进阶光环粒子 -->
-        <view class="evolution-aura-ring evo-{{petStageRank}}" wx:if="{{petStageRank >= 2}}"></view>
-
-        <!-- 🌟 悬浮动态闺蜜台词气泡（带实时思考 Loading 动效） -->
+        <!-- 🌟 悬浮动态闺蜜台词气泡（覆盖在 Canvas 上层） -->
         <view class="speech-bubble-3d animate-bubble-float {{aiThinking ? 'bubble-thinking' : ''}}">
           <view class="flex align-center" wx:if="{{aiThinking}}">
             <text class="bubble-msg" style="color: #EC4899;">💭 搭子正在组织温暖的语言...</text>
           </view>
           <block wx:else>
-            <text class="bubble-msg">“{{petDialogue || pet.dialogue}}”</text>
+            <text class="bubble-msg">"{{petDialogue || pet.dialogue}}"</text>
           </block>
           <view class="bubble-arrow"></view>
         </view>
 
-        <!-- 🛋️ 2.5D 等轴测动态家具生活点位舞台 -->
-        <view class="pet-25d-dynamic-anchor {{isMovingSpot ? 'pet-hopping-move' : ''}}"
-              style="bottom: {{currentSpot.bottom}}; left: {{currentSpot.left}}; transform: translateX(-50%) scale({{currentSpot.scale}});"
-              bindtap="onTapPet">
-          
-          <!-- 迸发爱心粒子 -->
-          <view class="heart-burst-particle {{heartAnim ? 'animate-heart-fly' : ''}}" wx:if="{{heartAnim}}">
-            <text class="burst-text">❤️</text>
-          </view>
+        <!-- 迸发爱心粒子 (覆盖层) -->
+        <view class="heart-burst-overlay {{heartAnim ? 'animate-heart-fly' : ''}}" wx:if="{{heartAnim}}">
+          <text class="burst-text">❤️</text>
+        </view>
 
-          <!-- 飞行动画食物 (投喂抛物线) -->
-          <view class="flying-food-projectile {{isFeeding ? 'animate-food-parabola' : ''}}" wx:if="{{isFeeding}}">
-            <text class="food-emoji">{{foodIcon}}</text>
-          </view>
-
-          <!-- 浮动 EXP 飘字 -->
-          <view class="floating-exp-gain {{isFeeding ? 'animate-exp-up' : ''}}" wx:if="{{isFeeding}}">
-            <text class="exp-text">+10 能量 ✨</text>
-          </view>
-
-          <!-- 🌟 2.5D 活体骨骼与多层微动系统 -->
-          <view class="pet-mesh-container stage-size-{{petStageRank}} {{isFeeding ? 'animate-pet-chew' : (isTouched ? 'animate-25d-joy' : 'animate-25d-breath')}}">
-            
-            <!-- 2.5D 手绘主体立绘 -->
-            <image class="pet-cutout-img" src="{{activePetImage}}" mode="aspectFit"></image>
-
-            <!-- 🌟 2.5D 灵动自然眨眼蒙皮层 -->
-            <view class="pet-25d-eyelid-overlay {{isTouched ? 'eyes-joy-smile' : 'eyes-blink-loop'}}">
-              <view class="eyelid-mask eye-left"></view>
-              <view class="eyelid-mask eye-right"></view>
-            </view>
-
-            <!-- 🌟 2.5D 脸颊粉晕微呼吸动效 -->
-            <view class="pet-25d-blush-aura {{isTouched ? 'blush-excited' : ''}}"></view>
-
-            <!-- 🌟 2.5D 高阶配件微动粒子 (热气升腾 / 樱花星芒) -->
-            <view class="pet-25d-acc-fx" wx:if="{{petStageRank >= 2}}">
-              <view class="acc-sparkle-dot s1">✦</view>
-              <view class="acc-sparkle-dot s2">✦</view>
-              <!-- 阶段3 暖茶气雾升腾 -->
-              <view class="steam-flow-wrap" wx:if="{{petStageRank >= 3}}">
-                <view class="steam-line st1"></view>
-                <view class="steam-line st2"></view>
-              </view>
-            </view>
-
-            <!-- 🌟 2.5D 地面真实接触物理阴影（随呼吸与弹跳精准物理联动） -->
-            <view class="pet-floor-shadow {{isFeeding ? 'shadow-chew' : (isTouched ? 'shadow-joy' : 'shadow-25d-breath')}}"></view>
-          </view>
-
+        <!-- 浮动 EXP 飘字 (覆盖层) -->
+        <view class="floating-exp-overlay {{isFeeding ? 'animate-exp-up' : ''}}" wx:if="{{isFeeding}}">
+          <text class="exp-text">+10 能量 ✨</text>
         </view>
 
         <!-- ☀️ 昼夜光影与 📸 拍照快捷浮动条 -->
         <view class="cozy-tools-dock flex align-center">
-          <view class="tool-btn-pill" bindtap="onToggleLightingMode" hover-class="btn-hover">
+          <view class="tool-btn-pill" catchtap="onToggleLightingMode" hover-class="btn-hover">
             <text class="tool-icon">{{lightingMode === 'NIGHT' ? '🌙' : (lightingMode === 'SUNSET' ? '🌅' : '☀️')}}</text>
             <text class="tool-label">{{lightingMode === 'NIGHT' ? '夜光' : (lightingMode === 'SUNSET' ? '黄昏' : '日光')}}</text>
           </view>
-          <view class="tool-btn-pill" bindtap="onOpenPolaroidModal" hover-class="btn-hover">
+          <view class="tool-btn-pill" catchtap="onOpenPolaroidModal" hover-class="btn-hover">
             <text class="tool-icon">📸</text>
             <text class="tool-label">拍照</text>
-          </view>
-          <view class="tool-btn-pill" bindtap="onOpenSceneModal" hover-class="btn-hover">
-            <text class="tool-icon">🎨</text>
-            <text class="tool-label">换景</text>
           </view>
         </view>
 
         <!-- 🎵 治愈黑胶唱片机组件 -->
-        <view class="cozy-vinyl-dock {{isPlayingMusic ? 'is-playing' : ''}}" bindtap="onToggleMusicPlayer">
+        <view class="cozy-vinyl-dock {{isPlayingMusic ? 'is-playing' : ''}}" catchtap="onToggleMusicPlayer">
           <view class="vinyl-disc-wrap {{isPlayingMusic ? 'animate-vinyl-spin' : ''}}">
-            <view class="vinyl-grooves"></view>
             <view class="vinyl-center-label">🌸</view>
           </view>
-          <view class="vinyl-tonearm {{isPlayingMusic ? 'tonearm-on' : ''}}"></view>
           <view class="vinyl-track-info flex align-center">
             <text class="vinyl-track-name">{{currentSongName || 'Flower'}}</text>
             <text class="vinyl-note-badge" wx:if="{{isPlayingMusic}}">♪</text>
@@ -276,11 +219,11 @@
           </view>
         </view>
 
-        <!-- 🛋️ 房间家具点位快捷导览条 (2.5D 智能生活导览) -->
+        <!-- 🛋️ 房间家具点位快捷导览条 -->
         <view class="room-spot-dock-bar flex align-center justify-center">
           <view wx:for="{{roomSpots}}" wx:key="id" 
                 class="spot-dock-item {{currentSpotId === item.id ? 'active' : ''}}"
-                bindtap="onSelectRoomSpot" data-id="{{item.id}}">
+                catchtap="onSelectRoomSpot" data-id="{{item.id}}">
             <text class="dock-icon">{{item.icon}}</text>
             <text class="dock-name">{{item.name}}</text>
           </view>
@@ -300,7 +243,7 @@
 
         <!-- 互动指引 -->
         <view class="touch-hint-label">
-          <text>👆 轻触抚摸它，它会结合你今日真实自律数据温暖回应</text>
+          <text>👆 滑动旋转视角 · 点击宠物互动</text>
         </view>
 
       </view>

@@ -93,17 +93,40 @@
   white-space: nowrap;
 }
 
-/* ================= 3D 核心互动舞台 ================= */
+/* ================= 3D 等轴测微缩世界核心舞台 ================= */
 .virtual-3d-world {
   position: relative;
   width: 100%;
-  height: 600rpx;
-  background: radial-gradient(circle at 50% 30%, #FFF1F2 0%, #F0FDF4 55%, #FDFBF7 100%);
+  height: 750rpx;
+  background: #F5F7F6;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  border-radius: 0 0 24rpx 24rpx;
+}
+
+.iso-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* 覆盖层 UI 通用定位 */
+.heart-burst-overlay {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  z-index: 15;
+  pointer-events: none;
+}
+
+.floating-exp-overlay {
+  position: absolute;
+  top: 25%;
+  left: 50%;
+  z-index: 15;
+  pointer-events: none;
 }
 
 .world-sun-ray {
@@ -1645,32 +1668,8 @@
   color: #047857;
 }
 
-.virtual-3d-world {
-  height: 520rpx !important;
-}
 
-/* ================= 🌟 WebGL 3D 浮空岛微缩世界 Canvas 容器 ================= */
-/* ================= 🌟 2.5D 微缩自律小屋昼夜滤镜、工具栏与黑胶唱片机 ================= */
-.lighting-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  transition: background 0.6s ease;
-  z-index: 5;
-}
-.lighting-overlay.lighting-DAY {
-  background: rgba(255, 247, 237, 0.02);
-}
-.lighting-overlay.lighting-SUNSET {
-  background: linear-gradient(135deg, rgba(251, 146, 60, 0.22) 0%, rgba(244, 114, 182, 0.24) 100%);
-  mix-blend-mode: multiply;
-}
-.lighting-overlay.lighting-NIGHT {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.45) 0%, rgba(30, 41, 59, 0.52) 100%);
-}
+/* ================= 🌟 3D Canvas 覆盖层工具栏与黑胶唱片机 ================= */
 
 /* ☀️ 昼夜与 📸 拍照快捷浮动条 */
 .cozy-tools-dock {
