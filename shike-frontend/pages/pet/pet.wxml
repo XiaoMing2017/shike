@@ -176,6 +176,11 @@
               style="bottom: {{currentSpot.bottom}}; left: {{currentSpot.left}};"
               catchtap="onTapPet">
           
+          <!-- 🌟 Pocket Love 风格头顶生动自律生活胶囊 -->
+          <view class="pocket-emote-pill {{isTouched ? 'pill-bounce-joy' : 'pill-float-gentle'}}" wx:if="{{!isMovingSpot}}">
+            <text class="emote-text">{{currentSpot.emoteBadge || '🌸 悠闲自律中'}}</text>
+          </view>
+
           <!-- 起跳/落地可爱卡通扬尘微粒 -->
           <view class="dust-puff-anim" wx:if="{{showDustPuff}}"></view>
 
@@ -194,8 +199,8 @@
             <text class="exp-text">+10 能量 ✨</text>
           </view>
 
-          <!-- 🌟 灵动活体萌宠容器 (根据状态切换卡通动作) -->
-          <view class="pet-mesh-container stage-size-{{petStageRank}} {{isFeeding ? 'animate-pet-chew' : (isTouched ? 'animate-bunny-joy' : ('state-' + petAnimState))}}">
+          <!-- 🌟 灵动活体萌宠容器 (根据自律打卡状态触发专属动作) -->
+          <view class="pet-mesh-container stage-size-{{petStageRank}} {{isFeeding ? 'animate-pet-chew' : (isTouched ? 'animate-bunny-joy' : ('state-' + (petAnimState || currentSpot.actionState || 'IDLE')))}}">
             
             <!-- 手绘精美主体立绘 (如小白兔) -->
             <image class="pet-cutout-img" src="{{activePetImage || '/images/pets/sprite_bunny.png'}}" mode="aspectFit"></image>
@@ -204,7 +209,7 @@
             <view class="bunny-ear-twitch-layer {{isTouched ? 'ears-excited' : 'ears-sway-loop'}}"></view>
 
             <!-- 🌟 自然灵动眨眼蒙皮层 -->
-            <view class="pet-25d-eyelid-overlay {{isTouched ? 'eyes-joy-smile' : (petAnimState === 'SLEEPING' ? 'eyes-sleeping-closed' : 'eyes-blink-loop')}}">
+            <view class="pet-25d-eyelid-overlay {{isTouched ? 'eyes-joy-smile' : (petAnimState === 'DEEP_SLEEP' || currentSpotId === 'BED' ? 'eyes-sleeping-closed' : 'eyes-blink-loop')}}">
               <view class="eyelid-mask eye-left"></view>
               <view class="eyelid-mask eye-right"></view>
             </view>
@@ -212,22 +217,36 @@
             <!-- 🌟 脸颊粉晕微呼吸动效 -->
             <view class="pet-25d-blush-aura {{isTouched ? 'blush-excited' : ''}}"></view>
 
-            <!-- 家具点位专属生活道具 -->
-            <!-- 沙发：看绘本 -->
-            <view class="spot-prop-item prop-book" wx:if="{{currentSpotId === 'SOFA'}}">
-              <text class="prop-emoji">📖</text>
+            <!-- 🌟 6 大家具打卡专属动态生活道具 -->
+            <!-- 1. 露台小花园：跳绳燃脂与飞旋小彩绳 -->
+            <view class="spot-prop-item prop-rope-jump" wx:if="{{currentSpotId === 'GARDEN'}}">
+              <view class="jump-rope-arc"></view>
+              <text class="prop-emoji">🔥</text>
             </view>
-            <!-- 大床：被窝安睡气泡 -->
+            
+            <!-- 2. 客厅沙发：享用减脂轻食沙拉与木勺 -->
+            <view class="spot-prop-item prop-salad-bowl" wx:if="{{currentSpotId === 'SOFA'}}">
+              <text class="prop-emoji">🥗</text>
+            </view>
+            
+            <!-- 3. 水吧补水角：咕嘟喝温水杯与水润微光 -->
+            <view class="spot-prop-item prop-water-cup" wx:if="{{currentSpotId === 'WATER_BAR'}}">
+              <text class="prop-emoji">💧</text>
+            </view>
+
+            <!-- 4. 雕花暖床：被窝安睡浮动 zZ 气泡 -->
             <view class="spot-prop-item prop-sleep-zz" wx:if="{{currentSpotId === 'BED'}}">
               <text class="prop-emoji-zz">zZ</text>
             </view>
-            <!-- 书桌：手账与台灯光芒 -->
+
+            <!-- 5. 专注书桌：整理手账日历与小铅笔 -->
             <view class="spot-prop-item prop-desk-study" wx:if="{{currentSpotId === 'DESK'}}">
               <text class="prop-emoji">✍️</text>
             </view>
-            <!-- 花园：飘落花瓣与日光浴 -->
-            <view class="spot-prop-item prop-garden-flower" wx:if="{{currentSpotId === 'GARDEN'}}">
-              <text class="prop-emoji">🌸</text>
+
+            <!-- 6. 梳妆穿衣镜：身材管理量腰围与自信光芒 -->
+            <view class="spot-prop-item prop-mirror-shine" wx:if="{{currentSpotId === 'DRESSER'}}">
+              <text class="prop-emoji">🪞</text>
             </view>
 
             <!-- 🌟 地面真实接触物理阴影（随呼吸与跳跃联动） -->

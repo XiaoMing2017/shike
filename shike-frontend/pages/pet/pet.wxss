@@ -248,36 +248,83 @@
   100% { transform: scaleX(var(--face, 1)) translateY(0) scaleY(1); }
 }
 
-/* 🌟 卡通状态机动画 */
-/* 1. 露台日光浴闻花 */
-.state-SUNBATHING {
-  animation: bunnySunbathing 3s ease-in-out infinite;
+/* 🌟 Pocket Love 风格头顶生活状态胶囊 */
+.pocket-emote-pill {
+  position: absolute;
+  top: -42rpx;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border: 2rpx solid #FBCFE8;
+  border-radius: 30rpx;
+  padding: 4rpx 16rpx;
+  box-shadow: 0 4rpx 16rpx rgba(244, 114, 182, 0.25);
+  z-index: 25;
+  white-space: nowrap;
+  pointer-events: none;
 }
-@keyframes bunnySunbathing {
-  0%, 100% { transform: translateY(0) scale(1, 1) rotate(0deg); }
-  35% { transform: translateY(-8rpx) scale(1.03, 0.97) rotate(-2deg); }
-  70% { transform: translateY(-4rpx) scale(0.98, 1.02) rotate(2deg); }
+.pocket-emote-pill .emote-text {
+  font-size: 20rpx;
+  font-weight: 900;
+  color: #BE185D;
+}
+.pill-float-gentle {
+  animation: emotePillFloat 2.6s ease-in-out infinite;
+}
+@keyframes emotePillFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6rpx); }
+}
+.pill-bounce-joy {
+  animation: emotePillBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes emotePillBounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.18) translateY(-10rpx); }
+  100% { transform: scale(1); }
 }
 
-/* 2. 沙发看绘本 */
-.state-READING {
-  animation: bunnyReading 2.8s ease-in-out infinite;
+/* 🌟 Pocket Love 风格 6 大自律生活动作状态机 */
+/* 1. 🏃 露台跳绳燃脂 (EXERCISING) */
+.state-EXERCISING {
+  animation: bunnyJumpRope 0.75s ease-in-out infinite;
 }
-@keyframes bunnyReading {
-  0%, 100% { transform: translateY(0) scale(0.98, 1.02) rotate(0deg); }
-  50% { transform: translateY(-4rpx) scale(1.02, 0.98) rotate(1deg); }
-}
-
-/* 3. 大床被窝深睡 */
-.state-SLEEPING {
-  animation: bunnySleeping 3.8s ease-in-out infinite;
-}
-@keyframes bunnySleeping {
-  0%, 100% { transform: translateY(2rpx) scale(1.02, 0.95); }
-  50% { transform: translateY(-4rpx) scale(0.98, 1.03); }
+@keyframes bunnyJumpRope {
+  0%, 100% { transform: translateY(0) scale(1, 0.96); }
+  40% { transform: translateY(-26rpx) scale(0.95, 1.08); }
+  80% { transform: translateY(0) scale(1.05, 0.92); }
 }
 
-/* 4. 书桌专注手账 */
+/* 2. 🥗 客厅沙发享用轻食 (EATING_MEAL) */
+.state-EATING_MEAL {
+  animation: bunnyMunchSalad 1.8s ease-in-out infinite;
+}
+@keyframes bunnyMunchSalad {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  25% { transform: translateY(-4rpx) scale(1.03, 0.97) rotate(-1deg); }
+  50% { transform: translateY(0) scale(0.98, 1.02); }
+  75% { transform: translateY(-4rpx) scale(1.02, 0.98) rotate(1deg); }
+}
+
+/* 3. 💧 水吧健康补水 (DRINKING_WATER) */
+.state-DRINKING_WATER {
+  animation: bunnyDrinkWater 2s ease-in-out infinite;
+}
+@keyframes bunnyDrinkWater {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  35% { transform: translateY(-6rpx) scale(1.04, 0.96) rotate(-2deg); }
+  70% { transform: translateY(-2rpx) scale(0.98, 1.02) rotate(1deg); }
+}
+
+/* 4. 🌙 雕花暖床深度安睡 (DEEP_SLEEP) */
+.state-DEEP_SLEEP {
+  animation: bunnyDeepSleep 3.6s ease-in-out infinite;
+}
+@keyframes bunnyDeepSleep {
+  0%, 100% { transform: translateY(2rpx) scale(1.03, 0.94); }
+  50% { transform: translateY(-4rpx) scale(0.97, 1.04); }
+}
+
+/* 5. ✍️ 书桌整理自律手账 (STUDYING) */
 .state-STUDYING {
   animation: bunnyStudying 2.2s ease-in-out infinite;
 }
@@ -287,16 +334,17 @@
   70% { transform: translateY(-2rpx) scale(0.99, 1.01) rotate(1deg); }
 }
 
-/* 5. 梳妆衣柜伸懒腰 */
-.state-DRESSING {
-  animation: bunnyDressing 2.6s ease-in-out infinite;
+/* 6. 🪞 梳妆穿衣镜身材管理 (CHECKING_MIRROR) */
+.state-CHECKING_MIRROR {
+  animation: bunnyMirrorCheck 2.8s ease-in-out infinite;
 }
-@keyframes bunnyDressing {
+@keyframes bunnyMirrorCheck {
   0%, 100% { transform: translateY(0) scale(1, 1); }
-  50% { transform: translateY(-12rpx) scale(0.95, 1.08); }
+  30% { transform: translateY(-8rpx) scale(0.96, 1.06) rotate(-2deg); }
+  60% { transform: translateY(-4rpx) scale(1.02, 0.98) rotate(2deg); }
 }
 
-/* 6. 触碰开心高跳 */
+/* 7. 触碰开心高跳 */
 .animate-bunny-joy {
   animation: bunnyJoyBounce 0.85s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -348,22 +396,83 @@
   transition: transform 0.2s, opacity 0.2s;
 }
 
-/* 家具专属小道具 */
+/* 🌟 6 大家具打卡专属动态生活道具样式 */
 .spot-prop-item {
   position: absolute;
   z-index: 15;
   pointer-events: none;
-  animation: propFloat 2.5s ease-in-out infinite alternate;
 }
-.prop-emoji { font-size: 32rpx; }
+.prop-emoji { font-size: 34rpx; }
 .prop-emoji-zz { font-size: 26rpx; font-weight: 900; color: #6366F1; animation: floatZz 2s infinite; }
-.prop-book { top: 30%; right: -16rpx; }
-.prop-sleep-zz { top: -10rpx; right: -12rpx; }
-.prop-desk-study { top: 20%; right: -18rpx; }
-.prop-garden-flower { top: 10%; left: -16rpx; }
-@keyframes propFloat {
-  0% { transform: translateY(0) scale(0.95); }
-  100% { transform: translateY(-10rpx) scale(1.1); }
+
+/* 跳绳光弧 */
+.prop-rope-jump {
+  bottom: -6rpx;
+  right: -16rpx;
+  animation: ropeArcSpin 0.75s ease-in-out infinite;
+}
+.jump-rope-arc {
+  width: 90rpx;
+  height: 60rpx;
+  border-bottom: 4rpx dashed #F43F5E;
+  border-radius: 50%;
+  position: absolute;
+  bottom: 0;
+  left: -20rpx;
+}
+@keyframes ropeArcSpin {
+  0%, 100% { transform: scaleY(0.4) translateY(0); }
+  50% { transform: scaleY(1.2) translateY(-14rpx); }
+}
+
+/* 沙拉碗 */
+.prop-salad-bowl {
+  top: 30%;
+  right: -16rpx;
+  animation: saladMunchFloat 1.8s ease-in-out infinite;
+}
+@keyframes saladMunchFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-6rpx) scale(1.08); }
+}
+
+/* 水杯 */
+.prop-water-cup {
+  top: 25%;
+  right: -14rpx;
+  animation: waterCupGlow 2s ease-in-out infinite;
+}
+@keyframes waterCupGlow {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4rpx #38BDF8); }
+  50% { transform: scale(1.12) translateY(-4rpx); filter: drop-shadow(0 0 10rpx #38BDF8); }
+}
+
+/* 暖床 zZ */
+.prop-sleep-zz {
+  top: -14rpx;
+  right: -10rpx;
+}
+
+/* 书桌手账 */
+.prop-desk-study {
+  top: 20%;
+  right: -18rpx;
+  animation: deskPencilWrite 1.5s ease-in-out infinite alternate;
+}
+@keyframes deskPencilWrite {
+  0% { transform: rotate(-5deg) translateY(0); }
+  100% { transform: rotate(10deg) translateY(-4rpx); }
+}
+
+/* 穿衣镜身材光芒 */
+.prop-mirror-shine {
+  top: 15%;
+  left: -16rpx;
+  animation: mirrorSparkle 2s ease-in-out infinite alternate;
+}
+@keyframes mirrorSparkle {
+  0% { transform: scale(0.9) rotate(-4deg); }
+  100% { transform: scale(1.15) rotate(4deg); filter: drop-shadow(0 0 8rpx #F472B6); }
 }
 
 .world-sun-ray {

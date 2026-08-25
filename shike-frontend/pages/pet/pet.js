@@ -255,58 +255,81 @@ const SCENE_LIST = [
 const ROOM_SPOTS = {
   GARDEN: {
     id: 'GARDEN',
-    name: '露台花园',
+    name: '露台小花园',
     icon: '🪴',
     bottom: '22%',
     left: '36%',
     scale: 1.05,
-    tag: '日光浴',
-    actionState: 'SUNBATHING',
-    quote: '在露台小草坪上晒晒太阳、闻闻小花，惬意满分！🌸'
+    tag: '跳绳燃脂',
+    habitType: 'EXERCISE',
+    actionState: 'EXERCISING',
+    emoteBadge: '🔥 露台跳绳中',
+    quote: '刚陪你做完燃脂运动，露台跳绳出出汗太爽啦！身体超轻盈！🏃‍♀️🔥'
   },
   SOFA: {
     id: 'SOFA',
-    name: '客厅沙发',
+    name: '客厅软沙发',
     icon: '🛋️',
     bottom: '39%',
     left: '24%',
     scale: 0.95,
-    tag: '安静阅读',
-    actionState: 'READING',
-    quote: '窝在米白软沙发里翻翻绘本，享受不被打扰的自律时光！📖'
+    tag: '享用轻食',
+    habitType: 'DIET',
+    actionState: 'EATING_MEAL',
+    emoteBadge: '🥗 享用轻食中',
+    quote: '健康减脂餐好好吃！按时吃饭才是维持好体态的秘诀呢～🥗✨'
+  },
+  WATER_BAR: {
+    id: 'WATER_BAR',
+    name: '水吧补水角',
+    icon: '💧',
+    bottom: '46%',
+    left: '44%',
+    scale: 0.90,
+    tag: '咕嘟喝水',
+    habitType: 'WATER',
+    actionState: 'DRINKING_WATER',
+    emoteBadge: '💧 健康补水中',
+    quote: '喝足 8 大杯温水，皮肤水嫩嫩，代谢加速全靠它啦！💧🌸'
   },
   BED: {
     id: 'BED',
-    name: '雕花大床',
+    name: '雕花暖被窝',
     icon: '🛏️',
     bottom: '36%',
     left: '73%',
     scale: 0.96,
-    tag: '安睡打卡',
-    actionState: 'SLEEPING',
-    quote: '今晚按时早睡，钻进暖烘烘的苹果绿被窝做一个香甜的好梦～💤'
+    tag: '早睡安眠',
+    habitType: 'SLEEP',
+    actionState: 'DEEP_SLEEP',
+    emoteBadge: '🌙 甜美安睡中',
+    quote: '晚安宝宝，美容觉时间到，今晚也要做个甜甜的好梦 🌙💤'
   },
   DESK: {
     id: 'DESK',
-    name: '专注书桌',
+    name: '专注学习书桌',
     icon: '📝',
     bottom: '52%',
     left: '60%',
     scale: 0.88,
-    tag: '专注打卡',
+    tag: '手账打卡',
+    habitType: 'CHECKIN',
     actionState: 'STUDYING',
-    quote: '坐在书桌前把今天的自律小目标逐个搞定，元气满满！✍️'
+    emoteBadge: '✍️ 专注打卡中',
+    quote: '坐在书桌前整理手账，今天的小目标逐个搞定超有成就感！✍️✨'
   },
   DRESSER: {
     id: 'DRESSER',
-    name: '梳妆衣柜',
+    name: '梳妆穿衣镜',
     icon: '🪞',
     bottom: '55%',
     left: '32%',
     scale: 0.86,
     tag: '身材管理',
-    actionState: 'DRESSING',
-    quote: '对着镜子伸个懒腰，记录晨起体重，越来越自信轻盈！🪞'
+    habitType: 'WEIGHT',
+    actionState: 'CHECKING_MIRROR',
+    emoteBadge: '🪞 体态管理中',
+    quote: '对着大穿衣镜伸个懒腰，晨起记录体重，腰线越来越美啦！🪞💖'
   }
 };
 
@@ -628,16 +651,20 @@ Page({
 
   syncSpotWithHabits(tasks) {
     const hour = new Date().getHours();
-    let targetId = 'GARDEN';
+    let targetId = 'DESK'; // 默认在书桌整理手账
 
     if (hour >= 22 || hour < 7) {
-      targetId = 'BED'; // 夜间在雕花大床安睡
+      targetId = 'BED'; // 🌙 夜间自动钻进暖被窝早睡
     } else if (tasks && tasks.exercise) {
-      targetId = 'GARDEN'; // 运动后在露台花园
+      targetId = 'GARDEN'; // 🏃 运动锻炼打卡 ➔ 露台跳绳燃脂
     } else if (tasks && tasks.diet) {
-      targetId = 'SOFA'; // 饮食记录后在沙发阅读
+      targetId = 'SOFA'; // 🥗 记餐打卡 ➔ 客厅沙发享用轻食
+    } else if (tasks && tasks.water) {
+      targetId = 'WATER_BAR'; // 💧 喝水打卡 ➔ 水吧咕嘟补水
+    } else if (tasks && tasks.weight) {
+      targetId = 'DRESSER'; // 🪞 体重打卡 ➔ 梳妆穿衣镜前记录体态
     } else if (hour >= 8 && hour <= 18) {
-      targetId = 'DESK'; // 白天在书桌专注
+      targetId = 'DESK'; // 📝 白天专注打卡
     }
 
     if (ROOM_SPOTS[targetId] && targetId !== this.data.currentSpotId) {
