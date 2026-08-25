@@ -780,12 +780,6 @@ Page({
     });
   },
 
-  onGoToPet() {
-    wx.switchTab({
-      url: '/pages/pet/pet'
-    });
-  },
-
   onGoToHomePlan() {
     wx.switchTab({
       url: '/pages/index/index',

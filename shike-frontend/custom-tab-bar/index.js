@@ -9,13 +9,6 @@ const ALL_TABS = [
     selectedIconPath: "/images/home_active.png"
   },
   {
-    key: "pet_system",
-    pagePath: "pages/pet/pet",
-    text: "自律搭子",
-    iconPath: "/images/pet.png",
-    selectedIconPath: "/images/pet_active.png"
-  },
-  {
     pagePath: "pages/team/team",
     text: "减脂对赌",
     iconPath: "/images/team.png",
@@ -38,20 +31,10 @@ Component({
   },
 
   methods: {
-    updateTabs(currentRoute, features) {
-      const feat = features || (app && app.globalData && app.globalData.features) || {};
-      const isPetEnabled = feat.pet_system !== false;
-
-      const filteredList = ALL_TABS.filter(tab => {
-        if (tab.key === 'pet_system' && !isPetEnabled) {
-          return false;
-        }
-        return true;
-      });
-
+    updateTabs(currentRoute) {
       this.setData({
         selectedPath: currentRoute || "pages/index/index",
-        list: filteredList
+        list: ALL_TABS
       });
     },
 

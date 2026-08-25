@@ -1,8 +1,0 @@
-{
-  "usingComponents": {},
-  "navigationBarTitleText": "我的自律搭子",
-  "navigationBarBackgroundColor": "#F8FAFC",
-  "navigationBarTextStyle": "black",
-  "backgroundColor": "#F8FAFC",
-  "enablePullDownRefresh": true
-}

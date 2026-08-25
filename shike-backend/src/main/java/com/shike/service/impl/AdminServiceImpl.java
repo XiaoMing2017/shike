@@ -648,7 +648,6 @@ public class AdminServiceImpl implements AdminService {
             initSingleToggle("water_log", "饮水追踪与记录", "健康追踪", "PROD_AND_TEST", true, "每日饮水量实时目标进度追踪");
             initSingleToggle("week_dashboard", "周看板视图与对比", "看板与分析", "PROD_AND_TEST", true, "支持切换到近7天热量/三大营养素趋势与周看板");
             initSingleToggle("month_dashboard", "月看板视图与趋势", "看板与分析", "PROD_AND_TEST", true, "支持切换到月度热量赤字、4周趋势对比与月看板");
-            initSingleToggle("pet_system", "自律搭子宠物养成", "互动与养成", "TEST_ONLY", true, "运动打卡投喂自律搭子，宠物陪伴健康减脂");
             
             // 清理 Redis 缓存，防止旧乱码缓存驻留
             if (stringRedisTemplate != null) {

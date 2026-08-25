@@ -23,9 +23,6 @@ public class ExerciseServiceImpl implements ExerciseService {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private com.shike.repository.PetRepository petRepository;
-
     @Override
     @Transactional(readOnly = true)
     public List<ExerciseRecord> getDailyRecords(Long userId, LocalDate date) {
@@ -70,24 +67,7 @@ public class ExerciseServiceImpl implements ExerciseService {
                 .caloriesBurned(finalCalories)
                 .build();
 
-        ExerciseRecord savedRecord = exerciseRecordRepository.save(record);
-
-        // 联动自律搭子宠物系统：发放每日运动食物奖励
-        try {
-            petRepository.findByUserId(userId).ifPresent(pet -> {
-                LocalDate recordDate = date != null ? date : LocalDate.now();
-                if (pet.getLastExerciseDate() == null || !pet.getLastExerciseDate().equals(recordDate)) {
-                    pet.setFoodCount((pet.getFoodCount() != null ? pet.getFoodCount() : 0) + 1);
-                    pet.setLastExerciseDate(recordDate);
-                    petRepository.save(pet);
-                    log.info("Exercise added: awarded 1 pet food to userId={}", userId);
-                }
-            });
-        } catch (Exception e) {
-            log.warn("Failed to award pet food for exercise: {}", e.getMessage());
-        }
-
-        return savedRecord;
+        return exerciseRecordRepository.save(record);
     }
 
     @Override

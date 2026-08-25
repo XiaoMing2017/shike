@@ -1,7 +1,6 @@
 {
   "pages": [
     "pages/index/index",
-    "pages/pet/pet",
     "pages/team/team",
     "pages/profile/profile",
     "pages/history/history"
@@ -25,12 +24,6 @@
         "text": "首页看板",
         "iconPath": "images/home.png",
         "selectedIconPath": "images/home_active.png"
-      },
-      {
-        "pagePath": "pages/pet/pet",
-        "text": "自律搭子",
-        "iconPath": "images/pet.png",
-        "selectedIconPath": "images/pet_active.png"
       },
       {
         "pagePath": "pages/team/team",

@@ -47,7 +47,6 @@ public class DietServiceImpl implements DietService {
     private final UserRepository userRepository;
     private final PointsRecordRepository pointsRecordRepository;
     private final com.shike.repository.WeightRecordRepository weightRecordRepository;
-    private final com.shike.service.PetService petService;
     private final ObjectMapper objectMapper;
     private final StringRedisTemplate stringRedisTemplate;
     private final com.shike.service.AdminService adminService;
@@ -1533,13 +1532,6 @@ public class DietServiceImpl implements DietService {
                         .build());
         record.setWeight(weight);
         weightRecordRepository.save(record);
-        try {
-            if (petService != null) {
-                petService.awardPetFood(userId, "WEIGHT", date != null ? date : LocalDate.now());
-            }
-        } catch (Exception e) {
-            log.warn("Failed to award pet food for weight: {}", e.getMessage());
-        }
 
         // 始终同步刷新个人档案 User.weight 和目标卡路里
         if (user != null) {
