@@ -149,22 +149,21 @@ public class AdminServiceImpl implements AdminService {
         long totalHistoricalAiCount = totalHistoricalMealCount + totalHistoricalPlanCount;
 
         // 精准统计全站历史各类 AI 真实调用量
-        long allDietRecognitions = dietRecordRepository.count(); // 拍照识餐 (qwen-plus, 实测~630 Tokens: Prompt 450 + Comp 180)
-        long allDietDiagnosis = pointsRecordRepository.countByType("DIET_DIAGNOSIS"); // 深度诊断 (qwen-plus, 实测~700 Tokens: Prompt 480 + Comp 220)
-        long allPlanGenerations = pointsRecordRepository.countByType("PLAN_GEN"); // 专属计划 (qwen-max, 实测~4,025 Tokens: Prompt 536 + Comp 3,489)
+        long allDietRecognitions = dietRecordRepository.count(); // 拍照识餐 (qwen-vl-plus, 实测~630 Tokens: Prompt 450 + Comp 180)
+        long allDietDiagnosis = pointsRecordRepository.countByType("DIET_DIAGNOSIS"); // 深度诊断 (qwen3.7-plus, 实测~700 Tokens: Prompt 480 + Comp 220)
+        long allPlanGenerations = pointsRecordRepository.countByType("PLAN_GEN"); // 专属计划 (qwen3.7-plus, 实测~4,025 Tokens: Prompt 536 + Comp 3,489)
 
         // 真实精确 Token 消耗量汇总
         long totalAiTokens = (allDietRecognitions * 630L) + (allDietDiagnosis * 700L) + (allPlanGenerations * 4025L);
 
-        // 阿里云百炼通义千问官方最新价格模型:
-        // 1. qwen-plus (识餐与诊断): 输入 ￥0.80/百万Token (￥0.0008/1K), 输出 ￥2.00/百万Token (￥0.002/1K)
+        // 阿里云百炼通义千问官方最新价格模型 (全量采用超高性价比 Plus 系列):
+        // 1. qwen-plus / qwen3.7-plus: 输入 ￥0.80/百万Token (￥0.0008/1K), 输出 ￥2.00/百万Token (￥0.002/1K)
         //    - 拍照识餐单次成本: (450 * 0.0008 + 180 * 0.002) / 1000 = ￥0.00072 / 次
         //    - 营养诊断单次成本: (480 * 0.0008 + 220 * 0.002) / 1000 = ￥0.000824 / 次
-        // 2. qwen-max (7天专属计划): 输入 ￥2.40/百万Token (￥0.0024/1K), 输出 ￥9.60/百万Token (￥0.0096/1K)
-        //    - 7天计划单次成本: (536 * 0.0024 + 3489 * 0.0096) / 1000 = ￥0.03478 / 次
+        //    - 7天计划单次成本: (536 * 0.0008 + 3489 * 0.002) / 1000 = ￥0.0074 / 次 (较 Max 降本 80%)
         double mealCost = allDietRecognitions * 0.00072;
         double diagnosisCost = allDietDiagnosis * 0.000824;
-        double planCost = allPlanGenerations * 0.03478;
+        double planCost = allPlanGenerations * 0.0074;
         double totalCost = mealCost + diagnosisCost + planCost;
         double estimatedCost = Math.round(totalCost * 100.0) / 100.0;
         if (estimatedCost == 0.0 && totalAiTokens > 0) {
@@ -265,7 +264,7 @@ public class AdminServiceImpl implements AdminService {
                 .totalPoints(totalPoints)
                 .totalAiTokens(totalAiTokens)
                 .estimatedAiCost(estimatedCost)
-                .aiCostFormula("识图估算~630 Token/次(qwen-plus), AI诊断~700 Token/次(qwen-plus), 7天计划生成~4,025 Token/次(qwen-max)。按阿里云百炼官方最新计费标准实算")
+                .aiCostFormula("识图估算~630 Token/次(qwen-vl-plus), AI诊断~700 Token/次(qwen3.7-plus), 7天计划生成~4,025 Token/次(qwen3.7-plus)。按阿里云百炼官方最新计费标准实算")
                 .aiTrend(aiTrendList)
                 .userRegistrationTrend(registrationTrendList)
                 .dauTrend(dauTrendList)
@@ -1040,10 +1039,10 @@ public class AdminServiceImpl implements AdminService {
         String dietModel = stringRedisTemplate.opsForValue().get("shike:sys:config:ai_model_diet");
         
         if (planModel == null || planModel.isBlank()) {
-            planModel = "qwen3.8-max";
+            planModel = "qwen3.5-plus";
         }
         if (dietModel == null || dietModel.isBlank()) {
-            dietModel = "qwen3.6-plus";
+            dietModel = "qwen3.7-plus";
         }
         
         java.util.Map<String, String> map = new java.util.HashMap<>();
@@ -1069,7 +1068,7 @@ public class AdminServiceImpl implements AdminService {
         
         java.util.Set<String> planOptions = stringRedisTemplate.opsForSet().members("shike:sys:config:ai_model_plan_options");
         if (planOptions == null || planOptions.isEmpty()) {
-            planOptions = new java.util.LinkedHashSet<>(java.util.List.of("qwen3.7-plus", "qwen-max", "qwen-plus", "qwen-turbo", "deepseek-chat", "gpt-4o"));
+            planOptions = new java.util.LinkedHashSet<>(java.util.List.of("qwen3.5-plus", "qwen3.7-plus", "qwen-plus", "qwen-turbo", "deepseek-chat", "gpt-4o"));
             for (String opt : planOptions) {
                 stringRedisTemplate.opsForSet().add("shike:sys:config:ai_model_plan_options", opt);
             }
@@ -1077,7 +1076,7 @@ public class AdminServiceImpl implements AdminService {
         
         java.util.Set<String> dietOptions = stringRedisTemplate.opsForSet().members("shike:sys:config:ai_model_diet_options");
         if (dietOptions == null || dietOptions.isEmpty()) {
-            dietOptions = new java.util.LinkedHashSet<>(java.util.List.of("qwen3.7-plus", "qwen-plus", "qwen-vl-max", "qwen-max", "qwen-turbo"));
+            dietOptions = new java.util.LinkedHashSet<>(java.util.List.of("qwen3.7-plus", "qwen3.5-plus", "qwen-plus", "qwen-vl-plus", "qwen-turbo"));
             for (String opt : dietOptions) {
                 stringRedisTemplate.opsForSet().add("shike:sys:config:ai_model_diet_options", opt);
             }

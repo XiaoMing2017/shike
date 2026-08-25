@@ -48,7 +48,7 @@ public class PetServiceImpl implements PetService {
     private final ObjectMapper objectMapper;
     private final AdminService adminService;
 
-    @Value("${ai.api-key:sk-ws-H.EDLLDHH.13Vh.MEUCIQCd-Whyz9sUcrs2stiBRtDQmCdalFSF2Igm9p_OIF80tgIgTLbsTfpaWGgUcncGzCS7Dbsx5eEPy0mcT-wC5WMxApk}")
+    @Value("${ai.api-key:sk-ws-H.EDLLDHH.jhKp.MEQCID5AkHa0TNfVEvwRSbT52_dMmC7R4eMyo0Q3O4cMiEiYAiAnHc4q3LtwuyxzeJFIzNXopiSxd66zHH3IiT_F98SABQ}")
     private String aiApiKey;
 
     @Value("${ai.model:qwen-turbo}")
@@ -58,6 +58,7 @@ public class PetServiceImpl implements PetService {
     private String aiEndpoint;
 
     private static final Map<String, String> PRESET_AVATARS = Map.of(
+            "BUNNY", "/images/pets/sprite_bunny.png",
             "DRAGON", "/images/pets/pet_dragon_stage1.png",
             "TOTORO", "/images/pets/pet_totoro_stage1.png",
             "CAT", "/images/pets/pet_cat_stage1.png",

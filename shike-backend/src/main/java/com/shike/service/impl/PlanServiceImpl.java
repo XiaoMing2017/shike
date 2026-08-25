@@ -42,7 +42,7 @@ public class PlanServiceImpl implements PlanService {
     @Value("${ai.endpoint:https://api.openai.com/v1/chat/completions}")
     private String aiEndpoint;
 
-    @Value("${ai.plan-model:${ai.model:qwen3.8-max}}")
+    @Value("${ai.plan-model:${ai.model:qwen3.5-plus}}")
     private String aiModel;
 
     @Value("${ai.timeout-ms:120000}")

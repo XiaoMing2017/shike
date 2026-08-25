@@ -113,7 +113,6 @@ public class DietServiceImpl implements DietService {
                         .uri(java.net.URI.create("https://aip.baidubce.com/rest/2.0/image-classify/v2/dish?access_token=" + token))
                         .header("Content-Type", "application/x-www-form-urlencoded")
                         .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-                        .header("Connection", "close")
                         .POST(java.net.http.HttpRequest.BodyPublishers.ofString(requestBody, java.nio.charset.StandardCharsets.UTF_8))
                         .timeout(java.time.Duration.ofMillis(aiTimeoutMs))
                         .build();
@@ -182,7 +181,6 @@ public class DietServiceImpl implements DietService {
                                 .header("Content-Type", "application/json")
                                 .header("Authorization", "Bearer " + aiApiKey)
                                 .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-                                .header("Connection", "close")
                                 .POST(java.net.http.HttpRequest.BodyPublishers.ofString(requestJson, java.nio.charset.StandardCharsets.UTF_8))
                                 .timeout(java.time.Duration.ofMillis(aiTimeoutMs))
                                 .build();
@@ -372,7 +370,6 @@ public class DietServiceImpl implements DietService {
                         .uri(java.net.URI.create(geminiUrl))
                         .header("Content-Type", "application/json")
                         .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-                        .header("Connection", "close")
                         .POST(java.net.http.HttpRequest.BodyPublishers.ofString(requestJson))
                         .timeout(java.time.Duration.ofMillis(aiTimeoutMs))
                         .build();
@@ -393,15 +390,12 @@ public class DietServiceImpl implements DietService {
                 String activeDietModel = getActiveDietModel();
                 log.info("Calling OpenAI compatible vision API: {}, base model: {}", aiEndpoint, activeDietModel);
                 String visionModel = activeDietModel;
-                if (activeDietModel.contains("qwen") && !activeDietModel.contains("vl")) {
-                    visionModel = "qwen-vl-max";
-                }
                 log.info("Using Vision LLM model for image analysis: {}", visionModel);
                 try {
                     responseBody = callOpenAiVision(visionModel, prompt, dataUrl, mimeType);
                 } catch (Exception e) {
                     String fallbackModel = "qwen-vl-plus";
-                    log.warn("Primary vision model {} failed: {}. Falling back to stable model {}...", visionModel, e.getMessage(), fallbackModel);
+                    log.warn("Primary vision model {} failed: {}. Retrying with fallback model {}...", visionModel, e.getMessage(), fallbackModel);
                     try {
                         responseBody = callOpenAiVision(fallbackModel, prompt, dataUrl, mimeType);
                     } catch (Exception ex) {
@@ -609,7 +603,6 @@ public class DietServiceImpl implements DietService {
                 java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
                         .uri(java.net.URI.create(authUrl))
                         .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-                        .header("Connection", "close")
                         .POST(java.net.http.HttpRequest.BodyPublishers.noBody())
                         .timeout(java.time.Duration.ofMillis(5000))
                         .build();
@@ -841,7 +834,6 @@ public class DietServiceImpl implements DietService {
                 .header("Content-Type", "application/json")
                 .header("Authorization", "Bearer " + aiApiKey)
                 .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-                .header("Connection", "close")
                 .POST(java.net.http.HttpRequest.BodyPublishers.ofString(requestJson, java.nio.charset.StandardCharsets.UTF_8))
                 .timeout(java.time.Duration.ofMillis(aiTimeoutMs))
                 .build();
@@ -880,7 +872,7 @@ public class DietServiceImpl implements DietService {
                     "2. 如果未包含，请将漏掉的提示中的食物/饮品估算重量和营养成分，并以相同的 JSON 格式追加到列表中一并返回。\n" +
                     "注意：你必须且只能返回标准的 JSON 数组格式，不要包含 ``` 标记，不要包含任何 markdown 格式，不要包含任何其他解释文字。";
 
-            String modelToUse = "glm-4-flash"; // Fast and cheap text model
+            String modelToUse = getActiveDietModel();
             String responseText = callTextAi(modelToUse, textPrompt);
             if (responseText != null && !responseText.trim().isEmpty()) {
                 String cleanJson = responseText.trim();
@@ -920,7 +912,6 @@ public class DietServiceImpl implements DietService {
                 .header("Content-Type", "application/json")
                 .header("Authorization", "Bearer " + aiApiKey)
                 .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-                .header("Connection", "close")
                 .POST(java.net.http.HttpRequest.BodyPublishers.ofString(requestJson, java.nio.charset.StandardCharsets.UTF_8))
                 .timeout(java.time.Duration.ofMillis(aiTimeoutMs))
                 .build();
@@ -1053,7 +1044,7 @@ public class DietServiceImpl implements DietService {
 
         java.util.Map<String, Object> resMap = new java.util.HashMap<>();
         try {
-            String textModel = (aiModel != null && !aiModel.isEmpty()) ? aiModel : "qwen3.6-flash";
+            String textModel = getActiveDietModel();
             String aiResponseJson = callTextAi(textModel, sb.toString());
             String jsonText = aiResponseJson.trim();
             if (jsonText.startsWith("```json")) jsonText = jsonText.substring(7);

@@ -4055,7 +4055,7 @@
       <div class="modal-header">
         <div>
           <h3><i class="fa-solid fa-brain" style="color:#60A5FA; margin-right:8px;"></i> AI 大模型 Token 消耗与计费成本明细</h3>
-          <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">实时统计全站大模型（qwen-max / qwen-vl-max / qwen3.8-max）调用负载与算力账单</p>
+          <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">实时统计全站大模型（qwen3.7-plus / qwen-vl-plus / qwen-plus）调用负载与算力账单</p>
         </div>
         <button class="modal-close-btn" onclick="closeAiTokenDetailModal()">&times;</button>
       </div>
@@ -4090,7 +4090,7 @@
           <tbody>
             <tr>
               <td><span class="badge" style="background:rgba(96, 165, 250, 0.2); color:#60A5FA;">🥗 拍照识餐/营养估算</span></td>
-              <td><code>qwen-plus</code></td>
+              <td><code>qwen3.7-plus</code></td>
               <td>~ 450 Tokens</td>
               <td>~ 180 Tokens</td>
               <td style="font-weight:700; color:#60A5FA;">~ 630 Tokens</td>
@@ -4099,7 +4099,7 @@
             </tr>
             <tr>
               <td><span class="badge" style="background:rgba(16, 185, 129, 0.2); color:#34D399;">💡 AI 深度膳食诊断</span></td>
-              <td><code>qwen-plus</code></td>
+              <td><code>qwen3.7-plus</code></td>
               <td>~ 480 Tokens</td>
               <td>~ 220 Tokens</td>
               <td style="font-weight:700; color:#34D399;">~ 700 Tokens</td>
@@ -4108,12 +4108,12 @@
             </tr>
             <tr>
               <td><span class="badge" style="background:rgba(168, 85, 247, 0.2); color:#C084FC;">🎯 7天专属运动与食谱生成</span></td>
-              <td><code>qwen-max</code></td>
+              <td><code>qwen3.5-plus</code></td>
               <td>~ 536 Tokens</td>
               <td>~ 3,489 Tokens</td>
               <td style="font-weight:700; color:#C084FC;">~ 4,025 Tokens</td>
-              <td style="font-size:11px; color:var(--text-muted);">入￥2.4/M · 出￥9.6/M</td>
-              <td style="color:#34D399; font-weight:700;">￥0.03478</td>
+              <td style="font-size:11px; color:var(--text-muted);">入￥0.8/M · 出￥2.0/M</td>
+              <td style="color:#34D399; font-weight:700;">￥0.0074</td>
             </tr>
           </tbody>
         </table>
@@ -4198,7 +4198,7 @@
           planSel.innerHTML = '';
           dietSel.innerHTML = '';
 
-          const planOptions = res.data.planOptions || ["qwen3.8-max", "qwen3.6-plus", "qwen3.6-flash", "qwen-max", "gpt-4o"];
+          const planOptions = res.data.planOptions || ["qwen3.5-plus", "qwen3.7-plus", "qwen-plus", "qwen-turbo", "deepseek-chat", "gpt-4o"];
           planOptions.forEach(opt => {
             const optionEl = document.createElement('option');
             optionEl.value = opt;
@@ -4207,7 +4207,7 @@
             planSel.appendChild(optionEl);
           });
 
-          const dietOptions = res.data.dietOptions || ["qwen3.6-plus", "qwen3.6-flash", "qwen-vl-max", "qwen3.8-max"];
+          const dietOptions = res.data.dietOptions || ["qwen3.7-plus", "qwen3.5-plus", "qwen-plus", "qwen-vl-plus", "qwen-turbo"];
           dietOptions.forEach(opt => {
             const optionEl = document.createElement('option');
             optionEl.value = opt;

@@ -485,7 +485,7 @@ Page({
     }
 
     wx.request({
-      url: `${app.globalData.baseUrl}/pet/my-pet?userId=${user.id}`,
+      url: `${app.globalData.baseUrl}/pet/my?userId=${user.id}`,
       method: 'GET',
       success: (res) => {
         if (res.data && res.data.code === 200 && res.data.data) {
@@ -757,8 +757,13 @@ Page({
 
     this.setData({ adopting: true });
     wx.request({
-      url: `${app.globalData.baseUrl}/pet/adopt?userId=${user.id}&petType=${type}&petName=${encodeURIComponent(name)}`,
+      url: `${app.globalData.baseUrl}/pet/create`,
       method: 'POST',
+      data: {
+        userId: user.id,
+        name: name,
+        petType: type
+      },
       success: (res) => {
         if (res.data && res.data.code === 200) {
           const newPet = res.data.data;
