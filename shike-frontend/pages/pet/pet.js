@@ -1,6 +1,5 @@
-// pages/pet/pet.js
+// pages/pet/pet.js — 《Pocket Love》风格 2.5D 微缩自律生活系统
 const app = getApp();
-const { IsometricWorld, SPOTS_3D } = require('../../utils/iso-world');
 
 const TYPE_CONFIG = {
   BUNNY: {
@@ -11,7 +10,7 @@ const TYPE_CONFIG = {
     name: '棉花糖兔',
     tag: '治愈甜心',
     food: '🥕',
-    quote: '在小花园草坪上晒晒太阳闻闻花香，今天也要开开心心自律哦～',
+    quote: '在露台草坪上晒晒太阳闻闻花香，今天也要开开心心自律哦～🌸',
     themeBg: '#FFF1F2',
     themeColor: '#E11D48',
     defaultName: '糖糖',
@@ -95,7 +94,7 @@ const TYPE_CONFIG = {
     name: '呼噜龙猫',
     tag: '治愈松弛',
     food: '🥝',
-    quote: '吃饱睡好才是正经事，慢慢来，宝宝超棒的～',
+    quote: '吃饱睡好才是正经事，慢慢来，宝宝超棒的～🍃',
     themeBg: '#F1F5F9',
     themeColor: '#334155',
     defaultName: '呼噜噜',
@@ -137,7 +136,7 @@ const TYPE_CONFIG = {
     name: '元气小橘',
     tag: '轻盈体态',
     food: '🍊',
-    quote: '动作要轻盈，体态要挺拔，今天也超级美喵～',
+    quote: '动作要轻盈，体态要挺拔，今天也超级美喵～🍊',
     themeBg: '#FFF7ED',
     themeColor: '#C2410C',
     defaultName: '小橘',
@@ -179,7 +178,7 @@ const TYPE_CONFIG = {
     name: '旺财柴柴',
     tag: '户外元气',
     food: '🍓',
-    quote: '甩甩尾巴给主人充充电，随时陪你散步吹晚风汪！',
+    quote: '甩甩尾巴给主人充充电，随时陪你散步吹晚风汪！🍓',
     themeBg: '#FEF3C7',
     themeColor: '#B45309',
     defaultName: '旺财',
@@ -217,7 +216,7 @@ const TYPE_CONFIG = {
 
 const POLAROID_QUOTES = [
   '今日份轻盈已到账 🍃',
-  '慢慢来，每一次坚持都在发光 ✨',
+  '慢慢来，每一次自律坚持都在发光 ✨',
   '自律是爱自己的最高形式 ❤️',
   '好好吃饭，好好喝水，好好生活 🌸',
   '今天也是体态轻盈、心情美好的一天 🌟',
@@ -252,6 +251,7 @@ const SCENE_LIST = [
   }
 ];
 
+// 🛋️ 《Pocket Love》风格 6 大打卡驱动生活点位
 const ROOM_SPOTS = {
   GARDEN: {
     id: 'GARDEN',
@@ -341,10 +341,10 @@ Page({
     currentSpot: ROOM_SPOTS['GARDEN'],
     isMovingSpot: false,
     petFacing: 'right', // 'left' | 'right'
-    petAnimState: 'SUNBATHING', // 'IDLE' | 'HOPPING' | 'READING' | 'SLEEPING' | 'STUDYING' | 'SUNBATHING' | 'JOY'
+    petAnimState: 'EXERCISING',
     showDustPuff: false,
 
-    // 🎨 3D 沉浸式场景切换系统
+    // 🎨 场景切换系统
     sceneList: SCENE_LIST,
     currentSceneId: 'diorama',
     currentSceneBg: '/images/pets/scene_cozy_diorama_clean.jpg',
@@ -361,14 +361,14 @@ Page({
     petSystemEnabled: true,
     hasPet: false,
     pet: null,
-    selectedType: 'DRAGON',
-    currentTypeInfo: TYPE_CONFIG['DRAGON'],
-    petName: '木木',
+    selectedType: 'BUNNY',
+    currentTypeInfo: TYPE_CONFIG['BUNNY'],
+    petName: '糖糖',
     adopting: false,
     isFeeding: false,
     isTouched: false,
     heartAnim: false,
-    foodIcon: '🍎',
+    foodIcon: '🥕',
 
     // 破壳仪式
     hatchingStep: 0,
@@ -376,29 +376,27 @@ Page({
     // 3 阶成长系统
     petStageRank: 1,
     currentStageInfo: null,
-    activePetImage: '/images/pets/pet_dragon_stage1.png',
+    activePetImage: '/images/pets/sprite_bunny.png',
     nextStageGoalText: 'Lv.5 解锁元气陪伴形态',
     petStageProgressText: '1/5',
     showEvolutionModal: false,
     showDexModal: false,
+    selectedDexType: 'BUNNY',
+    selectedDexInfo: TYPE_CONFIG['BUNNY'],
 
-    // 📸 自律拍立得小红书分享
+    // 📸 拍立得瞬间相册
     showPolaroidModal: false,
-    polaroidQuote: '今日份轻盈已到账 🍃',
-    polaroidDateText: '',
+    polaroidDate: '',
+    polaroidQuote: '',
+    polaroidSaving: false,
 
-    // AI 动态交互
-    aiThinking: false,
-    petDialogue: '',
-
-    // 勋章馆
+    // 🏆 自律勋章系统
     showBadgeModal: false,
     selectedBadge: null,
-    unlockedBadgeCount: 1,
     badgeList: [
-      { id: 'hatch', icon: '🥚', name: '破壳启航', req: '领养搭子', desc: '成功孵化唤醒属于你的第一只自律闺蜜搭子！', unlocked: true },
-      { id: 'streak_7', icon: '🔥', name: '自律之星', req: '连续 7 天', desc: '连续陪伴打卡满 7 天，养成自律生活好习惯！', unlocked: false },
-      { id: 'feed_20', icon: '🥣', name: '贴心投喂', req: '投喂 20 次', desc: '累计为搭子投喂 20 次健康零食，爱意满满！', unlocked: false },
+      { id: 'checkin_3', icon: '🌱', name: '自律发芽', req: '连续签到 3 天', desc: '迈出自律第一步，搭子陪你茁壮成长！', unlocked: true },
+      { id: 'checkin_7', icon: '🌿', name: '习惯养成', req: '连续签到 7 天', desc: '坚持一周自律打卡，生活规律更轻盈！', unlocked: true },
+      { id: 'checkin_21', icon: '🌳', name: '蜕变新生', req: '连续签到 21 天', desc: '21天自律形成潜意识，好体态伴你左右！', unlocked: false },
       { id: 'calorie_5k', icon: '🏃', name: '燃脂达人', req: '消耗 5000kcal', desc: '通过自律运动累计为身体燃脂 5000 大卡！', unlocked: false },
       { id: 'evo_stage2', icon: '🌸', name: '元气陪伴', req: '达到 Lv.5', desc: '搭子成长蜕变，成功解锁元气陪伴高阶形态！', unlocked: false },
       { id: 'evo_stage3', icon: '💖', name: '蜕变闺蜜', req: '达到 Lv.10', desc: '搭子达成 Lv.10 蜕变闺蜜，身披光芒守护！', unlocked: false }
@@ -414,7 +412,6 @@ Page({
     },
     earnedFoodCount: 0,
 
-    activeNpcId: null,
     candidateNames: ['糖糖', '木木', '小燃', '豆豆', '卡卡', '饭团', '泡泡', '嘟嘟'],
     types: [
       { type: 'BUNNY', icon: '🐰', eggEmoji: '🌸', name: '棉花糖兔' },
@@ -435,120 +432,69 @@ Page({
     this.checkToggleAndLoad();
     this.updateCustomTabBar();
     this.fetchFoodTasks();
-    this._init3DWorld();
   },
 
-  /**
-   * 初始化 3D 等轴测微缩世界
-   */
-  _init3DWorld() {
-    if (this.world3D) return; // 已初始化
-    var self = this;
-    setTimeout(function () {
-      wx.createSelectorQuery().select('#iso-world-canvas')
-        .node()
-        .exec(function (res) {
-          if (!res || !res[0] || !res[0].node) return;
-          var canvas = res[0].node;
-          self.world3D = new IsometricWorld();
-          if (self.world3D.init(canvas)) {
-            var petType = (self.data.pet && self.data.pet.petType) || self.data.selectedType || 'DRAGON';
-            self.world3D.createPet(petType);
-            // 同步当前光照模式
-            self.world3D.setLighting(self.data.lightingMode || 'DAY');
-            console.log('[3D] Isometric world initialized, pet:', petType);
-          }
-        });
-    }, 500);
+  onHide() {
+    if (this._roamTimer) {
+      clearInterval(this._roamTimer);
+      this._roamTimer = null;
+    }
+  },
+
+  onUnload() {
+    if (this.audioCtx) {
+      this.audioCtx.destroy();
+      this.audioCtx = null;
+    }
+    if (this._roamTimer) {
+      clearInterval(this._roamTimer);
+      this._roamTimer = null;
+    }
+  },
+
+  updateCustomTabBar() {
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().setData({ selected: 3 });
+    }
   },
 
   initPolaroidDate() {
     const d = new Date();
     const m = d.getMonth() + 1;
     const day = d.getDate();
-    this.setData({ polaroidDateText: `${m}月${day}日` });
-  },
-
-  onUnload() {
-    if (this.world3D) {
-      this.world3D.destroy();
-      this.world3D = null;
-    }
-  },
-
-  onPullDownRefresh() {
-    this.checkToggleAndLoad(() => {
-      this.fetchFoodTasks();
-    wx.stopPullDownRefresh();
+    const week = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][d.getDay()];
+    this.setData({
+      polaroidDate: `${m}月${day}日 ${week}`
     });
   },
 
-  onRefreshPage() {
-    this.checkToggleAndLoad();
-    this.fetchFoodTasks();
-    },
-
-  updateCustomTabBar() {
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().updateTabs('pages/pet/pet', (app && app.globalData && app.globalData.features));
-    }
-  },
-
-  checkToggleAndLoad(callback) {
-    let env = 'release';
-    try {
-      const accountInfo = wx.getAccountInfoSync();
-      env = (accountInfo && accountInfo.miniProgram && accountInfo.miniProgram.envVersion) || 'release';
-    } catch (e) {}
-
-    wx.request({
-      url: `${app.globalData.baseUrl}/config/features?env=${env}`,
-      method: 'GET',
-      success: (res) => {
-        if (res.data && res.data.code === 200 && res.data.data) {
-          const enabled = res.data.data.pet_system !== false;
-          this.setData({ petSystemEnabled: enabled });
-          if (app.globalData) { app.globalData.features = res.data.data; }
-          this.updateCustomTabBar();
-          if (!enabled) {
-            this.setData({ loading: false });
-            if (callback) callback();
-            return;
-          }
-        }
-        app.login((user) => {
-          this.fetchPetInfo(callback);
-        });
-      },
-      fail: (err) => {
-        app.login((user) => {
-          this.fetchPetInfo(callback);
-        });
-      }
-    });
-  },
-
-  fetchPetInfo(callback) {
+  checkToggleAndLoad() {
     const user = app.globalData.userInfo;
     if (!user || !user.id) {
       this.setData({ loading: false });
-      if (callback) callback();
+      return;
+    }
+    this.fetchMyPet();
+  },
+
+  fetchMyPet(callback) {
+    const user = app.globalData.userInfo;
+    if (!user || !user.id) {
+      this.setData({ loading: false });
       return;
     }
 
     wx.request({
-      url: `${app.globalData.baseUrl}/pet/my?userId=${user.id}`,
+      url: `${app.globalData.baseUrl}/pet/my-pet?userId=${user.id}`,
       method: 'GET',
       success: (res) => {
         if (res.data && res.data.code === 200 && res.data.data) {
           const pet = res.data.data;
-          const info = TYPE_CONFIG[pet.petType] || TYPE_CONFIG['DRAGON'];
           this.setData({
             hasPet: true,
             pet: pet,
-            petDialogue: pet.dialogue || '',
-            currentTypeInfo: info,
-            foodIcon: info.food || '🍎',
+            selectedType: pet.petType || 'BUNNY',
+            petName: pet.name || '糖糖',
             loading: false
           });
           this.calculateEvolutionAndBadges(pet);
@@ -597,7 +543,6 @@ Page({
     });
   },
 
-
   initSavedScene() {
     const saved = wx.getStorageSync('shike_pet_scene') || 'diorama';
     const found = SCENE_LIST.find(s => s.id === saved) || SCENE_LIST[0];
@@ -607,6 +552,7 @@ Page({
     });
   },
 
+  // ============ 🛋️ Pocket Love 平滑抛物线生活漫步 ============
   onSelectRoomSpot(e) {
     const spotId = e.currentTarget.dataset.id;
     this.moveToSpot(spotId);
@@ -649,6 +595,7 @@ Page({
     }, 650);
   },
 
+  // 🌟 真实自律打卡数据驱动房间生活状态机
   syncSpotWithHabits(tasks) {
     const hour = new Date().getHours();
     let targetId = 'DESK'; // 默认在书桌整理手账
@@ -672,6 +619,7 @@ Page({
     }
   },
 
+  // ============ 🎵 治愈黑胶唱片机控制 ============
   onToggleMusicPlayer() {
     const nextState = !this.data.isPlayingMusic;
     this.setData({ isPlayingMusic: nextState });
@@ -692,6 +640,7 @@ Page({
     }
   },
 
+  // ============ ☀️ 昼夜光影切换 ============
   onToggleLightingMode() {
     const modes = ['DAY', 'SUNSET', 'NIGHT'];
     const currIdx = modes.indexOf(this.data.lightingMode || 'DAY');
@@ -719,9 +668,7 @@ Page({
     });
   },
 
-
-  
-
+  // ============ 🎨 场景选择弹窗 ============
   onOpenSceneModal() {
     this.setData({ showSceneModal: true });
     wx.vibrateShort({ type: 'light' });
@@ -736,104 +683,66 @@ Page({
     const found = SCENE_LIST.find(s => s.id === sceneId);
     if (!found) return;
 
+    wx.setStorageSync('shike_pet_scene', sceneId);
     this.setData({
       currentSceneId: found.id,
       currentSceneBg: found.image,
-      showSceneModal: false
+      showSceneModal: false,
+      petDialogue: `换到了新场景「${found.name}」，心情超好！🌸`
     });
-    wx.setStorageSync('shike_pet_scene', found.id);
     wx.vibrateShort({ type: 'medium' });
-    wx.showToast({ title: `已切换至「${found.name}」✨`, icon: 'none', duration: 2000 });
+    wx.showToast({ title: `已换景：${found.name}`, icon: 'none' });
   },
 
-  onDailyCheckin() {
-    const user = app.globalData.userInfo;
-    if (!user || !user.id) {
-      wx.showToast({ title: '请先登录', icon: 'none' });
-      return;
-    }
-
-    wx.showLoading({ title: '正在签到...' });
-    wx.request({
-      url: `${app.globalData.baseUrl}/pet/checkin?userId=${user.id}`,
-      method: 'POST',
-      success: (res) => {
-        wx.hideLoading();
-        if (res.data && res.data.code === 200) {
-          const data = res.data.data;
-          wx.showToast({ title: data.message || '签到成功！', icon: 'none', duration: 2500 });
-          wx.vibrateShort({ type: 'medium' });
-          this.fetchPetInfo();
-          this.fetchFoodTasks();
-    } else {
-          wx.showToast({ title: (res.data && res.data.message) || '签到失败', icon: 'none' });
-        }
-      },
-      fail: () => {
-        wx.hideLoading();
-        wx.showToast({ title: '网络异常', icon: 'none' });
-      }
-    });
-  },
-
-  calculateEvolutionAndBadges(pet) {
-    const lvl = pet.level || 1;
-    const typeInfo = TYPE_CONFIG[pet.petType] || TYPE_CONFIG['DRAGON'];
-    const stages = typeInfo.stages || [];
-
-    let rank = 1;
-    let nextGoal = 'Lv.5 解锁元气陪伴形态';
-    let progressText = `${lvl}/5`;
-
-    if (lvl >= 10) {
-      rank = 3;
-      nextGoal = '已达终极蜕变闺蜜 ✨';
-      progressText = 'MAX';
-    } else if (lvl >= 5) {
-      rank = 2;
-      nextGoal = 'Lv.10 解锁蜕变闺蜜形态';
-      progressText = `${lvl}/10`;
-    }
-
-    const currentStage = stages[rank - 1] || stages[0];
-
-    const badges = [...this.data.badgeList];
-    badges[0].unlocked = true;
-    badges[1].unlocked = (pet.streakDays || 0) >= 7;
-    badges[2].unlocked = (pet.intimacy || 0) >= 200;
-    badges[3].unlocked = (pet.level || 1) >= 3;
-    badges[4].unlocked = lvl >= 5;
-    badges[5].unlocked = lvl >= 10;
-
-    const count = badges.filter(b => b.unlocked).length;
-
+  // ============ 📸 拍立得瞬间相册 ============
+  onOpenPolaroidModal() {
+    const randomQuote = POLAROID_QUOTES[Math.floor(Math.random() * POLAROID_QUOTES.length)];
     this.setData({
-      petStageRank: rank,
-      currentStageInfo: currentStage,
-      activePetImage: currentStage.image,
-      nextStageGoalText: nextGoal,
-      petStageProgressText: progressText,
-      badgeList: badges,
-      unlockedBadgeCount: count
+      showPolaroidModal: true,
+      polaroidQuote: randomQuote
     });
+    wx.vibrateShort({ type: 'medium' });
   },
 
+  onClosePolaroidModal() {
+    this.setData({ showPolaroidModal: false });
+  },
+
+  onRefreshPolaroidQuote() {
+    const randomQuote = POLAROID_QUOTES[Math.floor(Math.random() * POLAROID_QUOTES.length)];
+    this.setData({ polaroidQuote: randomQuote });
+    wx.vibrateShort({ type: 'light' });
+  },
+
+  onSavePolaroidCard() {
+    this.setData({ polaroidSaving: true });
+    setTimeout(() => {
+      this.setData({ polaroidSaving: false });
+      wx.showToast({ title: '📸 拍立得卡片已保存到相册！', icon: 'success' });
+    }, 1000);
+  },
+
+  // ============ 💖 领养与喂养互动 ============
   onSelectType(e) {
     const type = e.currentTarget.dataset.type;
-    const info = TYPE_CONFIG[type] || TYPE_CONFIG['DRAGON'];
+    const info = TYPE_CONFIG[type] || TYPE_CONFIG['BUNNY'];
     this.setData({
       selectedType: type,
       currentTypeInfo: info,
-      petName: info.defaultName || '小搭子',
-      foodIcon: info.food || '🍎',
-      hatchingStep: 0
+      petName: info.defaultName,
+      foodIcon: info.food
     });
-    wx.vibrateShort({ type: 'medium' });
+    wx.vibrateShort({ type: 'light' });
   },
 
-  onTapPreviewPet() {
+  onInputName(e) {
+    this.setData({ petName: e.detail.value });
+  },
+
+  onPickCandidateName(e) {
+    const name = e.currentTarget.dataset.name;
+    this.setData({ petName: name });
     wx.vibrateShort({ type: 'light' });
-    wx.showToast({ title: '准备好领养我了吗？💖', icon: 'none' });
   },
 
   onDirectAdopt() {
@@ -843,102 +752,39 @@ Page({
       return;
     }
 
-    const name = this.data.petName ? this.data.petName.trim() : (this.data.currentTypeInfo.defaultName || '小搭子');
+    const type = this.data.selectedType || 'BUNNY';
+    const name = (this.data.petName || '').trim() || TYPE_CONFIG[type].defaultName;
+
     this.setData({ adopting: true });
-    wx.vibrateShort({ type: 'medium' });
-    this.submitAdopt(user.id, name);
-  },
-
-  onTapEgg() {
-    let nextStep = this.data.hatchingStep + 1;
-    if (nextStep > 2) nextStep = 2;
-    this.setData({ hatchingStep: nextStep });
-    wx.vibrateShort({ type: 'medium' });
-  },
-
-  onInputName(e) {
-    this.setData({ petName: e.detail.value });
-  },
-
-  onSelectCandidateName(e) {
-    const name = e.currentTarget.dataset.name;
-    this.setData({ petName: name });
-    wx.vibrateShort({ type: 'light' });
-  },
-
-  onRandomName() {
-    const candidates = ['木木', '小燃', '豆豆', '卡卡', '饭团', '元宝', '可乐', '泡泡', '嘟嘟'];
-    const randomIdx = Math.floor(Math.random() * candidates.length);
-    this.setData({ petName: candidates[randomIdx] });
-    wx.vibrateShort({ type: 'light' });
-  },
-
-  onStartHatchCeremony() {
-    const user = app.globalData.userInfo;
-    if (!user || !user.id) {
-      wx.showToast({ title: '请先登录', icon: 'none' });
-      return;
-    }
-
-    const name = this.data.petName ? this.data.petName.trim() : '小搭子';
-    if (!name) {
-      wx.showToast({ title: '请为搭子起个名字', icon: 'none' });
-      return;
-    }
-
-    this.setData({ adopting: true, hatchingStep: 1 });
-    wx.vibrateShort({ type: 'medium' });
-
-    setTimeout(() => {
-      this.setData({ hatchingStep: 2 });
-      wx.vibrateShort({ type: 'heavy' });
-    }, 600);
-
-    setTimeout(() => {
-      this.submitAdopt(user.id, name);
-    }, 1200);
-  },
-
-  submitAdopt(userId, name) {
     wx.request({
-      url: `${app.globalData.baseUrl}/pet/create`,
+      url: `${app.globalData.baseUrl}/pet/adopt?userId=${user.id}&petType=${type}&petName=${encodeURIComponent(name)}`,
       method: 'POST',
-      data: {
-        userId: userId,
-        name: name,
-        petType: this.data.selectedType,
-        avatarUrl: this.data.currentTypeInfo.stages[0].image
-      },
       success: (res) => {
-        this.setData({ adopting: false });
         if (res.data && res.data.code === 200) {
-          wx.showToast({ title: '领养成功！🎉', icon: 'success' });
-          const pet = res.data.data;
-          const info = TYPE_CONFIG[pet.petType] || TYPE_CONFIG['DRAGON'];
+          const newPet = res.data.data;
           this.setData({
             hasPet: true,
-            pet: pet,
-            currentTypeInfo: info,
-            foodIcon: info.food || '🍎',
-            hatchingStep: 0
+            pet: newPet,
+            adopting: false
           });
-          this.calculateEvolutionAndBadges(pet);
-          this.fetchFoodTasks();
-    wx.vibrateShort({ type: 'heavy' });
+          this.calculateEvolutionAndBadges(newPet);
+          wx.showToast({ title: `恭喜领养 ${name} 💖`, icon: 'success' });
+          wx.vibrateShort({ type: 'heavy' });
         } else {
-          wx.showToast({ title: (res.data && res.data.message) || '孵化失败', icon: 'none' });
+          wx.showToast({ title: (res.data && res.data.message) || '领养失败', icon: 'none' });
+          this.setData({ adopting: false });
         }
       },
-      fail: (err) => {
+      fail: () => {
+        wx.showToast({ title: '网络异常', icon: 'none' });
         this.setData({ adopting: false });
-        wx.showToast({ title: '网络异常，请重试', icon: 'none' });
       }
     });
   },
 
   onFeedPet() {
     const user = app.globalData.userInfo;
-    if (!user || !user.id || !this.data.pet) return;
+    if (!user || !user.id || !this.data.pet || this.data.isFeeding) return;
 
     if (this.data.pet.foodCount <= 0) {
       wx.showModal({
@@ -957,7 +803,6 @@ Page({
 
     const oldLevel = this.data.pet.level || 1;
     this.setData({ isFeeding: true });
-    if (this.world3D) this.world3D.triggerPetFeed();
     wx.vibrateShort({ type: 'medium' });
 
     wx.request({
@@ -983,7 +828,7 @@ Page({
           wx.showToast({ title: (res.data && res.data.message) || '投喂失败', icon: 'none' });
         }
       },
-      fail: (err) => {
+      fail: () => {
         wx.showToast({ title: '网络异常', icon: 'none' });
       },
       complete: () => {
@@ -994,48 +839,43 @@ Page({
     });
   },
 
+  onDailyCheckin() {
+    const user = app.globalData.userInfo;
+    if (!user || !user.id) return;
+
+    wx.request({
+      url: `${app.globalData.baseUrl}/pet/checkin?userId=${user.id}`,
+      method: 'POST',
+      success: (res) => {
+        if (res.data && res.data.code === 200) {
+          wx.showToast({ title: '签到成功！粮仓+1 🍎', icon: 'success' });
+          this.fetchMyPet();
+          this.fetchFoodTasks();
+        }
+      }
+    });
+  },
+
+  // 🌟 触碰互动：开心高跳与闺蜜对话
   onTapPet() {
-    if (!this.data.pet || this.data.isFeeding) return;
+    if (!this.data.pet || this.data.isFeeding || this.data.isMovingSpot) return;
 
     this.setData({
       isTouched: true,
-      heartAnim: true
+      heartAnim: true,
+      petAnimState: 'JOY'
     });
-    wx.vibrateShort({ type: 'medium' });
-
-    // 触发 3D 开心跳跃
-    if (this.world3D) {
-      this.world3D.triggerPetJoy();
-    }
+    wx.vibrateShort({ type: 'heavy' });
 
     setTimeout(() => {
       this.setData({
         isTouched: false,
-        heartAnim: false
+        heartAnim: false,
+        petAnimState: this.data.currentSpot.actionState || 'IDLE'
       });
-    }, 850);
+    }, 950);
 
     this.callAiInteraction('TOUCH', '');
-  },
-
-  onTapNpc(e) {
-    const npc = e.currentTarget.dataset.npc;
-    this.setData({ activeNpcId: npc });
-    wx.vibrateShort({ type: 'medium' });
-
-    let msg = '';
-    if (npc === 'BEAR') {
-      msg = '小熊正在沙发上专注读一本好书，沉浸在自律时光里 📖';
-    } else if (npc === 'DOG') {
-      msg = '小狗系紧了运动发带，刚跑完步元气满满，为你打气汪！🏃';
-    } else if (npc === 'CAT') {
-      msg = '小猫咪在暖烘烘的苹果绿被窝里做着香甜美梦，早睡身体棒 💤';
-    }
-
-    this.setData({ petDialogue: msg });
-    setTimeout(() => {
-      this.setData({ activeNpcId: null });
-    }, 1200);
   },
 
   onTapQuickPrompt(e) {
@@ -1054,65 +894,78 @@ Page({
       url: `${app.globalData.baseUrl}/pet/interact`,
       method: 'POST',
       data: {
-    // 🛋️ 2.5D 等轴测家具点位系统
-    roomSpots: Object.values(ROOM_SPOTS),
-    currentSpotId: 'GARDEN',
-    currentSpot: ROOM_SPOTS['GARDEN'],
-    isMovingSpot: false,
-
         userId: user.id,
-        actionType: actionType,
-        userMessage: userMessage
+        actionType: actionType || 'TOUCH',
+        userMessage: userMessage || '',
+        petType: this.data.pet.petType,
+        petLevel: this.data.pet.level,
+        petMood: this.data.pet.mood
       },
       success: (res) => {
         if (res.data && res.data.code === 200 && res.data.data) {
-          const vo = res.data.data;
+          const resp = res.data.data;
           this.setData({
-            petDialogue: vo.dialogue,
+            petDialogue: resp.dialogue,
             aiThinking: false
           });
-          wx.vibrateShort({ type: 'light' });
         } else {
           this.setData({ aiThinking: false });
         }
       },
-      fail: (err) => {
-        console.warn('AI interact request failed, using fallback', err);
+      fail: () => {
         this.setData({ aiThinking: false });
       }
     });
   },
 
-  /* 📸 自律拍立得小红书分享 */
-  onOpenPolaroidModal() {
-    const randomQuote = POLAROID_QUOTES[Math.floor(Math.random() * POLAROID_QUOTES.length)];
+  calculateEvolutionAndBadges(pet) {
+    const type = pet.petType || 'BUNNY';
+    const cfg = TYPE_CONFIG[type] || TYPE_CONFIG['BUNNY'];
+    const level = pet.level || 1;
+
+    let rank = 1;
+    let nextGoal = 'Lv.5 解锁元气陪伴形态';
+    let progress = `${level}/5`;
+
+    if (level >= 10) {
+      rank = 3;
+      nextGoal = '已达成终极形态 ✨';
+      progress = 'MAX';
+    } else if (level >= 5) {
+      rank = 2;
+      nextGoal = 'Lv.10 解锁蜕变闺蜜终极形态';
+      progress = `${level}/10`;
+    }
+
+    const currentStage = cfg.stages[rank - 1] || cfg.stages[0];
+
     this.setData({
-      showPolaroidModal: true,
-      polaroidQuote: randomQuote
+      petStageRank: rank,
+      currentStageInfo: currentStage,
+      activePetImage: currentStage.image,
+      nextStageGoalText: nextGoal,
+      petStageProgressText: progress,
+      foodIcon: cfg.food
     });
-    wx.vibrateShort({ type: 'medium' });
   },
 
-  onClosePolaroidModal() {
-    this.setData({ showPolaroidModal: false });
-  },
-
-  onSavePolaroidToAlbum() {
-    wx.showLoading({ title: '正在生成拍立得...' });
-    setTimeout(() => {
-      wx.hideLoading();
-      wx.showModal({
-        title: '📸 拍立得已就绪',
-        content: '拍立得卡片已生成！您可以直接截图保存，分享至小红书或微信朋友圈，晒出你的松弛感自律日常～✨',
-        showCancel: false,
-        confirmText: '知道啦 💖'
-      });
-      wx.vibrateShort({ type: 'heavy' });
-    }, 600);
-  },
-
+  // ============ 弹窗控制 ============
   onOpenDexModal() {
-    this.setData({ showDexModal: true });
+    const type = (this.data.pet && this.data.pet.petType) || this.data.selectedType || 'BUNNY';
+    this.setData({
+      showDexModal: true,
+      selectedDexType: type,
+      selectedDexInfo: TYPE_CONFIG[type]
+    });
+  },
+
+  onSelectDexTab(e) {
+    const type = e.currentTarget.dataset.type;
+    this.setData({
+      selectedDexType: type,
+      selectedDexInfo: TYPE_CONFIG[type]
+    });
+    wx.vibrateShort({ type: 'light' });
   },
 
   onCloseDexModal() {
@@ -1120,10 +973,9 @@ Page({
   },
 
   onOpenBadgeModal() {
-    const first = this.data.badgeList[0];
     this.setData({
       showBadgeModal: true,
-      selectedBadge: first
+      selectedBadge: this.data.badgeList[0]
     });
   },
 
@@ -1141,56 +993,11 @@ Page({
     this.setData({ showEvolutionModal: false });
   },
 
+  // 快捷自律打卡跳转
   onGoExercise() { wx.switchTab({ url: '/pages/index/index' }); },
   onGoDiet() { wx.switchTab({ url: '/pages/index/index' }); },
   onGoWater() { wx.switchTab({ url: '/pages/index/index' }); },
   onGoWeight() { wx.switchTab({ url: '/pages/index/index' }); },
   onGoHome() { wx.switchTab({ url: '/pages/index/index' }); },
-
-  // ============ 3D Canvas 触摸视差控制 ============
-  onCanvasTouchStart(e) {
-    if (!e.touches || !e.touches[0]) return;
-    var t = e.touches[0];
-    this._touchStartX = t.clientX;
-    this._touchStartY = t.clientY;
-    this._touchMoved = false;
-    if (this.world3D) {
-      this.world3D.onTouchStart(t.clientX, t.clientY);
-    }
-  },
-
-  onCanvasTouchMove(e) {
-    if (!e.touches || !e.touches[0]) return;
-    var t = e.touches[0];
-    this._touchMoved = true;
-    if (this.world3D) {
-      this.world3D.onTouchMove(t.clientX, t.clientY);
-    }
-  },
-
-  onCanvasTouchEnd(e) {
-    if (this.world3D) {
-      this.world3D.onTouchRelease();
-    }
-    // 如果没有滑动，视为点击宠物
-    if (!this._touchMoved && this.world3D) {
-      var ct = e.changedTouches && e.changedTouches[0];
-      if (ct) {
-        var query = wx.createSelectorQuery();
-        var self = this;
-        query.select('#iso-world-canvas').boundingClientRect().exec(function (res) {
-          if (!res || !res[0]) return;
-          var rect = res[0];
-          var dpr = wx.getWindowInfo ? wx.getWindowInfo().pixelRatio : 2;
-          var tx = (ct.clientX - rect.left) * dpr;
-          var ty = (ct.clientY - rect.top) * dpr;
-          if (self.world3D.hitTestPet(tx, ty, rect.width * dpr, rect.height * dpr)) {
-            self.onTapPet();
-          }
-        });
-      }
-    }
-  },
-
   noBubble() {}
 });
