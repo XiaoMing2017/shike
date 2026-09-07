@@ -1,4 +1,5 @@
 const app = getApp();
+const subscribeHelper = require('../../utils/subscribeHelper.js');
 
 Page({
   data: {
@@ -8,8 +9,35 @@ Page({
     currentDay: 1,
     targetDays: 7,
     points: 500,
+    dailyPot: 0,
+    finalPot: 0,
     inviteCode: '',
     members: [],
+
+    // 玩法 1：每日盲盒瓜分与暴击轮盘状态
+    showLootModal: false,
+    pendingLoot: null,
+    pendingNudgeAlert: null,
+    isSpinning: false,
+    wheelAngle: 0,
+    lootClaimResult: null,
+    showHistoryModal: false,
+    settlementHistory: [],
+
+    // 玩法 2：减脂卧底间谍局
+    showSpyModal: false,
+    spyInfo: {},
+    inputSpyTaunt: '',
+    selectedSuspectId: null,
+
+    // 玩法 3：战术道具店与查岗
+    showShopModal: false,
+    shopItems: [],
+    pendingAudit: null,
+
+    // 玩法 4：AI 毒舌战报
+    showRoastModal: false,
+    todayRoast: null,
 
     // Form inputs
     inputInviteCode: '',
@@ -57,6 +85,7 @@ Page({
     app.login((user) => {
       this.fetchTeamData(user.id);
       this.checkPendingNudgeAlert(user.id);
+      this.fetchPendingAudit(user.id);
     });
   },
 
@@ -72,18 +101,26 @@ Page({
             avatar = app.formatImageUrl(avatar);
             return {
               ...m,
+              userId: m.userId || m.id,
               avatar: avatar
             };
           });
+          const userPoints = detail.userPoints !== undefined ? detail.userPoints : (app.globalData.userInfo ? app.globalData.userInfo.points : 0);
           this.setData({
+            userId: userId,
             hasTeam: true,
             teamId: detail.teamId,
             teamName: detail.teamName,
             currentDay: detail.currentDay,
             targetDays: detail.targetDays,
             points: detail.points,
+            userPoints: userPoints,
+            dailyPot: detail.dailyPot || 0,
+            finalPot: detail.finalPot || 0,
             inviteCode: detail.inviteCode,
-            members: formattedMembers
+            members: formattedMembers,
+            pendingLoot: detail.pendingLoot || null,
+            showLootModal: false
           });
         } else {
           this.setData({
@@ -161,6 +198,10 @@ Page({
         if (res.data && res.data.code === 200) {
           wx.showToast({ title: '成功加入小队！', icon: 'success' });
           this.fetchTeamData(user.id);
+          // 顺手拉起小队查岗与战报订阅通知授权
+          setTimeout(() => {
+            subscribeHelper.requestTeamSubscriptions();
+          }, 800);
         } else {
           wx.showToast({ title: res.data.message || '加入失败', icon: 'none' });
         }
@@ -201,6 +242,10 @@ Page({
             createTeamName: ''
           });
           this.fetchTeamData(user.id);
+          // 顺手拉起小队查岗与战报订阅通知授权
+          setTimeout(() => {
+            subscribeHelper.requestTeamSubscriptions();
+          }, 800);
         } else {
           wx.showToast({ title: res.data.message || '创建失败', icon: 'none' });
         }
@@ -1308,13 +1353,16 @@ const loadImage = (canvas, path) => {
       method: 'GET',
       success: (res) => {
         if (res.data && res.data.code === 200 && res.data.data) {
+          const alertMsg = res.data.data;
+          this.setData({ pendingNudgeAlert: alertMsg });
           wx.showModal({
             title: '🔔 小队打卡提醒',
-            content: res.data.data,
+            content: alertMsg,
             confirmText: '去拍照打卡',
             confirmColor: '#10B981',
             cancelText: '知道啦',
             success: (mRes) => {
+              this.dismissNudgeAlert(userId);
               if (mRes.confirm) {
                 wx.switchTab({ url: '/pages/index/index' });
               }
@@ -1323,5 +1371,510 @@ const loadImage = (canvas, path) => {
         }
       }
     });
+  },
+
+  dismissNudgeAlert(userId) {
+    const uid = userId || (app.globalData.userInfo && app.globalData.userInfo.id);
+    this.setData({ pendingNudgeAlert: null });
+    if (!uid) return;
+    wx.request({
+      url: `${app.globalData.baseUrl}/team/nudge/alert/ack?userId=${uid}`,
+      method: 'POST'
+    });
+  },
+
+  onGoUploadForNudge() {
+    const user = app.globalData.userInfo;
+    if (user) this.dismissNudgeAlert(user.id);
+    wx.switchTab({ url: '/pages/index/index' });
+  },
+
+  onDismissNudgeBanner() {
+    const user = app.globalData.userInfo;
+    if (user) this.dismissNudgeAlert(user.id);
+  },
+
+  // =========================================================================
+  // 玩法 1：每日盲盒瓜分池交互方法
+  // =========================================================================
+
+  openLootModal() {
+    this.setData({ showLootModal: true });
+  },
+
+  closeLootModal() {
+    this.setData({
+      showLootModal: false,
+      isSpinning: false
+    });
+  },
+
+  onSpinLootWheel() {
+    if (this.data.isSpinning) return;
+    const user = app.globalData.userInfo;
+    const loot = this.data.pendingLoot;
+    if (!user || !loot) {
+      wx.showToast({ title: '暂无待领盲盒', icon: 'none' });
+      return;
+    }
+
+    // 顺手静默累加/拉起微信服务通知订阅授权（瑞幸式静默滚雪球）
+    subscribeHelper.requestTeamSubscriptions();
+
+    this.setData({ isSpinning: true });
+
+    // 随机增加 3~5 圈额外旋转
+    const baseRotations = 360 * 4;
+    const randomExtra = Math.floor(Math.random() * 360);
+    const targetAngle = baseRotations + randomExtra;
+    this.setData({ wheelAngle: targetAngle });
+
+    wx.request({
+      url: `${app.globalData.baseUrl}/team/daily-loot/claim?userId=${user.id}&lootId=${loot.id}`,
+      method: 'POST',
+      success: (res) => {
+        setTimeout(() => {
+          this.setData({ isSpinning: false });
+          if (res.data && res.data.code === 200 && res.data.data) {
+            const claimData = res.data.data;
+            this.setData({
+              lootClaimResult: claimData,
+              pendingLoot: null
+            });
+            // 震动反馈
+            if (wx.vibrateLong) wx.vibrateLong();
+            // 刷新小队与个人积分
+            this.fetchTeamData(user.id);
+          } else {
+            wx.showToast({ title: (res.data && res.data.message) || '开启失败', icon: 'none' });
+          }
+        }, 2200); // 轮盘转动 2.2 秒后揭晓结果
+      },
+      fail: () => {
+        this.setData({ isSpinning: false });
+        wx.showToast({ title: '网络连接异常', icon: 'none' });
+      }
+    });
+  },
+
+  onConfirmLootReward() {
+    this.setData({
+      showLootModal: false,
+      lootClaimResult: null
+    });
+  },
+
+  onViewSettlementHistory() {
+    const teamId = this.data.teamId;
+    if (!teamId) return;
+
+    wx.showLoading({ title: '加载中...' });
+    wx.request({
+      url: `${app.globalData.baseUrl}/team/daily-loot/history?teamId=${teamId}`,
+      method: 'GET',
+      success: (res) => {
+        wx.hideLoading();
+        if (res.data && res.data.code === 200) {
+          this.setData({
+            settlementHistory: res.data.data || [],
+            showHistoryModal: true
+          });
+        }
+      },
+      fail: () => {
+        wx.hideLoading();
+        wx.showToast({ title: '加载流水失败', icon: 'none' });
+      }
+    });
+  },
+
+  onCloseHistoryModal() {
+    this.setData({ showHistoryModal: false });
+  },
+
+  // =========================================================================
+  // 玩法 2：减脂卧底间谍局方法
+  // =========================================================================
+
+  openSpyModal() {
+    const user = app.globalData.userInfo;
+    const teamId = this.data.teamId;
+    if (!user || !teamId) return;
+
+    wx.showLoading({ title: '加载中...' });
+    wx.request({
+      url: `${app.globalData.baseUrl}/team/spy/status?userId=${user.id}&teamId=${teamId}`,
+      method: 'GET',
+      success: (res) => {
+        wx.hideLoading();
+        if (res.data && res.data.code === 200) {
+          this.setData({
+            spyInfo: res.data.data || {},
+            showSpyModal: true
+          });
+        }
+      },
+      fail: () => {
+        wx.hideLoading();
+        wx.showToast({ title: '加载卧底情报失败', icon: 'none' });
+      }
+    });
+  },
+
+  closeSpyModal() {
+    this.setData({ showSpyModal: false });
+  },
+
+  onSpyTauntInput(e) {
+    this.setData({ inputSpyTaunt: e.detail.value });
+  },
+
+  onSendSpyTaunt() {
+    const user = app.globalData.userInfo;
+    const teamId = this.data.teamId;
+    const text = this.data.inputSpyTaunt;
+    if (!text || !text.trim()) {
+      wx.showToast({ title: '请输入诱惑台词', icon: 'none' });
+      return;
+    }
+
+    wx.showLoading({ title: '投毒中...' });
+    wx.request({
+      url: `${app.globalData.baseUrl}/team/spy/taunt?userId=${user.id}&teamId=${teamId}&text=${encodeURIComponent(text)}`,
+      method: 'POST',
+      success: (res) => {
+        wx.hideLoading();
+        if (res.data && res.data.code === 200) {
+          wx.showToast({ title: '投毒成功！', icon: 'success' });
+          this.setData({ inputSpyTaunt: '', showSpyModal: false });
+        } else {
+          wx.showToast({ title: (res.data && res.data.message) || '发送失败', icon: 'none' });
+        }
+      },
+      fail: () => {
+        wx.hideLoading();
+        wx.showToast({ title: '网络异常', icon: 'none' });
+      }
+    });
+  },
+
+  selectSuspect(e) {
+    const id = e.currentTarget.dataset.id;
+    this.setData({ selectedSuspectId: id });
+  },
+
+  onCastSpyVote() {
+    const user = app.globalData.userInfo;
+    const teamId = this.data.teamId;
+    const suspectId = this.data.selectedSuspectId;
+    if (!suspectId) {
+      wx.showToast({ title: '请选择怀疑的队友', icon: 'none' });
+      return;
+    }
+
+    wx.showLoading({ title: '投票中...' });
+    wx.request({
+      url: `${app.globalData.baseUrl}/team/spy/vote?voterId=${user.id}&targetUserId=${suspectId}&teamId=${teamId}`,
+      method: 'POST',
+      success: (res) => {
+        wx.hideLoading();
+        if (res.data && res.data.code === 200) {
+          wx.showToast({ title: '指认成功！', icon: 'success' });
+          this.setData({ showSpyModal: false });
+        } else {
+          wx.showToast({ title: (res.data && res.data.message) || '投票失败', icon: 'none' });
+        }
+      },
+      fail: () => {
+        wx.hideLoading();
+        wx.showToast({ title: '网络异常', icon: 'none' });
+      }
+    });
+  },
+
+  // =========================================================================
+  // 玩法 3：战术道具卡牌商店方法
+  // =========================================================================
+
+  openShopModal() {
+    const user = app.globalData.userInfo;
+    if (!user) return;
+
+    // 打开道具店时，同步当前个人钱包积分
+    if (user.points !== undefined) {
+      this.setData({ userPoints: user.points });
+    }
+
+    wx.showLoading({ title: '加载中...' });
+    wx.request({
+      url: `${app.globalData.baseUrl}/team/items/shop?userId=${user.id}`,
+      method: 'GET',
+      success: (res) => {
+        wx.hideLoading();
+        if (res.data && res.data.code === 200) {
+          this.setData({
+            shopItems: res.data.data || [],
+            showShopModal: true
+          });
+        }
+      },
+      fail: () => {
+        wx.hideLoading();
+        wx.showToast({ title: '加载道具店失败', icon: 'none' });
+      }
+    });
+  },
+
+  closeShopModal() {
+    this.setData({ showShopModal: false });
+  },
+
+  onBuyItem(e) {
+    const itemType = e.currentTarget.dataset.itemType;
+    const user = app.globalData.userInfo;
+    if (!user || !itemType) return;
+
+    wx.showLoading({ title: '购买中...' });
+    wx.request({
+      url: `${app.globalData.baseUrl}/team/items/buy?userId=${user.id}&itemType=${itemType}`,
+      method: 'POST',
+      success: (res) => {
+        wx.hideLoading();
+        if (res.data && res.data.code === 200) {
+          wx.showToast({ title: '购买成功！', icon: 'success' });
+          // 实时更新个人钱包可用积分
+          const rem = res.data.data && res.data.data.remainingPoints;
+          if (rem !== undefined) {
+            this.setData({ userPoints: rem });
+            if (app.globalData.userInfo) {
+              app.globalData.userInfo.points = rem;
+            }
+          }
+          this.openShopModal(); // 刷新商店
+        } else {
+          wx.showToast({ title: (res.data && res.data.message) || '购买失败', icon: 'none' });
+        }
+      },
+      fail: () => {
+        wx.hideLoading();
+        wx.showToast({ title: '网络异常', icon: 'none' });
+      }
+    });
+  },
+
+  onUseItem(e) {
+    const itemType = e.currentTarget.dataset.itemType;
+    const user = app.globalData.userInfo;
+    const teamId = this.data.teamId;
+    if (!user || !itemType || !teamId) return;
+
+    // 场景 1：欺骗餐豁免盾
+    if (itemType === 'CHEAT_SHIELD') {
+      this.executeUseItem(`${app.globalData.baseUrl}/team/items/use/shield?userId=${user.id}&teamId=${teamId}`);
+      return;
+    }
+
+    // 场景 2：血清补签卡
+    if (itemType === 'SERUM_REVIVAL') {
+      this.executeUseItem(`${app.globalData.baseUrl}/team/items/use/revival?userId=${user.id}&teamId=${teamId}`);
+      return;
+    }
+
+    // 场景 3：查岗狙击卡 -> 弹出队友选择菜单，指定目标突击查岗
+    if (itemType === 'SNIPER_AUDIT') {
+      const teammates = (this.data.members || []).filter(m => (m.userId || m.id) !== user.id);
+      if (teammates.length === 0) {
+        wx.showModal({
+          title: '暂无可查岗队友',
+          content: '当前小队暂无其他队友，快邀请好友加入对赌局吧！',
+          showCancel: false
+        });
+        return;
+      }
+
+      const names = teammates.map(m => `🎯 突击查岗: ${m.name || '队友'}`);
+      wx.showActionSheet({
+        itemList: names,
+        success: (res) => {
+          const selectedMember = teammates[res.tapIndex];
+          if (!selectedMember) return;
+          const targetId = selectedMember.userId || selectedMember.id;
+          const targetName = selectedMember.name || '队友';
+
+          wx.showModal({
+            title: '确认发起突击查岗',
+            content: `确定消耗 1 张【查岗狙击卡】突击查岗【${targetName}】吗？对方需在 30 分钟内拍照上传餐食，超时扣 20 分入小队奖池！`,
+            confirmText: '立即查岗',
+            confirmColor: '#EF4444',
+            success: (confirmRes) => {
+              if (confirmRes.confirm) {
+                wx.showLoading({ title: '发起查岗中...' });
+                wx.request({
+                  url: `${app.globalData.baseUrl}/team/items/use/sniper?senderId=${user.id}&targetUserId=${targetId}&teamId=${teamId}`,
+                  method: 'POST',
+                  success: (resp) => {
+                    wx.hideLoading();
+                    if (resp.data && resp.data.code === 200) {
+                      wx.showModal({
+                        title: '🎯 突击查岗已下达！',
+                        content: `已成功锁定队友【${targetName}】！对方必须在 30 分钟内拍照自证，请静候战果！`,
+                        showCancel: false
+                      });
+                      this.setData({ showShopModal: false });
+                      this.openShopModal(); // 刷新商店背包数量
+                      this.fetchTeamData(user.id);
+                      // 顺手请求订阅
+                      setTimeout(() => {
+                        subscribeHelper.requestTeamSubscriptions();
+                      }, 500);
+                    } else {
+                      wx.showToast({ title: (resp.data && resp.data.message) || '查岗发起失败', icon: 'none' });
+                    }
+                  },
+                  fail: () => {
+                    wx.hideLoading();
+                    wx.showToast({ title: '网络异常', icon: 'none' });
+                  }
+                });
+              }
+            }
+          });
+        }
+      });
+      return;
+    }
+
+    // 场景 4：反弹镜像卡
+    if (itemType === 'MIRROR_DEFLECT') {
+      if (this.data.pendingAudit) {
+        wx.showModal({
+          title: '触发反弹镜像',
+          content: '检测到当前有队友对你发起了突击查岗，确定立即消耗 1 张【反弹镜像卡】强制反弹给发起人吗？',
+          confirmText: '立即反弹',
+          confirmColor: '#6366F1',
+          success: (confirmRes) => {
+            if (confirmRes.confirm) {
+              this.setData({ showShopModal: false });
+              this.onDeflectAudit();
+            }
+          }
+        });
+      } else {
+        wx.showModal({
+          title: '🪞 反弹镜像卡说明',
+          content: '【反弹镜像卡】为自动防御战术卡！已在您的背包中备战。\n\n当有队友对你发起突击查岗时，顶部查岗警报条将自动解锁【🪞 反弹】技能，点击即可强制对方在 30 分钟内拍照打卡！',
+          showCancel: false,
+          confirmText: '明白啦'
+        });
+      }
+    }
+  },
+
+  executeUseItem(url) {
+    const user = app.globalData.userInfo;
+    wx.showLoading({ title: '使用道具中...' });
+    wx.request({
+      url: url,
+      method: 'POST',
+      success: (res) => {
+        wx.hideLoading();
+        if (res.data && res.data.code === 200) {
+          wx.showModal({
+            title: '道具使用成功',
+            content: res.data.data.message,
+            showCancel: false,
+            confirmText: '太棒了'
+          });
+          this.setData({ showShopModal: false });
+          this.fetchTeamData(user.id);
+        } else {
+          wx.showToast({ title: (res.data && res.data.message) || '使用失败', icon: 'none' });
+        }
+      },
+      fail: () => {
+        wx.hideLoading();
+        wx.showToast({ title: '网络异常', icon: 'none' });
+      }
+    });
+  },
+
+  fetchPendingAudit(userId) {
+    if (!userId) return;
+    wx.request({
+      url: `${app.globalData.baseUrl}/team/items/audit/pending?userId=${userId}`,
+      method: 'GET',
+      success: (res) => {
+        if (res.data && res.data.code === 200 && res.data.data) {
+          this.setData({ pendingAudit: res.data.data });
+        } else {
+          this.setData({ pendingAudit: null });
+        }
+      }
+    });
+  },
+
+  onDeflectAudit() {
+    const user = app.globalData.userInfo;
+    const task = this.data.pendingAudit;
+    if (!user || !task) return;
+
+    wx.showLoading({ title: '反弹中...' });
+    wx.request({
+      url: `${app.globalData.baseUrl}/team/items/use/deflect?userId=${user.id}&auditTaskId=${task.id}`,
+      method: 'POST',
+      success: (res) => {
+        wx.hideLoading();
+        if (res.data && res.data.code === 200) {
+          wx.showModal({
+            title: '🪞 反弹成功',
+            content: res.data.data.message,
+            showCancel: false
+          });
+          this.setData({ pendingAudit: null });
+        } else {
+          wx.showToast({ title: (res.data && res.data.message) || '反弹失败', icon: 'none' });
+        }
+      },
+      fail: () => {
+        wx.hideLoading();
+        wx.showToast({ title: '网络异常', icon: 'none' });
+      }
+    });
+  },
+
+  onGoUploadForAudit() {
+    wx.switchTab({ url: '/pages/index/index' });
+  },
+
+  // =========================================================================
+  // 玩法 4：AI 每日毒舌战报方法
+  // =========================================================================
+
+  openRoastModal() {
+    const teamId = this.data.teamId;
+    if (!teamId) return;
+
+    wx.showLoading({ title: '生成战报中...' });
+    wx.request({
+      url: `${app.globalData.baseUrl}/team/ai-roast/today?teamId=${teamId}`,
+      method: 'GET',
+      success: (res) => {
+        wx.hideLoading();
+        if (res.data && res.data.code === 200) {
+          this.setData({
+            todayRoast: res.data.data || null,
+            showRoastModal: true
+          });
+        }
+      },
+      fail: () => {
+        wx.hideLoading();
+        wx.showToast({ title: '战报加载失败', icon: 'none' });
+      }
+    });
+  },
+
+  closeRoastModal() {
+    this.setData({ showRoastModal: false });
   }
 });

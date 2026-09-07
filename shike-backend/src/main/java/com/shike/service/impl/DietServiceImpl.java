@@ -50,6 +50,7 @@ public class DietServiceImpl implements DietService {
     private final ObjectMapper objectMapper;
     private final StringRedisTemplate stringRedisTemplate;
     private final com.shike.service.AdminService adminService;
+    private final com.shike.service.StreakService streakService;
 
     @Value("${ai.provider:OPENAI}")
     private String aiProvider;
@@ -696,7 +697,18 @@ public class DietServiceImpl implements DietService {
                 .imageUrl(imageUrl)
                 .build();
 
-        return dietRecordRepository.save(record);
+        DietRecord saved = dietRecordRepository.save(record);
+
+        // 只要打卡记餐，即自动触发连续自律打卡并自动发放阶梯奖励
+        try {
+            if (streakService != null) {
+                streakService.autoCheckinOnDietRecord(userId);
+            }
+        } catch (Exception e) {
+            log.info("[STREAK] Auto checkin on diet record: {}", e.getMessage());
+        }
+
+        return saved;
     }
 
     @Override
@@ -751,19 +763,52 @@ public class DietServiceImpl implements DietService {
         return summaryList;
     }
 
+    private int getConfiguredAiRecognizePoints() {
+        try {
+            if (stringRedisTemplate != null) {
+                String val = stringRedisTemplate.opsForValue().get("shike:sys:config:ai_recognize_points");
+                if (val != null) {
+                    return Math.max(0, Integer.parseInt(val));
+                }
+            }
+        } catch (Exception ignored) {}
+        return 5; // 默认每次消耗 5 积分
+    }
+
+    private int getConfiguredAiDailyLimit() {
+        try {
+            if (stringRedisTemplate != null) {
+                String val = stringRedisTemplate.opsForValue().get("shike:sys:config:ai_daily_limit");
+                if (val != null) {
+                    return Math.max(1, Integer.parseInt(val));
+                }
+            }
+        } catch (Exception ignored) {}
+        return 10; // 默认每日限 10 次
+    }
+
     private void checkPointsBalance(Long userId) {
         if (userId == null) return;
+        int requiredPoints = getConfiguredAiRecognizePoints();
+        if (requiredPoints <= 0) return; // 设为 0 积分时免扣免查
+        
         User user = userRepository.findById(userId).orElse(null);
         if (user != null) {
+            if (user.isUnlimitedAiUser()) {
+                return;
+            }
             int currentPoints = user.getPoints() != null ? user.getPoints() : 0;
-            if (currentPoints < 5) {
-                throw new BizException(400, "积分余额不足（需 5 积分，当前仅有 " + currentPoints + " 积分），请完成每日打卡或签到赚取积分！");
+            if (currentPoints < requiredPoints) {
+                throw new BizException(400, "积分余额不足（AI识图需 " + requiredPoints + " 积分，当前仅有 " + currentPoints + " 积分），请完成每日打卡或签到赚取积分！");
             }
         }
     }
 
     private void deductPointsForAi(Long userId) {
         if (userId == null) return;
+        int costPoints = getConfiguredAiRecognizePoints();
+        if (costPoints <= 0) return; // 0 积分无需扣除
+
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) return;
         if (user.isUnlimitedAiUser()) {
@@ -772,17 +817,17 @@ public class DietServiceImpl implements DietService {
             return;
         }
         int currentPoints = user.getPoints() != null ? user.getPoints() : 0;
-        user.setPoints(Math.max(0, currentPoints - 5));
+        user.setPoints(Math.max(0, currentPoints - costPoints));
         userRepository.save(user);
         
         PointsRecord record = PointsRecord.builder()
                 .userId(userId)
-                .amount(-5)
+                .amount(-costPoints)
                 .type("AI_RECOGNITION")
-                .remark("AI食物热量识别")
+                .remark("AI食物热量识别 (消耗 " + costPoints + " 积分)")
                 .build();
         pointsRecordRepository.save(record);
-        log.info("Deducted 5 points from user {} for AI recognition. Remaining points: {}", userId, user.getPoints());
+        log.info("Deducted {} points from user {} for AI recognition. Remaining points: {}", costPoints, userId, user.getPoints());
     }
 
     private String callOpenAiVision(String model, String prompt, String dataUrl, String mimeType) throws Exception {
@@ -810,7 +855,8 @@ public class DietServiceImpl implements DietService {
                     "messages", java.util.List.of(userMessage),
                     "temperature", 0.2,
                     "top_p", 0.8,
-                    "max_tokens", 2048
+                    "max_tokens", 2048,
+                    "thinking", java.util.Map.of("type", "disabled")
             );
         } else {
             payload = java.util.Map.of(
@@ -925,13 +971,19 @@ public class DietServiceImpl implements DietService {
     }
 
     private void checkDailyAiLimit(Long userId) {
+        if (userId == null) return;
+        User user = userRepository.findById(userId).orElse(null);
+        if (user != null && user.isUnlimitedAiUser()) {
+            return; // VIP / 无限次用户不受每日限制
+        }
+        int maxLimit = getConfiguredAiDailyLimit();
         try {
             String key = "shike:ai:limit:" + userId + ":" + LocalDate.now();
             String val = stringRedisTemplate.opsForValue().get(key);
             if (val != null) {
                 int count = Integer.parseInt(val);
-                if (count >= 10) {
-                    throw new BizException(400, "您今天已达到每日 10 次 AI 识别上限，请明天再来哦～");
+                if (count >= maxLimit) {
+                    throw new BizException(400, "您今天已达到每日 " + maxLimit + " 次 AI 识别上限，请明天再来哦～");
                 }
             }
         } catch (BizException e) {

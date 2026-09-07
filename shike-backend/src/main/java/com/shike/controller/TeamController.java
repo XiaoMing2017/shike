@@ -90,4 +90,139 @@ public class TeamController {
         String alertMsg = teamService.getPendingNudgeAlert(userId);
         return ResultDTO.success(alertMsg);
     }
+
+    @PostMapping("/nudge/alert/ack")
+    public ResultDTO<Void> ackNudgeAlert(@RequestParam Long userId) {
+        teamService.dismissNudgeAlert(userId);
+        return ResultDTO.success();
+    }
+
+    // =========================================================================
+    // 玩法 1：每日盲盒瓜分池 REST 接口
+    // =========================================================================
+
+    @GetMapping("/daily-loot/pending")
+    public ResultDTO<com.shike.model.entity.TeamLootRecord> getPendingDailyLoot(@RequestParam Long userId) {
+        com.shike.model.entity.TeamLootRecord loot = teamService.getPendingDailyLoot(userId);
+        return ResultDTO.success(loot);
+    }
+
+    @PostMapping("/daily-loot/claim")
+    public ResultDTO<java.util.Map<String, Object>> claimDailyLoot(@RequestParam Long userId, @RequestParam Long lootId) {
+        java.util.Map<String, Object> res = teamService.claimDailyLoot(userId, lootId);
+        return ResultDTO.success(res);
+    }
+
+    @GetMapping("/daily-loot/history")
+    public ResultDTO<List<com.shike.model.entity.TeamDailySettlement>> getDailySettlementHistory(@RequestParam Long teamId) {
+        List<com.shike.model.entity.TeamDailySettlement> list = teamService.getDailySettlementHistory(teamId);
+        return ResultDTO.success(list);
+    }
+
+    @PostMapping("/daily-loot/manual-settle")
+    public ResultDTO<java.util.Map<String, Object>> manualTriggerSettlement(@RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate date) {
+        java.util.Map<String, Object> res = teamService.manualTriggerSettlement(date);
+        return ResultDTO.success(res);
+    }
+
+    // =========================================================================
+    // 玩法 2：减脂卧底 / 狼人杀间谍局 REST 接口
+    // =========================================================================
+
+    @GetMapping("/spy/status")
+    public ResultDTO<java.util.Map<String, Object>> getSpyGameStatus(@RequestParam Long userId, @RequestParam Long teamId) {
+        java.util.Map<String, Object> res = teamService.getSpyGameStatus(userId, teamId);
+        return ResultDTO.success(res);
+    }
+
+    @PostMapping("/spy/taunt")
+    public ResultDTO<String> postSpyTaunt(@RequestParam Long userId, @RequestParam Long teamId,
+                                          @RequestParam(required = false) String text,
+                                          @RequestParam(required = false) String imageUrl) {
+        String msg = teamService.postSpyTaunt(userId, teamId, text, imageUrl);
+        return ResultDTO.success(msg);
+    }
+
+    @PostMapping("/spy/vote")
+    public ResultDTO<String> castSpyVote(@RequestParam Long voterId, @RequestParam Long targetUserId, @RequestParam Long teamId) {
+        String msg = teamService.castSpyVote(voterId, targetUserId, teamId);
+        return ResultDTO.success(msg);
+    }
+
+    // =========================================================================
+    // 玩法 3：对赌战术道具卡牌商店 REST 接口
+    // =========================================================================
+
+    @GetMapping("/items/shop")
+    public ResultDTO<List<java.util.Map<String, Object>>> getShopItems(@RequestParam Long userId) {
+        List<java.util.Map<String, Object>> items = teamService.getShopItems(userId);
+        return ResultDTO.success(items);
+    }
+
+    @PostMapping("/items/buy")
+    public ResultDTO<java.util.Map<String, Object>> buyShopItem(@RequestParam Long userId, @RequestParam String itemType) {
+        java.util.Map<String, Object> res = teamService.buyShopItem(userId, itemType);
+        return ResultDTO.success(res);
+    }
+
+    @GetMapping("/items/inventory")
+    public ResultDTO<List<com.shike.model.entity.UserItem>> getUserInventory(@RequestParam Long userId) {
+        List<com.shike.model.entity.UserItem> inventory = teamService.getUserInventory(userId);
+        return ResultDTO.success(inventory);
+    }
+
+    @PostMapping("/items/use/shield")
+    public ResultDTO<java.util.Map<String, Object>> useCheatShield(@RequestParam Long userId, @RequestParam Long teamId,
+                                                                   @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate date) {
+        java.util.Map<String, Object> res = teamService.useCheatShield(userId, teamId, date);
+        return ResultDTO.success(res);
+    }
+
+    @PostMapping("/items/use/revival")
+    public ResultDTO<java.util.Map<String, Object>> useSerumRevival(@RequestParam Long userId, @RequestParam Long teamId,
+                                                                    @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate targetDate) {
+        java.util.Map<String, Object> res = teamService.useSerumRevival(userId, teamId, targetDate);
+        return ResultDTO.success(res);
+    }
+
+    @PostMapping("/items/use/sniper")
+    public ResultDTO<com.shike.model.entity.TeamAuditTask> triggerSniperAudit(@RequestParam Long senderId, @RequestParam Long targetUserId, @RequestParam Long teamId) {
+        com.shike.model.entity.TeamAuditTask task = teamService.triggerSniperAudit(senderId, targetUserId, teamId);
+        return ResultDTO.success(task);
+    }
+
+    @PostMapping("/items/use/deflect")
+    public ResultDTO<java.util.Map<String, Object>> deflectAudit(@RequestParam Long userId, @RequestParam Long auditTaskId) {
+        java.util.Map<String, Object> res = teamService.deflectAudit(userId, auditTaskId);
+        return ResultDTO.success(res);
+    }
+
+    @PostMapping("/items/audit/respond")
+    public ResultDTO<java.util.Map<String, Object>> respondToAudit(@RequestParam Long userId, @RequestParam Long auditTaskId, @RequestParam Long dietRecordId) {
+        java.util.Map<String, Object> res = teamService.respondToAudit(userId, auditTaskId, dietRecordId);
+        return ResultDTO.success(res);
+    }
+
+    @GetMapping("/items/audit/pending")
+    public ResultDTO<com.shike.model.entity.TeamAuditTask> getPendingAudit(@RequestParam Long userId) {
+        com.shike.model.entity.TeamAuditTask task = teamService.getPendingAuditForUser(userId);
+        return ResultDTO.success(task);
+    }
+
+    // =========================================================================
+    // 玩法 4：AI 营养师法官与每日毒舌战报 REST 接口
+    // =========================================================================
+
+    @GetMapping("/ai-roast/today")
+    public ResultDTO<com.shike.model.entity.TeamAiRoast> getTodayAiRoast(@RequestParam Long teamId) {
+        com.shike.model.entity.TeamAiRoast roast = teamService.getTodayAiRoast(teamId);
+        return ResultDTO.success(roast);
+    }
+
+    @PostMapping("/ai-roast/generate")
+    public ResultDTO<com.shike.model.entity.TeamAiRoast> generateAiRoast(@RequestParam Long teamId,
+                                                                         @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate date) {
+        com.shike.model.entity.TeamAiRoast roast = teamService.generateDailyAiRoast(teamId, date);
+        return ResultDTO.success(roast);
+    }
 }

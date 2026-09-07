@@ -35,7 +35,10 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PointsRecordRepository pointsRecordRepository;
 
-    @Value("${wx.mock}")
+    @Value("${spring.profiles.active:dev}")
+    private String activeProfile;
+
+    @Value("${wx.mock:false}")
     private boolean wxMock;
 
     @Value("${wx.appid}")
@@ -49,29 +52,31 @@ public class UserServiceImpl implements UserService {
     public User loginOrRegister(UserLoginDTO loginDTO) {
         String openid = null;
         String code = loginDTO.getCode();
+        boolean isDevEnvironment = !"prod".equalsIgnoreCase(activeProfile) || wxMock;
 
         if (code != null && !code.trim().isEmpty()) {
             try {
                 openid = getOpenIdFromWx(code);
             } catch (Exception e) {
-                if (wxMock) {
-                    log.warn("Wx login via code failed (probably due to mock appid/secret), falling back to mock openid. Error: {}", e.getMessage());
+                if (isDevEnvironment) {
+                    log.warn("Wx login via code failed in dev environment: {}, falling back to mock user", e.getMessage());
                     openid = loginDTO.getOpenid();
                     if (openid == null || openid.trim().isEmpty()) {
                         openid = "mock_user_openid_123";
                     }
                 } else {
+                    log.error("Wx login failed in production: {}", e.getMessage());
                     throw e;
                 }
             }
         } else {
-            if (wxMock) {
+            if (isDevEnvironment) {
                 openid = loginDTO.getOpenid();
                 if (openid == null || openid.trim().isEmpty()) {
                     openid = "mock_user_openid_123";
                 }
             } else {
-                throw new BizException(400, "code must be provided for login");
+                throw new BizException(400, "code must be provided for login in production");
             }
         }
 

@@ -95,9 +95,38 @@
       <text class="section-title">当日餐食明细</text>
     </view>
 
-    <view class="empty-meals" wx:if="{{dayMeals.length === 0}}">
+    <view class="empty-meals flex flex-col align-center" wx:if="{{dayMeals.length === 0}}">
       <image class="empty-icon" src="/images/empty_box.png" mode="aspectFit" wx:if="{{false}}" />
       <text class="empty-text">🍃 该日暂无饮食记录</text>
+
+      <!-- 过去的未打卡日期：支持消耗积分或血清补签卡补卡 -->
+      <view class="makeup-box flex flex-col align-center" wx:if="{{isPastEmptyDate}}">
+        <view class="makeup-header flex align-center">
+          <text class="makeup-badge">漏卡可补</text>
+          <text class="makeup-title">补签该日记录，点亮自律绿圈</text>
+        </view>
+        <text class="makeup-desc">补签后将自动生成打卡达标记录，点亮绿圈并维护连续自律连击</text>
+        
+        <view class="makeup-actions flex align-center justify-center">
+          <!-- 方式 1：50 积分补卡 -->
+          <view class="makeup-action-btn points-makeup flex align-center" catchtap="onMakeupWithPoints">
+            <text class="btn-icon">🪙</text>
+            <view class="flex flex-col align-start">
+              <text class="btn-primary-txt">50 积分补卡</text>
+              <text class="btn-sub-txt">现有 {{userPoints || 0}} 积分</text>
+            </view>
+          </view>
+          
+          <!-- 方式 2：血清补签卡补卡 -->
+          <view class="makeup-action-btn serum-makeup flex align-center" catchtap="onMakeupWithSerum">
+            <text class="btn-icon">💉</text>
+            <view class="flex flex-col align-start">
+              <text class="btn-primary-txt">补签卡补卡</text>
+              <text class="btn-sub-txt">剩余 {{userSerumCount || 0}} 张</text>
+            </view>
+          </view>
+        </view>
+      </view>
     </view>
 
     <view class="meal-list" wx:else>

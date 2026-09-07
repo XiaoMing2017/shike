@@ -201,11 +201,20 @@ public class AdminServiceImpl implements AdminService {
 
         // ========== 留存率 Cohort 分析 ==========
         List<AdminStatsDTO.RetentionItem> retentionList = new ArrayList<>();
-        int defaultAiLimit = 10;
+        int defaultAiLimit = localAiDailyLimit;
+        int defaultAiPoints = localAiRecognizePoints;
         try {
-            String limitVal = stringRedisTemplate.opsForValue().get("shike:sys:config:ai_daily_limit");
-            if (limitVal != null) {
-                defaultAiLimit = Integer.parseInt(limitVal);
+            if (stringRedisTemplate != null) {
+                String limitVal = stringRedisTemplate.opsForValue().get("shike:sys:config:ai_daily_limit");
+                if (limitVal != null) {
+                    defaultAiLimit = Integer.parseInt(limitVal);
+                    localAiDailyLimit = defaultAiLimit;
+                }
+                String pointsVal = stringRedisTemplate.opsForValue().get("shike:sys:config:ai_recognize_points");
+                if (pointsVal != null) {
+                    defaultAiPoints = Integer.parseInt(pointsVal);
+                    localAiRecognizePoints = defaultAiPoints;
+                }
             }
         } catch (Exception ignored) {}
 
@@ -269,6 +278,7 @@ public class AdminServiceImpl implements AdminService {
                 .userRegistrationTrend(registrationTrendList)
                 .dauTrend(dauTrendList)
                 .globalAiLimit(defaultAiLimit)
+                .aiRecognizePoints(defaultAiPoints)
                 .retentionStats(retentionList)
                 .build();
     }
@@ -357,22 +367,29 @@ public class AdminServiceImpl implements AdminService {
                 int points = u != null && u.getPoints() != null ? u.getPoints() : 0;
                 boolean isCreator = m.getUserId().equals(t.getCreatorId());
 
+                List<TeamCheckin> checkins = teamCheckinRepository.findByTeamIdAndUserId(t.getId(), m.getUserId());
+                boolean hasCheckinSuccess = checkins.stream()
+                        .anyMatch(c -> c.getCheckinDate().equals(today) && Boolean.TRUE.equals(c.getIsSuccess()));
+
                 boolean todayChecked = false;
-                List<DietRecord> todayDiets = dietRecordRepository.findByUserIdAndRecordDate(m.getUserId(), today);
-                if (!todayDiets.isEmpty()) {
-                    java.math.BigDecimal totalTodayCalories = todayDiets.stream()
-                            .map(DietRecord::getTotalCalories)
-                            .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
-                    java.math.BigDecimal budget = (u != null && u.getTargetCalories() != null) 
-                            ? u.getTargetCalories() 
-                            : java.math.BigDecimal.valueOf(2000.0);
-                    java.math.BigDecimal maxAllowed = budget.multiply(java.math.BigDecimal.valueOf(1.25));
-                    todayChecked = totalTodayCalories.compareTo(maxAllowed) <= 0;
+                if (hasCheckinSuccess) {
+                    todayChecked = true;
+                } else {
+                    List<DietRecord> todayDiets = dietRecordRepository.findByUserIdAndRecordDate(m.getUserId(), today);
+                    if (!todayDiets.isEmpty()) {
+                        java.math.BigDecimal totalTodayCalories = todayDiets.stream()
+                                .map(DietRecord::getTotalCalories)
+                                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+                        java.math.BigDecimal budget = (u != null && u.getTargetCalories() != null) 
+                                ? u.getTargetCalories() 
+                                : java.math.BigDecimal.valueOf(2000.0);
+                        java.math.BigDecimal maxAllowed = budget.multiply(java.math.BigDecimal.valueOf(1.25));
+                        todayChecked = totalTodayCalories.compareTo(maxAllowed) <= 0;
+                    }
                 }
 
-                List<TeamCheckin> checkins = teamCheckinRepository.findByTeamIdAndUserId(t.getId(), m.getUserId());
                 int successCount = (int) checkins.stream().filter(c -> Boolean.TRUE.equals(c.getIsSuccess())).count();
-                if (todayChecked && checkins.stream().noneMatch(c -> c.getCheckinDate().equals(today))) {
+                if (todayChecked && checkins.stream().noneMatch(c -> c.getCheckinDate().equals(today) && Boolean.TRUE.equals(c.getIsSuccess()))) {
                     successCount++;
                 }
 
@@ -390,22 +407,29 @@ public class AdminServiceImpl implements AdminService {
 
             // Fallback: If creator is not in tb_team_member table for this team, automatically include creator as a member
             if (memberItems.stream().noneMatch(m -> m.getUserId().equals(t.getCreatorId())) && creator != null) {
+                List<TeamCheckin> checkins = teamCheckinRepository.findByTeamIdAndUserId(t.getId(), creator.getId());
+                boolean hasCheckinSuccess = checkins.stream()
+                        .anyMatch(c -> c.getCheckinDate().equals(today) && Boolean.TRUE.equals(c.getIsSuccess()));
+
                 boolean todayChecked = false;
-                List<DietRecord> todayDiets = dietRecordRepository.findByUserIdAndRecordDate(creator.getId(), today);
-                if (!todayDiets.isEmpty()) {
-                    java.math.BigDecimal totalTodayCalories = todayDiets.stream()
-                            .map(DietRecord::getTotalCalories)
-                            .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
-                    java.math.BigDecimal budget = creator.getTargetCalories() != null 
-                            ? creator.getTargetCalories() 
-                            : java.math.BigDecimal.valueOf(2000.0);
-                    java.math.BigDecimal maxAllowed = budget.multiply(java.math.BigDecimal.valueOf(1.25));
-                    todayChecked = totalTodayCalories.compareTo(maxAllowed) <= 0;
+                if (hasCheckinSuccess) {
+                    todayChecked = true;
+                } else {
+                    List<DietRecord> todayDiets = dietRecordRepository.findByUserIdAndRecordDate(creator.getId(), today);
+                    if (!todayDiets.isEmpty()) {
+                        java.math.BigDecimal totalTodayCalories = todayDiets.stream()
+                                .map(DietRecord::getTotalCalories)
+                                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+                        java.math.BigDecimal budget = creator.getTargetCalories() != null 
+                                ? creator.getTargetCalories() 
+                                : java.math.BigDecimal.valueOf(2000.0);
+                        java.math.BigDecimal maxAllowed = budget.multiply(java.math.BigDecimal.valueOf(1.25));
+                        todayChecked = totalTodayCalories.compareTo(maxAllowed) <= 0;
+                    }
                 }
 
-                List<TeamCheckin> checkins = teamCheckinRepository.findByTeamIdAndUserId(t.getId(), creator.getId());
                 int successCount = (int) checkins.stream().filter(c -> Boolean.TRUE.equals(c.getIsSuccess())).count();
-                if (todayChecked && checkins.stream().noneMatch(c -> c.getCheckinDate().equals(today))) {
+                if (todayChecked && checkins.stream().noneMatch(c -> c.getCheckinDate().equals(today) && Boolean.TRUE.equals(c.getIsSuccess()))) {
                     successCount++;
                 }
 
@@ -618,11 +642,35 @@ public class AdminServiceImpl implements AdminService {
                 adminUsername, userId, user.getVipType(), user.getAiUnlimited(), user.getVipExpireTime());
     }
 
+    private static volatile int localAiDailyLimit = 10;
+    private static volatile int localAiRecognizePoints = 5;
+
     @Override
     public void updateGlobalAiLimit(Integer limit, String adminUsername) {
         if (limit == null || limit < 1) limit = 10;
-        stringRedisTemplate.opsForValue().set("shike:sys:config:ai_daily_limit", String.valueOf(limit));
+        localAiDailyLimit = limit;
+        try {
+            if (stringRedisTemplate != null) {
+                stringRedisTemplate.opsForValue().set("shike:sys:config:ai_daily_limit", String.valueOf(limit));
+            }
+        } catch (Exception e) {
+            log.warn("Redis unavailable, saved ai daily limit to memory: {}", e.getMessage());
+        }
         logAudit(adminUsername, "UPDATE_AI_LIMIT", "GLOBAL", "修改全局每日 AI 调用上限为: " + limit + " 次");
+    }
+
+    @Override
+    public void updateAiRecognizePoints(Integer points, String adminUsername) {
+        if (points == null || points < 0) points = 0;
+        localAiRecognizePoints = points;
+        try {
+            if (stringRedisTemplate != null) {
+                stringRedisTemplate.opsForValue().set("shike:sys:config:ai_recognize_points", String.valueOf(points));
+            }
+        } catch (Exception e) {
+            log.warn("Redis unavailable, saved ai points to memory: {}", e.getMessage());
+        }
+        logAudit(adminUsername, "UPDATE_AI_POINTS", "GLOBAL", "修改每次 AI 识别热量消耗积分为: " + points + " 积分");
     }
 
     @Override
@@ -827,6 +875,24 @@ public class AdminServiceImpl implements AdminService {
         }
 
         return res;
+    }
+
+    @Override
+    public java.util.Map<String, Object> getPublicSystemPolicy() {
+        int limit = localAiDailyLimit;
+        int points = localAiRecognizePoints;
+        try {
+            if (stringRedisTemplate != null) {
+                String lVal = stringRedisTemplate.opsForValue().get("shike:sys:config:ai_daily_limit");
+                if (lVal != null) limit = Integer.parseInt(lVal);
+                String pVal = stringRedisTemplate.opsForValue().get("shike:sys:config:ai_recognize_points");
+                if (pVal != null) points = Integer.parseInt(pVal);
+            }
+        } catch (Exception ignored) {}
+        return java.util.Map.of(
+                "aiDailyLimit", limit,
+                "aiRecognizePoints", points
+        );
     }
 
     @Override

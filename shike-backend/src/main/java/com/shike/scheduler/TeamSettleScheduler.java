@@ -29,6 +29,7 @@ public class TeamSettleScheduler {
     private final DietRecordRepository dietRecordRepository;
     private final TeamCheckinRepository teamCheckinRepository;
     private final PointsRecordRepository pointsRecordRepository;
+    private final com.shike.service.WxSubscribeService wxSubscribeService;
 
     @Scheduled(cron = "0 5 0 * * ?")
     @Transactional
@@ -96,6 +97,19 @@ public class TeamSettleScheduler {
                         .remark("契约小队 [" + team.getTeamName() + "] 每日打卡达标奖励")
                         .build();
                 pointsRecordRepository.save(pRecord);
+
+                // 发送微信服务通知：奖励到账与开盲盒提醒
+                try {
+                    wxSubscribeService.sendUserNotice(
+                            user.getId(),
+                            "TEAM_LOOT",
+                            "🪙 减脂小队奖励已到账！",
+                            "昨日控卡达标获得+20积分！小队盲盒已生成，快来开盒！",
+                            "pages/team/team"
+                    );
+                } catch (Exception e) {
+                    log.warn("Failed to send WeChat loot notice to user {}: {}", user.getId(), e.getMessage());
+                }
             }
 
             log.info("Member {} checkin result for {}: success={}, total={}/{} kcal", 

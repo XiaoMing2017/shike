@@ -28,6 +28,7 @@ public class AdminStatsDTO {
     private List<AiTrendItem> aiTrend;
     private List<AiTrendItem> userRegistrationTrend;
     private Integer globalAiLimit;
+    private Integer aiRecognizePoints; // 每次 AI 识别热量消耗积分
     private List<RetentionItem> retentionStats;
     private List<AiTrendItem> dauTrend;
 

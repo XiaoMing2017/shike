@@ -20,7 +20,10 @@ Page({
       proteinPercent: 0,
       fatPercent: 0
     },
-    dayMeals: []
+    dayMeals: [],
+    userPoints: 0,
+    userSerumCount: 0,
+    isPastEmptyDate: false
   },
 
   onLoad() {
@@ -51,6 +54,7 @@ Page({
   onShow() {
     if (this.data.userId) {
       this.generateCalendar();
+      this.fetchUserPointsAndItems();
     }
   },
 
@@ -62,6 +66,7 @@ Page({
         userId: user.id
       }, () => {
         this.generateCalendar();
+        this.fetchUserPointsAndItems();
       });
     });
   },
@@ -253,11 +258,19 @@ Page({
 
           const caloriesPercent = Math.min(100, Math.round((dayCalories / dayBudget) * 100));
 
+          const today = new Date();
+          const y = today.getFullYear();
+          const m = String(today.getMonth() + 1).padStart(2, '0');
+          const d = String(today.getDate()).padStart(2, '0');
+          const todayStr = `${y}-${m}-${d}`;
+          const isPastEmptyDate = dateString < todayStr && dayMeals.length === 0;
+
           this.setData({
             dayMeals: dayMeals,
             dayCalories: dayCalories,
             dayBudget: dayBudget,
             caloriesPercent: caloriesPercent,
+            isPastEmptyDate: isPastEmptyDate,
             nutrients: {
               carbs,
               protein,
@@ -391,4 +404,132 @@ Page({
       }
     });
   },
+
+  fetchUserPointsAndItems() {
+    const { userId } = this.data;
+    if (!userId) return;
+    wx.request({
+      url: `${app.globalData.baseUrl}/streak/status?userId=${userId}`,
+      method: 'GET',
+      success: (res) => {
+        if (res.data && res.data.code === 200 && res.data.data) {
+          const d = res.data.data;
+          this.setData({
+            userPoints: d.userPoints || 0,
+            userSerumCount: d.serumCount || 0
+          });
+        }
+      }
+    });
+  },
+
+  onMakeupWithPoints() {
+    const { userId, selectedDate, selectedDateStr, userPoints } = this.data;
+    if (!userId || !selectedDate) return;
+
+    if (userPoints < 50) {
+      wx.showModal({
+        title: '积分不足',
+        content: `补签需要消耗 50 契约积分，当前仅有 ${userPoints} 积分。您可以通过自律打卡或坚持记录赚取积分！`,
+        showCancel: false,
+        confirmText: '我知道了'
+      });
+      return;
+    }
+
+    wx.showModal({
+      title: '确认补签',
+      content: `确定消耗 50 契约积分补签【${selectedDateStr}】的自律打卡吗？补签后该日将点亮绿圈并恢复打卡达标！`,
+      confirmText: '确认补签',
+      cancelText: '取消',
+      success: (res) => {
+        if (!res.confirm) return;
+
+        wx.showLoading({ title: '正在补签...' });
+        wx.request({
+          url: `${app.globalData.baseUrl}/streak/recover?userId=${userId}&method=POINTS&date=${selectedDate}`,
+          method: 'POST',
+          success: (resp) => {
+            wx.hideLoading();
+            if (resp.data && resp.data.code === 200) {
+              wx.showToast({
+                title: '补签成功！🎉',
+                icon: 'success'
+              });
+              this.setData({
+                userPoints: Math.max(0, userPoints - 50)
+              });
+              // 重新拉取当月汇总与当日明细
+              this.fetchMonthSummary();
+              this.fetchUserPointsAndItems();
+            } else {
+              wx.showToast({
+                title: (resp.data && resp.data.message) || '补签失败',
+                icon: 'none'
+              });
+            }
+          },
+          fail: () => {
+            wx.hideLoading();
+            wx.showToast({ title: '网络异常', icon: 'none' });
+          }
+        });
+      }
+    });
+  },
+
+  onMakeupWithSerum() {
+    const { userId, selectedDate, selectedDateStr, userSerumCount } = this.data;
+    if (!userId || !selectedDate) return;
+
+    if (userSerumCount <= 0) {
+      wx.showModal({
+        title: '补签卡不足',
+        content: '背包中没有【血清补签卡】。建议直接使用 50 契约积分补签，或在小队商店/连击阶梯中获取补签卡！',
+        showCancel: false,
+        confirmText: '我知道了'
+      });
+      return;
+    }
+
+    wx.showModal({
+      title: '确认补签',
+      content: `确定消耗 1 张血清补签卡补签【${selectedDateStr}】吗？补签后该日将点亮绿圈并恢复打卡达标！`,
+      confirmText: '确认补签',
+      cancelText: '取消',
+      success: (res) => {
+        if (!res.confirm) return;
+
+        wx.showLoading({ title: '正在补签...' });
+        wx.request({
+          url: `${app.globalData.baseUrl}/streak/recover?userId=${userId}&method=SERUM_CARD&date=${selectedDate}`,
+          method: 'POST',
+          success: (resp) => {
+            wx.hideLoading();
+            if (resp.data && resp.data.code === 200) {
+              wx.showToast({
+                title: '补签成功！🎉',
+                icon: 'success'
+              });
+              this.setData({
+                userSerumCount: Math.max(0, userSerumCount - 1)
+              });
+              // 重新拉取当月汇总与当日明细
+              this.fetchMonthSummary();
+              this.fetchUserPointsAndItems();
+            } else {
+              wx.showToast({
+                title: (resp.data && resp.data.message) || '补签失败',
+                icon: 'none'
+              });
+            }
+          },
+          fail: () => {
+            wx.hideLoading();
+            wx.showToast({ title: '网络异常', icon: 'none' });
+          }
+        });
+      }
+    });
+  }
 });

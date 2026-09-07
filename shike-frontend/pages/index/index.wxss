@@ -1,5 +1,5 @@
 .container {
-  padding: 30rpx 40rpx 60rpx 40rpx;
+  padding: 30rpx 40rpx calc(220rpx + env(safe-area-inset-bottom)) 40rpx;
   display: flex;
   flex-direction: column;
   background: linear-gradient(135deg, #F3F6F8 0%, #EBF4F6 100%);
@@ -15,16 +15,18 @@
 /* 0. 顶部导航/状态栏 */
 .app-header {
   width: 100%;
-  padding: 10rpx 0 30rpx 0;
+  padding: 10rpx 0 20rpx 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
 }
 
 .header-icon-btn {
-  font-size: 36rpx;
-  width: 68rpx;
+  font-size: 32rpx;
+  min-width: 68rpx;
   height: 68rpx;
+  padding: 0 16rpx;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -32,10 +34,15 @@
   border-radius: 20rpx;
   border: 1rpx solid rgba(255, 255, 255, 0.6);
   box-shadow: 0 8rpx 24rpx rgba(148, 163, 184, 0.05);
+  box-sizing: border-box;
 }
 
 .header-title-wrapper {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   text-align: center;
+  pointer-events: none;
 }
 
 .header-title {
@@ -50,6 +57,12 @@
   color: #64748B;
   margin-top: 6rpx;
   font-weight: 600;
+}
+
+.header-right-box {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
 }
 
 .header-avatar-btn {
@@ -811,7 +824,7 @@
 .water-sheet-mask {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  z-index: 1050;
+  z-index: 10050;
   background: rgba(15, 23, 42, 0);
   pointer-events: none;
   transition: background 0.35s;
@@ -826,16 +839,15 @@
   position: fixed;
   left: 0; right: 0;
   bottom: 0;
-  z-index: 1051;
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  z-index: 10051;
+  background: #FFFFFF;
   border-radius: 40rpx 40rpx 0 0;
-  border-top: 1rpx solid rgba(255, 255, 255, 0.8);
-  padding: 20rpx 40rpx 60rpx 40rpx;
+  border-top: 1rpx solid rgba(226, 232, 240, 0.9);
+  padding: 24rpx 36rpx calc(36rpx + env(safe-area-inset-bottom)) 36rpx;
   transform: translateY(100%);
   transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
-  box-shadow: 0 -16rpx 64rpx rgba(15, 23, 42, 0.08);
+  box-shadow: 0 -16rpx 64rpx rgba(15, 23, 42, 0.15);
+  box-sizing: border-box;
 }
 .water-sheet-mask.active .water-sheet {
   transform: translateY(0);
@@ -845,7 +857,7 @@
   height: 8rpx;
   border-radius: 4rpx;
   background: rgba(203, 213, 225, 0.8);
-  margin: 0 auto 24rpx auto;
+  margin: 0 auto 20rpx auto;
 }
 .water-sheet-title {
   display: block;
@@ -853,27 +865,26 @@
   font-size: 32rpx;
   font-weight: 800;
   color: #1E293B;
-  margin-bottom: 32rpx;
+  margin-bottom: 20rpx;
 }
 
 /* ===================== 动态水杯 ===================== */
 .water-cup-wrapper {
   display: flex;
   justify-content: center;
-  margin-bottom: 24rpx;
+  margin-bottom: 18rpx;
 }
 .water-cup {
   position: relative;
-  width: 240rpx;
-  height: 320rpx;
-  border-radius: 16rpx 16rpx 40rpx 40rpx;
-  border: 4rpx solid rgba(255, 255, 255, 0.8);
+  width: 210rpx;
+  height: 250rpx;
+  border-radius: 16rpx 16rpx 36rpx 36rpx;
+  border: 4rpx solid rgba(226, 232, 240, 0.9);
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.25);
+  background: #F8FAFC;
   box-shadow: 
-    0 16rpx 40rpx rgba(148, 163, 184, 0.06), 
-    inset 0 4rpx 12rpx rgba(255, 255, 255, 0.5),
-    0 0 0 1rpx rgba(226, 232, 240, 0.8);
+    0 12rpx 32rpx rgba(148, 163, 184, 0.08), 
+    inset 0 4rpx 12rpx rgba(255, 255, 255, 0.8);
 }
 .water-cup::before {
   content: '';
@@ -942,7 +953,7 @@
 /* ===================== 数据统计行 ===================== */
 .water-stats {
   text-align: center;
-  margin-bottom: 32rpx;
+  margin-bottom: 20rpx;
 }
 .water-stats-text {
   font-size: 26rpx;
@@ -1697,7 +1708,6 @@
 }
 
 .exercise-scroll-box {
-  max-height: 480rpx;
   width: 100%;
   box-sizing: border-box;
 }
@@ -3795,12 +3805,8 @@
   box-shadow: 0 6rpx 16rpx rgba(16, 185, 129, 0.3);
 }
 
-/* 💬 首页右下角常驻悬浮客服水滴气泡 (100% 匹配饮水气泡水滴形态与画风) */
+/* 💬 首页常驻悬浮客服水滴气泡 (支持自由拖拽移动，100% 匹配饮水气泡水滴形态与画风) */
 .feedback-floating-fab {
-  position: fixed !important;
-  right: 28rpx !important;
-  bottom: 100rpx !important;
-  z-index: 99 !important;
   width: 92rpx !important;
   height: 92rpx !important;
   border-radius: 50% !important;
@@ -3817,13 +3823,24 @@
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  transition: opacity 0.3s, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
   filter: drop-shadow(0 10rpx 18rpx rgba(16, 185, 129, 0.22)) !important;
   -webkit-filter: drop-shadow(0 10rpx 18rpx rgba(16, 185, 129, 0.22)) !important;
+  box-sizing: border-box !important;
+}
+
+.feedback-floating-fab::after {
+  border: none !important;
 }
 
 .feedback-floating-fab:active {
   transform: scale(0.9) !important;
+}
+
+.feedback-floating-fab.hide {
+  opacity: 0 !important;
+  transform: scale(0.5) !important;
+  pointer-events: none !important;
 }
 
 .fab-icon {
@@ -4072,4 +4089,343 @@
   border: none !important;
   box-shadow: 0 8rpx 20rpx rgba(236, 72, 153, 0.4) !important;
 }
+
+/* ==========================================================================
+   模块一：首页顶部栏「连续自律火焰标识 (Header Streak Item)」
+   ========================================================================== */
+.flame-streak-header-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6rpx;
+  cursor: pointer;
+  padding: 6rpx 10rpx;
+  border-radius: 20rpx;
+  transition: transform 0.2s ease;
+}
+
+.flame-streak-header-item:active {
+  transform: scale(0.92);
+}
+
+.flame-streak-header-item .flame-emoji {
+  font-size: 34rpx;
+  line-height: 1;
+  display: inline-block;
+  transition: all 0.3s ease;
+}
+
+.flame-streak-header-item .flame-count-text {
+  font-size: 26rpx;
+  letter-spacing: 0.5rpx;
+  line-height: 1;
+  transition: all 0.3s ease;
+}
+
+/* 已打卡达标：火焰火红，微光呼吸，文字火红 */
+.flame-streak-header-item.flame-lit .flame-emoji {
+  animation: headerFlamePulse 2s infinite ease-in-out;
+  filter: drop-shadow(0 2rpx 8rpx rgba(239, 68, 68, 0.55));
+}
+
+.flame-streak-header-item.flame-lit .flame-count-text {
+  color: #EF4444; /* 火红色 */
+  font-weight: 800;
+  text-shadow: 0 1rpx 3rpx rgba(239, 68, 68, 0.2);
+}
+
+@keyframes headerFlamePulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 2rpx 6rpx rgba(239, 68, 68, 0.45));
+  }
+  50% {
+    transform: scale(1.15);
+    filter: drop-shadow(0 4rpx 12rpx rgba(239, 68, 68, 0.8));
+  }
+}
+
+/* 未打卡：火焰灰度置灰，文字灰色 */
+.flame-streak-header-item.flame-unlit .flame-emoji {
+  filter: grayscale(100%);
+  opacity: 0.38;
+  transform: scale(0.94);
+}
+
+.flame-streak-header-item.flame-unlit .flame-count-text {
+  color: #94A3B8; /* 灰色 */
+  font-weight: 700;
+}
+
+
+/* ===================== 连击庆祝弹窗样式 ===================== */
+.streak-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+.streak-modal-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.streak-dialog-box {
+  width: 600rpx;
+  background: #FFFFFF;
+  border-radius: 40rpx;
+  padding: 44rpx 36rpx 36rpx;
+  box-shadow: 0 24rpx 60rpx rgba(15, 23, 42, 0.25);
+  animation: dialogScaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+@keyframes dialogScaleUp {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.celebration-icon {
+  font-size: 80rpx;
+  margin-bottom: 12rpx;
+}
+
+.celebration-title {
+  font-size: 38rpx;
+  font-weight: 900;
+  color: #0F172A;
+  margin-bottom: 10rpx;
+}
+
+.celebration-desc {
+  font-size: 24rpx;
+  color: #64748B;
+  text-align: center;
+  margin-bottom: 28rpx;
+}
+
+.reward-points-card {
+  width: 100%;
+  background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+  border: 1.5rpx solid rgba(245, 158, 11, 0.3);
+  border-radius: 24rpx;
+  padding: 24rpx 28rpx;
+  box-sizing: border-box;
+  margin-bottom: 20rpx;
+}
+
+.points-label {
+  font-size: 22rpx;
+  color: #92400E;
+}
+
+.points-val {
+  font-size: 36rpx;
+  font-weight: 900;
+  color: #B45309;
+}
+
+.points-tag {
+  font-size: 20rpx;
+  font-weight: 700;
+  color: #B45309;
+  background: rgba(245, 158, 11, 0.2);
+  padding: 4rpx 14rpx;
+  border-radius: 12rpx;
+}
+
+.special-drop-card {
+  width: 100%;
+  background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
+  border: 1.5rpx solid rgba(34, 197, 94, 0.3);
+  border-radius: 24rpx;
+  padding: 20rpx 24rpx;
+  box-sizing: border-box;
+  margin-bottom: 24rpx;
+  gap: 16rpx;
+}
+
+.drop-icon {
+  font-size: 48rpx;
+}
+
+.drop-meta {
+  flex: 1;
+}
+
+.drop-title {
+  font-size: 24rpx;
+  font-weight: 800;
+  color: #166534;
+}
+
+.drop-desc {
+  font-size: 20rpx;
+  color: #15803D;
+  margin-top: 4rpx;
+}
+
+.next-day-teaser {
+  width: 100%;
+  background: #F8FAFC;
+  border: 1.5rpx dashed #CBD5E1;
+  border-radius: 20rpx;
+  padding: 16rpx 20rpx;
+  margin-bottom: 30rpx;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.teaser-headline {
+  font-size: 24rpx;
+  color: #475569;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.teaser-highlight {
+  color: #D97706;
+  font-weight: 800;
+  margin: 0 4rpx;
+}
+
+.teaser-sub {
+  font-size: 21rpx;
+  color: #94A3B8;
+  margin-top: 6rpx;
+  line-height: 1.3;
+}
+
+.streak-dialog-btn {
+  width: 100%;
+  height: 88rpx;
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  border-radius: 44rpx;
+  color: #FFFFFF;
+  font-size: 30rpx;
+  font-weight: 800;
+  box-shadow: 0 10rpx 24rpx rgba(16, 185, 129, 0.35);
+}
+
+/* ===================== 断签挽救弹窗样式 ===================== */
+.streak-saver-dialog {
+  width: 620rpx;
+  background: #FFFFFF;
+  border-radius: 40rpx;
+  padding: 44rpx 36rpx 32rpx;
+  box-shadow: 0 24rpx 60rpx rgba(15, 23, 42, 0.25);
+  animation: dialogScaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+.saver-icon {
+  font-size: 80rpx;
+  margin-bottom: 12rpx;
+}
+
+.saver-title {
+  font-size: 34rpx;
+  font-weight: 900;
+  color: #DC2626;
+  text-align: center;
+  margin-bottom: 10rpx;
+}
+
+.saver-desc {
+  font-size: 24rpx;
+  color: #64748B;
+  text-align: center;
+  line-height: 1.5;
+  margin-bottom: 28rpx;
+}
+
+.saver-options {
+  width: 100%;
+  gap: 20rpx;
+  margin-bottom: 28rpx;
+}
+
+.saver-option-card {
+  width: 100%;
+  background: #F8FAFC;
+  border: 1.5rpx solid #E2E8F0;
+  border-radius: 24rpx;
+  padding: 24rpx 20rpx;
+  box-sizing: border-box;
+}
+
+.opt-title {
+  font-size: 26rpx;
+  font-weight: 800;
+  color: #1E293B;
+}
+
+.opt-desc {
+  font-size: 20rpx;
+  color: #64748B;
+  margin-top: 6rpx;
+}
+
+.opt-btn {
+  padding: 10rpx 22rpx;
+  border-radius: 20rpx;
+  font-size: 22rpx;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.opt-btn.enabled {
+  background: #6366F1;
+  color: #FFFFFF;
+  box-shadow: 0 6rpx 14rpx rgba(99, 102, 241, 0.3);
+}
+
+.opt-btn.disabled {
+  background: #E2E8F0;
+  color: #94A3B8;
+}
+
+.opt-btn.share-btn {
+  background: #10B981;
+  color: #FFFFFF;
+  box-shadow: 0 6rpx 14rpx rgba(16, 185, 129, 0.3);
+}
+
+.opt-btn.points-btn {
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  color: #FFFFFF;
+  box-shadow: 0 6rpx 14rpx rgba(245, 158, 11, 0.35);
+}
+
+.share-btn-reset {
+  padding: 24rpx 20rpx !important;
+  margin: 0 !important;
+  border: 1.5rpx solid #E2E8F0 !important;
+  background: #F8FAFC !important;
+  line-height: normal !important;
+}
+
+.share-btn-reset::after {
+  display: none !important;
+}
+
+.saver-skip-link {
+  font-size: 22rpx;
+  color: #94A3B8;
+  text-decoration: underline;
+  margin-top: 10rpx;
+}
+
 

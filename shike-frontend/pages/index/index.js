@@ -1,4 +1,5 @@
 const app = getApp();
+const subscribeHelper = require('../../utils/subscribeHelper.js');
 
 const COMMON_FOOD_DICTIONARY = [
   { name: '油条', unit: '根', standardWeight: 50, caloriesPer100g: 386.0, proteinPer100g: 6.9, fatPer100g: 17.6, carbsPer100g: 51.0 },
@@ -17,6 +18,11 @@ const COMMON_FOOD_DICTIONARY = [
 
 Page({
   data: {
+    streakStatus: null,
+    showStreakCelebrationModal: false,
+    streakCheckinResult: null,
+    showStreakSaverModal: false,
+    hasShownCelebrationToday: false,
     isWaterSubscribed: false,
     waterSubQuota: 0,
     currentDateStr: '',
@@ -117,6 +123,8 @@ Page({
     waterFillHeight: 0,
     fabX: 300,
     fabY: 500,
+    contactFabX: 300,
+    contactFabY: 435,
     // 智能营养平衡诊断卡片 & 弹窗
     nutritionInsights: [],
     showNutritionModal: false,
@@ -172,12 +180,14 @@ Page({
     isDiagnosing: false,
     aiExpertComment: '',
     showWeightModal: false,
-    inputWeightValue: ''
+    inputWeightValue: '',
+    aiRecognizePoints: 5
   },
 
   onLoad(options) {
     this.fetchAnnouncementConfig();
     this.fetchContactConfig();
+    this.fetchSystemPolicy();
     // 检查是否显示新功能上线重磅引导弹窗 (页面首次加载/每次打开进入展现1次)
     try {
       const user = (app.globalData && app.globalData.userInfo) || wx.getStorageSync('userInfo');
@@ -191,7 +201,7 @@ Page({
     } catch (e) {
       console.error('Error reading modal storage', e);
     }
-    // 动态计算悬浮饮水气泡的初始位置 (右边 34rpx，距离底部 186rpx)
+    // 动态计算悬浮小组件（饮水气泡 + 客服气泡）初始位置 (右边 17px，垂直错落排列)
     try {
       const sys = wx.getSystemInfoSync();
       const screenWidth = sys.windowWidth;
@@ -199,7 +209,9 @@ Page({
       const fabSize = 46; // 92rpx 对应 46px
       this.setData({
         fabX: screenWidth - fabSize - 17, // 右边 17px
-        fabY: screenHeight - fabSize - 100 // 底部 100px (安全避开 TabBar)
+        fabY: screenHeight - fabSize - 100, // 底部 100px (安全避开 TabBar)
+        contactFabX: screenWidth - fabSize - 17, // 右边 17px
+        contactFabY: screenHeight - fabSize - 165 // 位于饮水气泡上方 65px，留出间距且不重叠
       });
     } catch (e) {
       console.error('Failed to calculate FAB position', e);
@@ -274,6 +286,26 @@ Page({
       },
       fail: (err) => {
         console.error('Failed to fetch contact config', err);
+      }
+    });
+  },
+
+  fetchSystemPolicy() {
+    wx.request({
+      url: `${app.globalData.baseUrl}/config/policy`,
+      method: 'GET',
+      success: (res) => {
+        if (res.data && res.data.code === 200 && res.data.data) {
+          const policy = res.data.data;
+          const points = policy.aiRecognizePoints !== undefined ? policy.aiRecognizePoints : 5;
+          this.setData({
+            aiRecognizePoints: points
+          });
+          app.globalData.aiRecognizePoints = points;
+        }
+      },
+      fail: (err) => {
+        console.warn('Failed to fetch system policy', err);
       }
     });
   },
@@ -563,6 +595,7 @@ Page({
 
     // 从后端拉取真实剩余额度
     this._loadWaterSubQuota();
+    this.fetchSystemPolicy();
   },
 
 
@@ -620,6 +653,7 @@ Page({
       this.checkLateCheckinStatus(user.id);
       this.checkPendingNudgeAlert(user.id);
       this.checkWaterReminderStatus(user.id);
+      this.fetchStreakStatus(user.id);
     }
     // 1. Set calorie targets and dynamic nutrient distribution
     const targetCal = user.targetCalories || 2000;
@@ -1385,6 +1419,7 @@ Page({
     const match = COMMON_FOOD_DICTIONARY.find(f => f.name === name);
     if (match) {
       const items = this.data.aiFoodItems || [];
+      items.forEach(it => { it.isFocus = false; });
       items.push({
         name: match.name,
         weight: match.standardWeight,
@@ -1395,8 +1430,18 @@ Page({
       });
       
       this.setData({
-        aiFoodItems: items
+        aiFoodItems: items,
+        foodListScrollIntoView: 'food-scroll-bottom-anchor',
+        foodListScrollTop: (this.data.foodListScrollTop || 0) + 2000
       });
+
+      setTimeout(() => {
+        this.setData({
+          foodListScrollIntoView: 'food-scroll-bottom-anchor',
+          foodListScrollTop: (this.data.foodListScrollTop || 0) + 2000
+        });
+      }, 120);
+
       this.recalculateTotalCalories();
     }
   },
@@ -1413,17 +1458,29 @@ Page({
 
   addNewFoodItem() {
     const items = this.data.aiFoodItems || [];
+    items.forEach(it => { it.isFocus = false; });
     items.push({
       name: '',
-      weight: 0,
+      weight: 100,
       calories: 0,
       protein: 0,
       fat: 0,
-      carbs: 0
+      carbs: 0,
+      isFocus: true
     });
     this.setData({
-      aiFoodItems: items
+      aiFoodItems: items,
+      foodListScrollIntoView: 'food-scroll-bottom-anchor',
+      foodListScrollTop: (this.data.foodListScrollTop || 0) + 2000
     });
+
+    setTimeout(() => {
+      this.setData({
+        foodListScrollIntoView: 'food-scroll-bottom-anchor',
+        foodListScrollTop: (this.data.foodListScrollTop || 0) + 2000
+      });
+    }, 120);
+
     this.recalculateTotalCalories();
   },
 
@@ -1519,6 +1576,10 @@ Page({
         if (res.data && res.data.code === 200) {
           wx.showToast({ title: '记录成功', icon: 'success' });
           this.checkUserAndLoadData(); // reload dashboard
+          // 顺手静默累加/拉起每日控卡提醒服务通知授权（瑞幸式静默滚雪球）
+          setTimeout(() => {
+            subscribeHelper.requestDietReminderSubscription();
+          }, 800);
         } else {
           wx.showToast({ title: '保存记录失败', icon: 'error' });
         }
@@ -1857,6 +1918,241 @@ Page({
 
   onQuickPhotoRecord() {
     this.onTapAddMeal();
+  },
+
+  // ===================== 模块一：连续自律连击 (Streak Board) =====================
+
+  fetchStreakStatus(userId) {
+    if (!userId) return;
+    wx.request({
+      url: `${app.globalData.baseUrl}/streak/status?userId=${userId}`,
+      method: 'GET',
+      success: (res) => {
+        if (res.data && res.data.code === 200 && res.data.data) {
+          const streak = res.data.data;
+          this.setData({ streakStatus: streak });
+          if (streak.isBroken && !this.data.hasShownStreakSaverModal) {
+            this.setData({
+              showStreakSaverModal: true,
+              hasShownStreakSaverModal: true
+            });
+          }
+          // 今日打卡达标自动弹窗呈现奖励
+          if (streak.todayChecked && streak.todayCheckinResult && !this.data.hasShownCelebrationToday) {
+            this.setData({
+              streakCheckinResult: streak.todayCheckinResult,
+              showStreakCelebrationModal: true,
+              hasShownCelebrationToday: true
+            });
+          }
+        }
+      }
+    });
+  },
+
+  onTapFlame() {
+    const status = this.data.streakStatus;
+    if (!status) return;
+    if (status.todayChecked) {
+      if (status.todayCheckinResult) {
+        this.setData({
+          streakCheckinResult: status.todayCheckinResult,
+          showStreakCelebrationModal: true
+        });
+      } else {
+        wx.showToast({
+          title: `今日自律已达标！已连续 ${status.currentStreak || 1} 天 🔥`,
+          icon: 'none',
+          duration: 2500
+        });
+      }
+    } else {
+      if (status.isBroken) {
+        this.setData({ showStreakSaverModal: true });
+        return;
+      }
+      wx.showToast({
+        title: '今日尚未打卡，记录一餐即可自动点亮火焰 🔥',
+        icon: 'none',
+        duration: 2500
+      });
+    }
+  },
+
+  onTapStreakCheckin() {
+    const user = app.globalData.userInfo;
+    if (!user || !user.id) {
+      wx.showToast({ title: '请先登录', icon: 'none' });
+      return;
+    }
+
+    if (this.data.streakStatus && this.data.streakStatus.todayChecked) {
+      wx.showToast({ title: '今日已打卡，明天再来领阶梯奖励吧！', icon: 'none' });
+      return;
+    }
+
+    wx.showLoading({ title: '打卡中...' });
+    wx.request({
+      url: `${app.globalData.baseUrl}/streak/checkin?userId=${user.id}`,
+      method: 'POST',
+      success: (res) => {
+        wx.hideLoading();
+        if (res.data && res.data.code === 200 && res.data.data) {
+          const result = res.data.data;
+          this.setData({
+            streakCheckinResult: result,
+            showStreakCelebrationModal: true
+          });
+          this.fetchStreakStatus(user.id);
+          if (result.totalUserPoints !== undefined && app.globalData.userInfo) {
+            app.globalData.userInfo.points = result.totalUserPoints;
+          }
+        } else {
+          wx.showToast({ title: (res.data && res.data.message) || '打卡失败', icon: 'none' });
+        }
+      },
+      fail: () => {
+        wx.hideLoading();
+        wx.showToast({ title: '网络异常，请重试', icon: 'none' });
+      }
+    });
+  },
+
+  onTapStreakNode(e) {
+    const day = e.currentTarget.dataset.day;
+    if (!this.data.streakStatus) return;
+
+    if (day === this.data.streakStatus.currentCycleDay && !this.data.streakStatus.todayChecked) {
+      this.onTapStreakCheckin();
+    } else if (day === 7) {
+      wx.showToast({ title: '连续自律 7 天即可开启金色通关神秘大宝箱！🎁', icon: 'none' });
+    } else {
+      const node = (this.data.streakStatus.days || []).find(d => d.day === day);
+      if (node) {
+        if (node.status === 'COMPLETED') {
+          wx.showToast({ title: `Day ${day} 已完成自律打卡 ✓`, icon: 'none' });
+        } else {
+          const rewardText = node.itemRewardName ? `，附赠【${node.itemRewardName}】` : '';
+          wx.showToast({ title: `Day ${day} 奖励：+${node.points} 积分${rewardText}`, icon: 'none' });
+        }
+      }
+    }
+  },
+
+  closeStreakCelebrationModal() {
+    this.setData({ showStreakCelebrationModal: false });
+  },
+
+  closeStreakSaverModal() {
+    this.setData({ showStreakSaverModal: false });
+  },
+
+  onRecoverStreakWithSerum() {
+    const user = app.globalData.userInfo;
+    if (!user || !user.id) return;
+
+    if (!this.data.streakStatus || this.data.streakStatus.serumCount <= 0) {
+      wx.showModal({
+        title: '补签卡不足',
+        content: '背包中没有【血清补签卡】，您可以通过好友分享免费拯救或在小队商店获取！',
+        showCancel: false,
+        confirmText: '我知道了'
+      });
+      return;
+    }
+
+    wx.showLoading({ title: '正在挽救连击...' });
+    wx.request({
+      url: `${app.globalData.baseUrl}/streak/recover?userId=${user.id}&method=SERUM_CARD`,
+      method: 'POST',
+      success: (res) => {
+        wx.hideLoading();
+        if (res.data && res.data.code === 200) {
+          wx.showModal({
+            title: '拯救成功！🎉',
+            content: (res.data.data && res.data.data.message) || '已恢复连续自律连击！快去完成今日打卡吧！',
+            showCancel: false,
+            confirmText: '立即打卡'
+          });
+          this.setData({ showStreakSaverModal: false });
+          this.fetchStreakStatus(user.id);
+        } else {
+          wx.showToast({ title: (res.data && res.data.message) || '挽救失败', icon: 'none' });
+        }
+      },
+      fail: () => {
+        wx.hideLoading();
+        wx.showToast({ title: '网络异常', icon: 'none' });
+      }
+    });
+  },
+
+  onRecoverStreakWithPoints() {
+    const user = app.globalData.userInfo;
+    if (!user || !user.id) return;
+
+    const userPoints = (this.data.streakStatus && this.data.streakStatus.userPoints) || 0;
+    if (userPoints < 50) {
+      wx.showModal({
+        title: '积分不足',
+        content: `消耗 50 契约积分补签，当前仅有 ${userPoints} 积分。您可以通过好友分享免费拯救或坚持记录赚取积分！`,
+        showCancel: false,
+        confirmText: '我知道了'
+      });
+      return;
+    }
+
+    wx.showModal({
+      title: '确认消耗积分',
+      content: `确定消耗 50 契约积分（现有 ${userPoints} 积分）挽救昨日断签并恢复自律连击吗？`,
+      confirmText: '确认消耗',
+      cancelText: '再想想',
+      success: (mRes) => {
+        if (!mRes.confirm) return;
+
+        wx.showLoading({ title: '正在挽救连击...' });
+        wx.request({
+          url: `${app.globalData.baseUrl}/streak/recover?userId=${user.id}&method=POINTS`,
+          method: 'POST',
+          success: (res) => {
+            wx.hideLoading();
+            if (res.data && res.data.code === 200) {
+              wx.showModal({
+                title: '拯救成功！🎉',
+                content: (res.data.data && res.data.data.message) || '已消耗 50 积分恢复连续自律连击！快去完成今日打卡吧！',
+                showCancel: false,
+                confirmText: '立即打卡'
+              });
+              this.setData({ showStreakSaverModal: false });
+              this.fetchStreakStatus(user.id);
+            } else {
+              wx.showToast({ title: (res.data && res.data.message) || '挽救失败', icon: 'none' });
+            }
+          },
+          fail: () => {
+            wx.hideLoading();
+            wx.showToast({ title: '网络异常', icon: 'none' });
+          }
+        });
+      }
+    });
+  },
+
+  onRecoverStreakWithShare() {
+    const user = app.globalData.userInfo;
+    if (!user || !user.id) return;
+
+    wx.request({
+      url: `${app.globalData.baseUrl}/streak/recover?userId=${user.id}&method=SHARE`,
+      method: 'POST',
+      success: (res) => {
+        if (res.data && res.data.code === 200) {
+          wx.showToast({ title: '分享拯救成功！🎉', icon: 'success' });
+          this.setData({ showStreakSaverModal: false });
+          this.fetchStreakStatus(user.id);
+        }
+      }
+    });
   },
 
   checkWaterReminderStatus(userId) {
@@ -3076,9 +3372,19 @@ Page({
     ctx.fillText('SCAN QR CODE TO JOIN US', 100, 800);
   },
 
-  onShareAppMessage() {
+  onShareAppMessage(res) {
     const user = app.globalData.userInfo;
     const nickname = user && user.nickname ? user.nickname : '自律达人';
+
+    if (res && res.from === 'button' && res.target && res.target.dataset && res.target.dataset.shareType === 'STREAK_RECOVER') {
+      this.onRecoverStreakWithShare();
+      return {
+        title: `🔥 我在《食刻》坚持连续自律 ${this.data.streakStatus ? this.data.streakStatus.brokenStreak : 3} 天，快来和我一起健康控卡！`,
+        path: '/pages/index/index',
+        imageUrl: this.data.tempPosterPath || ''
+      };
+    }
+
     this._rewardSharePoints('SHARE_FRIEND');
     return {
       title: `🥗 ${nickname}的今日卡路里膳食记录，拍照算卡，健康减脂！`,

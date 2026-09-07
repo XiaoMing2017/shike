@@ -17,9 +17,13 @@ public class TeamDetailDTO {
     private String teamName;
     private String inviteCode;
     private Integer targetDays;
-    private Integer points;
+    private Integer points; // 小队总押金奖池
+    private Integer userPoints; // 当前查询用户的个人可用积分余额
+    private Integer dailyPot; // 今日待瓜分流动池
+    private Integer finalPot; // 终极通关大奖池
     private Integer currentDay;
     private String status;
+    private Object pendingLoot; // 未领取的盲盒详情
     private List<MemberDetail> members;
 
     @Data

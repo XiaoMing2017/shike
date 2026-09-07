@@ -1,4 +1,4 @@
-<view class="container {{(showPlanModal || showWaterSheet || showNutritionModal || showAiResultModal || showExerciseModal || showMealOptionSheet || showOilOptionSheet || showViewModeSheet) ? 'page-lock' : ''}}">
+<view class="container {{(showPlanModal || showWaterSheet || showNutritionModal || showAiResultModal || showExerciseModal || showMealOptionSheet || showOilOptionSheet || showViewModeSheet || showStreakCelebrationModal || showStreakSaverModal) ? 'page-lock' : ''}}">
   <!-- 0. 顶部导航/状态栏 -->
   <view class="app-header flex justify-between align-center">
     <view class="header-icon-btn" catchtap="showViewModeModal">
@@ -8,9 +8,18 @@
       <text class="header-title">咔嚓算卡</text>
       <text class="header-date">{{currentDateStr}}</text>
     </view>
-    <view class="header-avatar-btn" catchtap="onTapAvatar">
-      <image class="header-avatar" src="{{avatarUrl}}" mode="aspectFill" />
-      <view class="avatar-dot"></view>
+    <view class="header-right-box flex align-center">
+      <!-- 极简连续自律火焰标识 + 天数 (右上角头像旁·多邻国风格常驻徽章) -->
+      <view class="flame-streak-header-item flex align-center {{streakStatus.todayChecked ? 'flame-lit' : 'flame-unlit'}}" 
+            wx:if="{{streakStatus}}" 
+            catchtap="onTapFlame">
+        <text class="flame-emoji">🔥</text>
+        <text class="flame-count-text">{{streakStatus.currentStreak || 0}}天</text>
+      </view>
+      <view class="header-avatar-btn" catchtap="onTapAvatar">
+        <image class="header-avatar" src="{{avatarUrl}}" mode="aspectFill" />
+        <view class="avatar-dot"></view>
+      </view>
     </view>
   </view>
 
@@ -171,7 +180,7 @@
       
       <view class="glass-card exercise-card">
         <block wx:if="{{exercises.length > 0}}">
-          <scroll-view class="exercise-scroll-box" scroll-y="true" enhanced="true" show-scrollbar="false">
+          <view class="exercise-scroll-box">
             <view class="exercise-list">
               <view class="exercise-item flex justify-between align-center" wx:for="{{exercises}}" wx:key="id">
                 <view class="exercise-info flex align-center">
@@ -187,7 +196,7 @@
                 </view>
               </view>
             </view>
-          </scroll-view>
+          </view>
         </block>
         <block wx:else>
           <view class="exercise-empty flex flex-col align-center justify-center" catchtap="openAddExerciseModal">
@@ -602,13 +611,13 @@
         <view class="modal-option" catchtap="selectMealOption" data-option="camera">
           <view style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
             <text class="modal-option-label">📷 拍照识别 (AI)</text>
-            <text style="font-size: 22rpx; color: #EF4444; background: #FEE2E2; padding: 4rpx 12rpx; border-radius: 6rpx; font-weight: 500; margin-right: 20rpx;">-5 积分</text>
+            <text class="ai-points-tag {{aiRecognizePoints === 0 ? 'tag-free' : ''}}">{{aiRecognizePoints === 0 ? '免费' : ('-' + (aiRecognizePoints || 5) + ' 积分')}}</text>
           </view>
         </view>
         <view class="modal-option" catchtap="selectMealOption" data-option="album">
           <view style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
             <text class="modal-option-label">🖼️ 从相册选择 (AI)</text>
-            <text style="font-size: 22rpx; color: #EF4444; background: #FEE2E2; padding: 4rpx 12rpx; border-radius: 6rpx; font-weight: 500; margin-right: 20rpx;">-5 积分</text>
+            <text class="ai-points-tag {{aiRecognizePoints === 0 ? 'tag-free' : ''}}">{{aiRecognizePoints === 0 ? '免费' : ('-' + (aiRecognizePoints || 5) + ' 积分')}}</text>
           </view>
         </view>
       </scroll-view>
@@ -651,12 +660,12 @@
         <block wx:if="{{aiResultSuccess}}">
           <!-- 可编辑食材列表 -->
           <view class="editable-food-list" style="margin: 8rpx 0 0 0; width: 100%;">
-            <scroll-view class="food-list-scroll" scroll-y style="max-height: 440rpx;">
-              <view class="food-item-card" wx:for="{{aiFoodItems}}" wx:key="index">
+            <scroll-view class="food-list-scroll" scroll-y scroll-top="{{foodListScrollTop}}" scroll-into-view="{{foodListScrollIntoView}}" scroll-with-animation="true" style="max-height: 460rpx;">
+              <view class="food-item-card" wx:for="{{aiFoodItems}}" wx:key="index" id="food-item-{{index}}">
                 <!-- 顶部：食材名 + 重量 + 热量 + 删除 -->
                 <view class="food-item-row-top">
                   <view class="food-name-box">
-                    <input class="food-input name" value="{{item.name}}" bindinput="onFoodItemNameInput" data-index="{{index}}" placeholder="食材名称" />
+                    <input class="food-input name" value="{{item.name}}" bindinput="onFoodItemNameInput" data-index="{{index}}" placeholder="食材名称" focus="{{item.isFocus}}" />
                   </view>
                   <view class="input-unit-container weight">
                     <input class="food-input weight" type="digit" value="{{item.weight}}" bindinput="onFoodItemWeightInput" data-index="{{index}}" placeholder="克数" />
@@ -698,13 +707,15 @@
                   💡 匹配到估量：1{{item.matched.unit}}{{item.matched.name}} ≈ {{item.matched.weight}}g (点击套用)
                 </view>
               </view>
+              <!-- 底部滚动定位锚点 -->
+              <view id="food-scroll-bottom-anchor" style="height: 10rpx; width: 100%;"></view>
             </scroll-view>
             
             <!-- 新增食材按钮 -->
             <view class="add-food-row" catchtap="addNewFoodItem">
               <view class="add-food-btn flex align-center justify-center">
                 <text class="add-plus-icon">＋</text>
-                <text>添加其他食材</text>
+                <text>添加食材</text>
               </view>
             </view>
             
@@ -775,10 +786,25 @@
     </view>
   </view>
 
-  <!-- 悬浮饮水气泡 (支持拖拽移动) -->
+  <!-- 悬浮小组件区域 (支持自由拖拽移动：客服气泡 + 饮水气泡) -->
   <movable-area class="fab-movable-area">
+    <!-- 💬 悬浮客服气泡 (支持自由拖拽移动) -->
+    <movable-view class="fab-movable-view" direction="all" x="{{contactFabX}}" y="{{contactFabY}}" out-of-bounds="{{false}}" wx:if="{{features.user_feedback !== false && contactConfig.enabled !== false}}">
+      <!-- 方式 A: 微信原生客服聊天 -->
+      <button class="feedback-floating-fab flex flex-col align-center justify-center {{(showNewFeatureModal || showPlanModal || showWaterSheet || showNutritionModal || showAiResultModal || showExerciseModal || showMealOptionSheet || showOilOptionSheet || showViewModeSheet || showContactModal || showStreakSaverModal || showStreakCelebrationModal || showPosterModal || showWeightModal) ? 'hide' : ''}}" open-type="contact" wx:if="{{contactConfig.openType === 'CONTACT'}}">
+        <text class="fab-icon">💬</text>
+        <text class="fab-text">客服</text>
+      </button>
+      <!-- 方式 B: 极简联系卡弹窗 -->
+      <view class="feedback-floating-fab flex flex-col align-center justify-center {{(showNewFeatureModal || showPlanModal || showWaterSheet || showNutritionModal || showAiResultModal || showExerciseModal || showMealOptionSheet || showOilOptionSheet || showViewModeSheet || showContactModal || showStreakSaverModal || showStreakCelebrationModal || showPosterModal || showWeightModal) ? 'hide' : ''}}" catchtap="openContactModal" wx:else>
+        <text class="fab-icon">💬</text>
+        <text class="fab-text">客服</text>
+      </view>
+    </movable-view>
+
+    <!-- 💧 悬浮饮水气泡 (支持自由拖拽移动) -->
     <movable-view class="fab-movable-view" direction="all" x="{{fabX}}" y="{{fabY}}" out-of-bounds="{{false}}">
-      <view class="water-fab {{(showNewFeatureModal || showPlanModal || showWaterSheet || showNutritionModal || showAiResultModal || showExerciseModal || showMealOptionSheet || showOilOptionSheet || showViewModeSheet) ? 'hide' : ''}}" catchtap="openWaterSheet">
+      <view class="water-fab {{(showNewFeatureModal || showPlanModal || showWaterSheet || showNutritionModal || showAiResultModal || showExerciseModal || showMealOptionSheet || showOilOptionSheet || showViewModeSheet || showContactModal || showStreakSaverModal || showStreakCelebrationModal || showPosterModal || showWeightModal) ? 'hide' : ''}}" catchtap="openWaterSheet">
         <view class="water-fab-inner">
           <view class="water-fab-fill" style="height: {{waterFillHeight}}%;">
             <view class="fab-wave fab-wave1"></view>
@@ -1242,20 +1268,6 @@
     </view>
   </view>
 
-  <!-- 💬 右侧贴边悬浮客服气泡 (正圆形水滴画风，匹配饮水气泡) -->
-  <block wx:if="{{features.user_feedback !== false && contactConfig.enabled !== false}}">
-    <!-- 方式 A: 微信原生客服聊天 -->
-    <button class="feedback-floating-fab flex flex-col align-center justify-center" open-type="contact" wx:if="{{contactConfig.openType === 'CONTACT'}}">
-      <text class="fab-icon">💬</text>
-      <text class="fab-text">客服</text>
-    </button>
-    <!-- 方式 B: 极简联系卡弹窗 -->
-    <view class="feedback-floating-fab flex flex-col align-center justify-center" catchtap="openContactModal" wx:else>
-      <text class="fab-icon">💬</text>
-      <text class="fab-text">客服</text>
-    </view>
-  </block>
-
   <!-- 💬 极简客服与联系方式 Modal 弹窗 -->
   <view class="feedback-modal-mask flex justify-center align-center" wx:if="{{showContactModal}}" catchtouchmove="preventTouchMove">
     <view class="glass-card feedback-modal-dialog">
@@ -1330,6 +1342,105 @@
         <button class="poster-btn share" open-type="share">✉️ 发给好友</button>
         <view class="poster-btn timeline" catchtap="savePosterToAlbum">📸 发朋友圈</view>
       </view>
+    </view>
+  </view>
+
+  <!-- 连击达成庆祝弹窗 (Streak Celebration Modal) -->
+  <view class="modal-backdrop streak-modal-backdrop {{showStreakCelebrationModal ? 'active' : ''}}" catchtouchmove="preventBubble">
+    <view class="streak-dialog-box flex flex-col align-center" catchtap="preventBubble">
+      <view class="streak-celebration-head flex flex-col align-center">
+        <text class="celebration-icon">🎉</text>
+        <text class="celebration-title">连续自律 {{streakCheckinResult.currentStreak}} 天！</text>
+        <text class="celebration-desc">恭喜开启今日自律生活，习惯正在塑造更好的你！</text>
+      </view>
+
+      <view class="reward-points-card flex align-center justify-between">
+        <view class="flex align-center" style="gap: 16rpx;">
+          <text style="font-size: 40rpx;">🪙</text>
+          <view class="flex flex-col">
+            <text class="points-label">获得积分奖励</text>
+            <text class="points-val">+{{streakCheckinResult.rewardPoints}} pts</text>
+          </view>
+        </view>
+        <text class="points-tag">已入账</text>
+      </view>
+
+      <!-- 特殊掉落展示 -->
+      <view class="special-drop-card flex align-center" wx:if="{{streakCheckinResult.itemRewardName}}">
+        <text class="drop-icon">{{streakCheckinResult.itemRewardIcon || '🎁'}}</text>
+        <view class="flex flex-col drop-meta">
+          <text class="drop-title">特殊掉落：【{{streakCheckinResult.itemRewardName}}】× 1</text>
+          <text class="drop-desc">已自动存入道具背包，可在小队对赌挑战中使用！</text>
+        </view>
+      </view>
+
+      <!-- 明日预告 -->
+      <view class="next-day-teaser">
+        <view class="teaser-headline">
+          <text>明日打卡预告：可领 </text>
+          <text class="teaser-highlight">+{{streakCheckinResult.nextDayPoints}} 积分</text>
+        </view>
+        <view class="teaser-sub">保持连击，冲刺终极大奖 🎯</view>
+      </view>
+
+      <view class="streak-dialog-btn flex align-center justify-center" catchtap="closeStreakCelebrationModal">
+        <text>开心收下 🚀</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 断签挽救弹窗 (The Streak Saver Modal) -->
+  <view class="modal-backdrop streak-modal-backdrop {{showStreakSaverModal ? 'active' : ''}}" catchtouchmove="preventBubble">
+    <view class="streak-saver-dialog flex flex-col align-center" catchtap="preventBubble">
+      <view class="saver-head flex flex-col align-center">
+        <text class="saver-icon">😱</text>
+        <text class="saver-title">你的 {{streakStatus.brokenStreak}} 天连击差点就断了！</text>
+        <text class="saver-desc">昨日未能如约记录餐食，连击面临清零重置。快选择拯救方式复活你的连击：</text>
+      </view>
+
+      <view class="saver-options flex flex-col">
+        <!-- 选项 A：使用血清补签卡 -->
+        <view class="saver-option-card flex justify-between align-center" catchtap="onRecoverStreakWithSerum">
+          <view class="flex align-center" style="gap: 16rpx;">
+            <text style="font-size: 44rpx;">💉</text>
+            <view class="flex flex-col">
+              <text class="opt-title">使用【血清补签卡】一键复活</text>
+              <text class="opt-desc">消耗 1 张补签卡，完整挽回昨日连击（剩余 {{streakStatus.serumCount}} 张）</text>
+            </view>
+          </view>
+          <view class="opt-btn {{streakStatus.serumCount > 0 ? 'enabled' : 'disabled'}}">
+            {{streakStatus.serumCount > 0 ? '立即复活' : '无道具'}}
+          </view>
+        </view>
+
+        <!-- 选项 B：消耗 50 积分直接补签 -->
+        <view class="saver-option-card flex justify-between align-center" catchtap="onRecoverStreakWithPoints">
+          <view class="flex align-center" style="gap: 16rpx;">
+            <text style="font-size: 44rpx;">🪙</text>
+            <view class="flex flex-col">
+              <text class="opt-title">消耗 50 积分直接补签</text>
+              <text class="opt-desc">扣除 50 契约积分拯救昨日连击（现有 {{streakStatus.userPoints || 0}} 积分）</text>
+            </view>
+          </view>
+          <view class="opt-btn {{streakStatus.userPoints >= 50 ? 'points-btn' : 'disabled'}}">
+            {{streakStatus.userPoints >= 50 ? '50积分补卡' : '积分不足'}}
+          </view>
+        </view>
+
+        <!-- 选项 C：好友分享免费拯救 -->
+        <button class="saver-option-card flex justify-between align-center share-btn-reset" open-type="share" data-share-type="STREAK_RECOVER">
+          <view class="flex align-center" style="gap: 16rpx;">
+            <text style="font-size: 44rpx;">💌</text>
+            <view class="flex flex-col" style="text-align: left;">
+              <text class="opt-title">分享给微信好友免费拯救</text>
+              <text class="opt-desc">邀请好友一起监督减脂，每周享 1 次免费复活机会</text>
+            </view>
+          </view>
+          <view class="opt-btn share-btn">免费拯救</view>
+        </button>
+      </view>
+
+      <text class="saver-skip-link" catchtap="closeStreakSaverModal">狠心放弃，从 Day 1 重新开始 ></text>
     </view>
   </view>
 

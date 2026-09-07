@@ -14,4 +14,5 @@ public interface TeamCheckinRepository extends JpaRepository<TeamCheckin, Long> 
     List<TeamCheckin> findByTeamIdAndCheckinDate(Long teamId, LocalDate date);
     List<TeamCheckin> findByTeamIdAndUserId(Long teamId, Long userId);
     List<TeamCheckin> findByUserIdOrderByCheckinDateDesc(Long userId);
+    java.util.Optional<TeamCheckin> findByTeamIdAndUserIdAndCheckinDate(Long teamId, Long userId, LocalDate checkinDate);
 }

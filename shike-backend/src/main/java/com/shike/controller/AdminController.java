@@ -91,6 +91,12 @@ public class AdminController {
         return ResultDTO.success();
     }
 
+    @PostMapping({"/config/ai-points", "/api/v1/admin/config/ai-points"})
+    public ResultDTO<Void> updateAiRecognizePoints(@RequestParam Integer points) {
+        adminService.updateAiRecognizePoints(points, "admin");
+        return ResultDTO.success();
+    }
+
     @GetMapping({"/users/{userId}/point-logs", "/api/v1/admin/users/{userId}/point-logs"})
     public ResultDTO<List<com.shike.model.entity.PointLog>> getUserPointLogs(@PathVariable Long userId) {
         return ResultDTO.success(adminService.getUserPointLogs(userId));

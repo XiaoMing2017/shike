@@ -28,6 +28,14 @@ public class ConfigController {
     }
 
     /**
+     * 获取客户端系统策略配置 (供小程序前端动态渲染 AI 识图消耗积分、频次等)
+     */
+    @GetMapping("/policy")
+    public ResultDTO<Map<String, Object>> getPublicSystemPolicy() {
+        return ResultDTO.success(adminService.getPublicSystemPolicy());
+    }
+
+    /**
      * 获取客户端版本公告与引导弹窗动态配置 (供小程序前端渲染)
      */
     @GetMapping("/announcement")

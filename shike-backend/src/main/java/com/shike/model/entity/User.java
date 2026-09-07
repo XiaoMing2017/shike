@@ -86,6 +86,18 @@ public class User {
     @Column(name = "ai_unlimited", columnDefinition = "tinyint(1) default 0")
     private Boolean aiUnlimited;
 
+    @Column(name = "current_streak", columnDefinition = "int default 0")
+    private Integer currentStreak;
+
+    @Column(name = "max_streak", columnDefinition = "int default 0")
+    private Integer maxStreak;
+
+    @Column(name = "last_checkin_date")
+    private java.time.LocalDate lastCheckinDate;
+
+    @Column(name = "streak_freeze_count", columnDefinition = "int default 1")
+    private Integer streakFreezeCount;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

@@ -179,6 +179,23 @@ page {
   font-weight: 700;
 }
 
+.ai-points-tag {
+  font-size: 22rpx;
+  color: #EF4444;
+  background: #FEE2E2;
+  padding: 4rpx 14rpx;
+  border-radius: 8rpx;
+  font-weight: 600;
+  margin-right: 20rpx;
+  line-height: 1.2;
+}
+
+.ai-points-tag.tag-free {
+  color: #10B981 !important;
+  background: #D1FAE5 !important;
+  border: 1rpx solid #A7F3D0;
+}
+
 /* Custom prompt hint input styles */
 .modal-hint-box {
   padding: 10rpx 0 24rpx 0;

@@ -1,26 +1,140 @@
 <view class="container">
   <block wx:if="{{hasTeam}}">
-    <!-- 1. 团队挑战概要卡片 -->
+    <!-- 1. 团队挑战概要卡片 (升级为双轨奖池设计) -->
     <view class="glass-card team-status-card">
       <view class="flex justify-between align-center">
         <view class="team-meta">
           <view class="team-title">{{teamName}}</view>
           <view class="team-desc">对赌挑战进行中 (第{{currentDay}}/{{targetDays}}天)</view>
         </view>
-        <view class="pot-badge flex-col align-center flex">
-          <text class="pot-val">{{points}}</text>
-          <text class="pot-lbl">积分池</text>
+        <view class="dual-pot-wrapper flex">
+          <view class="pot-badge daily-pot flex-col align-center flex" catchtap="onViewSettlementHistory">
+            <text class="pot-val gold-text">{{dailyPot}}</text>
+            <text class="pot-lbl">🔥今日瓜分池</text>
+          </view>
+          <view class="pot-badge final-pot flex-col align-center flex">
+            <text class="pot-val">{{finalPot}}</text>
+            <text class="pot-lbl">🏆通关总奖池</text>
+          </view>
         </view>
       </view>
-      <view class="invite-section flex justify-between align-center">
-        <text class="invite-code-lbl">小队邀请码: <text class="code" catchtap="onCopyInviteCode">{{inviteCode}}</text></text>
-        <button class="btn-share" open-type="share" size="mini">邀请微信好友</button>
+
+      <!-- 待领盲盒发光通知条 -->
+      <view class="loot-banner flex justify-between align-center" wx:if="{{pendingLoot}}" catchtap="openLootModal">
+        <view class="loot-banner-left flex align-center">
+          <text class="loot-icon">🎁</text>
+          <text class="loot-text">你有 1 份昨夜自律分红盲盒待开启！</text>
+        </view>
+        <view class="loot-btn-open">开盲盒 ➔</view>
+      </view>
+
+      <view class="invite-section">
+        <!-- 上行：邀请码与微信好友邀请按钮 -->
+        <view class="invite-top-row flex justify-between align-center">
+          <view class="invite-code-lbl flex align-center" catchtap="onCopyInviteCode">
+            <text>小队邀请码:</text>
+            <text class="code">{{inviteCode}}</text>
+            <text class="copy-tag">复制</text>
+          </view>
+          <button class="btn-share" open-type="share" size="mini">➕ 邀请好友</button>
+        </view>
+
+        <!-- 下行：快捷功能栏 (瓜分流水、退出队伍) -->
+        <view class="invite-bottom-row flex justify-between align-center">
+          <view class="quick-action-link flex align-center" catchtap="onViewSettlementHistory">
+            <text class="action-icon">📜</text>
+            <text class="action-text">每日瓜分流水</text>
+          </view>
+          <view class="quick-action-link link-quit flex align-center" catchtap="onQuitTeam">
+            <text class="action-icon">🚪</text>
+            <text class="action-text">退出当前队伍</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 突击查岗倒计时悬浮条（高优先级预警置顶） -->
+    <view class="audit-alert-bar flex justify-between align-center" wx:if="{{pendingAudit}}" catchtap="openAuditResponseModal">
+      <view class="audit-left flex align-center flex-1">
+        <view class="audit-icon-box flex align-center justify-center">
+          <text class="audit-icon">🎯</text>
+        </view>
+        <view class="audit-info-col flex flex-col flex-1">
+          <view class="audit-headline flex align-center">
+            <text class="audit-title">突击查岗警报！</text>
+            <text class="audit-tag">限时30分</text>
+          </view>
+          <text class="audit-desc">队友突击查岗，超时未上传扣20分</text>
+        </view>
+      </view>
+      <view class="audit-actions flex align-center">
+        <view class="audit-pill-btn btn-deflect flex align-center justify-center" catchtap="onDeflectAudit">
+          <text>🪞 反弹</text>
+        </view>
+        <view class="audit-pill-btn btn-respond flex align-center justify-center" catchtap="onGoUploadForAudit">
+          <text>拍照打卡</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 队友催打卡提醒横幅（醒目气泡条） -->
+    <view class="nudge-banner-bar flex justify-between align-center" wx:if="{{pendingNudgeAlert}}">
+      <view class="nudge-left flex align-center flex-1">
+        <view class="nudge-icon-box flex align-center justify-center">
+          <text class="nudge-icon">🔔</text>
+        </view>
+        <view class="nudge-info-col flex flex-col flex-1">
+          <view class="nudge-headline flex align-center">
+            <text class="nudge-title">队友喊你打卡啦！</text>
+          </view>
+          <text class="nudge-desc">{{pendingNudgeAlert}}</text>
+        </view>
+      </view>
+      <view class="nudge-actions flex align-center">
+        <view class="nudge-pill-btn flex align-center justify-center" catchtap="onGoUploadForNudge">
+          <text>去打卡</text>
+        </view>
+        <view class="nudge-close-btn flex align-center justify-center" catchtap="onDismissNudgeBanner">✕</view>
+      </view>
+    </view>
+
+    <!-- 玩法 2/3/4 快捷战术工具栏（置于打卡榜上方，首屏黄金位置） -->
+    <view class="gamification-toolbar flex justify-between">
+      <view class="toolbar-btn shop-btn flex align-center" catchtap="openShopModal">
+        <text class="tool-icon">🛒</text>
+        <view class="flex-col">
+          <text class="tool-title">战术道具店</text>
+          <text class="tool-sub">护盾/补签/查岗</text>
+        </view>
+      </view>
+      <view class="toolbar-btn spy-btn flex align-center" catchtap="openSpyModal">
+        <text class="tool-icon">🕵️‍♂️</text>
+        <view class="flex-col">
+          <text class="tool-title">间谍卧底局</text>
+          <text class="tool-sub">{{spyInfo.roleName || '查看身份'}}</text>
+        </view>
+      </view>
+      <view class="toolbar-btn roast-btn flex align-center" catchtap="openRoastModal">
+        <text class="tool-icon">🤖</text>
+        <view class="flex-col">
+          <text class="tool-title">AI 毒舌战报</text>
+          <text class="tool-sub">每日MVP与通报</text>
+        </view>
       </view>
     </view>
 
     <!-- 2. 小队打卡排行榜 -->
     <view class="leaderboard-section">
-      <view class="section-title">小队打卡榜</view>
+      <view class="section-title flex justify-between align-center">
+        <view class="flex align-center">
+          <text>小队打卡榜</text>
+          <text class="section-sub" style="margin-left: 12rpx;">每日24:00结算</text>
+        </view>
+        <view class="quick-poster-btn flex align-center" catchtap="onGeneratePoster">
+          <text style="margin-right: 6rpx;">📸</text>
+          <text>打卡海报</text>
+        </view>
+      </view>
       <view class="glass-card member-card flex align-center justify-between" wx:for="{{members}}" wx:key="id">
         <view class="member-left flex align-center">
           <view class="rank-num {{index === 0 ? 'top-rank' : ''}}">
@@ -55,10 +169,94 @@
       </view>
     </view>
 
-    <!-- 3. 生成海报与分享 -->
-    <view class="footer-actions flex justify-between">
-      <view class="btn-action btn-secondary flex-1" catchtap="onGeneratePoster">📸 生成打卡海报</view>
-      <view class="btn-action btn-quit flex-1" catchtap="onQuitTeam">🚪 退出当前队伍</view>
+
+
+    <!-- 玩法 1：自律分红盲盒轮盘抽奖全屏弹窗 -->
+    <view class="modal-backdrop loot-modal-backdrop {{showLootModal ? 'active' : ''}}" catchtouchmove="preventBubble">
+      <view class="loot-dialog-box flex flex-col align-center" catchtap="preventBubble">
+        <!-- 弹窗顶栏：标题、副标题与关闭按钮 -->
+        <view class="loot-dialog-header flex justify-between align-start">
+          <view class="loot-title-group flex flex-col flex-1">
+            <text class="loot-gold-title">🏆 昨夜自律分红盲盒</text>
+            <text class="loot-gold-sub">恭喜昨日按时达标 · 快转动轮盘抽取暴击分红！</text>
+          </view>
+          <view class="loot-header-close flex align-center justify-center" catchtap="closeLootModal" wx:if="{{!isSpinning}}">
+            <text>✕</text>
+          </view>
+        </view>
+
+        <!-- 轮盘主体 -->
+        <view class="wheel-outer-wrapper">
+          <view class="wheel-circle {{isSpinning ? 'spinning' : ''}}" style="transform: rotate({{wheelAngle}}deg);">
+            <view class="wheel-slice slice-1"><text class="slice-text gray">🍃 谢谢惠顾</text></view>
+            <view class="wheel-slice slice-2"><text class="slice-text gold">1.5x 暴击</text></view>
+            <view class="wheel-slice slice-3"><text class="slice-text orange">2.0x 护盾</text></view>
+            <view class="wheel-slice slice-4"><text class="slice-text cyan">💉 补签卡</text></view>
+            <view class="wheel-slice slice-5"><text class="slice-text purple">👑 5x 传奇</text></view>
+            <view class="wheel-slice slice-6"><text class="slice-text green">1.0x 达标</text></view>
+          </view>
+          <view class="wheel-pointer">▼</view>
+          <view class="wheel-center-btn flex align-center justify-center" catchtap="onSpinLootWheel" wx:if="{{!lootClaimResult}}">
+            <text class="spin-text">{{isSpinning ? '抽取中' : 'GO!'}}</text>
+          </view>
+        </view>
+
+        <!-- 开奖结果呈现 -->
+        <view class="loot-result-card flex-col align-center" wx:if="{{lootClaimResult}}">
+          <block wx:if="{{lootClaimResult.multiplier === 0}}">
+            <text class="result-highlight thanks-color">🍃 谢谢惠顾，再接再厉！</text>
+            <text class="result-thanks-tip">今日运气稍逊一筹，坚持自律明日必有大暴击！</text>
+            <button class="btn-confirm-reward btn-thanks-confirm" catchtap="onConfirmLootReward">明日再战</button>
+          </block>
+          <block wx:else>
+            <text class="result-highlight">🎉 恭喜斩获 {{lootClaimResult.multiplier}} 倍暴击！</text>
+            <view class="result-points-box flex align-center">
+              <text class="points-plus">+{{lootClaimResult.finalPoints}}</text>
+              <text class="points-unit">积分入账</text>
+            </view>
+            <view class="item-reward-tag" wx:if="{{lootClaimResult.itemReward && lootClaimResult.itemReward !== 'NONE'}}">
+              <text wx:if="{{lootClaimResult.itemReward === 'SHIELD_FRAGMENT'}}">🛡️ 获得【欺骗餐护盾碎片 × 1】</text>
+              <text wx:elif="{{lootClaimResult.itemReward === 'SERUM_CARD'}}">💉 获得【血清补签卡 × 1】</text>
+              <text wx:elif="{{lootClaimResult.itemReward === 'AVATAR_FRAME'}}">👑 解锁【全站金色自律头像框】</text>
+            </view>
+            <button class="btn-confirm-reward" catchtap="onConfirmLootReward">开心收下</button>
+          </block>
+        </view>
+
+        <!-- 底部稍后开启操作位：居中优雅胶囊 -->
+        <view class="loot-dialog-footer flex align-center justify-center" wx:if="{{!lootClaimResult && !isSpinning}}">
+          <view class="loot-close-pill flex align-center justify-center" catchtap="closeLootModal">
+            <text>稍后开启</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 每日瓜分流水弹窗 -->
+    <view class="modal-backdrop {{showHistoryModal ? 'active' : ''}}" catchtap="onCloseHistoryModal" catchtouchmove="preventBubble">
+      <view class="modal-dialog history-dialog" catchtap="preventBubble">
+        <view class="modal-header">
+          <text class="modal-title">📜 小队每日瓜分战报</text>
+          <text class="modal-close" catchtap="onCloseHistoryModal">✕</text>
+        </view>
+        <scroll-view class="history-list-scroll" scroll-y>
+          <view class="history-item glass-card" wx:for="{{settlementHistory}}" wx:key="id">
+            <view class="history-meta flex justify-between align-center">
+              <text class="history-date">📅 {{item.settlementDate}} 战况</text>
+              <text class="history-pool gold-text">罚金池 {{item.penaltyPool}} 积分</text>
+            </view>
+            <view class="history-stats flex justify-between align-center">
+              <text class="stat-green">✅ {{item.successMembers}} 人达标</text>
+              <text class="stat-red">❌ {{item.failedMembers}} 人违约</text>
+              <text class="stat-reward">每人均分 +{{item.perPersonReward}} 分</text>
+            </view>
+            <view class="history-summary" wx:if="{{item.summaryText}}">{{item.summaryText}}</view>
+          </view>
+          <view class="history-empty" wx:if="{{!settlementHistory || settlementHistory.length === 0}}">
+            <text>暂无历史结算，首日结算将在今晚 24:00 自动开启！</text>
+          </view>
+        </scroll-view>
+      </view>
     </view>
 
     <!-- Off-screen Canvas for Poster Generation -->
@@ -143,4 +341,159 @@
       </view>
     </view>
   </view>
+
+  <!-- 玩法 3：战术道具店抽屉模态框 -->
+  <view class="modal-backdrop {{showShopModal ? 'active' : ''}}" catchtap="closeShopModal" catchtouchmove="preventBubble">
+    <view class="modal-dialog shop-dialog" catchtap="preventBubble">
+      <view class="modal-header flex justify-between align-center">
+        <view class="flex align-center">
+          <text class="modal-title-emoji">🛒</text>
+          <text class="modal-title">对赌战术道具店</text>
+        </view>
+        <view class="flex align-center">
+          <view class="shop-balance-pill flex align-center">
+            <text class="balance-label">可用</text>
+            <text class="balance-num">{{userPoints !== undefined ? userPoints : 0}}</text>
+            <text class="balance-coin">🪙</text>
+          </view>
+          <text class="modal-close" catchtap="closeShopModal">✕</text>
+        </view>
+      </view>
+      <scroll-view class="shop-list-scroll" scroll-y enable-passive>
+        <view class="shop-item-card flex align-center" wx:for="{{shopItems}}" wx:key="itemType">
+          <!-- 道具图标：现代微弧方圆徽章 -->
+          <view class="item-avatar-box flex align-center justify-center icon-bg-{{item.itemType}}">
+            <text class="item-emoji">{{item.icon}}</text>
+          </view>
+
+          <!-- 道具信息主体：标题与饱满功能描述 -->
+          <view class="item-main-content flex-col flex-1">
+            <view class="item-header-line flex align-center">
+              <text class="item-clean-name">{{item.name}}</text>
+              <text class="item-owned-pill" wx:if="{{item.owned > 0}}">拥有 {{item.owned}}</text>
+            </view>
+            <text class="item-clean-desc">{{item.desc}}</text>
+          </view>
+
+          <!-- 右侧购买决策单元：上方价格 + 下方操作胶囊（支持重复购买与立即使用） -->
+          <view class="item-action-wrapper flex-col align-end justify-center">
+            <view class="item-price-row flex align-center">
+              <text class="price-num">{{item.price}}</text>
+              <text class="price-unit">积分</text>
+            </view>
+
+            <!-- 场景 A：拥有该道具 -> 均提供【购买】与【使用】横向双精巧微胶囊 -->
+            <view class="item-btn-row flex align-center" wx:if="{{item.owned > 0}}">
+              <view class="btn-action-pill btn-buy-addon flex align-center justify-center" 
+                    catchtap="onBuyItem" data-item-type="{{item.itemType}}">
+                <text class="btn-text">购买</text>
+              </view>
+              <view class="btn-action-pill btn-use-primary flex align-center justify-center" 
+                    catchtap="onUseItem" data-item-type="{{item.itemType}}">
+                <text class="btn-text btn-text-white">使用</text>
+              </view>
+            </view>
+
+            <!-- 场景 B：未拥有 -> 单胶囊【兑换】 -->
+            <view class="btn-action-pill btn-buy-primary flex align-center justify-center" 
+                  wx:else 
+                  catchtap="onBuyItem" data-item-type="{{item.itemType}}">
+              <text class="btn-text">兑换</text>
+            </view>
+          </view>
+        </view>
+        <view class="shop-scroll-bottom-spacer"></view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <!-- 玩法 2：减脂卧底间谍局模态框 -->
+  <view class="modal-backdrop {{showSpyModal ? 'active' : ''}}" catchtap="closeSpyModal" catchtouchmove="preventBubble">
+    <view class="modal-dialog spy-dialog" catchtap="preventBubble">
+      <view class="modal-header">
+        <text class="modal-title">🕵️‍♂️ 减脂卧底·间谍局</text>
+        <text class="modal-close" catchtap="closeSpyModal">✕</text>
+      </view>
+      <view class="spy-content-box flex-col align-center">
+        <view class="spy-identity-card flex-col align-center">
+          <text class="spy-role-title">{{spyInfo.roleName}}</text>
+          <text class="spy-role-tip">{{spyInfo.roleTip}}</text>
+        </view>
+
+        <!-- 今日匿名挑衅展示 -->
+        <view class="spy-taunt-box" wx:if="{{spyInfo.todayTaunt}}">
+          <text class="taunt-title">📢 今日卧底挑衅广播：</text>
+          <text class="taunt-text">“{{spyInfo.todayTaunt}}”</text>
+        </view>
+
+        <!-- 卧底专属：发挑衅操作 -->
+        <view class="spy-action-section flex-col" wx:if="{{spyInfo.isSpy}}">
+          <text class="section-hint">作为卧底，你今天可以匿名投毒诱惑队友：</text>
+          <input class="taunt-input" placeholder="输入诱惑台词(如:今晚吃炸鸡烤串吗?)" value="{{inputSpyTaunt}}" bindinput="onSpyTauntInput" maxlength="30" />
+          <button class="btn-send-taunt" catchtap="onSendSpyTaunt">🔥 发送匿名美食诱惑</button>
+        </view>
+
+        <!-- 平民专属：投票抓卧底 -->
+        <view class="spy-vote-section" wx:if="{{!spyInfo.hasVoted}}">
+          <text class="section-hint">指认潜伏的捣蛋鬼（选择怀疑的队友）：</text>
+          <view class="vote-candidates flex justify-between">
+            <view class="candidate-btn {{selectedSuspectId === item.userId ? 'selected' : ''}}" 
+                  wx:for="{{members}}" wx:key="id" 
+                  wx:if="{{item.userId !== userId}}" 
+                  catchtap="selectSuspect" data-id="{{item.userId}}">
+              <text>{{item.name}}</text>
+            </view>
+          </view>
+          <button class="btn-cast-vote" catchtap="onCastSpyVote" disabled="{{!selectedSuspectId}}">🗳️ 投票指认TA</button>
+        </view>
+        <view class="spy-voted-tip" wx:else>
+          <text>✅ 你今天已完成指认投票！已累计 {{spyInfo.voteCount}} 人参与公投！</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 玩法 4：AI 每日毒舌战报模态框 -->
+  <!-- 玩法 4：AI 每日毒舌战报模态框 -->
+  <view class="modal-backdrop {{showRoastModal ? 'active' : ''}}" catchtap="closeRoastModal" catchtouchmove="preventBubble">
+    <view class="modal-dialog roast-dialog" catchtap="preventBubble">
+      <view class="modal-header flex justify-between align-center">
+        <text class="modal-title">🌶️ AI 毒舌私教每日审判</text>
+        <text class="modal-close" catchtap="closeRoastModal">✕</text>
+      </view>
+      <view class="roast-card-wrapper flex-col" wx:if="{{todayRoast}}">
+        <text class="roast-main-title">{{todayRoast.title}}</text>
+        
+        <!-- 审判对决双徽章：杜绝换行，单行溢出省略 -->
+        <view class="roast-badges flex justify-between">
+          <view class="roast-badge mvp-badge flex align-center">
+            <text class="badge-icon">👑</text>
+            <text class="badge-role">控卡战神:</text>
+            <text class="badge-name">{{todayRoast.mvpName || '虚位以待'}}</text>
+          </view>
+          <view class="roast-badge slacker-badge flex align-center">
+            <text class="badge-icon">🚨</text>
+            <text class="badge-role">偷吃现形:</text>
+            <text class="badge-name">{{todayRoast.slackerName || '全员稳健'}}</text>
+          </view>
+        </view>
+
+        <!-- 毒舌正文 -->
+        <view class="roast-content-text">{{todayRoast.content}}</view>
+        
+        <!-- 毒舌扎心一击金句框 -->
+        <view class="roast-quote-box flex align-start">
+          <text class="punchline-chili">🌶️</text>
+          <view class="flex-col flex-1">
+            <text class="punchline-tag">毒舌扎心一击</text>
+            <text class="roast-quote">“{{todayRoast.quote}}”</text>
+          </view>
+        </view>
+
+        <!-- 微信群公开处刑转发按钮 -->
+        <button class="btn-share-roast" open-type="share">📢 发到微信群公开处刑</button>
+      </view>
+    </view>
+  </view>
 </view>
+

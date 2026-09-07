@@ -24,12 +24,14 @@ public interface AdminService {
     void updateUserPoints(Long userId, Integer pointsDelta, String remark, String adminUsername);
     void updateUserVip(Long userId, String vipType, Boolean aiUnlimited, Integer days, String adminUsername);
     void updateGlobalAiLimit(Integer limit, String adminUsername);
+    void updateAiRecognizePoints(Integer points, String adminUsername);
     List<com.shike.model.entity.PointLog> getUserPointLogs(Long userId);
     List<com.shike.model.entity.AdminAuditLog> getAuditLogs();
 
     List<com.shike.model.entity.FeatureToggle> getAllFeatureToggles();
     void updateFeatureToggle(String featureKey, String envMode, Boolean enabled, String adminUsername);
     java.util.Map<String, Boolean> getPublicFeatureToggles(String env);
+    java.util.Map<String, Object> getPublicSystemPolicy();
 
     com.shike.model.dto.AnnouncementConfigDTO getAnnouncementConfig();
     void updateAnnouncementConfig(com.shike.model.dto.AnnouncementConfigDTO dto, String adminUsername);

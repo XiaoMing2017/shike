@@ -38,6 +38,9 @@ public class Team {
     @Builder.Default
     private Integer depositPoints = 100;
 
+    @Column(name = "spy_user_id")
+    private Long spyUserId; // 秘密指派的卧底成员ID
+
     @Column(nullable = false, length = 20)
     private String status; // ACTIVE, SUCCESS, FAILED
 

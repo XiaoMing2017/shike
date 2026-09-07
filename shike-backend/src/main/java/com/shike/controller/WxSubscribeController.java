@@ -2,6 +2,7 @@ package com.shike.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shike.common.ResultDTO;
+import com.shike.service.WxSubscribeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,67 +27,35 @@ import com.shike.repository.UserRepository;
 @Slf4j
 public class WxSubscribeController {
 
-    private final StringRedisTemplate stringRedisTemplate;
+    private final WxSubscribeService wxSubscribeService;
     private final UserRepository userRepository;
-
-    @Value("${wx.appid:}")
-    private String wxAppid;
-
-    @Value("${wx.secret:}")
-    private String wxSecret;
 
     @PostMapping("/subscribe")
     public ResultDTO<Map<String, Object>> recordSubscription(
             @RequestParam Long userId,
-            @RequestParam String templateId,
+            @RequestParam(required = false) String templateId,
             @RequestParam(defaultValue = "1") Integer count,
             @RequestParam(defaultValue = "WATER") String type) {
-        String key = "shike:wx:subscribe:" + userId + ":" + type;
-        
-        int currentQuota = 0;
-        String val = stringRedisTemplate.opsForValue().get(key);
-        if (val != null) {
-            try {
-                ObjectMapper mapper = new ObjectMapper();
-                com.fasterxml.jackson.databind.JsonNode node = mapper.readTree(val);
-                if (node.has("quota")) {
-                    currentQuota = node.get("quota").asInt();
-                }
-            } catch (Exception ignored) {}
-        }
-        int newQuota = currentQuota + count;
-
-        Map<String, Object> data = new HashMap<>();
-        data.put("templateId", templateId);
-        data.put("quota", newQuota);
-
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            stringRedisTemplate.opsForValue().set(key, mapper.writeValueAsString(data), 30, TimeUnit.DAYS);
-        } catch (Exception e) {
-            log.error("Save subscribe error", e);
-        }
-
-        log.info("Recorded subscription for user {}, added {}, total quota {}", userId, count, newQuota);
+        int newQuota = wxSubscribeService.recordSubscription(userId, templateId, count, type);
         return ResultDTO.success(Map.of("quota", newQuota));
+    }
+
+    @PostMapping("/subscribe/batch")
+    public ResultDTO<Map<String, Integer>> recordBatchSubscription(
+            @RequestParam Long userId,
+            @RequestParam(required = false) String templateId,
+            @RequestParam(defaultValue = "1") Integer count,
+            @RequestParam String types) { // 逗号分隔如: "TEAM_AUDIT,TEAM_LOOT,DIET_REMINDER"
+        String[] typeArr = types.split(",");
+        Map<String, Integer> res = wxSubscribeService.recordBatchSubscription(userId, templateId, count, typeArr);
+        return ResultDTO.success(res);
     }
 
     @GetMapping("/subscribe-info")
     public ResultDTO<Map<String, Object>> getSubscribeInfo(
             @RequestParam Long userId,
             @RequestParam(defaultValue = "WATER") String type) {
-        String key = "shike:wx:subscribe:" + userId + ":" + type;
-        String val = stringRedisTemplate.opsForValue().get(key);
-        int quota = 0;
-        if (val != null) {
-            try {
-                ObjectMapper mapper = new ObjectMapper();
-                com.fasterxml.jackson.databind.JsonNode node = mapper.readTree(val);
-                if (node.has("quota")) {
-                    quota = node.get("quota").asInt();
-                }
-            } catch (Exception ignored) {}
-        }
+        int quota = wxSubscribeService.getSubscriptionQuota(userId, type);
         return ResultDTO.success(Map.of("quota", quota, "isSubscribed", quota > 0));
     }
 
@@ -94,86 +63,46 @@ public class WxSubscribeController {
     public ResultDTO<String> cancelSubscription(
             @RequestParam Long userId,
             @RequestParam(defaultValue = "WATER") String type) {
-        String key = "shike:wx:subscribe:" + userId + ":" + type;
-        stringRedisTemplate.delete(key);
-        log.info("Cancelled subscription authorization for user {} type {}", userId, type);
+        wxSubscribeService.cancelSubscription(userId, type);
         return ResultDTO.success("已取消微信服务通知订阅");
     }
 
     @RequestMapping(value = "/trigger-test-water-reminder", method = {RequestMethod.GET, RequestMethod.POST})
     public ResultDTO<String> triggerTestWaterReminder(@RequestParam Long userId) {
         log.info("Manually triggering water reminder test for user {}", userId);
-        User user = userRepository.findById(userId).orElse(null);
-        if (user == null || user.getOpenid() == null || user.getOpenid().isEmpty()) {
-            return ResultDTO.error("找不到用户或用户未授权openid");
+        boolean sent = wxSubscribeService.sendUserNotice(userId, "WATER", "🥤 补充水分时刻到啦！", "这是饮水提醒测试，记得适时补充水分哦！", "pages/index/index");
+        return ResultDTO.success(sent ? "服务通知已发送成功" : "发送未成功(可能无配额或未授权)");
+    }
+
+    @RequestMapping(value = "/trigger-test-diet-reminder", method = {RequestMethod.GET, RequestMethod.POST})
+    public ResultDTO<String> triggerTestDietReminder(
+            @RequestParam Long userId,
+            @RequestParam(defaultValue = "DINNER") String slot) {
+        log.info("Manually triggering {} diet reminder test for user {}", slot, userId);
+        String title;
+        String content;
+        if ("BREAKFAST".equalsIgnoreCase(slot)) {
+            title = "🍳 今日早餐还未打卡";
+            content = "活力早晨记得吃早餐！拍照算卡开启一天减脂目标";
+        } else if ("LUNCH".equalsIgnoreCase(slot)) {
+            title = "🍱 今日午餐还未打卡";
+            content = "午饭时间到啦，随手拍照记餐，轻松控卡不超标！";
+        } else {
+            title = "🥗 今日控卡还差晚餐打卡";
+            content = "距离今日结算仅剩3小时，打卡成功即可保住小队契约金！";
         }
-        String templateId = "6rHAfQw2A3WSw00LCaV9MUSop3OFVsRTAx4I-xgW5lw";
-        return pushSubscribeMessage(user.getOpenid(), templateId, "🥤 补充水分时刻到啦！", "这是饮水提醒测试，记得适时补充水分哦！");
+        boolean sent = wxSubscribeService.sendUserNotice(userId, "DIET_REMINDER", title, content, "pages/index/index");
+        return ResultDTO.success(sent ? "服务通知已发送成功" : "发送未成功(可能无配额或未授权)");
     }
 
     @PostMapping("/push-subscribe-message")
     public ResultDTO<String> pushSubscribeMessage(
             @RequestParam String openid,
-            @RequestParam String templateId,
+            @RequestParam(required = false) String templateId,
             @RequestParam(defaultValue = "饮水与打卡提醒") String title,
-            @RequestParam(defaultValue = "保持身体水分平衡，适时补充水分！") String content) {
-        try {
-            if (wxAppid == null || wxAppid.isEmpty() || wxSecret == null || wxSecret.isEmpty()) {
-                return ResultDTO.error("微信 AppID 或 Secret 未配置");
-            }
-
-            String tokenUrl = String.format("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=%s&secret=%s",
-                    wxAppid, wxSecret);
-            HttpClient client = HttpClient.newHttpClient();
-            HttpRequest tokenRequest = HttpRequest.newBuilder().uri(URI.create(tokenUrl)).GET().build();
-            HttpResponse<String> tokenResponse = client.send(tokenRequest, HttpResponse.BodyHandlers.ofString());
-
-            ObjectMapper mapper = new ObjectMapper();
-            String accessToken = mapper.readTree(tokenResponse.body()).path("access_token").asText();
-
-            if (accessToken == null || accessToken.isEmpty()) {
-                return ResultDTO.error("获取微信 AccessToken 失败，请检查 appid/secret 配置");
-            }
-
-            String sendUrl = "https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=" + accessToken;
-
-            Map<String, Object> msgMap = new HashMap<>();
-            msgMap.put("touser", openid);
-            msgMap.put("template_id", templateId);
-            msgMap.put("page", "pages/index/index");
-
-            Map<String, Object> dataMap = new HashMap<>();
-
-            Map<String, String> time6 = new HashMap<>();
-            time6.put("value", java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
-            dataMap.put("time6", time6);
-
-            Map<String, String> thing1 = new HashMap<>();
-            thing1.put("value", title.length() > 20 ? title.substring(0, 17) + "..." : title);
-            dataMap.put("thing1", thing1);
-
-            Map<String, String> thing2 = new HashMap<>();
-            thing2.put("value", content.length() > 20 ? content.substring(0, 17) + "..." : content);
-            dataMap.put("thing2", thing2);
-
-            msgMap.put("data", dataMap);
-
-            String jsonPayload = mapper.writeValueAsString(msgMap);
-
-            HttpRequest sendReq = HttpRequest.newBuilder()
-                    .uri(URI.create(sendUrl))
-                    .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
-                    .header("Content-Type", "application/json")
-                    .timeout(Duration.ofSeconds(10))
-                    .build();
-
-            HttpResponse<String> sendResp = client.send(sendReq, HttpResponse.BodyHandlers.ofString());
-            log.info("WeChat Subscribe Message Send Result: {}", sendResp.body());
-
-            return ResultDTO.success("微信服务通知发送指令已提交: " + sendResp.body());
-        } catch (Exception e) {
-            log.error("Failed to send WeChat subscribe message", e);
-            return ResultDTO.error("发送失败: " + e.getMessage());
-        }
+            @RequestParam(defaultValue = "保持身体水分平衡，适时补充水分！") String content,
+            @RequestParam(defaultValue = "pages/index/index") String pagePath) {
+        boolean sent = wxSubscribeService.pushSubscribeMessageDirect(openid, templateId, title, content, pagePath);
+        return sent ? ResultDTO.success("微信服务通知发送指令已执行成功") : ResultDTO.error("微信服务通知发送失败");
     }
 }
