@@ -8,21 +8,21 @@ App({
     // =========================================================================
     // 🌐 后端接口地址切换配置 (按需注释/取消注释即可快速切换)
     // =========================================================================
-    // 1. 电脑端微信开发者工具 (本地局域网 IP)
-    baseUrl: 'http://192.168.1.16:8081/api/v1',
+    // 1. 电脑端微信开发者工具 (推荐使用 127.0.0.1，不受 WiFi 切换影响)
+    // baseUrl: 'http://192.168.0.4:8081/api/v1',
 
-    // 2. 手机真机调试本地 (手机与电脑连同一个 WiFi，使用电脑局域网 IP)
-    // baseUrl: 'http://192.168.1.16:8081/api/v1',
+    // 2. 手机真机调试本地 (手机与电脑连同一个 WiFi，当前电脑 WiFi IP: 172.19.20.61)
+    // baseUrl: 'http://172.19.20.61:8081/api/v1',
 
     // 3. 线上正线服务器 (无需同 WiFi，手机用流量或 WiFi 随时随地直连)
     // baseUrl: 'http://117.72.61.18:8081/api/v1',
 
     // 4. 线上正式发布域名 (微信已配 HTTPS 证书)
-    // baseUrl: 'https://shike.store/api/v1'
+    baseUrl: 'https://shike.store/api/v1'
   },
   formatImageUrl(url) {
     const defaultAvatar = 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0';
-    if (!url || url === '/images/profile.png' || url === 'tmp' || url.includes('.tmp')) {
+    if (!url || url === '/images/profile.png' || url === 'tmp' || url.includes('.tmp') || url.includes('unsplash')) {
       return defaultAvatar;
     }
     let formatted = url;
@@ -31,7 +31,7 @@ App({
     } else if (formatted.startsWith('uploads/')) {
       formatted = this.globalData.baseUrl + '/' + formatted;
     }
-    if (formatted.startsWith('http://')) {
+    if (formatted.startsWith('http://') && !formatted.includes(':8081') && !formatted.includes('192.168.') && !formatted.includes('127.0.0.1') && !formatted.includes('172.') && !formatted.includes('localhost')) {
       formatted = formatted.replace('http://', 'https://');
     }
     return formatted;

@@ -12,5 +12,6 @@ import java.util.Optional;
 public interface TeamLootRecordRepository extends JpaRepository<TeamLootRecord, Long> {
     Optional<TeamLootRecord> findByUserIdAndTeamIdAndSettlementDate(Long userId, Long teamId, LocalDate settlementDate);
     List<TeamLootRecord> findByUserIdAndStatusOrderBySettlementDateDesc(Long userId, String status);
+    List<TeamLootRecord> findByUserIdAndTeamIdAndStatusOrderBySettlementDateDesc(Long userId, Long teamId, String status);
     List<TeamLootRecord> findByTeamIdAndSettlementDate(Long teamId, LocalDate settlementDate);
 }

@@ -29,6 +29,8 @@ Page({
     spyInfo: {},
     inputSpyTaunt: '',
     selectedSuspectId: null,
+    showSpyTauntBubble: false,
+    hasReadTaunt: false,
 
     // 玩法 3：战术道具店与查岗
     showShopModal: false,
@@ -96,13 +98,24 @@ Page({
       success: (res) => {
         if (res.data && res.data.code === 200 && res.data.data) {
           const detail = res.data.data;
+          const todayStr = new Date().toISOString().slice(0, 10);
           const formattedMembers = (detail.members || []).map(m => {
             let avatar = m.avatar || m.avatarUrl;
             avatar = app.formatImageUrl(avatar);
+            const mUserId = m.userId || m.id;
+            const nudgeKey = `shike_nudge_${userId}_${mUserId}_${todayStr}`;
+            let hasNudged = false;
+            try {
+              const lastTime = wx.getStorageSync(nudgeKey);
+              if (lastTime && (Date.now() - Number(lastTime) < 30 * 60 * 1000)) {
+                hasNudged = true;
+              }
+            } catch (e) {}
             return {
               ...m,
-              userId: m.userId || m.id,
-              avatar: avatar
+              userId: mUserId,
+              avatar: avatar,
+              hasNudged: hasNudged
             };
           });
           const userPoints = detail.userPoints !== undefined ? detail.userPoints : (app.globalData.userInfo ? app.globalData.userInfo.points : 0);
@@ -122,6 +135,7 @@ Page({
             pendingLoot: detail.pendingLoot || null,
             showLootModal: false
           });
+          this.fetchSpyStatusSilently(userId, detail.teamId);
         } else {
           this.setData({
             hasTeam: false
@@ -182,6 +196,9 @@ Page({
       return;
     }
 
+    // 1. 同步唤起/静默获取小队服务通知授权 (TEAM_AUDIT, TEAM_LOOT)
+    subscribeHelper.requestTeamSubscriptions();
+
     const user = app.globalData.userInfo;
     if (!user) return;
 
@@ -198,10 +215,6 @@ Page({
         if (res.data && res.data.code === 200) {
           wx.showToast({ title: '成功加入小队！', icon: 'success' });
           this.fetchTeamData(user.id);
-          // 顺手拉起小队查岗与战报订阅通知授权
-          setTimeout(() => {
-            subscribeHelper.requestTeamSubscriptions();
-          }, 800);
         } else {
           wx.showToast({ title: res.data.message || '加入失败', icon: 'none' });
         }
@@ -219,6 +232,9 @@ Page({
       wx.showToast({ title: '请输入队伍名称', icon: 'none' });
       return;
     }
+
+    // 1. 同步唤起/静默获取小队服务通知授权 (TEAM_AUDIT, TEAM_LOOT)
+    subscribeHelper.requestTeamSubscriptions();
 
     const user = app.globalData.userInfo;
     if (!user) return;
@@ -242,10 +258,6 @@ Page({
             createTeamName: ''
           });
           this.fetchTeamData(user.id);
-          // 顺手拉起小队查岗与战报订阅通知授权
-          setTimeout(() => {
-            subscribeHelper.requestTeamSubscriptions();
-          }, 800);
         } else {
           wx.showToast({ title: res.data.message || '创建失败', icon: 'none' });
         }
@@ -1307,6 +1319,12 @@ const loadImage = (canvas, path) => {
 
     if (!targetUserId || !teamId || !userId) return;
 
+    // 1. 同步静默累加 TEAM_AUDIT 服务通知配额
+    subscribeHelper.requestNudgeSubscription();
+
+    if (this._isNudging) return;
+    this._isNudging = true;
+
     wx.showLoading({ title: '提醒发送中...' });
     wx.request({
       url: `${app.globalData.baseUrl}/team/nudge`,
@@ -1315,22 +1333,50 @@ const loadImage = (canvas, path) => {
       data: { senderId: userId, targetUserId, teamId },
       success: (res) => {
         wx.hideLoading();
+        this._isNudging = false;
         if (res.data && res.data.code === 200) {
           wx.showToast({
             title: res.data.data || `已提醒 ${name}！`,
             icon: 'success',
             duration: 2000
           });
-        } else {
-          wx.showToast({
-            title: (res.data && res.data.message) || '提醒失败',
-            icon: 'none',
-            duration: 2000
+          const todayStr = new Date().toISOString().slice(0, 10);
+          try {
+            wx.setStorageSync(`shike_nudge_${userId}_${targetUserId}_${todayStr}`, Date.now());
+          } catch (e) {}
+
+          const updatedMembers = (this.data.members || []).map(m => {
+            if ((m.userId || m.id) === targetUserId) {
+              return { ...m, hasNudged: true };
+            }
+            return m;
           });
+          this.setData({ members: updatedMembers });
+        } else {
+          const msg = (res.data && res.data.message) || '提醒失败';
+          wx.showToast({
+            title: msg,
+            icon: 'none',
+            duration: 2500
+          });
+          if (msg.includes('刚刚已经') || msg.includes('今天已提醒')) {
+            const todayStr = new Date().toISOString().slice(0, 10);
+            try {
+              wx.setStorageSync(`shike_nudge_${userId}_${targetUserId}_${todayStr}`, Date.now());
+            } catch (e) {}
+            const updatedMembers = (this.data.members || []).map(m => {
+              if ((m.userId || m.id) === targetUserId) {
+                return { ...m, hasNudged: true };
+              }
+              return m;
+            });
+            this.setData({ members: updatedMembers });
+          }
         }
       },
       fail: () => {
         wx.hideLoading();
+        this._isNudging = false;
         wx.showToast({ title: '网络连接失败', icon: 'none' });
       }
     });
@@ -1418,9 +1464,6 @@ const loadImage = (canvas, path) => {
       return;
     }
 
-    // 顺手静默累加/拉起微信服务通知订阅授权（瑞幸式静默滚雪球）
-    subscribeHelper.requestTeamSubscriptions();
-
     this.setData({ isSpinning: true });
 
     // 随机增加 3~5 圈额外旋转
@@ -1496,6 +1539,62 @@ const loadImage = (canvas, path) => {
   // 玩法 2：减脂卧底间谍局方法
   // =========================================================================
 
+  fetchSpyStatusSilently(userId, teamId) {
+    if (!userId || !teamId) return;
+    wx.request({
+      url: `${app.globalData.baseUrl}/team/spy/status?userId=${userId}&teamId=${teamId}`,
+      method: 'GET',
+      success: (res) => {
+        if (res.data && res.data.code === 200 && res.data.data) {
+          const spyInfo = res.data.data;
+          const tauntId = spyInfo.tauntId || (spyInfo.todayTaunt ? `${teamId}_${spyInfo.todayTaunt}` : null);
+          let hasReadTaunt = false;
+          if (tauntId) {
+            try {
+              hasReadTaunt = !!wx.getStorageSync('shike_read_taunt_' + tauntId);
+            } catch (e) {}
+          }
+          this.setData({
+            spyInfo: spyInfo,
+            hasReadTaunt: hasReadTaunt
+          });
+        }
+      }
+    });
+  },
+
+  onToggleSpyTauntBubble() {
+    const isExpanded = !this.data.showSpyTauntBubble;
+    this.setData({
+      showSpyTauntBubble: isExpanded
+    });
+    if (isExpanded) {
+      const spyInfo = this.data.spyInfo;
+      const tauntId = spyInfo ? (spyInfo.tauntId || (spyInfo.todayTaunt ? `${this.data.teamId}_${spyInfo.todayTaunt}` : null)) : null;
+      if (tauntId) {
+        try {
+          wx.setStorageSync('shike_read_taunt_' + tauntId, true);
+        } catch (e) {}
+      }
+      this.setData({
+        hasReadTaunt: true
+      });
+    }
+  },
+
+  onCloseSpyTauntBubble() {
+    this.setData({
+      showSpyTauntBubble: false
+    });
+  },
+
+  onQuickGoVoteFromTaunt() {
+    this.setData({
+      showSpyTauntBubble: false
+    });
+    this.openSpyModal();
+  },
+
   openSpyModal() {
     const user = app.globalData.userInfo;
     const teamId = this.data.teamId;
@@ -1545,10 +1644,11 @@ const loadImage = (canvas, path) => {
       success: (res) => {
         wx.hideLoading();
         if (res.data && res.data.code === 200) {
-          wx.showToast({ title: '投毒成功！', icon: 'success' });
+          wx.showToast({ title: res.data.data || '投毒成功！', icon: 'success' });
           this.setData({ inputSpyTaunt: '', showSpyModal: false });
+          this.fetchSpyStatusSilently(user.id, teamId);
         } else {
-          wx.showToast({ title: (res.data && res.data.message) || '发送失败', icon: 'none' });
+          wx.showToast({ title: (res.data && res.data.message) || '发送失败', icon: 'none', duration: 3000 });
         }
       },
       fail: () => {
@@ -1723,10 +1823,6 @@ const loadImage = (canvas, path) => {
                       this.setData({ showShopModal: false });
                       this.openShopModal(); // 刷新商店背包数量
                       this.fetchTeamData(user.id);
-                      // 顺手请求订阅
-                      setTimeout(() => {
-                        subscribeHelper.requestTeamSubscriptions();
-                      }, 500);
                     } else {
                       wx.showToast({ title: (resp.data && resp.data.message) || '查岗发起失败', icon: 'none' });
                     }
@@ -1854,22 +1950,25 @@ const loadImage = (canvas, path) => {
     const teamId = this.data.teamId;
     if (!teamId) return;
 
-    wx.showLoading({ title: '生成战报中...' });
+    wx.showLoading({ title: 'AI 审判构思中...', mask: true });
     wx.request({
       url: `${app.globalData.baseUrl}/team/ai-roast/today?teamId=${teamId}`,
       method: 'GET',
+      timeout: 60000,
       success: (res) => {
         wx.hideLoading();
-        if (res.data && res.data.code === 200) {
+        if (res.data && res.data.code === 200 && res.data.data) {
           this.setData({
-            todayRoast: res.data.data || null,
+            todayRoast: res.data.data,
             showRoastModal: true
           });
+        } else {
+          wx.showToast({ title: '暂无今日战报', icon: 'none' });
         }
       },
       fail: () => {
         wx.hideLoading();
-        wx.showToast({ title: '战报加载失败', icon: 'none' });
+        wx.showToast({ title: '战报加载超时，请重试', icon: 'none' });
       }
     });
   },

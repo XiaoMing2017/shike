@@ -57,6 +57,7 @@ ai:
   model: qwen3.7-plus
   diet-model: qwen3.7-plus
   plan-model: qwen3.5-plus
+  roast-model: qwen-plus
   endpoint: https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions
   api-key: sk-ws-H.EDLLDHH.jhKp.MEQCID5AkHa0TNfVEvwRSbT52_dMmC7R4eMyo0Q3O4cMiEiYAiAnHc4q3LtwuyxzeJFIzNXopiSxd66zHH3IiT_F98SABQ
   timeout-ms: 180000

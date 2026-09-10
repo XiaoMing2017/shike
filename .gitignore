@@ -18,3 +18,7 @@ Thumbs.db
 *.private.config.json
 project.private.config.json
 
+# Logs & scratch
+*.log
+scratch/
+

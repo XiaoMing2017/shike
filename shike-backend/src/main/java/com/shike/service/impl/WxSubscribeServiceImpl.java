@@ -31,7 +31,7 @@ public class WxSubscribeServiceImpl implements WxSubscribeService {
     private final StringRedisTemplate stringRedisTemplate;
     private final UserRepository userRepository;
 
-    public static final String DEFAULT_TEMPLATE_ID = "6rHAfQw2A3WSw00LCaV9MUSop3OFVsRTAx4I-xgW5lw";
+    public static final String DEFAULT_TEMPLATE_ID = "NkhvxMufBmdrVDAiiK-ySgwrDQpwUixTBwaXhSxOsLo";
 
     private static final ConcurrentHashMap<String, String> localSubscribeMap = new ConcurrentHashMap<>();
     private static volatile String cachedAccessToken = null;
@@ -190,18 +190,30 @@ public class WxSubscribeServiceImpl implements WxSubscribeService {
 
             Map<String, Object> dataMap = new HashMap<>();
 
-            // 针对模板 6rHAfQw2A3WSw00LCaV9MUSop3OFVsRTAx4I-xgW5lw
-            Map<String, String> time6 = new HashMap<>();
-            time6.put("value", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
-            dataMap.put("time6", time6);
+            if ("NkhvxMufBmdrVDAiiK-ySgwrDQpwUixTBwaXhSxOsLo".equals(templateId)) {
+                // 针对打卡提醒模板 NkhvxMufBmdrVDAiiK-ySgwrDQpwUixTBwaXhSxOsLo (打卡名称: thing4, 提醒时间: time13)
+                Map<String, String> thing4 = new HashMap<>();
+                String tVal = (title != null && !title.trim().isEmpty()) ? title.trim() : "自律打卡提醒";
+                thing4.put("value", tVal.length() > 20 ? tVal.substring(0, 17) + "..." : tVal);
+                dataMap.put("thing4", thing4);
 
-            Map<String, String> thing1 = new HashMap<>();
-            thing1.put("value", title.length() > 20 ? title.substring(0, 17) + "..." : title);
-            dataMap.put("thing1", thing1);
+                Map<String, String> time13 = new HashMap<>();
+                time13.put("value", LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm")));
+                dataMap.put("time13", time13);
+            } else {
+                // 针对旧版日常饮水提醒模板 6rHAfQw2A3WSw00LCaV9MUSop3OFVsRTAx4I-xgW5lw
+                Map<String, String> time6 = new HashMap<>();
+                time6.put("value", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+                dataMap.put("time6", time6);
 
-            Map<String, String> thing2 = new HashMap<>();
-            thing2.put("value", content.length() > 20 ? content.substring(0, 17) + "..." : content);
-            dataMap.put("thing2", thing2);
+                Map<String, String> thing1 = new HashMap<>();
+                thing1.put("value", title.length() > 20 ? title.substring(0, 17) + "..." : title);
+                dataMap.put("thing1", thing1);
+
+                Map<String, String> thing2 = new HashMap<>();
+                thing2.put("value", content.length() > 20 ? content.substring(0, 17) + "..." : content);
+                dataMap.put("thing2", thing2);
+            }
 
             msgMap.put("data", dataMap);
 

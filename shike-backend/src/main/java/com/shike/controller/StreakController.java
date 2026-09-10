@@ -46,4 +46,13 @@ public class StreakController {
         Map<String, Object> result = streakService.recoverStreak(userId, method, date);
         return ResultDTO.success(result);
     }
+
+    /**
+     * 放弃断签拯救，从 Day 1 重新开始自律打卡
+     */
+    @PostMapping("/restart")
+    public ResultDTO<StreakCheckinResultDTO> restartStreak(@RequestParam Long userId) {
+        StreakCheckinResultDTO result = streakService.restartStreak(userId);
+        return ResultDTO.success(result);
+    }
 }

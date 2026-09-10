@@ -111,7 +111,7 @@
         <text class="tool-icon">🕵️‍♂️</text>
         <view class="flex-col">
           <text class="tool-title">间谍卧底局</text>
-          <text class="tool-sub">{{spyInfo.roleName || '查看身份'}}</text>
+          <text class="tool-sub">{{members.length >= 3 ? (spyInfo.roleName || '查看身份') : '3人解锁'}}</text>
         </view>
       </view>
       <view class="toolbar-btn roast-btn flex align-center" catchtap="openRoastModal">
@@ -158,13 +158,18 @@
             {{item.todayChecked ? '今日已达标' : '今日未达标'}}
           </text>
           <text class="success-days">已连续达标 {{item.successCount}} 天</text>
-          <view class="nudge-btn flex align-center justify-center" 
-                wx:if="{{!item.todayChecked && item.userId !== userId}}" 
-                catchtap="onNudgeTeammate" 
-                data-user-id="{{item.userId}}" 
-                data-name="{{item.name}}">
-            <text style="font-size: 20rpx; font-weight: 700; color: #F59E0B;">🔔 催TA打卡</text>
-          </view>
+          <block wx:if="{{!item.todayChecked && item.userId !== userId}}">
+            <view class="nudge-btn nudged flex align-center justify-center" wx:if="{{item.hasNudged}}">
+              <text style="font-size: 20rpx; font-weight: 700; color: #94A3B8;">✓ 已提醒</text>
+            </view>
+            <view class="nudge-btn flex align-center justify-center" 
+                  wx:else
+                  catchtap="onNudgeTeammate" 
+                  data-user-id="{{item.userId}}" 
+                  data-name="{{item.name}}">
+              <text style="font-size: 20rpx; font-weight: 700; color: #F59E0B;">🔔 催TA打卡</text>
+            </view>
+          </block>
         </view>
       </view>
     </view>
@@ -414,23 +419,87 @@
         <text class="modal-title">🕵️‍♂️ 减脂卧底·间谍局</text>
         <text class="modal-close" catchtap="closeSpyModal">✕</text>
       </view>
-      <view class="spy-content-box flex-col align-center">
+      <!-- 1. 人数未满 3 人：未解锁引导提示卡片 -->
+      <view class="spy-locked-box flex flex-col align-center" wx:if="{{!spyInfo.enabled}}">
+        <view class="spy-locked-avatar-wrap flex align-center justify-center">
+          <text class="spy-locked-avatar">🕵️‍♂️</text>
+          <view class="spy-locked-badge">🔒</view>
+        </view>
+        <text class="spy-locked-headline">间谍卧底局未解锁</text>
+        
+        <!-- 人数状态胶囊 -->
+        <view class="spy-need-pill flex align-center justify-center">
+          <text class="need-curr">当前队伍 {{spyInfo.totalMembers || members.length || 1}} 人</text>
+          <text class="need-sep">·</text>
+          <text class="need-target">还差 {{3 - (spyInfo.totalMembers || members.length || 1)}} 人开局</text>
+        </view>
+
+        <!-- 趣味玩法规则速递 -->
+        <view class="spy-locked-card flex flex-col">
+          <view class="rule-item flex align-start">
+            <view class="rule-icon-box flex align-center justify-center">
+              <text class="rule-icon">🎲</text>
+            </view>
+            <view class="rule-info-col flex flex-col">
+              <view class="rule-title-row">
+                <text class="rule-title">满 3 人系统随机指定卧底</text>
+              </view>
+              <text class="rule-desc">凑齐 3 名队员自动开局，系统将在所有队员中秘密指定 1 名潜伏捣蛋鬼。</text>
+            </view>
+          </view>
+          <view class="rule-item flex align-start">
+            <view class="rule-icon-box flex align-center justify-center">
+              <text class="rule-icon">😈</text>
+            </view>
+            <view class="rule-info-col flex flex-col">
+              <view class="rule-title-row">
+                <text class="rule-title">卧底匿名投毒诱惑</text>
+              </view>
+              <text class="rule-desc">卧底每天可匿名向小队广播美食诱惑，暗中引诱大家破防吃超标！</text>
+            </view>
+          </view>
+          <view class="rule-item flex align-start">
+            <view class="rule-icon-box flex align-center justify-center">
+              <text class="rule-icon">🏆</text>
+            </view>
+            <view class="rule-info-col flex flex-col">
+              <view class="rule-title-row">
+                <text class="rule-title">周末公投瓜分奖池</text>
+              </view>
+              <text class="rule-desc">周日全员投票抓卧底：指认成功平分双倍奖池；若卧底成功潜伏则独吞大奖！</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 邀请好友按钮组 -->
+        <view class="spy-locked-footer flex flex-col align-center">
+          <button class="btn-spy-invite flex align-center justify-center" open-type="share">
+            <text class="invite-btn-text">➕ 邀请微信好友 (差 {{3 - (spyInfo.totalMembers || members.length || 1)}} 人开局) 🚀</text>
+          </button>
+          <view class="spy-copy-pill flex align-center justify-center" catchtap="onCopyInviteCode">
+            <text>复制小队邀请码: {{inviteCode || '获取中...'}} 📋</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 2. 人数已达标 (>= 3 人)：进入正常卧底局 -->
+      <view class="spy-content-box flex-col align-center" wx:else>
         <view class="spy-identity-card flex-col align-center">
           <text class="spy-role-title">{{spyInfo.roleName}}</text>
           <text class="spy-role-tip">{{spyInfo.roleTip}}</text>
         </view>
 
-        <!-- 今日匿名挑衅展示 -->
-        <view class="spy-taunt-box" wx:if="{{spyInfo.todayTaunt}}">
-          <text class="taunt-title">📢 今日卧底挑衅广播：</text>
-          <text class="taunt-text">“{{spyInfo.todayTaunt}}”</text>
-        </view>
 
         <!-- 卧底专属：发挑衅操作 -->
         <view class="spy-action-section flex-col" wx:if="{{spyInfo.isSpy}}">
-          <text class="section-hint">作为卧底，你今天可以匿名投毒诱惑队友：</text>
-          <input class="taunt-input" placeholder="输入诱惑台词(如:今晚吃炸鸡烤串吗?)" value="{{inputSpyTaunt}}" bindinput="onSpyTauntInput" maxlength="30" />
-          <button class="btn-send-taunt" catchtap="onSendSpyTaunt">🔥 发送匿名美食诱惑</button>
+          <text class="section-hint">作为卧底，你今天可以匿名投毒诱惑队友（午餐/晚餐各限1次）：</text>
+          <block wx:if="{{spyInfo.canPostTaunt !== false}}">
+            <input class="taunt-input" placeholder="输入{{spyInfo.currentPeriodName || '当前时段'}}诱惑台词(如:炸鸡奶茶走起?)" value="{{inputSpyTaunt}}" bindinput="onSpyTauntInput" maxlength="35" />
+            <button class="btn-send-taunt" catchtap="onSendSpyTaunt">🔥 发送【{{spyInfo.currentPeriodName || '本时段'}}】诱惑广播</button>
+          </block>
+          <view class="taunt-posted-tip flex align-center justify-center" wx:else>
+            <text>⏳ {{spyInfo.currentPeriodName || '当前时段'}}已发布挑衅广播，下个时段再来投毒！</text>
+          </view>
         </view>
 
         <!-- 平民专属：投票抓卧底 -->
@@ -492,6 +561,46 @@
 
         <!-- 微信群公开处刑转发按钮 -->
         <button class="btn-share-roast" open-type="share">📢 发到微信群公开处刑</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 悬浮灵动卧底广播胶囊 (形态 A：吸附右侧，发布时弹入 + 动态微光呼吸) -->
+  <view class="spy-floating-container" wx:if="{{spyInfo && spyInfo.todayTaunt}}">
+    <!-- 展开的详细挑衅气泡卡片 -->
+    <view class="spy-bubble-card {{showSpyTauntBubble ? 'show' : ''}}">
+      <view class="bubble-header flex justify-between align-center">
+        <view class="flex align-center" style="gap: 8rpx;">
+          <text class="bubble-title-icon">🕵️</text>
+          <text class="bubble-title">卧底·{{spyInfo.tauntPeriodName || '今日挑衅'}}广播</text>
+        </view>
+        <view class="bubble-close-btn" catchtap="onCloseSpyTauntBubble">✕</view>
+      </view>
+      
+      <view class="bubble-body">
+        <text class="bubble-quote-text">“{{spyInfo.todayTaunt}}”</text>
+      </view>
+
+      <view class="bubble-footer flex justify-between align-center">
+        <text class="bubble-hint">来自潜伏队友的匿名投毒</text>
+        <view class="bubble-vote-btn flex align-center" catchtap="onQuickGoVoteFromTaunt">
+          <text>🗳️ 抓TA投票 ></text>
+        </view>
+      </view>
+      <!-- 气泡指示三角小箭头 -->
+      <view class="bubble-arrow"></view>
+    </view>
+
+    <!-- 灵动悬浮胶囊按钮 (发微光动效) -->
+    <view class="spy-floating-capsule flex align-center {{hasReadTaunt ? 'calm' : 'glow-breathing'}}" 
+          catchtap="onToggleSpyTauntBubble">
+      <view class="capsule-icon-wrap">
+        <text class="capsule-icon">🕵️</text>
+        <view class="capsule-badge-dot" wx:if="{{!hasReadTaunt}}"></view>
+      </view>
+      <view class="capsule-text-col flex-col">
+        <text class="capsule-main-text">卧底挑衅</text>
+        <text class="capsule-sub-text">{{hasReadTaunt ? '点击查看' : '有新诱惑!'}}</text>
       </view>
     </view>
   </view>

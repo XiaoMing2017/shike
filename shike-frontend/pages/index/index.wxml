@@ -719,16 +719,19 @@
               </view>
             </view>
             
-            <!-- 常见食材估重助手小卡片 -->
-            <view class="portion-helper-card">
-              <view class="portion-helper-title flex align-center">
-                <text style="margin-right: 6rpx;">💡</text>
-                <text>常见分量快速添加</text>
-              </view>
-              <view class="portion-helper-tags">
-                <view class="portion-helper-tag" wx:for="{{helperFoods}}" wx:key="name" catchtap="addHelperFood" data-name="{{item.name}}">
-                  + {{item.name}} (1{{item.unit}})
+            <!-- AI 智能神评卡片（根据今日预算与本餐智能裁决：扎心毒舌 vs 爽快夸夸） -->
+            <view class="ai-critique-card {{mealCritique.styleType || 'savage'}}" wx:if="{{mealCritique && mealCritique.text}}">
+              <view class="ai-critique-header flex align-center justify-between">
+                <view class="ai-critique-badge flex align-center">
+                  <text class="critique-icon">{{mealCritique.icon}}</text>
+                  <text class="critique-title">{{mealCritique.title}}</text>
                 </view>
+                <text class="critique-subtag">{{mealCritique.subtag}}</text>
+              </view>
+              <view class="ai-critique-content">
+                <text class="critique-quote-mark">“</text>
+                <text class="critique-text">{{mealCritique.text}}</text>
+                <text class="critique-quote-mark">”</text>
               </view>
             </view>
 
@@ -856,17 +859,17 @@
         </view>
       </view>
 
-      <!-- 🔔 微信服务通知订阅授权卡片 -->
+      <!-- 🔔 微信服务通知订阅授权卡片 (全局打卡与补水提醒联动) -->
       <view class="water-subscribe-card flex justify-between align-center" catchtap="onSubscribeWaterPush">
         <view class="water-sub-left">
           <text class="water-sub-icon">🔔</text>
           <view class="water-sub-text">
-            <text class="water-sub-title">微信聊天框定时提醒</text>
-            <text class="water-sub-desc">{{waterSubQuota > 0 ? '每天 10:30 / 15:30 / 20:00 自动推送' : '开启后每天 3 次定时喝水提醒'}}</text>
+            <text class="water-sub-title">微信自律打卡提醒</text>
+            <text class="water-sub-desc">{{isGlobalReminderSubscribed ? '每日三餐打卡与适时补水提醒已开启' : '开启后每日定时提醒记餐打卡与适时补水'}}</text>
           </view>
         </view>
-        <view class="water-sub-badge {{waterSubQuota > 0 ? 'active' : ''}}">
-          <text class="water-sub-badge-text">{{waterSubQuota > 0 ? '剩 ' + waterSubQuota + ' 次' : '点击开启'}}</text>
+        <view class="water-sub-badge {{isGlobalReminderSubscribed ? 'active' : ''}}">
+          <text class="water-sub-badge-text">{{isGlobalReminderSubscribed ? '已开启 ✓' : '点击开启'}}</text>
         </view>
       </view>
     </view>
@@ -1389,6 +1392,93 @@
     </view>
   </view>
 
+  <!-- 7天连续自律里程碑挑战（简约高级版） -->
+  <view class="modal-backdrop streak-modal-backdrop {{showStreakCycleModal ? 'active' : ''}}" catchtouchmove="preventBubble">
+    <view class="streak-cycle-dialog flex flex-col align-center" catchtap="preventBubble">
+      <!-- 极简右上角关闭按钮 -->
+      <view class="cycle-close-btn flex align-center justify-center" catchtap="closeStreakCycleModal">✕</view>
+
+      <!-- 头部：火焰图标与连击天数 -->
+      <view class="cycle-flame-icon-box flex align-center justify-center">
+        <text class="cycle-flame-emoji">🔥</text>
+      </view>
+      <view class="cycle-title">
+        连续自律 <text class="cycle-days-highlight">{{streakStatus.currentStreak || 0}}</text> 天
+      </view>
+      <view class="cycle-subtitle flex align-center justify-center">
+        <view class="sub-pill best">最高 {{streakStatus.maxStreak || streakStatus.currentStreak || 0}} 天</view>
+        <view class="sub-pill status-pill {{streakStatus.todayChecked ? 'done' : 'wait'}}">{{streakStatus.todayChecked ? '今日已达标 ✓' : '今日待打卡'}}</view>
+      </view>
+
+      <!-- 7天阶梯卡片容器（极简通透） -->
+      <view class="cycle-track-card">
+        <view class="cycle-track-header flex align-center justify-between">
+          <text class="track-header-title">7天递增成长路线</text>
+          <text class="track-header-day">周期进度 {{streakStatus.currentCycleDay || 1}}/7</text>
+        </view>
+
+        <!-- 7天均匀横向分布 -->
+        <view class="cycle-nodes-flex flex align-center justify-between">
+          <block wx:for="{{streakStatus.days}}" wx:key="day">
+            <view class="cycle-col flex flex-col align-center {{item.status}} {{item.day === streakStatus.currentCycleDay ? 'is-today' : ''}}">
+              <text class="col-day">D{{item.day}}</text>
+              <view class="col-circle flex align-center justify-center">
+                <!-- 已完成：绿色打勾 -->
+                <block wx:if="{{item.status === 'COMPLETED'}}">
+                  <text class="col-check">✓</text>
+                </block>
+                <!-- 今天待打卡：火焰 -->
+                <block wx:elif="{{item.day === streakStatus.currentCycleDay && !streakStatus.todayChecked}}">
+                  <text class="col-flame">🔥</text>
+                </block>
+                <!-- 特殊道具节点：直接展示道具图标 -->
+                <block wx:elif="{{item.itemRewardIcon}}">
+                  <text class="col-item-emoji">{{item.itemRewardIcon}}</text>
+                </block>
+                <!-- 普通未打卡节点：锁 -->
+                <block wx:else>
+                  <text class="col-lock">🔒</text>
+                </block>
+              </view>
+              <!-- 底部标签：显示积分或精炼道具名称 -->
+              <text class="col-pts">+{{item.points}}</text>
+            </view>
+          </block>
+        </view>
+      </view>
+
+      <!-- 极简里程碑徽章条（清晰说明3大道具） -->
+      <view class="cycle-milestones-bar flex align-center justify-around">
+        <view class="milestone-item flex align-center">
+          <text class="ms-icon">🛡️</text>
+          <text class="ms-text">D3 护盾</text>
+        </view>
+        <text class="ms-sep">·</text>
+        <view class="milestone-item flex align-center">
+          <text class="ms-icon">💉</text>
+          <text class="ms-text">D5 补签卡</text>
+        </view>
+        <text class="ms-sep">·</text>
+        <view class="milestone-item flex align-center gold">
+          <text class="ms-icon">🎁</text>
+          <text class="ms-text">D7 金色宝箱</text>
+        </view>
+      </view>
+
+      <!-- 极简一行规则说明（轻柔透气，杜绝繁复段落） -->
+      <view class="cycle-hint-note">
+        每日记录任意饮食即点亮，7天循环开启新大奖
+      </view>
+
+      <!-- 底部高颜值胶囊按钮 -->
+      <view class="cycle-action-btn flex align-center justify-center {{streakStatus.todayChecked ? 'btn-done' : 'btn-pending'}}" 
+            catchtap="{{streakStatus.todayChecked ? 'closeStreakCycleModal' : 'onGoToCheckin'}}">
+        <text wx:if="{{streakStatus.todayChecked}}">保持自律，明天继续 🔥</text>
+        <text wx:else>立即记一餐，点亮今日火焰 📸</text>
+      </view>
+    </view>
+  </view>
+
   <!-- 断签挽救弹窗 (The Streak Saver Modal) -->
   <view class="modal-backdrop streak-modal-backdrop {{showStreakSaverModal ? 'active' : ''}}" catchtouchmove="preventBubble">
     <view class="streak-saver-dialog flex flex-col align-center" catchtap="preventBubble">
@@ -1440,7 +1530,7 @@
         </button>
       </view>
 
-      <text class="saver-skip-link" catchtap="closeStreakSaverModal">狠心放弃，从 Day 1 重新开始 ></text>
+      <text class="saver-skip-link" catchtap="onRestartStreakFromDayOne">狠心放弃，从 Day 1 重新开始 ></text>
     </view>
   </view>
 

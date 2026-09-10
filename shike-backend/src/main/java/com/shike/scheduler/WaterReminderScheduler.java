@@ -68,7 +68,7 @@ public class WaterReminderScheduler {
                 String val = stringRedisTemplate.opsForValue().get(key);
                 if (val == null || val.isEmpty()) continue;
 
-                String templateId = "6rHAfQw2A3WSw00LCaV9MUSop3OFVsRTAx4I-xgW5lw";
+                String templateId = "NkhvxMufBmdrVDAiiK-ySgwrDQpwUixTBwaXhSxOsLo";
                 int currentQuota = 1;
 
                 if (val.startsWith("{")) {
@@ -174,18 +174,28 @@ public class WaterReminderScheduler {
             msgMap.put("page", "pages/index/index");
 
             Map<String, Object> dataMap = new HashMap<>();
+            if ("NkhvxMufBmdrVDAiiK-ySgwrDQpwUixTBwaXhSxOsLo".equals(templateId)) {
+                Map<String, String> thing4 = new HashMap<>();
+                String tVal = (title != null && !title.trim().isEmpty()) ? title.trim() : "适时补水打卡";
+                thing4.put("value", tVal.length() > 20 ? tVal.substring(0, 17) + "..." : tVal);
+                dataMap.put("thing4", thing4);
 
-            Map<String, String> time6 = new HashMap<>();
-            time6.put("value", java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
-            dataMap.put("time6", time6);
+                Map<String, String> time13 = new HashMap<>();
+                time13.put("value", java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")));
+                dataMap.put("time13", time13);
+            } else {
+                Map<String, String> time6 = new HashMap<>();
+                time6.put("value", java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+                dataMap.put("time6", time6);
 
-            Map<String, String> thing1 = new HashMap<>();
-            thing1.put("value", title.length() > 20 ? title.substring(0, 17) + "..." : title);
-            dataMap.put("thing1", thing1);
+                Map<String, String> thing1 = new HashMap<>();
+                thing1.put("value", title.length() > 20 ? title.substring(0, 17) + "..." : title);
+                dataMap.put("thing1", thing1);
 
-            Map<String, String> thing2 = new HashMap<>();
-            thing2.put("value", content.length() > 20 ? content.substring(0, 17) + "..." : content);
-            dataMap.put("thing2", thing2);
+                Map<String, String> thing2 = new HashMap<>();
+                thing2.put("value", content.length() > 20 ? content.substring(0, 17) + "..." : content);
+                dataMap.put("thing2", thing2);
+            }
 
             msgMap.put("data", dataMap);
 

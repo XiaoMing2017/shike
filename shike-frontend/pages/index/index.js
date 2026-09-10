@@ -16,14 +16,178 @@ const COMMON_FOOD_DICTIONARY = [
   { name: '鸡胸肉', unit: '块', standardWeight: 150, caloriesPer100g: 133.0, proteinPer100g: 24.6, fatPer100g: 1.9, carbsPer100g: 2.5 }
 ];
 
+// 🧠 AI 智能神评神库（扎心毒舌 vs 爽快夸夸 vs 听劝变脸）
+const MEAL_CRITIQUE_BANK = {
+  // 1. 全天热量爆仓 / 预算击穿
+  OVER_CAL: {
+    styleType: 'savage',
+    icon: '🚨',
+    title: '热量爆仓',
+    subtag: '今日额度击穿',
+    quotes: [
+      '吃得挺豪迈啊！这一顿直接干穿今天全天的热量额度，晚饭你只配喝西北风了。',
+      '好家伙，今天预算直接被你一餐清仓大甩卖！离你设定的减脂目标又倒退了整整两公里。',
+      '照这个吃法，体重秤明天早上看到你都想连夜订机票离家出走。',
+      '嘴巴是享受了10分钟，腰上的游泳圈要跟你相依为命3个月，算盘打得真响啊！',
+      '减脂是只动嘴皮子吗？就这热量摄入，你昨天在跑步机上流的汗纯当给跑步机洗澡了。',
+      '今天全天热量彻底爆表！敢不敢把这碗饭拍下来发给带你减脂的朋友看看？',
+      '摄入直接超速违章扣满12分！今晚不绕着小区暴走一万步，对得起你肚皮上的肉吗？',
+      '这一口下去，脂肪在你的内脏里连夜大兴土木、全款开工建豪宅。',
+      '你这不是在吃饭，这是在以实物形式给小肚腩上供，虔诚得让人落泪。',
+      '吃得这么丰盛，今天剩下的时间建议你戴个防毒面具，把嘴彻底封印起来！',
+      '这一顿的热量炸弹炸得轰轰烈烈，你的减脂大计原地宣布破产重建！',
+      '全天卡路里额度已欠费停机，接下来请凭借强大的意志力光合作用维持生命。'
+    ]
+  },
+  // 2. 碳水炸弹 / 升糖火箭
+  CARB_BOMB: {
+    styleType: 'savage',
+    icon: '🌶️',
+    title: '碳水炸弹',
+    subtag: '血糖过山车',
+    quotes: [
+      '这满屏的碳水炸弹，你是准备吃饱了去冬眠吗？胰岛素已经在你血管里拉防空警报了！',
+      '清一色大米白面！你吃的不是饭，是给肚子上的游泳圈全款买砖添瓦。',
+      '全是主食碳水！下午工位上准备当安睡小猪？脂肪连夜在你腰上落户买房了。',
+      '吃完这顿血糖直接坐火箭冲上外太空，下午两点准时困得怀疑人生。',
+      '碳水直接拉满，优质蛋白一个不见。掉的可都是肌肉，代谢一降喝凉水都长肉！',
+      '满眼白花花的大碳水，真拿自己的胰岛不当外人是吧？',
+      '这碳水比例，隔壁养猪场看了都直呼专业。赶紧加个蛋或者肉，抢救一下肌肉吧！',
+      '你昨天辛苦流的汗，今天全给这一大碗碳水当了陪葬品，真够大方的！',
+      '碳水这么厚重，吃完连走路都费劲，还减什么脂？直接就地躺平算了！',
+      '就这一盘精制碳水下肚，脂肪合成流水线已经在你肚皮上连轴转通宵了。',
+      '碳水炸药包已引爆！你的血糖正在急速飙升，随时准备把多余热量打包送进脂肪库。',
+      '大碗碳水配酱汁，主打一个纯碳水狂欢！肌肉在哭泣，小肚子在狂喜。'
+    ]
+  },
+  // 3. 油脂超标 / 血管办年卡
+  HIGH_FAT: {
+    styleType: 'warning',
+    icon: '🥑',
+    title: '油脂超标',
+    subtag: '血管办年卡',
+    quotes: [
+      '这菜在油里游泳游得挺欢啊？吃完拿张吸油纸，能擦出半张葱油饼来。',
+      '待会儿下一步选『烹饪用油』时，摸摸你自己的良心，敢不敢选重油？',
+      '你这不是在摄入营养，是在血管里给甘油三酯全款办了终身尊贵VIP年卡。',
+      '这一盘子下去，连盘底都在反光！你真当自己有吸油烟机一样的胃啊？',
+      '全是油脂和热量刺客，嘴唇上抹的油都可以直接省下润唇膏的钱了！',
+      '油大得能炒菜，减脂期吃成这样，你肚皮上的肥肉今晚都在开香槟庆祝！',
+      '油脂爆表！吃之前建议拿碗白开水涮三遍，不然这一顿够你白跑五公里。',
+      '高脂盛宴！这一餐的热量密度比核弹还硬核，明天称重自求多福吧！',
+      '脂肪含量高得离谱，吃完这口油汪汪的硬菜，内脏脂肪连夜为你起立鼓掌。',
+      '油腻指数拉满！热量全藏在吸饱了汤汁的油花里，你的腹肌已彻底失联。'
+    ]
+  },
+  // 4. 缺蛋白质 / 假装吃草
+  NO_PROTEIN: {
+    styleType: 'warning',
+    icon: '🥩',
+    title: '掉肌预警',
+    subtag: '优质蛋白告急',
+    quotes: [
+      '蛋白质就这么丁点？掉的全是辛辛苦苦攒的肌肉！代谢一降，喝口凉水都长肉。',
+      '看着像在吃草，其实全是沙拉酱泡菜，热量比红烧肉还高，纯纯的智商税大餐！',
+      '一点优质蛋白都不给，下午三点抓心挠肝到处翻零食的人，肯定就是你。',
+      '没蛋白哪来的饱腹感？两个小时后饿得前胸贴后背，可别怪我没提前警告你！',
+      '这是小兔子吃的饲料吗？不吃够蛋白质，身体只会疯狂分解你的瘦体重！',
+      '假装自律吃得少，结果全在掉肌肉。赶紧去啃个鸡胸肉或者灌瓶无糖豆浆抢救一下！',
+      '蛋白质亏空成这样，你身上的肉松松垮垮不是没有原因的，赶紧补蛋白！',
+      '只吃草不吃肉，看着很健康其实代谢全垮，下午饿到啃桌角说的就是你。',
+      '优质蛋白严重欠费！没有蛋白质护体，你的基础代谢率正在断崖式下跌。',
+      '看似克制的小素餐，其实连最基本的肌肉修复能量都不够，快加个水煮蛋吧！'
+    ]
+  },
+  // 5. 深夜放毒 / 扎心宵夜
+  LATE_NIGHT: {
+    styleType: 'savage',
+    icon: '🌙',
+    title: '深夜放毒',
+    subtag: '内脏通宵加班',
+    quotes: [
+      '半夜放毒？脂肪最喜欢你这种自觉、热情且无私奉献的全自动培养皿了。',
+      '大半夜吃这个，嘴巴爽了，内脏在通宵加班，明早起来水肿得自己都不认识！',
+      '深夜热量炸弹！明天早上一上秤，保准让你哭得比现在嚼得还大声。',
+      '白天辛辛苦苦少吃一口，大半夜全给宵夜做了慈善，减脂意志力薄得像层保鲜膜。',
+      '这么晚还在进食，你是打算让胃半夜起来给你打工吗？放下筷子立地成佛！',
+      '深夜吃进去的每一口，都会精准转化为你下周镜子前叹气时摸到的那坨肉。',
+      '黑夜给了你黑色的眼睛，你却用它来寻找外卖和炸鸡？明早称重别哭！',
+      '夜宵一时爽，脂肪火葬场。躺下睡觉的时候，摸摸良心也摸摸肚子上的肉吧！',
+      '月亮睡了你不睡，你是脂肪小宝贝。明天脸大一圈，后天腰粗一寸！',
+      '大半夜给消化系统加通宵班，你的代谢系统已经集体递交辞职信了。'
+    ]
+  },
+  // 6. 封神模范减脂餐
+  GOD_TIER: {
+    styleType: 'praise',
+    icon: '🏆',
+    title: '封神模范',
+    subtag: '掉秤教科书',
+    quotes: [
+      '绝了！这蛋白质配比简直是教科书级别，腹肌在暗中给你疯狂鼓掌！',
+      '懂吃的人减脂就像开挂！高饱腹低热量，活该你掉秤这么快！',
+      '自律天花板！今天这顿吃得挑不出任何毛病，继续保持，下周惊艳所有人！',
+      '干得漂亮！碳水克制、蛋白拉满，你离理想身材就差明早称重了！',
+      '这才是真正懂行的减脂餐！优质蛋白+饱腹纤维，燃脂引擎已经全速启动！',
+      '完美搭配！吃得舒服还完全不长肉，那些靠节食受罪的人看了都得眼红！',
+      '神仙搭配！一口下去全是给代谢打工的优质燃料，掉秤只是时间问题！',
+      '无懈可击！这一盘下去既解馋又掉脂，你的自律段位已经超越了99%的减脂人！',
+      '教科书般的黄金宏量配比！能把减脂餐吃得这么专业，想不瘦都难！',
+      '这顿饭搭配得极其高级，营养均衡无死角，体脂率看了都得连夜下滑！',
+      '顶级选品！优质蛋白护体，饱腹感拉满，给自律的你送上一万朵小红花！',
+      '吃得聪明又克制，没有多余的负担全是能量，今天又是身材管理满分的一天！'
+    ]
+  },
+  // 7. 干净低卡控卡餐
+  CLEAN_EAT: {
+    styleType: 'praise',
+    icon: '✨',
+    title: '干净自律',
+    subtag: '燃脂动力拉满',
+    quotes: [
+      '相当干净的一餐！没有乱七八糟的热量刺客，身体代谢表示极度舒适！',
+      '热量控制得无可挑剔，饱腹感拉满还不超标，今天的自律打卡稳稳拿下！',
+      '节奏非常好！不节食也不放纵，长期主义者的身材注定越来越好看！',
+      '吃得清爽又踏实，胃里毫无负担，下午的精神头绝对比吃外卖好上一百倍！',
+      '今天这一步走得太扎实了！没有亏待嘴巴，也没有纵容脂肪，满分通过！',
+      '稳如老狗！按照这个营养结构吃下去，小肚子悄悄缩水是迟早的事！',
+      '清清爽爽无负担，每一口都在给脂肪做减法，保持这个势头绝对赢！',
+      '舒服又克制，热量在安全线以内稳稳滑行，这就是掉秤的黄金节奏！',
+      '干净饮食的模范代表！告别重油重糖，你的身体正在由内而外变得轻盈！',
+      '掌控感拉满！在美食与身材之间找到了完美平衡点，今天为你点赞！'
+    ]
+  },
+  // 8. 算你识相 / 当场听劝
+  LISTENED: {
+    styleType: 'listened',
+    icon: '💡',
+    title: '算你识相',
+    subtag: '听劝掉秤最快',
+    quotes: [
+      '算你识相！手起刀落砍掉多余热量，听劝的人才配拥有马甲线！',
+      '这就对了嘛！求生欲拉满，这顿饭终于像个正经自律人吃的减脂餐了。',
+      '改得漂亮！及时收手算你头脑清醒，你的小蛮腰在暗中给你点赞！',
+      '听劝的孩子减脂最快！刚刚那一口要是吃下去，明天就该蹲马桶上悔恨了。',
+      '手起刀落削减热量，算你还有点克制力！保持这个清醒劲儿，绝对瘦！',
+      '懂得适可而止才是高段位玩家！这顿调整后完全达标，给你记上一功！',
+      '孺子可教也！砍掉这几口，明天称重就能少叹一口气，机智如你！',
+      '刀法精准！主动给肠胃减负，少摄入的这几十卡就是你明早掉秤的底气！',
+      '求生欲瞬间拉满！知道悬崖勒马，说明你的减脂决心不是闹着玩的！',
+      '这就对了！拒绝碳水刺客的诱惑，今天的自律段位直接往上晋升一级！'
+    ]
+  }
+};
+
 Page({
   data: {
     streakStatus: null,
     showStreakCelebrationModal: false,
+    showStreakCycleModal: false,
     streakCheckinResult: null,
     showStreakSaverModal: false,
     hasShownCelebrationToday: false,
     isWaterSubscribed: false,
+    isGlobalReminderSubscribed: false,
     waterSubQuota: 0,
     currentDateStr: '',
     avatarUrl: '/images/profile.png',
@@ -53,7 +217,7 @@ Page({
         desc: '',
         calories: 0,
         time: '8:30 AM',
-        image: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=200&auto=format&fit=crop'
+        image: '/images/meal_breakfast.jpg'
       },
       {
         type: 'LUNCH',
@@ -62,7 +226,7 @@ Page({
         desc: '',
         calories: 0,
         time: '12:45 PM',
-        image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200&auto=format&fit=crop'
+        image: '/images/meal_lunch.jpg'
       },
       {
         type: 'DINNER',
@@ -71,7 +235,7 @@ Page({
         desc: '',
         calories: 0,
         time: '7:15 PM',
-        image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=200&auto=format&fit=crop'
+        image: '/images/meal_dinner.jpg'
       },
       {
         type: 'SNACK',
@@ -80,7 +244,7 @@ Page({
         desc: '',
         calories: 0,
         time: '3:30 PM',
-        image: 'https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?w=200&auto=format&fit=crop'
+        image: '/images/meal_snack.jpg'
       }
     ],
     viewModeIndex: 0,
@@ -107,14 +271,8 @@ Page({
     mealHint: '',
     quickTags: ['肉包', '馒头', '菜包', '水饺', '面条', '米饭'],
     aiFoodItems: [],
-    helperFoods: [
-      { name: '米饭', unit: '碗' },
-      { name: '油条', unit: '根' },
-      { name: '鸡蛋', unit: '个' },
-      { name: '馒头', unit: '个' },
-      { name: '牛奶', unit: '盒' },
-      { name: '苹果', unit: '个' }
-    ],
+    mealCritique: null,
+    aiInitialCalories: 0,
     // 饮水数据
     showWaterSheet: false,
     waterAmount: 0,
@@ -590,8 +748,15 @@ Page({
   onShow() {
     this.updateDateDisplay();
     this.checkUserAndLoadData();
-    const subscribed = !!wx.getStorageSync('water_wx_subscribed');
-    this.setData({ isWaterSubscribed: subscribed });
+    const isGlobalReminderSubscribed = Boolean(
+      wx.getStorageSync('global_reminder_subscribed') ||
+      wx.getStorageSync('water_wx_subscribed') ||
+      wx.getStorageSync('diet_wx_subscribed')
+    );
+    this.setData({
+      isGlobalReminderSubscribed,
+      isWaterSubscribed: isGlobalReminderSubscribed
+    });
 
     // 从后端拉取真实剩余额度
     this._loadWaterSubQuota();
@@ -778,9 +943,17 @@ Page({
     let protein = 0;
     let fat = 0;
 
+    const defaultMealImages = {
+      BREAKFAST: '/images/meal_breakfast.jpg',
+      LUNCH: '/images/meal_lunch.jpg',
+      DINNER: '/images/meal_dinner.jpg',
+      SNACK: '/images/meal_snack.jpg'
+    };
+
     // Reset meal recorded status
     const updatedMeals = this.data.meals.map(meal => {
       meal.recorded = false;
+      meal.image = defaultMealImages[meal.type] || '/images/meal_lunch.jpg';
       meal.desc = '';
       meal.calories = 0;
       return meal;
@@ -797,6 +970,9 @@ Page({
       if (mealIdx !== -1) {
         updatedMeals[mealIdx].recorded = true;
         updatedMeals[mealIdx].calories += record.totalCalories;
+        if (record.imageUrl && !record.imageUrl.includes('unsplash') && !record.imageUrl.includes('example.com')) {
+          updatedMeals[mealIdx].image = record.imageUrl;
+        }
         
         // Parse food names and append to description
         try {
@@ -1260,18 +1436,22 @@ Page({
             } catch (e) {
               console.error('Failed to parse foodItems JSON:', e);
             }
+            const initialCal = parseFloat(parsedRecord.totalCalories) || 0;
             this.setData({
               tempParsedFoodItems: parsedRecord.foodItems,
               aiFoodItems: foodItems,
               showAiResultModal: true,
               aiResultSuccess: true,
               aiResultFoodText: this.formatFoodItems(parsedRecord.foodItems),
-              aiResultCalories: parsedRecord.totalCalories,
+              aiResultCalories: initialCal,
               aiResultProtein: parsedRecord.totalProtein || 0,
               aiResultFat: parsedRecord.totalFat || 0,
               aiResultCarbs: parsedRecord.totalCarbs || 0,
-              aiResultMessage: ''
+              aiResultMessage: '',
+              aiInitialCalories: initialCal
             });
+            this.updateMealCritique(true);
+            this.checkFirstRecognitionReminder();
           } else {
             if (result.message && result.message.indexOf('积分余额不足') !== -1) {
               wx.showModal({
@@ -1414,38 +1594,6 @@ Page({
     }
   },
 
-  addHelperFood(e) {
-    const name = e.currentTarget.dataset.name;
-    const match = COMMON_FOOD_DICTIONARY.find(f => f.name === name);
-    if (match) {
-      const items = this.data.aiFoodItems || [];
-      items.forEach(it => { it.isFocus = false; });
-      items.push({
-        name: match.name,
-        weight: match.standardWeight,
-        calories: parseFloat(((match.caloriesPer100g * match.standardWeight) / 100).toFixed(1)),
-        protein: parseFloat(((match.proteinPer100g * match.standardWeight) / 100).toFixed(1)),
-        fat: parseFloat(((match.fatPer100g * match.standardWeight) / 100).toFixed(1)),
-        carbs: parseFloat(((match.carbsPer100g * match.standardWeight) / 100).toFixed(1))
-      });
-      
-      this.setData({
-        aiFoodItems: items,
-        foodListScrollIntoView: 'food-scroll-bottom-anchor',
-        foodListScrollTop: (this.data.foodListScrollTop || 0) + 2000
-      });
-
-      setTimeout(() => {
-        this.setData({
-          foodListScrollIntoView: 'food-scroll-bottom-anchor',
-          foodListScrollTop: (this.data.foodListScrollTop || 0) + 2000
-        });
-      }, 120);
-
-      this.recalculateTotalCalories();
-    }
-  },
-
   deleteFoodItem(e) {
     const index = e.currentTarget.dataset.index;
     const items = this.data.aiFoodItems;
@@ -1502,6 +1650,109 @@ Page({
       aiResultFat: parseFloat(totalFat.toFixed(1)),
       aiResultCarbs: parseFloat(totalCarbs.toFixed(1))
     });
+    this.updateMealCritique(false);
+  },
+
+  updateMealCritique(isInitial = false) {
+    const aiFoodItems = this.data.aiFoodItems || [];
+    if (!aiFoodItems || aiFoodItems.length === 0) {
+      this.setData({ mealCritique: null });
+      return;
+    }
+
+    const mealCal = parseFloat(this.data.aiResultCalories) || 0;
+    const mealProtein = parseFloat(this.data.aiResultProtein) || 0;
+    const mealFat = parseFloat(this.data.aiResultFat) || 0;
+    const mealCarbs = parseFloat(this.data.aiResultCarbs) || 0;
+    const targetCal = parseFloat(this.data.targetCal) || 2000;
+    const consumedCal = parseFloat(this.data.consumedCal) || 0;
+    const initialCal = parseFloat(this.data.aiInitialCalories) || mealCal;
+
+    // 当前时间小时
+    const currentHour = new Date().getHours();
+
+    // 宏量营养素热量折算比重 (蛋白4kcal/g, 脂肪9kcal/g, 碳水4kcal/g)
+    const proteinCal = mealProtein * 4;
+    const fatCal = mealFat * 9;
+    const carbsCal = mealCarbs * 4;
+    const macroCalTotal = (proteinCal + fatCal + carbsCal) || mealCal || 1;
+    const carbsRatio = carbsCal / macroCalTotal;
+    const fatRatio = fatCal / macroCalTotal;
+    const proteinRatio = proteinCal / macroCalTotal;
+
+    // 今日全天累计预计热量
+    const projectedTotalCal = consumedCal + mealCal;
+    const isCalOverBudget = projectedTotalCal > (targetCal + 50);
+
+    // 菜品名称特征检测（典型重油/重辣/高热量菜肴）
+    const foodNamesStr = aiFoodItems.map(it => (it.name || '')).join(' ');
+    const heavyKeywords = ['冒菜', '麻辣', '火锅', '油炸', '炸鸡', '红油', '烧烤', '烤肉', '肥牛', '五花肉', '披萨', '汉堡', '重油', '串串', '酸菜鱼', '干锅', '烤鱼', '卤肉', '猪蹄', '扣肉', '红烧'];
+    const isHeavyFood = heavyKeywords.some(kw => foodNamesStr.includes(kw));
+
+    let categoryKey = 'CLEAN_EAT';
+
+    // 1. 听劝变脸：如果是手动调改后，且热量相比识别初值减少 >= 70kcal
+    if (!isInitial && initialCal > 200 && (initialCal - mealCal >= 70)) {
+      categoryKey = 'LISTENED';
+    }
+    // 2. 深夜放毒：21:30 ~ 04:30 且热量超过 180kcal
+    else if ((currentHour >= 22 || currentHour < 4) && mealCal >= 180) {
+      categoryKey = 'LATE_NIGHT';
+    }
+    // 3. 全天预算直接击穿爆仓 OR 单餐巨量爆卡 (>= 800kcal)
+    else if (isCalOverBudget || mealCal >= 800) {
+      categoryKey = 'OVER_CAL';
+    }
+    // 4. 油脂超标：单餐脂肪绝对克数过大(>=28g) 或 脂肪热量占比高(>=40%) 或 命中重油重辣关键词且脂肪偏高(>=20g)
+    else if (mealFat >= 28 || fatRatio >= 0.40 || (isHeavyFood && (mealFat >= 20 || mealCal >= 550))) {
+      categoryKey = 'HIGH_FAT';
+    }
+    // 5. 碳水炸弹：单餐碳水绝对克数过大(>=85g) 或 碳水热量占比高(>=55% 且 碳水>=50g) 或 碳水高且蛋白低
+    else if (mealCarbs >= 85 || (carbsRatio >= 0.55 && mealCarbs >= 50) || (mealCarbs >= 60 && mealProtein < 16)) {
+      categoryKey = 'CARB_BOMB';
+    }
+    // 6. 掉肌预警：总热量不低但缺乏优质蛋白质
+    else if (mealCal >= 220 && mealProtein < 10) {
+      categoryKey = 'NO_PROTEIN';
+    }
+    // 7. 封神模范：高蛋白 + 适中脂肪/碳水 + 热量合理 + 非重油食物
+    else if (mealProtein >= 22 && fatRatio <= 0.35 && mealCal <= 650 && !isHeavyFood) {
+      categoryKey = 'GOD_TIER';
+    }
+    // 8. 干净自律控卡餐：热量适中 + 脂肪低 + 非重油
+    else if (mealCal <= 600 && mealFat <= 20 && fatRatio <= 0.35 && !isHeavyFood) {
+      categoryKey = 'CLEAN_EAT';
+    }
+    // 9. 普通适中家常餐（兜底精准分流，绝不滥夸）
+    else {
+      if (mealFat >= 22 || fatRatio >= 0.35 || isHeavyFood) {
+        categoryKey = 'HIGH_FAT';
+      } else if (mealCarbs >= 65) {
+        categoryKey = 'CARB_BOMB';
+      } else {
+        categoryKey = 'CLEAN_EAT';
+      }
+    }
+
+    const category = MEAL_CRITIQUE_BANK[categoryKey] || MEAL_CRITIQUE_BANK.CLEAN_EAT;
+    const quotes = category.quotes || [];
+
+    // 如果分类未改变且非初始加载，保持已有文案，避免微调克数时一直随机跳动
+    if (!isInitial && this.data.mealCritique && this.data.mealCritique.categoryKey === categoryKey) {
+      return;
+    }
+
+    const selectedQuote = quotes[Math.floor(Math.random() * quotes.length)] || quotes[0];
+    this.setData({
+      mealCritique: {
+        categoryKey: categoryKey,
+        styleType: category.styleType,
+        icon: category.icon,
+        title: category.title,
+        subtag: category.subtag,
+        text: selectedQuote
+      }
+    });
   },
 
   onFoodItemProteinInput(e) {
@@ -1542,6 +1793,9 @@ Page({
   },
 
   selectOilOption(e) {
+    // 1. 同步手势唤起/静默累加餐食打卡提醒配额 (DIET_REMINDER)
+    subscribeHelper.requestDietReminderSubscription();
+
     const oilLevel = e.currentTarget.dataset.level;
     this.setData({ showOilOptionSheet: false });
 
@@ -1576,10 +1830,14 @@ Page({
         if (res.data && res.data.code === 200) {
           wx.showToast({ title: '记录成功', icon: 'success' });
           this.checkUserAndLoadData(); // reload dashboard
-          // 顺手静默累加/拉起每日控卡提醒服务通知授权（瑞幸式静默滚雪球）
-          setTimeout(() => {
-            subscribeHelper.requestDietReminderSubscription();
-          }, 800);
+          // 若用户此前未被提醒且未拒绝过，触发一次首次打卡提醒询问；已开启则静默累加配额
+          if (!wx.getStorageSync('has_prompted_diet_reminder') && !wx.getStorageSync('diet_reminder_rejected') && !wx.getStorageSync('global_reminder_subscribed')) {
+            this.checkFirstRecognitionReminder();
+          } else {
+            setTimeout(() => {
+              subscribeHelper.requestDietReminderSubscription();
+            }, 800);
+          }
         } else {
           wx.showToast({ title: '保存记录失败', icon: 'error' });
         }
@@ -1647,6 +1905,9 @@ Page({
   },
 
   onWaterAdd(e) {
+    // 1. 同步静默累加 WATER 饮水服务通知配额
+    subscribeHelper.requestWaterSubscription();
+
     const addAmount = parseInt(e.currentTarget.dataset.amount) || 250;
     const user = app.globalData.userInfo;
     if (!user) return;
@@ -1953,30 +2214,36 @@ Page({
   onTapFlame() {
     const status = this.data.streakStatus;
     if (!status) return;
-    if (status.todayChecked) {
-      if (status.todayCheckinResult) {
-        this.setData({
-          streakCheckinResult: status.todayCheckinResult,
-          showStreakCelebrationModal: true
-        });
-      } else {
-        wx.showToast({
-          title: `今日自律已达标！已连续 ${status.currentStreak || 1} 天 🔥`,
-          icon: 'none',
-          duration: 2500
-        });
-      }
-    } else {
-      if (status.isBroken) {
-        this.setData({ showStreakSaverModal: true });
-        return;
-      }
-      wx.showToast({
-        title: '今日尚未打卡，记录一餐即可自动点亮火焰 🔥',
-        icon: 'none',
-        duration: 2500
-      });
+    if (status.isBroken) {
+      this.setData({ showStreakSaverModal: true });
+      return;
     }
+    // 打开7天阶梯奖励周期路线图弹窗
+    this.setData({
+      showStreakCycleModal: true
+    });
+  },
+
+  closeStreakCycleModal() {
+    this.setData({
+      showStreakCycleModal: false
+    });
+  },
+
+  onGoToCheckin() {
+    this.setData({
+      showStreakCycleModal: false
+    });
+    // 找到第一个未记录的餐别，拉起记餐弹窗
+    const unrecorded = (this.data.meals || []).find(m => !m.recorded);
+    const mealType = unrecorded ? unrecorded.type : 'LUNCH';
+    const meal = (this.data.meals || []).find(m => m.type === mealType);
+    this.setData({
+      currentMealType: mealType,
+      currentMealName: meal ? meal.name : '午餐',
+      showMealOptionSheet: true,
+      mealHint: ''
+    });
   },
 
   onTapStreakCheckin() {
@@ -2045,6 +2312,49 @@ Page({
 
   closeStreakSaverModal() {
     this.setData({ showStreakSaverModal: false });
+  },
+
+  onRestartStreakFromDayOne() {
+    const user = app.globalData.userInfo;
+    if (!user || !user.id) {
+      this.setData({ showStreakSaverModal: false });
+      return;
+    }
+
+    wx.showLoading({ title: '正在重新开启...' });
+    wx.request({
+      url: `${app.globalData.baseUrl}/streak/restart?userId=${user.id}`,
+      method: 'POST',
+      success: (res) => {
+        wx.hideLoading();
+        this.setData({ showStreakSaverModal: false });
+        if (res.data && res.data.code === 200 && res.data.data) {
+          const result = res.data.data;
+          this.setData({
+            streakCheckinResult: null,
+            showStreakCelebrationModal: false
+          });
+          this.fetchStreakStatus(user.id);
+          if (result.totalUserPoints !== undefined && app.globalData.userInfo) {
+            app.globalData.userInfo.points = result.totalUserPoints;
+          }
+          wx.showToast({
+            title: '已重置为 0 天，请完成今日打卡！',
+            icon: 'none',
+            duration: 2500
+          });
+        } else {
+          wx.showToast({ title: (res.data && res.data.message) || '重置失败', icon: 'none' });
+          this.fetchStreakStatus(user.id);
+        }
+      },
+      fail: () => {
+        wx.hideLoading();
+        this.setData({ showStreakSaverModal: false });
+        this.fetchStreakStatus(user.id);
+        wx.showToast({ title: '网络异常', icon: 'none' });
+      }
+    });
   },
 
   onRecoverStreakWithSerum() {
@@ -2182,6 +2492,9 @@ Page({
   },
 
   onQuickAddWater250() {
+    // 1. 同步静默累加 WATER 饮水服务通知配额
+    subscribeHelper.requestWaterSubscription();
+
     app.login((user) => {
       const today = new Date().toISOString().split('T')[0];
       const slot = this.data.currentWaterTimeSlot || 0;
@@ -2194,7 +2507,12 @@ Page({
           if (res.data && res.data.code === 200) {
             wx.showToast({ title: '已补水 250ml 💧', icon: 'success' });
             this.setData({ showWaterReminderBar: false });
-            this.loadWaterRecord(user.id);
+            const record = res.data.data;
+            if (record && record.amount !== undefined) {
+              this.updateWaterUI(record.amount, record.target || this.data.waterTarget);
+            } else {
+              this.loadWaterData(user.id, today);
+            }
           }
         }
       });
@@ -2217,11 +2535,18 @@ Page({
         success: (res) => {
           if (res.data && res.data.code === 200) {
             const quota = res.data.data.quota || 0;
+            const isSub = quota > 0 || Boolean(
+              wx.getStorageSync('global_reminder_subscribed') ||
+              wx.getStorageSync('water_wx_subscribed') ||
+              wx.getStorageSync('diet_wx_subscribed')
+            );
             this.setData({
               waterSubQuota: quota,
-              isWaterSubscribed: quota > 0
+              isWaterSubscribed: isSub,
+              isGlobalReminderSubscribed: isSub
             });
-            if (quota > 0) {
+            if (isSub) {
+              wx.setStorageSync('global_reminder_subscribed', true);
               wx.setStorageSync('water_wx_subscribed', true);
             }
           }
@@ -2231,21 +2556,27 @@ Page({
   },
 
   _renewWaterQuotaOnUserGesture(showToastIfSuccess = false) {
-    const templateId = '6rHAfQw2A3WSw00LCaV9MUSop3OFVsRTAx4I-xgW5lw';
+    const templateId = 'NkhvxMufBmdrVDAiiK-ySgwrDQpwUixTBwaXhSxOsLo';
     wx.requestSubscribeMessage({
       tmplIds: [templateId],
       success: (res) => {
         if (res[templateId] === 'accept') {
+          this.setData({
+            isGlobalReminderSubscribed: true,
+            isWaterSubscribed: true
+          });
           wx.setStorageSync('water_wx_subscribed', true);
+          wx.setStorageSync('global_reminder_subscribed', true);
+          wx.setStorageSync('diet_wx_subscribed', true);
           app.login((user) => {
             if (user && user.id) {
               wx.request({
-                url: `${app.globalData.baseUrl}/user/subscribe?userId=${user.id}&templateId=${templateId}&type=WATER&count=3`,
+                url: `${app.globalData.baseUrl}/user/subscribe/batch?userId=${user.id}&templateId=${templateId}&types=WATER,DIET_REMINDER&count=3`,
                 method: 'POST',
                 success: () => {
                   this._loadWaterSubQuota();
                   if (showToastIfSuccess) {
-                    wx.showToast({ title: '提醒额度已增加 🥤', icon: 'success' });
+                    wx.showToast({ title: '已开启微信定时提醒 🔔', icon: 'success' });
                   }
                 }
               });
@@ -2260,73 +2591,141 @@ Page({
   },
 
   onSubscribeWaterPush() {
-    const templateId = '6rHAfQw2A3WSw00LCaV9MUSop3OFVsRTAx4I-xgW5lw';
-
-    if (this.data.isWaterSubscribed && this.data.waterSubQuota > 0) {
-      wx.showActionSheet({
-        itemList: [`➕ 补充提醒次数 (当前剩 ${this.data.waterSubQuota} 次)`, '🚫 关闭微信定时提醒'],
-        itemColor: '#0F172A',
-        success: (res) => {
-          if (res.tapIndex === 0) {
-            this._renewWaterQuotaOnUserGesture(true);
-          } else if (res.tapIndex === 1) {
-            wx.showModal({
-              title: '关闭微信提醒',
-              content: `确定要关闭微信聊天框定时喝水提醒吗？`,
-              confirmText: '确定关闭',
-              cancelText: '保持开启',
-              success: (mRes) => {
-                if (mRes.confirm) {
-                  this.setData({ isWaterSubscribed: false, waterSubQuota: 0 });
-                  wx.removeStorageSync('water_wx_subscribed');
-                  wx.showToast({ title: '已关闭微信提醒', icon: 'none' });
-                  app.login((user) => {
-                    if (user && user.id) {
-                      wx.request({
-                        url: `${app.globalData.baseUrl}/user/unsubscribe?userId=${user.id}&type=WATER`,
-                        method: 'POST'
-                      });
-                    }
-                  });
-                }
-              }
-            });
+    if (this.data.isGlobalReminderSubscribed) {
+      wx.showModal({
+        title: '微信定时提醒',
+        content: '当前已开启全局定时打卡与补水提醒，是否需要关闭？',
+        confirmText: '确定关闭',
+        confirmColor: '#EF4444',
+        cancelText: '保持开启',
+        cancelColor: '#64748B',
+        success: (mRes) => {
+          if (mRes.confirm) {
+            this.disableGlobalReminders();
           }
         }
       });
       return;
     }
 
+    wx.showModal({
+      title: '🔔 开启微信自律打卡提醒',
+      content: '开启后系统将在三餐打卡与适时补水时贴心提醒，助你坚持自律！\n\n稍后微信弹窗中请点击【允许】完成开启。',
+      confirmText: '立即开启',
+      confirmColor: '#10B981',
+      cancelText: '暂不开启',
+      cancelColor: '#94A3B8',
+      success: (mRes) => {
+        if (mRes.confirm) {
+          this.enableGlobalReminders();
+        }
+      }
+    });
+  },
+
+  enableGlobalReminders(fromPrompt = false) {
+    const templateId = 'NkhvxMufBmdrVDAiiK-ySgwrDQpwUixTBwaXhSxOsLo';
     wx.requestSubscribeMessage({
       tmplIds: [templateId],
       success: (res) => {
         if (res[templateId] === 'accept') {
-          this.setData({ isWaterSubscribed: true });
+          this.setData({
+            isGlobalReminderSubscribed: true,
+            isWaterSubscribed: true
+          });
+          wx.setStorageSync('global_reminder_subscribed', true);
           wx.setStorageSync('water_wx_subscribed', true);
+          wx.setStorageSync('diet_wx_subscribed', true);
+          wx.removeStorageSync('diet_reminder_rejected');
 
           app.login((user) => {
             if (user && user.id) {
               wx.request({
-                url: `${app.globalData.baseUrl}/user/subscribe?userId=${user.id}&templateId=${templateId}&type=WATER&count=3`,
+                url: `${app.globalData.baseUrl}/user/subscribe/batch?userId=${user.id}&templateId=${templateId}&types=WATER,DIET_REMINDER&count=5`,
                 method: 'POST',
                 success: () => {
                   this._loadWaterSubQuota();
-                  wx.showToast({ title: '已开启微信饮水提醒 🥤', icon: 'success' });
                 }
               });
             }
           });
+          wx.showToast({ title: '已开启微信定时提醒 🔔', icon: 'success' });
         } else {
-          this.setData({ isWaterSubscribed: false });
-          wx.removeStorageSync('water_wx_subscribed');
-          wx.showToast({ title: '未授权，无法发送提醒', icon: 'none' });
+          if (!fromPrompt) {
+            wx.showToast({ title: '未授权提醒服务', icon: 'none' });
+          }
         }
       },
       fail: (err) => {
-        console.log('Subscribe message fail:', err);
-        wx.showToast({ title: '授权失败', icon: 'none' });
+        console.warn('Subscribe message failed:', err);
+        if (!fromPrompt) {
+          wx.showToast({ title: '唤起授权失败', icon: 'none' });
+        }
       }
     });
+  },
+
+  disableGlobalReminders() {
+    this.setData({
+      isGlobalReminderSubscribed: false,
+      isWaterSubscribed: false,
+      waterSubQuota: 0
+    });
+    wx.removeStorageSync('global_reminder_subscribed');
+    wx.removeStorageSync('water_wx_subscribed');
+    wx.removeStorageSync('diet_wx_subscribed');
+    wx.showToast({ title: '已关闭微信提醒', icon: 'none' });
+    app.login((user) => {
+      if (user && user.id) {
+        wx.request({
+          url: `${app.globalData.baseUrl}/user/unsubscribe?userId=${user.id}&type=WATER`,
+          method: 'POST'
+        });
+        wx.request({
+          url: `${app.globalData.baseUrl}/user/unsubscribe?userId=${user.id}&type=DIET_REMINDER`,
+          method: 'POST'
+        });
+      }
+    });
+  },
+
+  checkFirstRecognitionReminder() {
+    const hasPrompted = wx.getStorageSync('has_prompted_diet_reminder');
+    const isRejected = wx.getStorageSync('diet_reminder_rejected');
+    const isSubscribed = Boolean(
+      wx.getStorageSync('global_reminder_subscribed') ||
+      wx.getStorageSync('water_wx_subscribed') ||
+      wx.getStorageSync('diet_wx_subscribed')
+    );
+
+    // 如果用户已开启、或已经拒绝过、或已经弹出提示过，则绝对不再打扰
+    if (hasPrompted || isRejected || isSubscribed) {
+      return;
+    }
+
+    // 标记已进行首次询问
+    wx.setStorageSync('has_prompted_diet_reminder', true);
+
+    setTimeout(() => {
+      wx.showModal({
+        title: '🔔 开启微信打卡提醒',
+        content: '是否开启微信服务通知？我们将在三餐与补水时间贴心提醒你打卡记录，助你轻松坚持。若拒绝后将不再打扰。',
+        confirmText: '开启提醒',
+        confirmColor: '#10B981',
+        cancelText: '不再提醒',
+        cancelColor: '#94A3B8',
+        success: (res) => {
+          if (res.confirm) {
+            this.enableGlobalReminders(true);
+          } else {
+            wx.setStorageSync('diet_reminder_rejected', true);
+          }
+        },
+        fail: () => {
+          wx.setStorageSync('diet_reminder_rejected', true);
+        }
+      });
+    }, 500);
   },
 
   openPlanModal() {

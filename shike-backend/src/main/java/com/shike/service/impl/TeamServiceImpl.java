@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 import java.net.URI;
@@ -57,12 +58,16 @@ public class TeamServiceImpl implements TeamService {
     private final com.shike.repository.TeamAuditTaskRepository teamAuditTaskRepository;
     private final com.shike.repository.TeamAiRoastRepository teamAiRoastRepository;
     private final com.shike.service.WxSubscribeService wxSubscribeService;
+    private final java.util.Map<String, String> localTauntCache = new java.util.concurrent.ConcurrentHashMap<>();
 
     @Value("${ai.api-key:sk-ws-H.EDLLDHH.jhKp.MEQCID5AkHa0TNfVEvwRSbT52_dMmC7R4eMyo0Q3O4cMiEiYAiAnHc4q3LtwuyxzeJFIzNXopiSxd66zHH3IiT_F98SABQ}")
     private String aiApiKey;
 
     @Value("${ai.model:qwen3.5-plus}")
     private String aiModel;
+
+    @Value("${ai.roast-model:${ai.model:qwen-plus}}")
+    private String aiRoastModel;
 
     @Value("${wx.mock}")
     private boolean wxMock;
@@ -86,9 +91,16 @@ public class TeamServiceImpl implements TeamService {
     // 本地无 Redis 时的提醒弹窗内存缓存 (userId -> alertMsg)
     private static final java.util.concurrent.ConcurrentHashMap<Long, String> localNudgeAlerts = new java.util.concurrent.ConcurrentHashMap<>();
 
-    static {
-        localNudgeAlerts.put(2L, "🔔 队友【健身狂人·阿强】喊你快去打卡：今天就差你啦，快去拍照算卡吧！");
+    // 本地催促频率记录缓存 (senderId:targetUserId:yyyy-MM-dd -> NudgeRecord)
+    private static class NudgeRecord {
+        final int count;
+        final long lastTimestamp;
+        NudgeRecord(int count, long lastTimestamp) {
+            this.count = count;
+            this.lastTimestamp = lastTimestamp;
+        }
     }
+    private static final java.util.concurrent.ConcurrentHashMap<String, NudgeRecord> localNudgeRecords = new java.util.concurrent.ConcurrentHashMap<>();
 
     @Override
     @Transactional
@@ -242,21 +254,7 @@ public class TeamServiceImpl implements TeamService {
     public TeamDetailDTO getActiveTeamDetails(Long userId) {
         log.info("Fetching active team details for user: {}", userId);
         
-        List<TeamMember> userMemberships = teamMemberRepository.findByUserId(userId);
-        if (userMemberships.isEmpty()) {
-            log.info("User {} has no team memberships", userId);
-            return null;
-        }
-
-        Team activeTeam = null;
-        for (TeamMember membership : userMemberships) {
-            Team team = teamRepository.findById(membership.getTeamId()).orElse(null);
-            if (team != null && "ACTIVE".equals(team.getStatus())) {
-                activeTeam = team;
-                break;
-            }
-        }
-
+        Team activeTeam = getActiveTeamForUser(userId);
         if (activeTeam == null) {
             log.info("User {} is not currently in any ACTIVE team", userId);
             return null;
@@ -274,7 +272,9 @@ public class TeamServiceImpl implements TeamService {
         for (TeamMember member : teamMembers) {
             User user = userRepository.findById(member.getUserId()).orElse(null);
             String name = (user != null && user.getNickname() != null) ? user.getNickname() : "微信用户";
-            String avatar = (user != null && user.getAvatarUrl() != null) ? user.getAvatarUrl() : "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100";
+            String avatar = (user != null && user.getAvatarUrl() != null && !user.getAvatarUrl().contains("unsplash"))
+                    ? user.getAvatarUrl()
+                    : "https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg/0";
 
             List<TeamDetailDTO.TickDetail> ticks = new java.util.ArrayList<>();
             boolean todayChecked = false;
@@ -378,9 +378,9 @@ public class TeamServiceImpl implements TeamService {
         int finalPot = totalPoolPoints - (dailyPotBase * targetDays);
         if (finalPot < 0) finalPot = totalPoolPoints / 2;
 
-        // 查询当前用户是否有未开的每日盲盒
+        // 查询当前用户在当前有效小队中是否有未开的每日盲盒（严格限定当前小队，杜绝历史过期小队盲盒跨队显示）
         com.shike.model.entity.TeamLootRecord pendingLoot = teamLootRecordRepository
-                .findByUserIdAndStatusOrderBySettlementDateDesc(userId, "UNCLAIMED")
+                .findByUserIdAndTeamIdAndStatusOrderBySettlementDateDesc(userId, activeTeam.getId(), "UNCLAIMED")
                 .stream().findFirst().orElse(null);
 
         // 查询当前登录用户的个人真实积分余额
@@ -538,7 +538,44 @@ public class TeamServiceImpl implements TeamService {
                 .orElseThrow(() -> new BizException(404, "目标队友不存在"));
 
         String todayStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-        String redisKey = "shike:team:nudge:" + senderId + ":" + targetUserId + ":" + todayStr;
+        String nudgeKey = senderId + ":" + targetUserId + ":" + todayStr;
+        long now = System.currentTimeMillis();
+
+        // 1. 本地内存频次与30分钟冷却校验
+        NudgeRecord localRec = localNudgeRecords.get(nudgeKey);
+        if (localRec != null) {
+            long elapsed = now - localRec.lastTimestamp;
+            if (elapsed < 30 * 60 * 1000) {
+                long remainMinutes = Math.max(1, (30 * 60 * 1000 - elapsed) / (60 * 1000));
+                throw new BizException(400, "刚刚已经提醒过TA啦，请" + remainMinutes + "分钟后再来催促~");
+            }
+            if (localRec.count >= 2) {
+                throw new BizException(400, "今天已提醒该队友2次啦，给TA一点自律时间吧~");
+            }
+        }
+
+        // 2. Redis 校验（若有）
+        String redisKey = "shike:team:nudge:" + nudgeKey;
+        try {
+            if (stringRedisTemplate != null) {
+                String countVal = stringRedisTemplate.opsForValue().get(redisKey);
+                int count = countVal != null ? Integer.parseInt(countVal) : 0;
+                if (count >= 2) {
+                    throw new BizException(400, "今天已提醒该队友2次啦，给TA一点自律时间吧~");
+                }
+            }
+        } catch (BizException be) {
+            throw be;
+        } catch (Exception ignored) {}
+
+        // 3. 更新本地与Redis催促记录
+        int newCount = localRec != null ? localRec.count + 1 : 1;
+        localNudgeRecords.put(nudgeKey, new NudgeRecord(newCount, now));
+        try {
+            if (stringRedisTemplate != null) {
+                stringRedisTemplate.opsForValue().set(redisKey, String.valueOf(newCount), 24, TimeUnit.HOURS);
+            }
+        } catch (Exception ignored) {}
 
         String senderName = sender.getNickname() != null ? sender.getNickname() : "队友";
         String alertMsg = "🔔 队友【" + senderName + "】喊你快去打卡：今天就差你啦，快去拍照算卡吧！";
@@ -548,22 +585,10 @@ public class TeamServiceImpl implements TeamService {
 
         try {
             if (stringRedisTemplate != null) {
-                String countVal = stringRedisTemplate.opsForValue().get(redisKey);
-                int count = countVal != null ? Integer.parseInt(countVal) : 0;
-                if (count >= 3) {
-                    throw new BizException(400, "今天已经提醒过该队友3次啦，给TA一点时间吧~");
-                }
-
-                stringRedisTemplate.opsForValue().set(redisKey, String.valueOf(count + 1), 24, TimeUnit.HOURS);
-
                 String alertKey = "shike:team:nudge:alert:" + targetUserId;
                 stringRedisTemplate.opsForValue().set(alertKey, alertMsg, 12, TimeUnit.HOURS);
             }
-        } catch (BizException be) {
-            throw be;
-        } catch (Exception ignored) {
-            log.warn("Redis unavailable for nudge, processed in fallback mode");
-        }
+        } catch (Exception ignored) {}
 
         // 联动发送微信官方服务通知（队友催促打卡提醒）
         try {
@@ -735,7 +760,9 @@ public class TeamServiceImpl implements TeamService {
 
     @Override
     public com.shike.model.entity.TeamLootRecord getPendingDailyLoot(Long userId) {
-        return teamLootRecordRepository.findByUserIdAndStatusOrderBySettlementDateDesc(userId, "UNCLAIMED")
+        Team activeTeam = getActiveTeamForUser(userId);
+        if (activeTeam == null) return null;
+        return teamLootRecordRepository.findByUserIdAndTeamIdAndStatusOrderBySettlementDateDesc(userId, activeTeam.getId(), "UNCLAIMED")
                 .stream().findFirst().orElse(null);
     }
 
@@ -750,6 +777,15 @@ public class TeamServiceImpl implements TeamService {
         }
         if ("CLAIMED".equals(loot.getStatus())) {
             throw new BizException(400, "该盲盒已开启领取过了");
+        }
+
+        // 校验盲盒归属小队是否仍然有效且用户仍在队中
+        Team team = teamRepository.findById(loot.getTeamId()).orElse(null);
+        if (team == null || !"ACTIVE".equals(team.getStatus())) {
+            throw new BizException(400, "该盲盒所属队伍已失效或解散，无法开启");
+        }
+        if (teamMemberRepository.findByTeamIdAndUserId(loot.getTeamId(), userId).isEmpty()) {
+            throw new BizException(403, "你已不在该队伍中，无法开启此盲盒");
         }
 
         // 盲盒暴击轮盘概率算法 (权重随机 100%)
@@ -860,30 +896,73 @@ public class TeamServiceImpl implements TeamService {
 
         boolean isSpy = team.getSpyUserId() != null && team.getSpyUserId().equals(userId);
         LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+        String currentPeriod = now.isBefore(LocalTime.of(16, 0)) ? "LUNCH" : "DINNER";
+        String currentPeriodName = "LUNCH".equals(currentPeriod) ? "午餐时段" : "晚餐时段";
 
         // 查当周投票情况
         List<com.shike.model.entity.TeamSpyVote> votes = teamSpyVoteRepository.findByTeamIdAndVoteDate(teamId, today);
         boolean hasVoted = votes.stream().anyMatch(v -> v.getVoterUserId().equals(userId));
 
-        // 获取匿名诱惑挑衅消息（从 Redis 读）
-        String tauntKey = "shike:team:spy:taunt:" + teamId + ":" + today;
-        String tauntText = null;
-        try {
-            if (stringRedisTemplate != null) {
-                tauntText = stringRedisTemplate.opsForValue().get(tauntKey);
+        // 获取午餐与晚餐的广播（时段隔离与最新汇总）
+        String lunchKey = "shike:team:spy:taunt:" + teamId + ":" + today + ":LUNCH";
+        String dinnerKey = "shike:team:spy:taunt:" + teamId + ":" + today + ":DINNER";
+        String latestKey = "shike:team:spy:taunt:" + teamId + ":" + today + ":LATEST";
+        String legacyKey = "shike:team:spy:taunt:" + teamId + ":" + today;
+
+        String lunchTaunt = getCachedOrRedisTaunt(lunchKey);
+        String dinnerTaunt = getCachedOrRedisTaunt(dinnerKey);
+        String latestTaunt = getCachedOrRedisTaunt(latestKey);
+        if (latestTaunt == null) {
+            latestTaunt = "DINNER".equals(currentPeriod) && dinnerTaunt != null 
+                    ? dinnerTaunt 
+                    : (lunchTaunt != null ? lunchTaunt : getCachedOrRedisTaunt(legacyKey));
+        }
+
+        boolean currentPeriodPosted = "LUNCH".equals(currentPeriod) ? (lunchTaunt != null) : (dinnerTaunt != null);
+        String tauntPeriod = null;
+        String tauntPeriodName = null;
+        if (latestTaunt != null) {
+            if (latestTaunt.equals(dinnerTaunt)) {
+                tauntPeriod = "DINNER";
+                tauntPeriodName = "夜宵诱惑";
+            } else {
+                tauntPeriod = "LUNCH";
+                tauntPeriodName = "午餐诱惑";
             }
-        } catch (Exception ignored) {}
+        }
 
         java.util.Map<String, Object> res = new java.util.HashMap<>();
         res.put("enabled", members.size() >= 3);
         res.put("isSpy", isSpy);
         res.put("roleName", isSpy ? "🕵️‍♂️ 减脂卧底（捣蛋鬼）" : "🛡️ 自律平民");
         res.put("roleTip", isSpy ? "你的任务是引诱其他队友破防超标！周末公投若未被投出，独吞全部终极奖池！" : "守住自律底线！周日揪出潜伏的捣蛋鬼，平分双倍终极大奖池！");
-        res.put("todayTaunt", tauntText);
+        res.put("todayTaunt", latestTaunt);
+        res.put("tauntPeriod", tauntPeriod);
+        res.put("tauntPeriodName", tauntPeriodName);
+        res.put("tauntId", latestTaunt != null ? (teamId + "_" + today + "_" + (tauntPeriod != null ? tauntPeriod : "ALL")) : null);
+        res.put("canPostTaunt", !currentPeriodPosted);
+        res.put("currentPeriod", currentPeriod);
+        res.put("currentPeriodName", currentPeriodName);
         res.put("hasVoted", hasVoted);
         res.put("voteCount", votes.size());
         res.put("totalMembers", members.size());
         return res;
+    }
+
+    private String getCachedOrRedisTaunt(String key) {
+        String val = localTauntCache.get(key);
+        if (val != null && !val.isEmpty()) return val;
+        try {
+            if (stringRedisTemplate != null) {
+                String redisVal = stringRedisTemplate.opsForValue().get(key);
+                if (redisVal != null && !redisVal.isEmpty()) {
+                    localTauntCache.put(key, redisVal);
+                    return redisVal;
+                }
+            }
+        } catch (Exception ignored) {}
+        return null;
     }
 
     @Override
@@ -895,16 +974,44 @@ public class TeamServiceImpl implements TeamService {
         }
 
         LocalDate today = LocalDate.now();
-        String tauntKey = "shike:team:spy:taunt:" + teamId + ":" + today;
-        String fullTaunt = (text != null && !text.trim().isEmpty()) ? text.trim() : "今晚的炸鸡和全糖奶茶太香了，真的不来一口吗？😋";
+        LocalTime now = LocalTime.now();
+        String currentPeriod = now.isBefore(LocalTime.of(16, 0)) ? "LUNCH" : "DINNER";
+        String periodKey = "shike:team:spy:taunt:" + teamId + ":" + today + ":" + currentPeriod;
+
+        String existing = getCachedOrRedisTaunt(periodKey);
+        if (existing != null && !existing.isEmpty()) {
+            if ("LUNCH".equals(currentPeriod)) {
+                throw new BizException(400, "今日午餐时段已发布过挑衅广播，晚餐时段（16:00后）再来投毒吧！");
+            } else {
+                throw new BizException(400, "今日晚餐时段已发布过挑衅广播，每日午餐/晚餐各限1次，明天再来吧！");
+            }
+        }
+
+        String fullTaunt = (text != null && !text.trim().isEmpty()) 
+                ? text.trim() 
+                : ("LUNCH".equals(currentPeriod) 
+                    ? "中午不来份多汁炸鸡配冰阔落吗？吃饱了才有力气减脂！😋" 
+                    : "今晚的蒜香小龙虾和全糖奶茶太香了，打什么卡呀，吃起来！🦞🥤");
+
+        // 存入当前时段
+        localTauntCache.put(periodKey, fullTaunt);
+        // 存入最新
+        String latestKey = "shike:team:spy:taunt:" + teamId + ":" + today + ":LATEST";
+        localTauntCache.put(latestKey, fullTaunt);
+        // 兼容旧键
+        String legacyKey = "shike:team:spy:taunt:" + teamId + ":" + today;
+        localTauntCache.put(legacyKey, fullTaunt);
 
         try {
             if (stringRedisTemplate != null) {
-                stringRedisTemplate.opsForValue().set(tauntKey, fullTaunt, 24, TimeUnit.HOURS);
+                stringRedisTemplate.opsForValue().set(periodKey, fullTaunt, 24, TimeUnit.HOURS);
+                stringRedisTemplate.opsForValue().set(latestKey, fullTaunt, 24, TimeUnit.HOURS);
+                stringRedisTemplate.opsForValue().set(legacyKey, fullTaunt, 24, TimeUnit.HOURS);
             }
         } catch (Exception ignored) {}
 
-        return "匿名美食诱惑挑衅已成功发送至小队看板！";
+        String periodDesc = "LUNCH".equals(currentPeriod) ? "午餐" : "晚餐/夜宵";
+        return "今日【" + periodDesc + "】匿名诱惑广播已成功发布至小队主页！";
     }
 
     @Override
@@ -1308,11 +1415,13 @@ public class TeamServiceImpl implements TeamService {
         String content = String.format("全队都在拼命控卡瓜分大奖，@%s 堪称人形热量精算机，自律得像个莫得感情的减脂AI！而 @%s 同学嘴上喊着要马甲线，筷子却悄悄伸向了高热量深渊！系统警戒红灯已焊死在你头顶，一人超标全队分红，今晚24点小队瓜分池坐等您爆金币！", mvpName, slackerName);
         String quote = "嘴上说想瘦，筷子比谁都诚实，小队奖池感谢你的无私赞助！";
 
+        log.info("Generating AI daily roast for team {} on date {} using model {}...", teamId, roastDate, aiRoastModel);
+        long startTime = System.currentTimeMillis();
         try {
-            // 调用 qwen3.5-plus 生成毒舌战报
+            // 调用轻量高敏捷模型生成毒舌战报（1.5~2.5秒极速返回）
             HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
             var payload = java.util.Map.of(
-                    "model", aiModel,
+                    "model", (aiRoastModel != null && !aiRoastModel.isBlank()) ? aiRoastModel : "qwen-plus",
                     "messages", List.of(java.util.Map.of("role", "user", "content", prompt)),
                     "temperature", 0.85
             );
@@ -1320,11 +1429,12 @@ public class TeamServiceImpl implements TeamService {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create("https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"))
                     .header("Authorization", "Bearer " + aiApiKey)
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(reqBody))
+                    .header("Content-Type", "application/json; charset=utf-8")
+                    .timeout(Duration.ofSeconds(30))
+                    .POST(HttpRequest.BodyPublishers.ofString(reqBody, java.nio.charset.StandardCharsets.UTF_8))
                     .build();
 
-            HttpResponse<String> resp = client.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> resp = client.send(request, HttpResponse.BodyHandlers.ofString(java.nio.charset.StandardCharsets.UTF_8));
             if (resp.statusCode() == 200) {
                 JsonNode root = new ObjectMapper().readTree(resp.body());
                 String aiText = root.path("choices").get(0).path("message").path("content").asText();
@@ -1333,9 +1443,12 @@ public class TeamServiceImpl implements TeamService {
                 if (parsed.has("title")) title = parsed.get("title").asText();
                 if (parsed.has("content")) content = parsed.get("content").asText();
                 if (parsed.has("quote")) quote = parsed.get("quote").asText();
+                log.info("AI daily roast successfully generated in {} ms: title={}", (System.currentTimeMillis() - startTime), title);
+            } else {
+                log.warn("AI roast call returned non-200 status {}: {}", resp.statusCode(), resp.body());
             }
         } catch (Exception e) {
-            log.warn("Failed to call AI for roast, using spicy template: {}", e.getMessage());
+            log.warn("Failed to call AI for roast in {} ms, using spicy template: {}", (System.currentTimeMillis() - startTime), e.getMessage());
         }
 
         com.shike.model.entity.TeamAiRoast roast = teamAiRoastRepository.findByTeamIdAndRoastDate(teamId, roastDate)
@@ -1364,5 +1477,16 @@ public class TeamServiceImpl implements TeamService {
                         return null;
                     }
                 });
+    }
+
+    private Team getActiveTeamForUser(Long userId) {
+        List<TeamMember> userMemberships = teamMemberRepository.findByUserId(userId);
+        for (TeamMember membership : userMemberships) {
+            Team team = teamRepository.findById(membership.getTeamId()).orElse(null);
+            if (team != null && "ACTIVE".equals(team.getStatus())) {
+                return team;
+            }
+        }
+        return null;
     }
 }

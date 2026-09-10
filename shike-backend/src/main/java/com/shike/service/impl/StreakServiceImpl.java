@@ -20,6 +20,13 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.shike.model.entity.Team;
+import com.shike.model.entity.TeamCheckin;
+import com.shike.model.entity.TeamMember;
+import com.shike.repository.TeamCheckinRepository;
+import com.shike.repository.TeamMemberRepository;
+import com.shike.repository.TeamRepository;
+import java.util.stream.Collectors;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
@@ -35,17 +42,25 @@ public class StreakServiceImpl implements StreakService {
     private final UserItemRepository userItemRepository;
     private final DietRecordRepository dietRecordRepository;
     private final StringRedisTemplate stringRedisTemplate;
+    private final TeamMemberRepository teamMemberRepository;
+    private final TeamRepository teamRepository;
+    private final TeamCheckinRepository teamCheckinRepository;
+    private final Set<String> abandonedRescueUserIds = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
-    // 7天阶梯奖励配置表
-    private static final int[] LADDER_POINTS = {20, 30, 50, 60, 80, 100, 200};
+    // 7天阶梯奖励配置表（精算平衡模型：7天累计128积分，日常保本，大节点给高光与稀有道具）
+    private static final int[] LADDER_POINTS = {5, 8, 15, 10, 25, 15, 50};
     private static final String[] LADDER_ITEMS = {null, null, "CHEAT_SHIELD", null, "SERUM_REVIVAL", null, "GOLDEN_CHEST"};
     private static final String[] LADDER_ITEM_NAMES = {null, null, "欺骗餐护盾", null, "血清补签卡", null, "金色神秘宝箱"};
     private static final String[] LADDER_ITEM_ICONS = {null, null, "🛡️", null, "💉", null, "🎁"};
 
     @Override
+    @Transactional
     public StreakStatusDTO getStreakStatus(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BizException(404, "User not found"));
+
+        // 自动校验并修复连击连续性，杜绝历史数据因补卡未同步而脱节
+        recalculateAndSaveUserStreak(user);
 
         LocalDate today = LocalDate.now();
         LocalDate yesterday = today.minusDays(1);
@@ -58,14 +73,32 @@ public class StreakServiceImpl implements StreakService {
         boolean isBroken = false;
         int brokenStreak = 0;
 
+        List<StreakRecord> records = streakRecordRepository.findByUserIdOrderByCheckinDateDesc(userId);
+        Set<LocalDate> checkinDates = (records != null) ? records.stream()
+                .map(StreakRecord::getCheckinDate)
+                .collect(Collectors.toSet()) : java.util.Collections.emptySet();
+
         if (!todayChecked) {
-            if (lastDate != null && lastDate.equals(yesterday.minusDays(1)) && currentStreak > 0) {
-                // 昨天漏打了，但在前天打了，处于断签挽救窗口期（次日）
-                isBroken = true;
-                brokenStreak = currentStreak;
-            } else if (lastDate != null && lastDate.isBefore(yesterday.minusDays(1)) && currentStreak > 0) {
-                // 已经断签超期，归零
-                currentStreak = 0;
+            // 如果昨天漏打，但前天有打卡记录，且用户未主动放弃挽救，则判定为处于断签挽救窗口期
+            if (!checkinDates.contains(yesterday) && checkinDates.contains(yesterday.minusDays(1))) {
+                String abandonKey = userId + ":" + yesterday;
+                boolean isAbandoned = abandonedRescueUserIds.contains(abandonKey);
+                try {
+                    if (stringRedisTemplate != null && Boolean.TRUE.equals(stringRedisTemplate.hasKey("shike:streak:abandon:" + abandonKey))) {
+                        isAbandoned = true;
+                    }
+                } catch (Exception ignored) {}
+
+                if (!isAbandoned) {
+                    LocalDate cursor = yesterday.minusDays(1);
+                    while (checkinDates.contains(cursor)) {
+                        brokenStreak++;
+                        cursor = cursor.minusDays(1);
+                    }
+                    if (brokenStreak > 0) {
+                        isBroken = true;
+                    }
+                }
             }
         }
 
@@ -331,11 +364,11 @@ public class StreakServiceImpl implements StreakService {
             throw new BizException(400, "未知的断签挽救方式: " + method);
         }
 
-        // 补录打卡流水记录
+        // 补录打卡流水记录（先占位，随后根据流水连续性精确更新）
         StreakRecord makeupRecord = StreakRecord.builder()
                 .userId(userId)
                 .checkinDate(targetDate)
-                .streakDay(((user.getCurrentStreak() != null ? user.getCurrentStreak() : 1) % 7) + 1)
+                .streakDay(1)
                 .rewardPoints(0)
                 .itemReward(null)
                 .isMakeup(true)
@@ -357,11 +390,16 @@ public class StreakServiceImpl implements StreakService {
                 .build();
         dietRecordRepository.save(makeupDiet);
 
-        // 若补签的是昨天，维持并恢复打卡连续性
-        if (targetDate.equals(yesterday)) {
-            user.setLastCheckinDate(yesterday);
-            userRepository.save(user);
-        }
+        // 重新精确计算并持久化用户的连击数、最大连击数与最后打卡日期
+        recalculateAndSaveUserStreak(user);
+
+        // 更新本次补卡流水记录的循环天数
+        int cycleDay = ((user.getCurrentStreak() - 1) % 7) + 1;
+        makeupRecord.setStreakDay(cycleDay);
+        streakRecordRepository.save(makeupRecord);
+
+        // 同步契约小队当天的打卡达标状态
+        syncTeamCheckinOnRecover(userId, targetDate);
 
         log.info("[STREAK] User {} recovered streak for date {} via {}. Current streak: {}", userId, targetDate, method, user.getCurrentStreak());
 
@@ -411,5 +449,129 @@ public class StreakServiceImpl implements StreakService {
                         .build());
         item.setQuantity(item.getQuantity() + qty);
         userItemRepository.save(item);
+    }
+
+    /**
+     * 根据打卡流水记录重新精确计算用户的连击数、历史最高连击数与最后打卡日期
+     */
+    private void recalculateAndSaveUserStreak(User user) {
+        List<StreakRecord> records = streakRecordRepository.findByUserIdOrderByCheckinDateDesc(user.getId());
+        if (records == null || records.isEmpty()) {
+            return;
+        }
+
+        Set<LocalDate> checkinDates = records.stream()
+                .map(StreakRecord::getCheckinDate)
+                .collect(Collectors.toSet());
+
+        LocalDate today = LocalDate.now();
+        LocalDate yesterday = today.minusDays(1);
+
+        LocalDate startDate = null;
+        if (checkinDates.contains(today)) {
+            startDate = today;
+        } else if (checkinDates.contains(yesterday)) {
+            startDate = yesterday;
+        }
+
+        int streak = 0;
+        if (startDate != null) {
+            LocalDate cursor = startDate;
+            while (checkinDates.contains(cursor)) {
+                streak++;
+                cursor = cursor.minusDays(1);
+            }
+        } else {
+            // 今天和昨天都没打卡，说明当前连击中断，当前连击归零
+            streak = 0;
+        }
+
+        LocalDate latestDate = records.get(0).getCheckinDate();
+
+        user.setCurrentStreak(streak);
+        int maxStreak = user.getMaxStreak() != null ? user.getMaxStreak() : 0;
+        if (streak > maxStreak) {
+            user.setMaxStreak(streak);
+        }
+        user.setLastCheckinDate(latestDate);
+        userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public StreakCheckinResultDTO restartStreak(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BizException(404, "User not found"));
+
+        LocalDate today = LocalDate.now();
+        LocalDate yesterday = today.minusDays(1);
+
+        // 记录已放弃昨日拯救，避免重复触发 isBroken
+        String abandonKey = userId + ":" + yesterday;
+        abandonedRescueUserIds.add(abandonKey);
+        try {
+            if (stringRedisTemplate != null) {
+                stringRedisTemplate.opsForValue().set("shike:streak:abandon:" + abandonKey, "1", java.time.Duration.ofDays(3));
+            }
+        } catch (Exception ignored) {}
+
+        // 删除今日可能已存在的打卡流水（若有）
+        streakRecordRepository.findByUserIdAndCheckinDate(userId, today).ifPresent(streakRecordRepository::delete);
+
+        // 重置当前连击归零，保持今日待打卡状态（不自动打卡）
+        user.setCurrentStreak(0);
+        // lastCheckinDate 恢复为除今天之外最近一次实际打卡日期（如前天）
+        List<StreakRecord> records = streakRecordRepository.findByUserIdOrderByCheckinDateDesc(userId);
+        if (records != null && !records.isEmpty()) {
+            user.setLastCheckinDate(records.get(0).getCheckinDate());
+        } else {
+            user.setLastCheckinDate(null);
+        }
+        userRepository.save(user);
+
+        log.info("[STREAK] User {} reset streak to 0, pending today's checkin", userId);
+
+        return StreakCheckinResultDTO.builder()
+                .currentStreak(0)
+                .cycleDay(1)
+                .rewardPoints(0)
+                .itemReward(null)
+                .itemRewardName(null)
+                .itemRewardIcon(null)
+                .totalUserPoints(user.getPoints())
+                .nextDayPoints(LADDER_POINTS[0])
+                .message("连击已重置为 0 天，请完成今日自律打卡开启 Day 1！🔥")
+                .build();
+    }
+
+    /**
+     * 补签时，若用户在进行中的契约小队内，自动同步当天的小队打卡状态为达标
+     */
+    private void syncTeamCheckinOnRecover(Long userId, LocalDate targetDate) {
+        if (teamMemberRepository == null || teamRepository == null || teamCheckinRepository == null) {
+            return;
+        }
+        try {
+            List<TeamMember> teamMembers = teamMemberRepository.findByUserId(userId);
+            for (TeamMember tm : teamMembers) {
+                Team t = teamRepository.findById(tm.getTeamId()).orElse(null);
+                if (t != null && "ACTIVE".equals(t.getStatus())) {
+                    List<TeamCheckin> checkins = teamCheckinRepository.findByTeamIdAndUserId(t.getId(), userId);
+                    TeamCheckin checkin = checkins.stream()
+                            .filter(c -> c.getCheckinDate().equals(targetDate))
+                            .findFirst()
+                            .orElse(TeamCheckin.builder()
+                                    .teamId(t.getId())
+                                    .userId(userId)
+                                    .checkinDate(targetDate)
+                                    .build());
+                    checkin.setIsSuccess(true);
+                    teamCheckinRepository.save(checkin);
+                    log.info("[STREAK] Synced team checkin success for user {} in team {} on {}", userId, t.getId(), targetDate);
+                }
+            }
+        } catch (Exception e) {
+            log.error("[STREAK] Error syncing team checkin on recover: {}", e.getMessage());
+        }
     }
 }

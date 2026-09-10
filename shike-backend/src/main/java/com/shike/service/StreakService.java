@@ -16,4 +16,6 @@ public interface StreakService {
     Map<String, Object> recoverStreak(Long userId, String method);
 
     Map<String, Object> recoverStreak(Long userId, String method, String dateStr);
+
+    StreakCheckinResultDTO restartStreak(Long userId);
 }
