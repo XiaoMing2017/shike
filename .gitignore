@@ -22,3 +22,10 @@ project.private.config.json
 *.log
 scratch/
 
+# Node / PWA
+node_modules/
+shike-pwa/node_modules/
+dist/
+shike-pwa/dist/
+shike-pwa/.local
+shike-pwa/.env.local

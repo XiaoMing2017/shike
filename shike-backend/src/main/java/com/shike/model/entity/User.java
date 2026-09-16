@@ -26,6 +26,12 @@ public class User {
     @Column(nullable = false, unique = true, length = 64)
     private String openid;
 
+    @Column(length = 120)
+    private String email;
+
+    @Column(length = 128)
+    private String password;
+
     @Column(length = 50)
     private String nickname;
 

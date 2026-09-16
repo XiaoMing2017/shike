@@ -17,4 +17,5 @@ public interface DietRecordRepository extends JpaRepository<DietRecord, Long> {
     Long countByRecordDateAndUserIdNot(LocalDate date, Long excludeUserId);
     Long countByUserId(Long userId);
     Long countByUserIdAndRecordDate(Long userId, LocalDate date);
+    void deleteByUserId(Long userId);
 }

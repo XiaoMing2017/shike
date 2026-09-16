@@ -11,6 +11,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -80,6 +81,52 @@ public class DietController {
         return ResultDTO.success(record);
     }
 
+    @GetMapping("/today")
+    public ResultDTO<java.util.Map<String, Object>> getTodaySummary(
+            @RequestParam(value = "userId", required = false) String userIdParam) {
+        Long userId = 1L;
+        if (userIdParam != null && !userIdParam.isEmpty()) {
+            try {
+                String numeric = userIdParam.replaceAll("\\D+", "");
+                if (!numeric.isEmpty()) {
+                    userId = Long.parseLong(numeric);
+                }
+            } catch (Exception ignored) {}
+        }
+        LocalDate today = LocalDate.now();
+        List<DietRecord> records = dietService.getDailyRecords(userId, today);
+        double totalCal = 0;
+        double totalProtein = 0;
+        double totalCarbs = 0;
+        double totalFat = 0;
+        for (DietRecord r : records) {
+            double rCal = r.getTotalCalories() != null ? r.getTotalCalories().doubleValue() : 0;
+            double rProtein = r.getTotalProtein() != null ? r.getTotalProtein().doubleValue() : 0;
+            double rCarbs = r.getTotalCarbs() != null ? r.getTotalCarbs().doubleValue() : 0;
+            double rFat = r.getTotalFat() != null ? r.getTotalFat().doubleValue() : 0;
+
+            if (rCal > 0 && rProtein == 0 && rCarbs == 0 && rFat == 0) {
+                rProtein = Math.round((rCal * 0.25) / 4.0);
+                rCarbs = Math.round((rCal * 0.45) / 4.0);
+                rFat = Math.round((rCal * 0.30) / 9.0);
+                r.setTotalProtein(BigDecimal.valueOf(rProtein));
+                r.setTotalCarbs(BigDecimal.valueOf(rCarbs));
+                r.setTotalFat(BigDecimal.valueOf(rFat));
+            }
+            totalCal += rCal;
+            totalProtein += rProtein;
+            totalCarbs += rCarbs;
+            totalFat += rFat;
+        }
+        java.util.Map<String, Object> map = new java.util.HashMap<>();
+        map.put("totalCalories", Math.round(totalCal));
+        map.put("totalProtein", Math.round(totalProtein));
+        map.put("totalCarbs", Math.round(totalCarbs));
+        map.put("totalFat", Math.round(totalFat));
+        map.put("records", records);
+        return ResultDTO.success(map);
+    }
+
     @GetMapping("/daily")
     public ResultDTO<List<DietRecord>> getDailyRecords(
             @RequestParam("userId") Long userId,
@@ -134,6 +181,12 @@ public class DietController {
             date = LocalDate.now();
         }
         dietService.recordWeight(userId, weight, date);
+        return ResultDTO.success(null);
+    }
+
+    @DeleteMapping("/records")
+    public ResultDTO<Void> clearRecords(@RequestParam(value = "userId", required = false) Long userId) {
+        dietService.clearRecords(userId);
         return ResultDTO.success(null);
     }
 }

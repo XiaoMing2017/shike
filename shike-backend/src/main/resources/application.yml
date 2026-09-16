@@ -54,12 +54,12 @@ logging:
 
 ai:
   provider: OPENAI
-  model: qwen3.7-plus
-  diet-model: qwen3.7-plus
-  plan-model: qwen3.5-plus
+  model: qwen3.8-flash
+  diet-model: qwen3.8-flash
+  plan-model: qwen3.7-flash
   roast-model: qwen-plus
   endpoint: https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions
-  api-key: sk-ws-H.EDLLDHH.jhKp.MEQCID5AkHa0TNfVEvwRSbT52_dMmC7R4eMyo0Q3O4cMiEiYAiAnHc4q3LtwuyxzeJFIzNXopiSxd66zHH3IiT_F98SABQ
+  api-key: sk-ws-H.PHRHEXE.nKIX.MEUCIEk3OHUjWuWm9ZFTSPSb2tA9vz9kRfv8n8ODrF7YSTqPAiEArkNnos9gwxVI49Sn1Z6muRIa-sHMQvdGKwBNayXr3oo
   timeout-ms: 180000
 
 baidu:

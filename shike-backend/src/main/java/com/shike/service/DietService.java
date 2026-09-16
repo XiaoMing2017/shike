@@ -20,4 +20,5 @@ public interface DietService {
     WeekDashboardDTO getWeekDashboard(Long userId, String dateStr);
     MonthDashboardDTO getMonthDashboard(Long userId, Integer year, Integer month);
     void recordWeight(Long userId, java.math.BigDecimal weight, LocalDate date);
+    void clearRecords(Long userId);
 }

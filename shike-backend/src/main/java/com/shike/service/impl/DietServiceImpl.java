@@ -269,9 +269,9 @@ public class DietServiceImpl implements DietService {
 
         // Default mock diet record to fall back to in case of errors
         String defaultMockFoodItems = "[" +
-                "{\"name\": \"香煎鸡胸肉\", \"weight\": 150, \"calories\": 250.0, \"protein\": 30.0, \"fat\": 5.0, \"carbs\": 0.0}, " +
-                "{\"name\": \"水煮西蓝花\", \"weight\": 100, \"calories\": 35.0, \"protein\": 3.0, \"fat\": 0.5, \"carbs\": 7.0}, " +
-                "{\"name\": \"糙米饭\", \"weight\": 120, \"calories\": 165.0, \"protein\": 5.0, \"fat\": 1.0, \"carbs\": 35.0}" +
+                "{\"name\": \"Grilled Chicken Breast\", \"nameZh\": \"香煎鸡胸肉\", \"weight\": 150, \"calories\": 250.0, \"protein\": 30.0, \"fat\": 5.0, \"carbs\": 0.0, \"fiber\": 0.0, \"netCarbs\": 0.0, \"sodium\": 380.0, \"potassium\": 420.0, \"calcium\": 20.0, \"iron\": 1.2, \"vitaminC\": 0.0}, " +
+                "{\"name\": \"Steamed Broccoli\", \"nameZh\": \"水煮西蓝花\", \"weight\": 100, \"calories\": 35.0, \"protein\": 3.0, \"fat\": 0.5, \"carbs\": 7.0, \"fiber\": 3.0, \"netCarbs\": 4.0, \"sodium\": 30.0, \"potassium\": 316.0, \"calcium\": 47.0, \"iron\": 0.7, \"vitaminC\": 89.2}, " +
+                "{\"name\": \"Brown Rice\", \"nameZh\": \"糙米饭\", \"weight\": 120, \"calories\": 165.0, \"protein\": 5.0, \"fat\": 1.0, \"carbs\": 35.0, \"fiber\": 2.5, \"netCarbs\": 32.5, \"sodium\": 5.0, \"potassium\": 100.0, \"calcium\": 12.0, \"iron\": 0.6, \"vitaminC\": 0.0}" +
                 "]";
         DietRecord fallbackRecord = DietRecord.builder()
                 .foodItems(defaultMockFoodItems)
@@ -298,49 +298,30 @@ public class DietServiceImpl implements DietService {
             }
             String dataUrl = "data:" + mimeType + ";base64," + base64Data;
 
-            String prompt = "你是一个顶级的中国膳食营养视觉分析师。请严格按照以下步骤分析用户上传的食物照片。\n" +
+            String prompt = "You are a world-class certified clinical nutritionist and visual dietary analyst. " +
+                    "Analyze the user's uploaded food/beverage photo with high precision across Western, European, American, Asian, and global cuisines.\n" +
                     "\n" +
-                    "## 分析步骤\n" +
+                    "## Analysis Protocol:\n" +
+                    "1. Scan and identify every distinct food or drink on the plate/container (e.g. Avocado Toast, Grilled Salmon, Chicken Breast Bowl, Caesar Salad, Ribeye Steak, Pasta, Burger, Rice, Protein Shake).\n" +
+                    "2. Estimate portion size and weight (in grams) using visual references (cutlery, plates, cups, hands) or standard single-serving sizes.\n" +
+                    "3. Calculate precise nutritional metrics: weight (g), calories (kcal), protein (g), fat (g), carbs (g), and dietary fiber (g).\n" +
+                    "4. Calculate netCarbs = max(0, carbs - fiber).\n" +
+                    "5. Cross-check formula: calories ≈ protein * 4 + fat * 9 + carbs * 4 (within ±10% margin).\n" +
+                    "6. Account for visible cooking oils and dressing sauces (5-15g oil adding 45-135 kcal).\n" +
+                    "7. Estimate key clinical micronutrients and minerals for the food:\n" +
+                    "   - sodium (mg): estimated salt/sodium content\n" +
+                    "   - potassium (mg): vital electrolyte for fluid balance\n" +
+                    "   - calcium (mg): for bone health\n" +
+                    "   - iron (mg): for cellular oxygenation\n" +
+                    "   - vitaminC (mg): key antioxidant\n" +
                     "\n" +
-                    "### 第一步：逐一识别所有食物\n" +
-                    "仔细扫描整张图片，识别画面中出现的**每一种独立的食物或饮品**，包括主食、配菜、汤品、饮料、水果等，不要遗漏任何一种。\n" +
-                    "- 食物命名尽量准确具体（例如写 '尖椒肥肠' 而非 '炒肉'，写 '番茄炒蛋' 而非 '炒菜'）。\n" +
-                    "- 区分易混淆食材：\n" +
-                    "  * 肥肠：中空圈状/管状/褶皱状，表面有油脂感；鸡肉：实心块状，有纤维纹理；猪肉：多为片状或丝状。\n" +
-                    "  * 土豆丁 vs 豆腐块 vs 年糕：注意颜色、光泽和切面质感差异。\n" +
-                    "- 注意分析烹饪方式（炒、煮、蒸、炸、凉拌）和酱汁（红烧酱、辣椒油、蚝油等），这些会显著影响热量。\n" +
-                    "\n" +
-                    "### 第二步：体积与重量估算（关键！）\n" +
-                    "这是最影响准确度的环节，请特别认真：\n" +
-                    "- **寻找参照物**：在图片中寻找碗、盘子、筷子、勺子、手、杯子等可以作为尺寸参照的物体。\n" +
-                    "  * 标准家用饭碗（直径约 12cm），装满约 200g 米饭。\n" +
-                    "  * 标准家用菜盘（直径约 20-25cm）。\n" +
-                    "  * 一双筷子长约 24cm，可以用来估算食物堆叠的厚度和面积。\n" +
-                    "- **根据参照物推算面积和厚度**，从而估算每种食物的体积和重量（克数）。\n" +
-                    "- 如果没有明确参照物，则按中国餐饮的**一人份常规分量**估算（例如：一碗米饭约 200g，一份炒菜约 200-300g，一份汤面约 500g）。\n" +
-                    "\n" +
-                    "### 第三步：计算营养数据并交叉校验\n" +
-                    "- 根据第二步估算的重量（克数），结合食物的营养成分密度（每100g含多少热量/蛋白质/脂肪/碳水），计算每种食物的营养数据。\n" +
-                    "- **交叉校验公式**：确保每种食物的 calories 约等于 protein*4 + fat*9 + carbs*4（允许正负15%误差），如果差异过大，请调整数值使其一致。\n" +
-                    "- 烹饪用油：炒菜通常额外增加 5-15g 食用油（约 45-135kcal），请合理计入该菜品的 fat 和 calories 中。\n" +
-                    "\n" +
-                    "## 输出要求\n" +
-                    "你必须且只能返回一个标准 JSON 数组，不要包含任何 markdown 代码块标记（禁止 ```json 或 ```），不要包含任何额外文字或解释。\n" +
-                    "JSON 数组中每个对象的字段如下：\n" +
-                    "- name: 食物名称（中文，尽量准确具体）\n" +
-                    "- weight: 估算重量（整数，单位克）\n" +
-                    "- calories: 估算热量（数值，单位 kcal）\n" +
-                    "- protein: 蛋白质（数值，单位克）\n" +
-                    "- fat: 脂肪（数值，单位克）\n" +
-                    "- carbs: 碳水化合物（数值，单位克）\n" +
-                    "\n" +
-                    "示例输出：\n" +
-                    "[{\"name\": \"番茄炒蛋\", \"weight\": 250, \"calories\": 220, \"protein\": 12, \"fat\": 14, \"carbs\": 10}, {\"name\": \"白米饭\", \"weight\": 200, \"calories\": 232, \"protein\": 5, \"fat\": 0.6, \"carbs\": 52}]\n" +
-                    "\n" +
-                    "如果图片中完全没有任何食物或饮品，必须且只能返回空数组 []。";
+                    "## Output Format:\n" +
+                    "Return ONLY a raw valid JSON array of objects (NO markdown code block tags, NO ```json, NO extra text):\n" +
+                    "[{\"name\": \"Food Name (English)\", \"nameZh\": \"中文名称\", \"weight\": 200, \"calories\": 250, \"protein\": 15, \"fat\": 8, \"carbs\": 28, \"fiber\": 4, \"netCarbs\": 24, \"sodium\": 320, \"potassium\": 450, \"calcium\": 35, \"iron\": 1.8, \"vitaminC\": 12}]\n" +
+                    "If the image contains absolutely NO food or beverage, return an empty array [].";
 
             if (hint != null && !hint.trim().isEmpty()) {
-                prompt += "\n\n【用户补充提示：\"" + hint.trim() + "\"。请务必优先结合此提示词对图片中的食物进行正名和精准识别。如果提示词中提到了某些食物或饮品（例如：一杯牛奶、生椰拿铁、可乐等），即使在图片中看不清或不明显，你也必须将其作为独立食材项加入 JSON 数组，并根据常识合理估算其重量与营养素。绝对不能漏掉用户补充提示中提到的任何食物或饮品！】\n";
+                prompt += "\n\n[User Note / Context: \"" + hint.trim() + "\". Please factor in this context for precise identification.]\n";
             }
 
             String responseBody = "";
@@ -630,11 +611,19 @@ public class DietServiceImpl implements DietService {
     @Data
     public static class FoodItem {
         private String name;
+        private String nameZh;
         private Double weight;
         private Double calories;
         private Double protein;
         private Double fat;
         private Double carbs;
+        private Double fiber;
+        private Double netCarbs;
+        private Double sodium; // mg (钠)
+        private Double potassium; // mg (钾)
+        private Double calcium; // mg (钙)
+        private Double iron; // mg (铁)
+        private Double vitaminC; // mg (维生素C)
     }
 
     @Override
@@ -1629,6 +1618,18 @@ public class DietServiceImpl implements DietService {
             }
             userRepository.save(user);
             log.info("Synced updated weight {} kg to User {} profile successfully", weight, userId);
+        }
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void clearRecords(Long userId) {
+        if (userId != null) {
+            dietRecordRepository.deleteByUserId(userId);
+            log.info("Cleared all diet records for user {}", userId);
+        } else {
+            dietRecordRepository.deleteAll();
+            log.info("Cleared all diet records across system");
         }
     }
 }

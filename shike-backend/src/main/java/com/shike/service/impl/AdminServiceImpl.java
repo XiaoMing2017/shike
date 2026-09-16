@@ -902,19 +902,24 @@ public class AdminServiceImpl implements AdminService {
             // Default initial config matching the current onboarding modal
             List<com.shike.model.dto.AnnouncementConfigDTO.Item> defaultItems = List.of(
                     com.shike.model.dto.AnnouncementConfigDTO.Item.builder()
-                            .icon("🤖")
-                            .title("AI 专属运动与食谱")
-                            .desc("精准推荐每日3~4个动作与接地气食谱")
+                            .icon("🔥")
+                            .title("7天连续自律阶梯挑战")
+                            .desc("每日打卡领阶梯积分，大节点掉落珍稀道具与神秘宝箱")
                             .build(),
                     com.shike.model.dto.AnnouncementConfigDTO.Item.builder()
-                            .icon("💡")
-                            .title("AI 专家级营养健康诊断")
-                            .desc("评估三大营养占比，针对性给出指导")
+                            .icon("💉")
+                            .title("断签救护与血清补签")
+                            .desc("不慎漏卡无需焦虑，血清补签卡紧急复活你的连续天数")
                             .build(),
                     com.shike.model.dto.AnnouncementConfigDTO.Item.builder()
-                            .icon("📸")
-                            .title("高颜值晒餐海报")
-                            .desc("一键生成精美饮食打卡图，分享朋友圈")
+                            .icon("⚔️")
+                            .title("契约小队对赌挑战")
+                            .desc("好友组队互相监督，卧底抓包、打卡对赌、一键催促")
+                            .build(),
+                    com.shike.model.dto.AnnouncementConfigDTO.Item.builder()
+                            .icon("💧")
+                            .title("灵动交互与体验焕新")
+                            .desc("全新常驻可拖拽水滴气泡，餐食卡片与操作体验全面优化")
                             .build()
             );
 
@@ -926,12 +931,12 @@ public class AdminServiceImpl implements AdminService {
 
             config = com.shike.model.entity.AnnouncementConfig.builder()
                     .enabled(true)
-                    .badgeText("v2.0 重磅升级")
-                    .title("🎉 专属 AI 助手全新上线")
-                    .subtitle("精细化膳食、运动打卡与诊断全面开启")
+                    .badgeText("v5.0 重磅升级")
+                    .title("🎉 连续自律体系与契约小队上线")
+                    .subtitle("阶梯奖励、断签拯救与小队对赌挑战全面开启")
                     .itemsJson(json)
-                    .buttonText("✨ 立即体验 AI 计划")
-                    .buttonAction("AI_PLAN")
+                    .buttonText("✨ 开启今日自律")
+                    .buttonAction("PHOTO_MEAL")
                     .build();
             config = announcementConfigRepository.save(config);
         }
@@ -1104,10 +1109,10 @@ public class AdminServiceImpl implements AdminService {
         String dietModel = stringRedisTemplate.opsForValue().get("shike:sys:config:ai_model_diet");
         
         if (planModel == null || planModel.isBlank()) {
-            planModel = "qwen3.5-plus";
+            planModel = "qwen3.7-flash";
         }
         if (dietModel == null || dietModel.isBlank()) {
-            dietModel = "qwen3.7-plus";
+            dietModel = "qwen3.8-flash";
         }
         
         java.util.Map<String, String> map = new java.util.HashMap<>();
@@ -1133,7 +1138,7 @@ public class AdminServiceImpl implements AdminService {
         
         java.util.Set<String> planOptions = stringRedisTemplate.opsForSet().members("shike:sys:config:ai_model_plan_options");
         if (planOptions == null || planOptions.isEmpty()) {
-            planOptions = new java.util.LinkedHashSet<>(java.util.List.of("qwen3.5-plus", "qwen3.7-plus", "qwen-plus", "qwen-turbo", "deepseek-chat", "gpt-4o"));
+            planOptions = new java.util.LinkedHashSet<>(java.util.List.of("qwen3.7-flash", "qwen3.5-plus", "qwen3.7-plus", "qwen-plus", "qwen-turbo", "deepseek-chat", "gpt-4o"));
             for (String opt : planOptions) {
                 stringRedisTemplate.opsForSet().add("shike:sys:config:ai_model_plan_options", opt);
             }
@@ -1141,7 +1146,7 @@ public class AdminServiceImpl implements AdminService {
         
         java.util.Set<String> dietOptions = stringRedisTemplate.opsForSet().members("shike:sys:config:ai_model_diet_options");
         if (dietOptions == null || dietOptions.isEmpty()) {
-            dietOptions = new java.util.LinkedHashSet<>(java.util.List.of("qwen3.7-plus", "qwen3.5-plus", "qwen-plus", "qwen-vl-plus", "qwen-turbo"));
+            dietOptions = new java.util.LinkedHashSet<>(java.util.List.of("qwen3.8-flash", "qwen3.7-plus", "qwen3.5-plus", "qwen-plus", "qwen-vl-plus", "qwen-turbo"));
             for (String opt : dietOptions) {
                 stringRedisTemplate.opsForSet().add("shike:sys:config:ai_model_diet_options", opt);
             }

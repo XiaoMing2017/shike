@@ -1198,9 +1198,9 @@
   <view class="new-feature-mask flex justify-center align-center" wx:if="{{showNewFeatureModal && (announcementConfig ? announcementConfig.enabled !== false : true)}}" catchtap="closeNewFeatureModal">
     <view class="new-feature-card flex flex-col align-center" catchtap="preventBubble">
       <view class="new-feature-header flex flex-col align-center">
-        <view class="new-feature-badge-top">{{announcementConfig.badgeText || 'v2.0 重磅升级'}}</view>
-        <text class="new-feature-title">{{announcementConfig.title || '🎉 专属 AI 助手全新上线'}}</text>
-        <text class="new-feature-subtitle">{{announcementConfig.subtitle || '精细化膳食、运动打卡与诊断全面开启'}}</text>
+        <view class="new-feature-badge-top">{{announcementConfig.badgeText || 'v5.0 重磅升级'}}</view>
+        <text class="new-feature-title">{{announcementConfig.title || '🎉 连续自律体系与契约小队上线'}}</text>
+        <text class="new-feature-subtitle">{{announcementConfig.subtitle || '阶梯奖励、断签拯救与小队对赌挑战全面开启'}}</text>
       </view>
 
       <view class="new-feature-list flex flex-col">
@@ -1215,33 +1215,41 @@
         </block>
         <block wx:else>
           <view class="feature-item-row flex align-center">
-            <view class="feature-icon-box bg-purple flex align-center justify-center">🤖</view>
+            <view class="feature-icon-box bg-purple flex align-center justify-center">🔥</view>
             <view class="feature-item-info flex flex-col">
-              <text class="feature-item-title">7天 AI 专属运动与食谱</text>
-              <text class="feature-item-desc">精准推荐每日3~4个动作与接地气食谱</text>
+              <text class="feature-item-title">7天连续自律阶梯挑战</text>
+              <text class="feature-item-desc">每日打卡领阶梯积分，大节点掉落珍稀道具与神秘宝箱</text>
             </view>
           </view>
 
           <view class="feature-item-row flex align-center">
-            <view class="feature-icon-box bg-amber flex align-center justify-center">💡</view>
+            <view class="feature-icon-box bg-amber flex align-center justify-center">💉</view>
             <view class="feature-item-info flex flex-col">
-              <text class="feature-item-title">AI 专家级营养健康诊断</text>
-              <text class="feature-item-desc">评估三大营养占比，针对性给出指导</text>
+              <text class="feature-item-title">断签救护与血清补签</text>
+              <text class="feature-item-desc">不慎漏卡无需焦虑，血清补签卡紧急复活你的连续天数</text>
             </view>
           </view>
 
           <view class="feature-item-row flex align-center">
-            <view class="feature-icon-box bg-green flex align-center justify-center">📸</view>
+            <view class="feature-icon-box bg-green flex align-center justify-center">⚔️</view>
             <view class="feature-item-info flex flex-col">
-              <text class="feature-item-title">高颜值晒餐海报</text>
-              <text class="feature-item-desc">一键生成精美饮食打卡图，分享朋友圈</text>
+              <text class="feature-item-title">契约小队对赌挑战</text>
+              <text class="feature-item-desc">好友组队互相监督，卧底抓包、打卡对赌、一键催促</text>
+            </view>
+          </view>
+
+          <view class="feature-item-row flex align-center">
+            <view class="feature-icon-box bg-purple flex align-center justify-center">💧</view>
+            <view class="feature-item-info flex flex-col">
+              <text class="feature-item-title">灵动交互与体验焕新</text>
+              <text class="feature-item-desc">全新常驻可拖拽水滴气泡，餐食卡片与操作体验全面优化</text>
             </view>
           </view>
         </block>
       </view>
 
       <view class="new-feature-actions flex flex-col align-center">
-        <button class="btn-primary-launch" catchtap="onLaunchAnnouncementAction">{{announcementConfig.buttonText || '✨ 立即体验 AI 计划'}}</button>
+        <button class="btn-primary-launch" catchtap="onLaunchAnnouncementAction">{{announcementConfig.buttonText || '✨ 开启今日自律'}}</button>
         <text class="btn-dismiss-text" catchtap="closeNewFeatureModal">知道了，先逛逛</text>
       </view>
     </view>

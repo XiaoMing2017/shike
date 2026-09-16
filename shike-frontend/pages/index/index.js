@@ -346,19 +346,6 @@ Page({
     this.fetchAnnouncementConfig();
     this.fetchContactConfig();
     this.fetchSystemPolicy();
-    // 检查是否显示新功能上线重磅引导弹窗 (页面首次加载/每次打开进入展现1次)
-    try {
-      const user = (app.globalData && app.globalData.userInfo) || wx.getStorageSync('userInfo');
-      const isUser2 = user && (user.id == 2 || user.id == '2');
-      const hasSeenModal = wx.getStorageSync('has_seen_v2_new_feature_modal');
-      if (isUser2 || !hasSeenModal) {
-        setTimeout(() => {
-          this.setData({ showNewFeatureModal: true });
-        }, 800);
-      }
-    } catch (e) {
-      console.error('Error reading modal storage', e);
-    }
     // 动态计算悬浮小组件（饮水气泡 + 客服气泡）初始位置 (右边 17px，垂直错落排列)
     try {
       const sys = wx.getSystemInfoSync();
@@ -415,11 +402,9 @@ Page({
           // 动态判断弹窗：如果后台开关开启，且用户尚未看过当前版本标识的弹窗，则自动弹出
           if (config.enabled !== false) {
             const verKey = 'shike_seen_announcement_' + (config.badgeText || 'v1.0');
-            const user = (app.globalData && app.globalData.userInfo) || wx.getStorageSync('userInfo');
-            const isUser2 = user && (user.id == 2 || user.id == '2');
             const hasSeen = wx.getStorageSync(verKey);
 
-            if (isUser2 || !hasSeen) {
+            if (!hasSeen) {
               setTimeout(() => {
                 this.setData({ showNewFeatureModal: true });
               }, 400);
@@ -506,11 +491,7 @@ Page({
     try {
       const config = this.data.announcementConfig;
       const verKey = 'shike_seen_announcement_' + (config && config.badgeText ? config.badgeText : 'v1.0');
-      const user = (app.globalData && app.globalData.userInfo) || wx.getStorageSync('userInfo');
-      const isUser2 = user && (user.id == 2 || user.id == '2');
-      if (!isUser2) {
-        wx.setStorageSync(verKey, true);
-      }
+      wx.setStorageSync(verKey, true);
     } catch (e) {}
   },
 
@@ -598,7 +579,7 @@ Page({
   onLaunchAnnouncementAction() {
     this.closeNewFeatureModal();
     const config = this.data.announcementConfig;
-    const action = (config && config.buttonAction) ? config.buttonAction : 'AI_PLAN';
+    const action = (config && config.buttonAction) ? config.buttonAction : 'PHOTO_MEAL';
     
     if (action === 'AI_PLAN') {
       this.openPlanModal();
@@ -606,6 +587,8 @@ Page({
       this.openNutritionModal();
     } else if (action === 'PHOTO_MEAL') {
       this.selectMealOption();
+    } else if (action === 'TEAM') {
+      wx.switchTab({ url: '/pages/team/team' });
     }
   },
 
