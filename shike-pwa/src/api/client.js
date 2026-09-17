@@ -18,6 +18,10 @@ client.interceptors.request.use((config) => {
   if (userId) {
     config.headers['X-User-Id'] = userId
   }
+  // Allow browser to automatically set multipart/form-data with proper boundary for FormData
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type']
+  }
   return config
 }, (error) => {
   return Promise.reject(error)

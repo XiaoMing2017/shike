@@ -512,10 +512,61 @@ const triggerAlbum = () => {
   }
 }
 
+const compressImageFile = (file, maxWidth = 1280, quality = 0.82) => {
+  return new Promise((resolve) => {
+    if (!file || !file.type.startsWith('image/') || file.size < 200 * 1024) {
+      resolve(file)
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        let width = img.width
+        let height = img.height
+        if (width > maxWidth || height > maxWidth) {
+          if (width > height) {
+            height = Math.round((height * maxWidth) / width)
+            width = maxWidth
+          } else {
+            width = Math.round((width * maxWidth) / height)
+            height = maxWidth
+          }
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, width, height)
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const compressed = new File([blob], file.name.replace(/\.[^/.]+$/, '.jpg'), {
+                type: 'image/jpeg',
+                lastModified: Date.now()
+              })
+              resolve(compressed)
+            } else {
+              resolve(file)
+            }
+          },
+          'image/jpeg',
+          quality
+        )
+      }
+      img.onerror = () => resolve(file)
+      img.src = e.target.result
+    }
+    reader.onerror = () => resolve(file)
+    reader.readAsDataURL(file)
+  })
+}
+
 const processFile = async (file) => {
   if (!file) return
   previewUrl.value = URL.createObjectURL(file)
-  const result = await dietStore.analyzeMealImage(file, selectedOil.value)
+  const readyFile = await compressImageFile(file)
+  const result = await dietStore.analyzeMealImage(readyFile, selectedOil.value)
   scanResult.value = result
 }
 

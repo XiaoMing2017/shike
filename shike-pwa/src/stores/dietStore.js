@@ -257,12 +257,11 @@ export const useDietStore = defineStore('diet', {
         }
 
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Backend response timeout')), 45000)
+          setTimeout(() => reject(new Error('Backend response timeout')), 60000)
         )
         const res = await Promise.race([
           client.post('/diet/recognize', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-            timeout: 45000
+            timeout: 60000
           }),
           timeoutPromise
         ])
