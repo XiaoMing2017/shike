@@ -172,7 +172,11 @@ export default {
     contact: 'Contact Us & Support Desk',
     contactDesc: 'Official email: hmgygnus@gmail.com',
     manageSub: 'Manage Subscription',
-    manageSubDesc: 'View invoices, update card, or cancel anytime'
+    manageSubDesc: 'View invoices, update card, or cancel anytime',
+    refundShort: '7d Refund',
+    termsShort: 'Terms',
+    privacyShort: 'Privacy',
+    contactShort: 'Support'
   },
   paywall: {
     badge: '✨ SHIKE PRO',

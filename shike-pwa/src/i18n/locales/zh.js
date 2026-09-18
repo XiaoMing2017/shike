@@ -172,7 +172,11 @@ export default {
     contact: '客户支持与联系我们',
     contactDesc: '官方客服邮箱: hmgygnus@gmail.com',
     manageSub: '管理我的订阅',
-    manageSubDesc: '查看发票、更新支付或取消自动续订'
+    manageSubDesc: '查看发票、更新支付或取消自动续订',
+    refundShort: '7天退款',
+    termsShort: '服务条款',
+    privacyShort: '隐私政策',
+    contactShort: '联系客服'
   },
   paywall: {
     badge: '✨ SHIKE PRO 会员',
