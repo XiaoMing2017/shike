@@ -13,18 +13,18 @@ graph LR
   P1[阶段一: PWA基础与合规] -->|已完成 100%| P2[阶段二: 身体代谢评估与建档]
   P2 -->|已完成 100%| P3[阶段三: 海外真实AI视觉识别]
   P3 -->|已完成 100%| P5B[阶段五B: 教练督学中枢]
-  P5B -->|🔥 当前重心| QA[内部全功能真实验收与打磨]
-  QA -->|测试完备后| P4[阶段四: 零成本公网部署上线]
-  P4 --> P5[阶段五: 跨境美金订阅收款]
-  P5 --> P6[阶段六: 海外冷启动与增长]
+  P5B -->|已完成 100%| P4[阶段四: 公网部署上线]
+  P4 -->|已完成 100%| P5[阶段五: 跨境美金订阅收款]
+  P5 -->|🔥 当前重心| QA[内部全功能真机实测与体验打磨]
+  QA --> P6[阶段六: 海外冷启动与增长]
 
   style P1 fill:#d1fae5,stroke:#10b981,stroke-width:2px;
   style P2 fill:#d1fae5,stroke:#10b981,stroke-width:2px;
   style P3 fill:#d1fae5,stroke:#10b981,stroke-width:2px;
   style P5B fill:#d1fae5,stroke:#10b981,stroke-width:2px;
+  style P4 fill:#d1fae5,stroke:#10b981,stroke-width:2px;
+  style P5 fill:#d1fae5,stroke:#10b981,stroke-width:2px;
   style QA fill:#fef3c7,stroke:#f59e0b,stroke-width:3px;
-  style P4 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px;
-  style P5 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px;
   style P6 fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px;
 ```
 
@@ -87,17 +87,23 @@ graph LR
 
 ---
 
-### 阶段五：跨境美金订阅与变现闭环【待启动 ⏳】
-- [ ] **5.1 跨境收款账户选型与配置**：
-  - 接入海外独立开发者最青睐的 **Lemon Squeezy**（Merchant of Record 模式，国内身份证/个体户均可申请，自动代扣全球增值税 VAT）或 **Stripe**。
-- [ ] **5.2 订阅商品定义**：
-  - 创建 **Weekly Pro** ($4.99/周，带 3 天免费试用) 与 **Annual Pro** ($39.99/年，立省 65%)。
-- [ ] **5.3 前端收银台对接**：
-  - 点击 Paywall 弹窗直接拉起标准结账面板（支持海外信用卡、Apple Pay、Google Pay）。
-- [ ] **5.4 后端支付 Webhook 与会员权益发放**：
-  - 监听支付成功事件，实时将数据库用户 `vipType` 变更为 `PRO`。
-- [ ] **5.5 会员用量与商业化拦截闭环**：
-  - 非会员每日限额 3 次 AI 扫描，超额自动唤起 Paywall 升级；会员享有无限次 AI 拍照与深度微量元素报告。
+### 阶段五：跨境美金订阅与变现闭环【已全部完成闭环 ✅】
+> 详细设计与运维手册请查阅：[06_Lemon_Squeezy跨境美金订阅与支付系统设计与运维手册.md](文档/03_系统架构与数据库/06_Lemon_Squeezy跨境美金订阅与支付系统设计与运维手册.md)
+
+- [x] **5.1 跨境收款账户选型与配置**：
+  - 选定并接入海外独立开发者首选的 **Lemon Squeezy**（Merchant of Record 模式，自动代扣全球消费税 VAT，支持国内个人/个体户入驻）。
+- [x] **5.2 订阅商品定义**：
+  - 定义 **Weekly Pro** ($4.99/周，含 3 天免费试用) 与 **Annual Pro** ($39.99/年，立省 65%)。
+- [x] **5.3 前端收银台对接与内嵌体验**：
+  - 引入 `lemon.js` 官方 SDK，支持在移动端 PWA 中无感唤起半透明浮层收银台（支持 Apple Pay / Google Pay / 全球信用卡）。
+  - 实现 4 步状态机：套餐选择 -> 游客拦截与防飞单绑定 -> 收银台调用 -> 全屏撒花与 PRO 权益激活。
+- [x] **5.4 后端支付 Webhook 与会员权益发放**：
+  - 新增订单表 `tb_payment_order`，实现 HMAC-SHA256 签名鉴权防篡改。
+  - 自动履约：更新用户 `vip_type = 'PRO'`，顺延 `vip_expire_time`（周卡+7天/年卡+365天），置 `ai_unlimited = true`。
+  - 提供沙箱调试接口 `/payment/test-complete/{orderNo}` 方便随时无门槛验收。
+- [x] **5.5 会员用量与商业化拦截闭环**：
+  - 非会员每日限额 3 次 AI 拍照扫描，超额自动唤起 Paywall 升级弹窗；会员享有无限次拍照分析。
+  - 个人中心实时拉取并展示 `[Pro 会员有效 ✨]` 与到期时间。
 
 ---
 
