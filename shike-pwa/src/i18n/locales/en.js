@@ -166,11 +166,11 @@ export default {
   legal: {
     title: 'Legal & Customer Support',
     refundPolicy: 'Refund Policy & Request',
-    refundPolicyDesc: '14-Day Money-Back Guarantee, hassle-free',
+    refundPolicyDesc: '7-Day Money-Back Guarantee, hassle-free',
     terms: 'Terms of Service',
     privacy: 'Privacy Policy',
     contact: 'Contact Us & Support Desk',
-    contactDesc: 'Official email: support@shike.store',
+    contactDesc: 'Official email: hmgygnus@gmail.com',
     manageSub: 'Manage Subscription',
     manageSubDesc: 'View invoices, update card, or cancel anytime'
   },

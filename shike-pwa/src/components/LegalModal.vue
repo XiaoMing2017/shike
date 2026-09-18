@@ -62,10 +62,10 @@
             <Sparkles class="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
             <div>
               <div class="font-bold text-emerald-900 text-xs">
-                {{ isZh ? '14 天无忧满意保障 (14-Day Money-Back Guarantee)' : '14-Day Satisfaction Guarantee' }}
+                {{ isZh ? '7 天无忧满意保障 (7-Day Money-Back Guarantee)' : '7-Day Satisfaction Guarantee' }}
               </div>
               <p class="text-[11px] text-emerald-700 mt-0.5">
-                {{ isZh ? '在首次扣款后 14 天内，若对 AI 测算体验不满意，我们承诺为您全额原路退款。' : 'If you are unsatisfied with ShiKe within 14 days of your initial purchase, you are eligible for a full refund.' }}
+                {{ isZh ? '在首次扣款后 7 天内，若对 AI 测算体验不满意，我们承诺为您全额原路退款。' : 'If you are unsatisfied with ShiKe within 7 days of your initial purchase, you are eligible for a full refund.' }}
               </p>
             </div>
           </div>
@@ -75,7 +75,7 @@
               {{ isZh ? '1. 退款申请条件' : '1. Eligibility for Refunds' }}
             </h3>
             <p>
-              {{ isZh ? '通过 ShiKe Web/PWA 官方购买的周订阅 (Weekly) 或年订阅 (Annual)，自初始付款扣费之日起 14 个自然日内均可申请全额退款。' : 'Subscriptions purchased through the ShiKe Web App / Lemon Squeezy are eligible for a full refund within 14 calendar days from the initial transaction date.' }}
+              {{ isZh ? '通过 ShiKe Web/PWA 官方购买的周订阅 (Weekly) 或年订阅 (Annual)，自初始付款扣费之日起 7 个自然日内均可申请全额退款。' : 'Subscriptions purchased through the ShiKe Web App / Lemon Squeezy are eligible for a full refund within 7 calendar days from the initial transaction date.' }}
             </p>
           </div>
 
@@ -87,7 +87,7 @@
               {{ isZh ? '您无需复杂流程，仅需提供您的注册邮箱或订单收据：' : 'You can request a refund directly with no hassle:' }}
             </p>
             <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1 text-[11px]">
-              <div><strong>{{ isZh ? '客服邮箱：' : 'Support Email:' }}</strong> support@shike.store</div>
+              <div><strong>{{ isZh ? '客服邮箱：' : 'Support Email:' }}</strong> hmgygnus@gmail.com</div>
               <div><strong>{{ isZh ? '邮件主题：' : 'Subject:' }}</strong> Refund Request - [Your Order No / Email]</div>
               <div><strong>{{ isZh ? '处理时效：' : 'SLA:' }}</strong> {{ isZh ? '24~48 小时内确认并原路退回至支付卡（3~5 个工作日到账）。' : 'Processed within 24-48 hours back to your original payment method.' }}</div>
             </div>
@@ -104,7 +104,7 @@
 
           <!-- Direct mail action button -->
           <a
-            href="mailto:support@shike.store?subject=ShiKe%20PRO%20Refund%20Request&body=Hello%20ShiKe%20Support%2C%0A%0AI%20would%20like%20to%20request%20a%20refund%20for%20my%20subscription.%0A%0AMy%20account%20email%3A%20%0AMy%20order%20number%20(if%20available)%3A%20%0AReason%20(optional)%3A%20%0A%0AThank%20you!"
+            href="mailto:hmgygnus@gmail.com?subject=ShiKe%20PRO%20Refund%20Request&body=Hello%20ShiKe%20Support%2C%0A%0AI%20would%20like%20to%20request%20a%20refund%20for%20my%20subscription.%0A%0AMy%20account%20email%3A%20%0AMy%20order%20number%20(if%20available)%3A%20%0AReason%20(optional)%3A%20%0A%0AThank%20you!"
             class="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all mt-2"
           >
             <Mail class="w-3.5 h-3.5" />
@@ -167,7 +167,7 @@
           <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 text-xs">
             <div class="flex items-center justify-between">
               <span class="text-slate-500 font-medium">{{ isZh ? '客服邮箱' : 'Direct Email' }}:</span>
-              <a href="mailto:support@shike.store" class="font-bold text-emerald-600 hover:underline">support@shike.store</a>
+              <a href="mailto:hmgygnus@gmail.com" class="font-bold text-emerald-600 hover:underline">hmgygnus@gmail.com</a>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-slate-500 font-medium">{{ isZh ? '服务时间' : 'Operating Hours' }}:</span>
@@ -180,7 +180,7 @@
           </div>
 
           <a
-            href="mailto:support@shike.store?subject=ShiKe%20User%20Inquiry"
+            href="mailto:hmgygnus@gmail.com?subject=ShiKe%20User%20Inquiry"
             class="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all"
           >
             <Mail class="w-4 h-4" />

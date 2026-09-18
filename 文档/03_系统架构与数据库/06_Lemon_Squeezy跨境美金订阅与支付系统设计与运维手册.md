@@ -277,11 +277,11 @@ docker compose up -d shike-app
 2. **保障风控与降低拒付率 (Chargeback Rate)**：海外支付网关（Stripe / Lemon Squeezy）对商户的“信用卡拒付与拒付争议 (Dispute)”有极其严苛的红线指标（通常要求小于 1%）。若用户找不到退款途径或无法联系客服，往往会直接向发卡行发起拒付争议，导致商户被罚款甚至封店。
 
 ### 9.2 食刻 (ShiKe) 实施的退款与合规标准闭环
-1. **公开透明的「14 天无条件满意保障」政策 (14-Day Money-Back Guarantee)**：
-   - 首次扣款后 14 自然日内均可申请全额原路退款。
+1. **公开透明的「7 天无条件满意保障」政策 (7-Day Money-Back Guarantee)**：
+   - 首次扣款后 7 自然日内均可申请全额原路退款。
    - 在个人中心设置列表 (`ProfileView.vue`) 和付费弹窗底部 (`PaywallModal.vue`) 醒目展示。
 2. **便捷的客户支持通道与邮件直达**：
-   - 官方客服邮箱：`support@shike.store`。
+   - 官方客服邮箱：`hmgygnus@gmail.com`。
    - 点击「一键向客服发送退款申请邮件」按钮，自动唤起本地邮件客户端，并预填好邮件主题（`Refund Request`）与格式（含注册邮箱、订单编号、申请原因）。
    - 服务 SLA 承诺：24~48 小时内完成审核确认，并原路退回至用户支付原卡（3~5 个工作日入账）。
 3. **用户自主管理与取消自动续订 (Self-Service Cancel Subscription)**：
@@ -296,14 +296,14 @@ docker compose up -d shike-app
 Lemon Squeezy 与主流信用卡卡组织在审核出海 SaaS / 独立开发者产品时，必须在产品内可直接点击查看以下 4 项合法合规条款。食刻通过前端弹窗组件 `LegalModal.vue` 完整落地了中英双语版：
 
 1. **退款政策 (Refund Policy)**：
-   - 详述 14 天退款保障、申请资格、邮箱渠道、处理时效及取消续订指南。
+   - 详述 7 天退款保障、申请资格、邮箱渠道、处理时效及取消续订指南。
 2. **服务条款 (Terms of Service)**：
    - 包含健康与营养免责声明（AI 识别仅供参考，不作为医疗建议与临床处方）、订阅自动续期条款、账户终止规则。
 3. **隐私权政策 (Privacy Policy)**：
    - 符合欧盟 GDPR 与加州 CCPA 规范，明确用户餐食照片仅用于多模态 AI 营养识别与提取，不向第三方广告商转卖数据。
    - 个人中心内置「彻底注销账户并删除所有数据」的一键抹除功能。
 4. **客户支持与联系方式 (Contact & Support)**：
-   - 明确标出官方支持邮箱（`support@shike.store`）、7x24 小时工单时效以及记录销售商（MoR: Lemon Squeezy, LLC）。
+   - 明确标出官方支持邮箱（`hmgygnus@gmail.com`）、7x24 小时工单时效以及记录销售商（MoR: Lemon Squeezy, LLC）。
 
 ---
 

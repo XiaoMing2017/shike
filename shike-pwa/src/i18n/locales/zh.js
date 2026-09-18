@@ -166,11 +166,11 @@ export default {
   legal: {
     title: '法律条款与客户支持',
     refundPolicy: '退款政策与申请',
-    refundPolicyDesc: '14天无条件退款保障，极速原路返还',
+    refundPolicyDesc: '7天无条件退款保障，极速原路返还',
     terms: '服务条款 (Terms of Service)',
     privacy: '隐私权政策 (Privacy Policy)',
     contact: '客户支持与联系我们',
-    contactDesc: '官方客服邮箱: support@shike.store',
+    contactDesc: '官方客服邮箱: hmgygnus@gmail.com',
     manageSub: '管理我的订阅',
     manageSubDesc: '查看发票、更新支付或取消自动续订'
   },

@@ -127,7 +127,7 @@
           <div class="flex justify-center items-center gap-2 text-[11px] text-slate-500 flex-wrap">
             <button @click="handleRestore" class="hover:underline">{{ t('paywall.restore') }}</button>
             <span>•</span>
-            <button @click="openLegal('refund')" class="hover:underline text-emerald-600 font-semibold">{{ authStore.lang === 'zh' ? '14天退款' : 'Refund Policy' }}</button>
+            <button @click="openLegal('refund')" class="hover:underline text-emerald-600 font-semibold">{{ authStore.lang === 'zh' ? '7天退款' : '7-Day Refund' }}</button>
             <span>•</span>
             <button @click="openLegal('terms')" class="hover:underline">{{ t('paywall.terms') }}</button>
             <span>•</span>

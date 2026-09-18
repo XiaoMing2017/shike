@@ -186,7 +186,7 @@
             <div>
               <div class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
                 <span>{{ t('legal.refundPolicy') }}</span>
-                <span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">14-Day Guarantee</span>
+                <span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">7-Day Guarantee</span>
               </div>
               <div class="text-xs text-slate-400 mt-0.5">{{ t('legal.refundPolicyDesc') }}</div>
             </div>
