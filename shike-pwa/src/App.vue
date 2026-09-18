@@ -20,6 +20,7 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import BottomNav from './components/BottomNav.vue'
 import PaywallModal from './components/PaywallModal.vue'
@@ -28,4 +29,11 @@ import { useAuthStore } from './stores/authStore'
 
 const route = useRoute()
 const authStore = useAuthStore()
+
+onMounted(async () => {
+  await authStore.initSession()
+  if (authStore.user?.id) {
+    await authStore.refreshProfile()
+  }
+})
 </script>
