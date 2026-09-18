@@ -261,6 +261,88 @@ docker compose up -d shike-app
 | :--- | :--- | :--- |
 | `scratch/test_payment_api.py` | 测试线上创建订单、查询状态与模拟履约 | `python scratch/test_payment_api.py` |
 | `scratch/test_webhook.py` | 测试 Webhook 接收与 HMAC 验签机制 | `python scratch/test_webhook.py` |
+| `scratch/test_refund_api.py` | 测试线上创建订单、支付履约、即时退款与 VIP 权限自动回收 | `python scratch/test_refund_api.py` |
 
 **开发测试快捷指令**：
 - 前端测试：直接在 PWA 个人中心点击「升级 Pro 会员」，在弹窗中选择年卡后点击「立即开通」，沙箱模式下点击「一键模拟测试扣款成功」，即可立即体验完整的 VIP 升级流程与撒花动效。
+
+---
+
+## 9. 退款机制深度设计与海外标杆行业策略
+
+### 9.1 行业标杆对标：Cal AI 与海外顶级订阅 App 是如何处理退款的？
+在消费级健康/AI 应用领域（如 Cal AI, Noom, Flo, Duolingo, BetterMe），**绝对不在 App 内提供“一键全自动即时退款”按钮**。
+原因如下：
+1. **防恶意刷单与羊毛党**：如果开放应用内一键无审核退款，会有大量用户在生成深度分析或拍照识别后立即退款白嫖算力，导致极高的算力损耗与虚假退款率（Churn Rate 激增）。
+2. **保障风控与降低拒付率 (Chargeback Rate)**：海外支付网关（Stripe / Lemon Squeezy）对商户的“信用卡拒付与拒付争议 (Dispute)”有极其严苛的红线指标（通常要求小于 1%）。若用户找不到退款途径或无法联系客服，往往会直接向发卡行发起拒付争议，导致商户被罚款甚至封店。
+
+### 9.2 食刻 (ShiKe) 实施的退款与合规标准闭环
+1. **公开透明的「14 天无条件满意保障」政策 (14-Day Money-Back Guarantee)**：
+   - 首次扣款后 14 自然日内均可申请全额原路退款。
+   - 在个人中心设置列表 (`ProfileView.vue`) 和付费弹窗底部 (`PaywallModal.vue`) 醒目展示。
+2. **便捷的客户支持通道与邮件直达**：
+   - 官方客服邮箱：`support@shike.store`。
+   - 点击「一键向客服发送退款申请邮件」按钮，自动唤起本地邮件客户端，并预填好邮件主题（`Refund Request`）与格式（含注册邮箱、订单编号、申请原因）。
+   - 服务 SLA 承诺：24~48 小时内完成审核确认，并原路退回至用户支付原卡（3~5 个工作日入账）。
+3. **用户自主管理与取消自动续订 (Self-Service Cancel Subscription)**：
+   - 对于仅希望下个计费周期不再扣费的用户，无需联系客服，PRO 会员个人中心直接提供「管理我的订阅」入口。
+   - 直达 Lemon Squeezy 客户官方门户：`https://app.lemonsqueezy.com/my-orders`。
+   - 用户可自主查看历史收据发票、更换信用卡卡号，或一键关闭下期自动续费（保留当前周期的 PRO 会员剩余有效期）。
+
+---
+
+## 10. Lemon Squeezy 海外商户审核必备四大刚性合规页面
+
+Lemon Squeezy 与主流信用卡卡组织在审核出海 SaaS / 独立开发者产品时，必须在产品内可直接点击查看以下 4 项合法合规条款。食刻通过前端弹窗组件 `LegalModal.vue` 完整落地了中英双语版：
+
+1. **退款政策 (Refund Policy)**：
+   - 详述 14 天退款保障、申请资格、邮箱渠道、处理时效及取消续订指南。
+2. **服务条款 (Terms of Service)**：
+   - 包含健康与营养免责声明（AI 识别仅供参考，不作为医疗建议与临床处方）、订阅自动续期条款、账户终止规则。
+3. **隐私权政策 (Privacy Policy)**：
+   - 符合欧盟 GDPR 与加州 CCPA 规范，明确用户餐食照片仅用于多模态 AI 营养识别与提取，不向第三方广告商转卖数据。
+   - 个人中心内置「彻底注销账户并删除所有数据」的一键抹除功能。
+4. **客户支持与联系方式 (Contact & Support)**：
+   - 明确标出官方支持邮箱（`support@shike.store`）、7x24 小时工单时效以及记录销售商（MoR: Lemon Squeezy, LLC）。
+
+---
+
+## 11. 退款自动化 Webhook 与权限回收技术实现
+
+### 11.1 Webhook 事件监听矩阵
+在后端的 `PaymentServiceImpl.java` 中，已集成对退款与订阅状态的深度监听：
+
+| Webhook 事件 (`event_name`) | 触发时机 | 业务逻辑处理与资产更新 |
+| :--- | :--- | :--- |
+| `order_created` / `subscription_created` | 订单支付成功 | 状态设为 `PAID`，开通 PRO 会员 (`vipType='PRO'`)，开启 `aiUnlimited=true` |
+| `order_refunded` | 平台或管理员同意退款 | 状态设为 `REFUNDED`，**立即回收 VIP 权限** (`vipType='NORMAL'`, `aiUnlimited=false`) |
+| `subscription_cancelled` | 用户取消下期续订 | 记录日志，状态设为 `CANCELLED`，**不剥夺当前已付费周期权益**，到期后正常转为普通用户 |
+
+### 11.2 后端权限回收核心实现代码
+```java
+private void revokeUserVip(Long userId) {
+    User user = userMapper.selectById(userId);
+    if (user != null) {
+        user.setVipType("NORMAL");
+        user.setVipExpireTime(LocalDateTime.now());
+        user.setAiUnlimited(false);
+        userMapper.updateById(user);
+        log.info("Successfully revoked VIP for user: {}", userId);
+    }
+}
+```
+
+### 11.3 线上测试与验证命令
+针对开发与沙箱测试，后端提供了无需等待第三方网关的测试退款接口：
+```http
+POST https://shike.store/api/v1/payment/test-refund/{orderNo}
+```
+运行本地自动化验证脚本：
+```bash
+python scratch/test_refund_api.py
+```
+**实测结果**：
+1. 创建订单并模拟支付：`vipType: PRO`, `aiUnlimited: true`
+2. 触发退款接口：订单状态变为 `REFUNDED`
+3. 用户表数据即时回收：`vipType: NORMAL`, `aiUnlimited: false`, `vipExpireTime: 2026-09-18`
+
