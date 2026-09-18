@@ -26,11 +26,12 @@ public class DietController {
     public ResultDTO<DietRecord> recognizeMeal(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "hint", required = false) String hint,
+            @RequestParam(value = "lang", required = false, defaultValue = "zh") String lang,
             @RequestParam(value = "userId", required = false) Long userId) {
-        System.out.println("[DEBUG-CONTROLLER] recognizeMeal called. Original hint: " + hint);
+        System.out.println("[DEBUG-CONTROLLER] recognizeMeal called. Original hint: " + hint + ", lang: " + lang);
         String decodedHint = resolveMultipartString(hint);
         System.out.println("[DEBUG-CONTROLLER] recognizeMeal resolved hint: " + decodedHint);
-        DietRecord record = dietService.recognizeMeal(file, decodedHint, userId);
+        DietRecord record = dietService.recognizeMeal(file, decodedHint, userId, lang);
         return ResultDTO.success(record);
     }
 

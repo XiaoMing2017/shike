@@ -1,9 +1,11 @@
 import { defineStore } from 'pinia'
 import client from '../api/client'
+import { useAuthStore } from './authStore'
 
 export function normalizeDietRecord(r) {
   if (!r) return null
-  const isZh = (localStorage.getItem('shike_lang') || 'en') === 'zh'
+  const currentLang = localStorage.getItem('shike_lang') || 'zh'
+  const isZh = currentLang === 'zh'
 
   // 1. Calories
   let calories = Math.round(Number(
@@ -37,7 +39,11 @@ export function normalizeDietRecord(r) {
       items = typeof r.foodItems === 'string' ? JSON.parse(r.foodItems) : r.foodItems
       if (Array.isArray(items) && items.length > 0) {
         if (!name) {
-          name = items.map(it => (isZh && it.nameZh ? it.nameZh : it.name)).filter(Boolean).join(' + ')
+          name = items.map(it => {
+            if (isZh) return it.nameZh || it.name
+            if (currentLang === 'en') return it.nameEn || it.name
+            return it.name || it.nameEn || it.nameZh
+          }).filter(Boolean).join(' + ')
         }
         // If macros are still 0, aggregate from items
         if (!calories) calories = Math.round(items.reduce((s, it) => s + (Number(it.calories) || 0), 0))
@@ -242,14 +248,18 @@ export const useDietStore = defineStore('diet', {
         console.warn('Backend clear records error:', e.message)
       }
     },
-    async analyzeMealImage(file, oilLevel = 'NORMAL') {
+    async analyzeMealImage(file, oilLevel = 'NORMAL', userHint = '') {
       this.isLoading = true
-      const isZh = (localStorage.getItem('shike_lang') || 'en') === 'zh'
+      const authStore = useAuthStore()
+      const lang = authStore.lang || localStorage.getItem('shike_lang') || 'zh'
+      const isZh = lang === 'zh'
       try {
-        try {
-          const formData = new FormData()
+        const formData = new FormData()
         formData.append('file', file)
-        formData.append('hint', isZh ? '请使用中文输出菜品名' : 'Please output in English')
+        formData.append('lang', lang)
+        if (userHint && userHint.trim()) {
+          formData.append('hint', userHint.trim())
+        }
 
         const userId = localStorage.getItem('shike_user_id')
         if (userId && !isNaN(Number(userId))) {
@@ -257,7 +267,7 @@ export const useDietStore = defineStore('diet', {
         }
 
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Backend response timeout')), 60000)
+          setTimeout(() => reject(new Error(isZh ? '识别响应超时，请重试' : 'Backend recognition timeout, please retry')), 60000)
         )
         const res = await Promise.race([
           client.post('/diet/recognize', formData, {
@@ -280,7 +290,11 @@ export const useDietStore = defineStore('diet', {
 
           let dishName = ''
           if (items.length > 0) {
-            dishName = items.map(it => (isZh && it.nameZh ? it.nameZh : it.name)).join(' + ')
+            dishName = items.map(it => {
+              if (isZh) return it.nameZh || it.name
+              if (lang === 'en') return it.nameEn || it.name
+              return it.name || it.nameEn || it.nameZh
+            }).filter(Boolean).join(' + ')
           } else {
             dishName = isZh ? '健康轻食餐' : 'Nutritious Meal'
           }
@@ -336,6 +350,18 @@ export const useDietStore = defineStore('diet', {
             antiInflammatoryScore
           }
 
+          const defaultAdvices = {
+            zh: '优质高蛋白营养搭配，有益于维持饱腹感与血糖平稳。',
+            en: 'Rich in lean protein and essential micronutrients, optimal for muscle recovery and steady fat burn.',
+            ja: '良質なタンパク質と微量栄養素が豊富で、筋肉の回復と健康的な代謝を促進します。',
+            es: 'Rico en proteínas magras y micronutrientes esenciales, óptimo para la recuperación muscular y el control metabólico.',
+            fr: 'Riche en protéines maigres et micronutriments essentiels, optimal pour la récupération musculaire.',
+            de: 'Reich an magerem Eiweiß und essenziellen Mikronährstoffen, optimal für Muskelregeneration und Stoffwechsel.',
+            pt: 'Rico em proteínas magras e micronutrientes essenciais, ideal para a recuperação muscular e saúde metabólica.'
+          }
+          const itemAdvice = items.find(it => it.advice && it.advice.trim())?.advice
+          const advice = itemAdvice || (defaultAdvices[lang] || defaultAdvices['en'])
+
           const parsedResult = {
             id: res.id || Date.now(),
             dishName: dishName,
@@ -348,85 +374,19 @@ export const useDietStore = defineStore('diet', {
             confidence: 0.96,
             foodItems: items,
             sauceLevel: oilLevel === 'LIGHT' ? 'Light Dressing' : (oilLevel === 'HEAVY' ? 'Rich Oil/Sauce' : 'Standard Dressing'),
-            advice: isZh
-              ? '优质高蛋白搭配，有益于运动后肌肉修复与稳定控制血糖。'
-              : 'Rich in lean protein and essential micronutrients, optimal for muscle recovery and steady fat burn.',
+            advice: advice,
             micronutrients
           }
           this.currentScanResult = parsedResult
           return parsedResult
         }
       } catch (err) {
-        console.warn('Real AI endpoint unavailable or offline, using smart realistic simulator:', err.message)
+        console.error('AI Recognition error:', err)
+        throw err
+      } finally {
+        this.isLoading = false
       }
-
-      // Smart realistic fallback for smooth preview in offline/testing mode
-      const realisticDishes = [
-        {
-          dishName: isZh ? '地中海香草烤鸡胸能量碗' : 'Mediterranean Grilled Chicken Bowl',
-          calories: 520,
-          protein: 48,
-          carbs: 38,
-          fat: 16,
-          netCarbs: 32,
-          fiber: 6,
-          confidence: 0.95,
-          advice: isZh ? '高蛋白低脂典范，非常适合减脂期制造热量赤字并维持饱腹感。' : 'High in lean protein, optimal for muscle recovery and steady fat burn.',
-          micronutrients: {
-            sodium: 420,
-            potassium: 890,
-            calcium: 210,
-            iron: 2.8,
-            vitaminC: 42,
-            sodiumDv: 18,
-            potassiumDv: 26,
-            calciumDv: 21,
-            ironDv: 16,
-            vitaminCDv: 47,
-            nakRatio: 2.12,
-            nakStatus: 'optimal',
-            antiInflammatoryScore: 'high'
-          }
-        },
-        {
-          dishName: isZh ? '牛油果水波蛋全麦三明治' : 'Avocado Poached Egg Toast',
-          calories: 420,
-          protein: 22,
-          carbs: 34,
-          fat: 18,
-          netCarbs: 26,
-          fiber: 8,
-          confidence: 0.93,
-          advice: isZh ? '富含有益心血管的单不饱和脂肪酸与优质膳食纤维。' : 'Rich in healthy monounsaturated fats and essential dietary fiber.',
-          micronutrients: {
-            sodium: 380,
-            potassium: 760,
-            calcium: 150,
-            iron: 2.1,
-            vitaminC: 28,
-            sodiumDv: 16,
-            potassiumDv: 22,
-            calciumDv: 15,
-            ironDv: 12,
-            vitaminCDv: 31,
-            nakRatio: 2.0,
-            nakStatus: 'optimal',
-            antiInflammatoryScore: 'high'
-          }
-        }
-      ]
-      const chosen = realisticDishes[Math.floor(Math.random() * realisticDishes.length)]
-      const fallbackResult = {
-        id: Date.now(),
-        ...chosen,
-        sauceLevel: oilLevel === 'LIGHT' ? 'Light Dressing' : (oilLevel === 'HEAVY' ? 'Rich Sauce' : 'Standard Dressing')
-      }
-      this.currentScanResult = fallbackResult
-      return fallbackResult
-    } finally {
-      this.isLoading = false
-    }
-  },
+    },
     async saveMealRecord(mealData) {
       const isZh = (localStorage.getItem('shike_lang') || 'en') === 'zh'
       const dishName = mealData.dishName || mealData.name || (isZh ? '健康轻食餐' : 'Nutritious Meal')

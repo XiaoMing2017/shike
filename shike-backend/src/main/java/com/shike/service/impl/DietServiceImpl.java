@@ -79,6 +79,12 @@ public class DietServiceImpl implements DietService {
     @Override
     @Transactional
     public DietRecord recognizeMeal(MultipartFile file, String hint, Long userId) {
+        return recognizeMeal(file, hint, userId, "zh");
+    }
+
+    @Override
+    @Transactional
+    public DietRecord recognizeMeal(MultipartFile file, String hint, Long userId, String lang) {
         java.util.Map<String, Boolean> toggles = adminService.getPublicFeatureToggles("release");
         if (toggles != null && Boolean.FALSE.equals(toggles.get("photo_recognize"))) {
             throw new BizException(400, "AI 拍照识图算卡功能暂未开放或在维护中");
@@ -91,7 +97,7 @@ public class DietServiceImpl implements DietService {
         checkDailyAiLimit(userId);
         checkPointsBalance(userId);
         
-        log.info("Received image for AI recognition: {}, size: {} bytes, hint: {}", file.getOriginalFilename(), file.getSize(), hint);
+        log.info("Received image for AI recognition: {}, size: {} bytes, hint: {}, lang: {}", file.getOriginalFilename(), file.getSize(), hint, lang);
 
         if ("BAIDU".equalsIgnoreCase(aiProvider)) {
             log.info("Using Baidu Food Recognition API...");
@@ -298,26 +304,30 @@ public class DietServiceImpl implements DietService {
             }
             String dataUrl = "data:" + mimeType + ";base64," + base64Data;
 
+            String langInstruction = getLanguageInstruction(lang);
+
             String prompt = "You are a world-class certified clinical nutritionist and visual dietary analyst. " +
                     "Analyze the user's uploaded food/beverage photo with high precision across Western, European, American, Asian, and global cuisines.\n" +
                     "\n" +
                     "## Analysis Protocol:\n" +
-                    "1. Scan and identify every distinct food or drink on the plate/container (e.g. Avocado Toast, Grilled Salmon, Chicken Breast Bowl, Caesar Salad, Ribeye Steak, Pasta, Burger, Rice, Protein Shake).\n" +
-                    "2. Estimate portion size and weight (in grams) using visual references (cutlery, plates, cups, hands) or standard single-serving sizes.\n" +
-                    "3. Calculate precise nutritional metrics: weight (g), calories (kcal), protein (g), fat (g), carbs (g), and dietary fiber (g).\n" +
-                    "4. Calculate netCarbs = max(0, carbs - fiber).\n" +
-                    "5. Cross-check formula: calories ≈ protein * 4 + fat * 9 + carbs * 4 (within ±10% margin).\n" +
-                    "6. Account for visible cooking oils and dressing sauces (5-15g oil adding 45-135 kcal).\n" +
-                    "7. Estimate key clinical micronutrients and minerals for the food:\n" +
+                    "1. Scan and identify every distinct food or drink on the plate/container.\n" +
+                    "2. " + langInstruction + "\n" +
+                    "3. Estimate portion size and weight (in grams) using visual references (cutlery, plates, cups, hands) or standard single-serving sizes.\n" +
+                    "4. Calculate precise nutritional metrics: weight (g), calories (kcal), protein (g), fat (g), carbs (g), and dietary fiber (g).\n" +
+                    "5. Calculate netCarbs = max(0, carbs - fiber).\n" +
+                    "6. Cross-check formula: calories ≈ protein * 4 + fat * 9 + carbs * 4 (within ±10% margin).\n" +
+                    "7. Account for visible cooking oils and dressing sauces (5-15g oil adding 45-135 kcal).\n" +
+                    "8. Estimate key clinical micronutrients and minerals for the food:\n" +
                     "   - sodium (mg): estimated salt/sodium content\n" +
                     "   - potassium (mg): vital electrolyte for fluid balance\n" +
                     "   - calcium (mg): for bone health\n" +
                     "   - iron (mg): for cellular oxygenation\n" +
                     "   - vitaminC (mg): key antioxidant\n" +
+                    "9. Provide a concise 1-sentence clinical nutrition advice in the \"advice\" field according to the user's language.\n" +
                     "\n" +
                     "## Output Format:\n" +
                     "Return ONLY a raw valid JSON array of objects (NO markdown code block tags, NO ```json, NO extra text):\n" +
-                    "[{\"name\": \"Food Name (English)\", \"nameZh\": \"中文名称\", \"weight\": 200, \"calories\": 250, \"protein\": 15, \"fat\": 8, \"carbs\": 28, \"fiber\": 4, \"netCarbs\": 24, \"sodium\": 320, \"potassium\": 450, \"calcium\": 35, \"iron\": 1.8, \"vitaminC\": 12}]\n" +
+                    "[{\"name\": \"Food Name in user language\", \"nameZh\": \"中文名称\", \"nameEn\": \"English Food Name\", \"weight\": 200, \"calories\": 250, \"protein\": 15, \"fat\": 8, \"carbs\": 28, \"fiber\": 4, \"netCarbs\": 24, \"sodium\": 320, \"potassium\": 450, \"calcium\": 35, \"iron\": 1.8, \"vitaminC\": 12, \"advice\": \"Nutritional feedback in user language\"}]\n" +
                     "If the image contains absolutely NO food or beverage, return an empty array [].";
 
             if (hint != null && !hint.trim().isEmpty()) {
@@ -492,6 +502,32 @@ public class DietServiceImpl implements DietService {
         }
     }
 
+    private String getLanguageInstruction(String lang) {
+        if (lang == null || lang.trim().isEmpty()) {
+            lang = "zh";
+        }
+        switch (lang.toLowerCase().trim()) {
+            case "zh":
+            case "zh-cn":
+            case "zh-tw":
+            case "zh-hk":
+                return "CRITICAL LANGUAGE INSTRUCTION: The user's active language is Simplified Chinese (简体中文). You MUST output all dish names (\"name\" and \"nameZh\") in natural, authentic Chinese (例如: '花甲米线', '白灼大虾', '香煎鸡胸肉', '牛油果沙拉', '西红柿炒鸡蛋'). DO NOT output English names for \"name\" when Chinese is requested. Also provide a professional 1-sentence nutritional advice in Chinese for the \"advice\" field.";
+            case "ja":
+                return "CRITICAL LANGUAGE INSTRUCTION: The user's active language is Japanese (日本語). You MUST output dish names in natural Japanese (例えば: 'アボカドトースト', 'ラーメン', 'サーモン丼'). The \"advice\" field must be in Japanese.";
+            case "es":
+                return "CRITICAL LANGUAGE INSTRUCTION: The user's active language is Spanish (Español). You MUST output dish names in Spanish (e.g. 'Tostada de aguacate', 'Sopa de fideos con almejas'). The \"advice\" field must be in Spanish.";
+            case "fr":
+                return "CRITICAL LANGUAGE INSTRUCTION: The user's active language is French (Français). You MUST output dish names in French (e.g. 'Soupe de nouilles aux palourdes', 'Salade de saumon'). The \"advice\" field must be in French.";
+            case "de":
+                return "CRITICAL LANGUAGE INSTRUCTION: The user's active language is German (Deutsch). You MUST output dish names in German (e.g. 'Reisnudelsuppe mit Muscheln'). The \"advice\" field must be in German.";
+            case "pt":
+                return "CRITICAL LANGUAGE INSTRUCTION: The user's active language is Portuguese (Português). You MUST output dish names in Portuguese (e.g. 'Sopa de macarrão com amêijoas'). The \"advice\" field must be in Portuguese.";
+            case "en":
+            default:
+                return "CRITICAL LANGUAGE INSTRUCTION: The user's active language is English. You MUST output dish names in English (e.g. 'Clam Rice Noodle Soup', 'Avocado Toast'). The \"advice\" field must be in English.";
+        }
+    }
+
     private byte[] compressImage(MultipartFile file) {
         try (InputStream is = file.getInputStream()) {
             BufferedImage originalImage = ImageIO.read(is);
@@ -612,6 +648,7 @@ public class DietServiceImpl implements DietService {
     public static class FoodItem {
         private String name;
         private String nameZh;
+        private String nameEn;
         private Double weight;
         private Double calories;
         private Double protein;
@@ -624,6 +661,7 @@ public class DietServiceImpl implements DietService {
         private Double calcium; // mg (钙)
         private Double iron; // mg (铁)
         private Double vitaminC; // mg (维生素C)
+        private String advice;
     }
 
     @Override

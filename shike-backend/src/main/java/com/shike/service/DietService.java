@@ -13,6 +13,7 @@ import java.util.Map;
 
 public interface DietService {
     DietRecord recognizeMeal(MultipartFile file, String hint, Long userId);
+    DietRecord recognizeMeal(MultipartFile file, String hint, Long userId, String lang);
     DietRecord recordMeal(Long userId, String mealType, String foodItemsJson, String oilLevel, String imageUrl);
     List<DietRecord> getDailyRecords(Long userId, LocalDate date);
     List<MonthSummaryDTO> getMonthSummary(Long userId, int year, int month);

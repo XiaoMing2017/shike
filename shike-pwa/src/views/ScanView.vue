@@ -193,6 +193,29 @@
         </div>
       </div>
 
+      <!-- Error Feedback Card -->
+      <div v-if="errorMessage && !dietStore.isLoading" class="glass-card rounded-3xl p-5 space-y-3 bg-red-50/90 border border-red-200 text-center animate-shake">
+        <div class="w-10 h-10 mx-auto rounded-full bg-red-100 flex items-center justify-center text-red-600">
+          <AlertCircle class="w-5 h-5" />
+        </div>
+        <h3 class="text-sm font-bold text-red-900">{{ authStore.lang === 'zh' ? '未能识别到食物' : 'Food Not Detected' }}</h3>
+        <p class="text-xs text-red-600 leading-relaxed">{{ errorMessage }}</p>
+        <div class="pt-1 flex justify-center gap-2">
+          <button
+            @click="triggerCamera"
+            class="px-4 py-2 rounded-xl bg-red-600 text-white text-xs font-bold shadow-sm hover:bg-red-700 active:scale-95 transition-all"
+          >
+            {{ authStore.lang === 'zh' ? '重新拍照' : 'Retake Photo' }}
+          </button>
+          <button
+            @click="triggerAlbum"
+            class="px-4 py-2 rounded-xl bg-white border border-red-200 text-red-700 text-xs font-bold hover:bg-red-50 active:scale-95 transition-all"
+          >
+            {{ authStore.lang === 'zh' ? '从相册选择' : 'Choose from Album' }}
+          </button>
+        </div>
+      </div>
+
       <!-- Analysis Result Card -->
       <div v-if="scanResult && !dietStore.isLoading" class="glass-card rounded-3xl p-5 space-y-4 animate-slide-up">
         <div class="flex items-start justify-between">
@@ -434,7 +457,8 @@ import {
   Utensils,
   Lock,
   ShieldCheck,
-  Droplets
+  Droplets,
+  AlertCircle
 } from 'lucide-vue-next'
 import confetti from 'canvas-confetti'
 import { useAuthStore } from '../stores/authStore'
@@ -450,6 +474,7 @@ const cameraInput = ref(null)
 const albumInput = ref(null)
 const previewUrl = ref(null)
 const scanResult = ref(null)
+const errorMessage = ref('')
 const selectedOil = ref('NORMAL')
 const isDragging = ref(false)
 
@@ -564,10 +589,17 @@ const compressImageFile = (file, maxWidth = 1280, quality = 0.82) => {
 
 const processFile = async (file) => {
   if (!file) return
+  errorMessage.value = ''
+  scanResult.value = null
   previewUrl.value = URL.createObjectURL(file)
-  const readyFile = await compressImageFile(file)
-  const result = await dietStore.analyzeMealImage(readyFile, selectedOil.value)
-  scanResult.value = result
+  try {
+    const readyFile = await compressImageFile(file)
+    const result = await dietStore.analyzeMealImage(readyFile, selectedOil.value)
+    scanResult.value = result
+  } catch (err) {
+    console.error('Scan processing error:', err)
+    errorMessage.value = err.response?.data?.message || err.message || (authStore.lang === 'zh' ? '未能识别到食物，请重新拍摄清晰的食物照片' : 'No food recognized. Please take a clearer photo.')
+  }
 }
 
 const handleFileSelected = async (e) => {
@@ -595,20 +627,38 @@ const getSampleDishName = (index) => {
 
 const loadSampleDish = async (dish, index) => {
   if (!authStore.consumeScan()) return
+  errorMessage.value = ''
   previewUrl.value = dish.imageUrl
   // Create dummy image file for backend API/analyzer
   const dummyFile = new File([new Blob()], `sample_${index}.jpg`, { type: 'image/jpeg' })
-  const res = await dietStore.analyzeMealImage(dummyFile, selectedOil.value)
-  if (res) {
-    res.dishName = getSampleDishName(index)
-    res.calories = dish.calories
-    res.protein = dish.protein
-    res.carbs = dish.carbs
-    res.fat = dish.fat
-    res.netCarbs = dish.netCarbs
-    res.fiber = dish.fiber
+  try {
+    const res = await dietStore.analyzeMealImage(dummyFile, selectedOil.value)
+    if (res) {
+      res.dishName = getSampleDishName(index)
+      res.calories = dish.calories
+      res.protein = dish.protein
+      res.carbs = dish.carbs
+      res.fat = dish.fat
+      res.netCarbs = dish.netCarbs
+      res.fiber = dish.fiber
+    }
+    scanResult.value = res
+  } catch (err) {
+    // If dummy file fails on backend, fall back to sample dish metrics directly
+    scanResult.value = {
+      id: Date.now(),
+      dishName: getSampleDishName(index),
+      calories: dish.calories,
+      protein: dish.protein,
+      carbs: dish.carbs,
+      fat: dish.fat,
+      netCarbs: dish.netCarbs,
+      fiber: dish.fiber,
+      confidence: 0.98,
+      advice: authStore.lang === 'zh' ? '优质均衡营养搭配，富含蛋白质与膳食纤维。' : 'Balanced nutritional profile rich in protein and fiber.',
+      foodItems: []
+    }
   }
-  scanResult.value = res
 }
 
 const adjustedCalories = computed(() => {
@@ -628,6 +678,7 @@ const oilLabel = computed(() => {
 const resetScan = () => {
   previewUrl.value = null
   scanResult.value = null
+  errorMessage.value = ''
   selectedOil.value = 'NORMAL'
 }
 

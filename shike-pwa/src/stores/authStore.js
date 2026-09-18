@@ -6,16 +6,20 @@ function detectInitialLanguage() {
   if (saved && ['en', 'zh', 'es', 'de', 'fr', 'ja', 'pt'].includes(saved)) {
     return saved
   }
+  let initial = 'en'
   if (typeof navigator !== 'undefined' && navigator.language) {
     const navLang = navigator.language.toLowerCase()
-    if (navLang.startsWith('zh')) return 'zh'
-    if (navLang.startsWith('es')) return 'es'
-    if (navLang.startsWith('de')) return 'de'
-    if (navLang.startsWith('fr')) return 'fr'
-    if (navLang.startsWith('ja')) return 'ja'
-    if (navLang.startsWith('pt')) return 'pt'
+    if (navLang.startsWith('zh')) initial = 'zh'
+    else if (navLang.startsWith('es')) initial = 'es'
+    else if (navLang.startsWith('de')) initial = 'de'
+    else if (navLang.startsWith('fr')) initial = 'fr'
+    else if (navLang.startsWith('ja')) initial = 'ja'
+    else if (navLang.startsWith('pt')) initial = 'pt'
   }
-  return 'en'
+  try {
+    localStorage.setItem('shike_lang', initial)
+  } catch (e) {}
+  return initial
 }
 
 export const useAuthStore = defineStore('auth', {
