@@ -29,8 +29,9 @@ def build_local_jar():
     if os.path.exists(JDK17_PATH):
         env["JAVA_HOME"] = JDK17_PATH
         env["PATH"] = f"{JDK17_PATH}\\bin;" + env["PATH"]
+    env["JAVA_TOOL_OPTIONS"] = "-Dfile.encoding=UTF-8"
     
-    cmd = "mvn clean package -DskipTests --settings settings.xml"
+    cmd = "mvn clean package -DskipTests -Dfile.encoding=UTF-8 --settings settings.xml"
     process = subprocess.Popen(cmd, cwd=BACKEND_DIR, shell=True, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding='utf-8', errors='replace')
     
     for line in process.stdout:
