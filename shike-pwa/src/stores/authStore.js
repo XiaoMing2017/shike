@@ -235,10 +235,28 @@ export const useAuthStore = defineStore('auth', {
     closePaywall() {
       this.isPaywallOpen = false
     },
-    upgradeVipSuccess() {
+    async refreshProfile() {
+      const currentId = this.user?.id || this.userId
+      if (!currentId) return null
+      try {
+        const res = await client.get(`/user/${currentId}`)
+        if (res) {
+          this.user = { ...this.user, ...res }
+          localStorage.setItem('shike_user', JSON.stringify(this.user))
+          return this.user
+        }
+      } catch (e) {
+        console.warn('Failed to refresh user profile from backend:', e.message)
+      }
+      return null
+    },
+    upgradeVipSuccess(newVipData = {}) {
       if (this.user) {
-        this.user.vipType = 'PRO'
+        this.user.vipType = newVipData.vipType || 'PRO'
         this.user.aiUnlimited = true
+        if (newVipData.vipExpireTime) {
+          this.user.vipExpireTime = newVipData.vipExpireTime
+        }
         localStorage.setItem('shike_user', JSON.stringify(this.user))
       }
       this.isPaywallOpen = false

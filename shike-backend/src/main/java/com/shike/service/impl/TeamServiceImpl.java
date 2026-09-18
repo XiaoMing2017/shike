@@ -408,7 +408,7 @@ public class TeamServiceImpl implements TeamService {
     public void leaveTeam(Long userId, Long teamId) {
         teamMemberRepository.deleteByTeamIdAndUserId(teamId, userId);
         userRepository.findById(userId).ifPresent(user -> {
-            int originalPoints = user.getPoints() != null ? user.getPoints() : 1000;
+            int originalPoints = user.getPoints() != null ? user.getPoints() : 200;
             user.setPoints(Math.max(0, originalPoints - 100));
             userRepository.save(user);
             

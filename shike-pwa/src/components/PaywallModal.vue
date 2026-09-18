@@ -203,6 +203,91 @@
           </button>
         </div>
       </div>
+
+      <!-- STEP 3: Sandbox / Test Mode Checkout Modal -->
+      <div v-else-if="step === 'test_checkout'" class="space-y-5 text-center pt-2">
+        <div class="w-14 h-14 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto shadow-sm">
+          <Sparkles class="w-7 h-7" />
+        </div>
+        <div>
+          <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-800 uppercase tracking-wider">
+            Lemon Squeezy 沙箱收银台
+          </span>
+          <h3 class="text-xl font-black text-slate-900 mt-2">
+            订单已创建：{{ selectedPlan === 'yearly' ? '$39.99 (年卡)' : '$4.99 (周卡)' }}
+          </h3>
+          <p class="text-xs text-slate-500 mt-1 font-mono break-all">
+            {{ currentOrderNo }}
+          </p>
+        </div>
+
+        <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-left space-y-2 text-xs text-slate-600">
+          <div class="flex justify-between">
+            <span>套餐类型:</span>
+            <span class="font-bold text-slate-800">{{ selectedPlan === 'yearly' ? 'Annual Pro (年卡)' : 'Weekly Pro (周卡)' }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span>支付托管通道:</span>
+            <span class="font-bold text-slate-800">Lemon Squeezy MoR</span>
+          </div>
+          <div class="flex justify-between">
+            <span>会员权益:</span>
+            <span class="font-bold text-emerald-600">无限次 AI 拍照 + 深度健康分析</span>
+          </div>
+        </div>
+
+        <div class="space-y-2.5">
+          <!-- One-click simulate payment success button -->
+          <button
+            @click="handleSimulateTestSuccess"
+            :disabled="isProcessing"
+            class="w-full py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-white font-bold text-sm shadow-md shadow-emerald-500/25 flex items-center justify-center gap-2 transition-all"
+          >
+            <Sparkles class="w-4 h-4" />
+            <span>{{ isProcessing ? '正在模拟扣款履约...' : '🧪 一键模拟测试扣款成功' }}</span>
+          </button>
+
+          <button
+            v-if="currentCheckoutUrl && currentCheckoutUrl.startsWith('http')"
+            @click="openExternalCheckout"
+            class="w-full py-3 rounded-2xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center justify-center gap-1.5 transition-all"
+          >
+            <span>打开官方收银台链接</span>
+          </button>
+        </div>
+
+        <div class="text-center pt-1">
+          <button
+            @click="step = 'plans'"
+            class="text-xs font-semibold text-slate-400 hover:text-slate-600 inline-flex items-center gap-1"
+          >
+            <ArrowLeft class="w-3.5 h-3.5" />
+            <span>返回方案选择</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 4: Success View -->
+      <div v-else-if="step === 'success'" class="space-y-5 text-center py-4">
+        <div class="w-16 h-16 rounded-3xl bg-emerald-500 text-white flex items-center justify-center mx-auto shadow-xl shadow-emerald-500/25 animate-bounce">
+          <Check class="w-8 h-8 stroke-[3]" />
+        </div>
+        <div>
+          <h2 class="text-2xl font-black text-slate-900">
+            PRO 会员激活成功！
+          </h2>
+          <p class="text-xs text-slate-500 mt-2">
+            恭喜您成为 ShiKe PRO 会员，已解锁无限次 AI 拍照与深度健康建议。
+          </p>
+        </div>
+
+        <button
+          @click="close"
+          class="w-full py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm shadow-md transition-all active:scale-[0.98]"
+        >
+          立即开启体验
+        </button>
+      </div>
     </div>
 
     <!-- Google Chooser Modal -->
@@ -215,13 +300,14 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { X, Check, ShieldCheck, Mail, ArrowLeft } from 'lucide-vue-next'
+import { X, Check, ShieldCheck, Mail, ArrowLeft, Sparkles } from 'lucide-vue-next'
 import confetti from 'canvas-confetti'
 import GoogleChooserModal from './GoogleChooserModal.vue'
 import { useAuthStore } from '../stores/authStore'
 import { useI18n } from '../i18n'
+import client from '../api/client'
 
 const props = defineProps({
   isOpen: Boolean
@@ -232,19 +318,29 @@ const router = useRouter()
 const authStore = useAuthStore()
 const { t } = useI18n()
 
-const step = ref('plans') // 'plans' | 'bind_account'
+const step = ref('plans') // 'plans' | 'bind_account' | 'test_checkout' | 'success'
 const selectedPlan = ref('yearly')
 const isProcessing = ref(false)
 const showGoogleModal = ref(false)
+const currentOrderNo = ref('')
+const currentCheckoutUrl = ref('')
+let pollTimer = null
 
 // Reset step when modal opens
 watch(() => props.isOpen, (newVal) => {
   if (newVal) {
     step.value = 'plans'
+  } else {
+    stopPolling()
   }
 })
 
+onUnmounted(() => {
+  stopPolling()
+})
+
 const close = () => {
+  stopPolling()
   step.value = 'plans'
   emit('close')
 }
@@ -256,26 +352,108 @@ const handleSubscribe = async () => {
     return
   }
 
-  // If user is already authenticated, directly process checkout & activation
+  // If user is already authenticated, create real checkout session
   await executeUpgrade()
 }
 
 const executeUpgrade = async () => {
   isProcessing.value = true
   try {
-    await new Promise((r) => setTimeout(r, 1000))
-    authStore.upgradeVipSuccess()
-    confetti({
-      particleCount: 80,
-      spread: 70,
-      origin: { y: 0.6 }
+    const res = await client.post('/payment/checkout', {
+      planType: selectedPlan.value,
+      userId: authStore.user?.id
     })
-    close()
+
+    if (!res || !res.orderNo) {
+      throw new Error('Could not create checkout session')
+    }
+
+    currentOrderNo.value = res.orderNo
+    currentCheckoutUrl.value = res.checkoutUrl || ''
+
+    // If Lemon.js is loaded and URL is an official lemon squeezy checkout
+    if (window.LemonSqueezy?.Url && res.checkoutUrl && res.checkoutUrl.includes('lemonsqueezy.com')) {
+      // Listen for Lemon Squeezy event
+      if (window.LemonSqueezy?.Setup) {
+        window.LemonSqueezy.Setup({
+          eventHandler: async (event) => {
+            if (event.event === 'Checkout.Success') {
+              await onPaymentCompleted(res)
+            }
+          }
+        })
+      }
+      window.LemonSqueezy.Url.Open(res.checkoutUrl)
+      startPolling(res.orderNo)
+    } else {
+      // In development or sandbox mode: show sandbox confirmation view
+      step.value = 'test_checkout'
+    }
   } catch (err) {
-    alert('Payment process cancelled or failed: ' + err.message)
+    console.error('Payment checkout error:', err)
+    alert('Payment checkout error: ' + err.message)
   } finally {
     isProcessing.value = false
   }
+}
+
+const handleSimulateTestSuccess = async () => {
+  if (!currentOrderNo.value) return
+  isProcessing.value = true
+  try {
+    const res = await client.post(`/payment/test-complete/${currentOrderNo.value}`)
+    await onPaymentCompleted(res)
+  } catch (err) {
+    alert('Simulation error: ' + err.message)
+  } finally {
+    isProcessing.value = false
+  }
+}
+
+const openExternalCheckout = () => {
+  if (currentCheckoutUrl.value) {
+    window.open(currentCheckoutUrl.value, '_blank')
+    startPolling(currentOrderNo.value)
+  }
+}
+
+const startPolling = (orderNo) => {
+  stopPolling()
+  let attempts = 0
+  pollTimer = setInterval(async () => {
+    attempts++
+    if (attempts > 30) {
+      stopPolling()
+      return
+    }
+    try {
+      const res = await client.get(`/payment/order-status/${orderNo}`)
+      if (res && (res.status === 'PAID' || res.isVipActive)) {
+        await onPaymentCompleted(res)
+      }
+    } catch (e) {
+      // silent poll error
+    }
+  }, 2500)
+}
+
+const stopPolling = () => {
+  if (pollTimer) {
+    clearInterval(pollTimer)
+    pollTimer = null
+  }
+}
+
+const onPaymentCompleted = async (statusData = {}) => {
+  stopPolling()
+  authStore.upgradeVipSuccess(statusData)
+  await authStore.refreshProfile()
+  confetti({
+    particleCount: 100,
+    spread: 70,
+    origin: { y: 0.6 }
+  })
+  step.value = 'success'
 }
 
 const handleGoogleAccountSelect = async (account) => {
@@ -284,14 +462,8 @@ const handleGoogleAccountSelect = async (account) => {
   try {
     // 1. Authenticate user with Google account
     await authStore.loginWithGoogle(account)
-    // 2. Seamlessly complete PRO upgrade for this newly linked account
-    authStore.upgradeVipSuccess()
-    confetti({
-      particleCount: 80,
-      spread: 70,
-      origin: { y: 0.6 }
-    })
-    close()
+    // 2. Proceed to checkout
+    await executeUpgrade()
   } catch (err) {
     alert('Google account link failed: ' + err.message)
   } finally {
@@ -304,13 +476,25 @@ const goToEmailAuth = () => {
   router.push(`/auth?redirect=/scan&upgrade=pro&plan=${selectedPlan.value}`)
 }
 
-const handleRestore = () => {
+const handleRestore = async () => {
   if (authStore.isGuest) {
     step.value = 'bind_account'
     return
   }
-  authStore.upgradeVipSuccess()
-  alert(t('paywall.restoredSuccess'))
-  close()
+  isProcessing.value = true
+  try {
+    const updated = await authStore.refreshProfile()
+    if (updated && (updated.vipType === 'PRO' || updated.vipType === 'VIP' || updated.aiUnlimited)) {
+      authStore.upgradeVipSuccess(updated)
+      alert(t('paywall.restoredSuccess'))
+      close()
+    } else {
+      alert('未检测到有效 PRO 会员订阅或已过期')
+    }
+  } catch (e) {
+    alert('恢复失败: ' + e.message)
+  } finally {
+    isProcessing.value = false
+  }
 }
 </script>

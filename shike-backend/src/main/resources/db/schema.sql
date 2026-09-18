@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS `tb_user` (
   `bmr` DECIMAL(6,1) DEFAULT NULL COMMENT '基础代谢率(kcal)',
   `tdee` DECIMAL(6,1) DEFAULT NULL COMMENT '每日总能消耗(kcal)',
   `target_calories` DECIMAL(6,1) DEFAULT NULL COMMENT '每日目标摄入热量(kcal)',
-  `points` INT DEFAULT 1000 COMMENT '用户当前持有契约积分',
+  `points` INT DEFAULT 200 COMMENT '用户当前持有契约积分',
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   INDEX `idx_openid` (`openid`)
@@ -107,4 +107,24 @@ CREATE TABLE IF NOT EXISTS `tb_exercise_record` (
   INDEX `idx_user_exercise_date` (`user_id`, `record_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='运动打卡记录表';
 
-
+-- 9. 支付与订阅订单明细表
+CREATE TABLE IF NOT EXISTS `tb_payment_order` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
+  `order_no` VARCHAR(64) NOT NULL UNIQUE COMMENT '商户内部订单号',
+  `user_id` BIGINT NOT NULL COMMENT '用户ID',
+  `user_email` VARCHAR(120) DEFAULT NULL COMMENT '用户邮箱',
+  `plan_type` VARCHAR(20) NOT NULL COMMENT '套餐类型: WEEKLY, YEARLY',
+  `amount` DECIMAL(8,2) NOT NULL COMMENT '订单金额',
+  `currency` VARCHAR(10) DEFAULT 'USD' COMMENT '币种',
+  `status` VARCHAR(20) DEFAULT 'PENDING' COMMENT '状态: PENDING, PAID, CANCELLED, REFUNDED',
+  `provider` VARCHAR(20) DEFAULT 'LEMON_SQUEEZY' COMMENT '支付通道: LEMON_SQUEEZY',
+  `ls_order_id` VARCHAR(64) DEFAULT NULL COMMENT 'Lemon Squeezy Order ID',
+  `ls_subscription_id` VARCHAR(64) DEFAULT NULL COMMENT 'Lemon Squeezy Subscription ID',
+  `checkout_url` TEXT DEFAULT NULL COMMENT '收银台链接',
+  `paid_at` DATETIME DEFAULT NULL COMMENT '支付完成时间',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  INDEX `idx_user_id` (`user_id`),
+  INDEX `idx_order_no` (`order_no`),
+  INDEX `idx_ls_order_id` (`ls_order_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='支付订单表';

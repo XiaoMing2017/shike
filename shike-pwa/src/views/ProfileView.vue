@@ -10,8 +10,13 @@
       >
         {{ t('profile.upgradePro') }}
       </button>
-      <div v-else class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">
-        {{ t('profile.proActive') }}
+      <div v-else class="text-right">
+        <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold inline-block">
+          {{ t('profile.proActive') }}
+        </span>
+        <div v-if="authStore.user?.vipExpireTime" class="text-[10px] text-emerald-600 mt-0.5 font-mono">
+          至 {{ authStore.user.vipExpireTime.substring(0, 10) }}
+        </div>
       </div>
     </div>
 
@@ -259,7 +264,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import confetti from 'canvas-confetti'
 import {
   Scale,
   Languages,
@@ -279,9 +286,21 @@ import { useAuthStore } from '../stores/authStore'
 import { useDietStore } from '../stores/dietStore'
 import { useI18n, SUPPORTED_LANGUAGES } from '../i18n'
 
+const route = useRoute()
 const authStore = useAuthStore()
 const dietStore = useDietStore()
 const { t } = useI18n()
+
+onMounted(async () => {
+  await authStore.refreshProfile()
+  if (route.query.payment === 'success') {
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 }
+    })
+  }
+})
 
 const isLangModalOpen = ref(false)
 const currentLangMeta = computed(

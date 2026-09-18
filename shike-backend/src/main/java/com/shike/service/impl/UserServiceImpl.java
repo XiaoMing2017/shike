@@ -94,12 +94,24 @@ public class UserServiceImpl implements UserService {
                     .openid(openid)
                     .nickname("微信用户_" + openid.substring(Math.max(0, openid.length() - 6)))
                     .gender(0)
-                    .points(1000) // 初始契约分 1000
+                    .points(200) // 初始契约分 200
                     .activityLevel("SEDENTARY")
                     .goal("MAINTAIN")
                     .trainingLevel("BEGINNER")
                     .build();
-            return userRepository.save(newUser);
+            User saved = userRepository.save(newUser);
+            try {
+                PointsRecord initialRecord = PointsRecord.builder()
+                        .userId(saved.getId())
+                        .amount(200)
+                        .type("REGISTER_BONUS")
+                        .remark("新用户入驻赠送契约积分")
+                        .build();
+                pointsRecordRepository.save(initialRecord);
+            } catch (Exception e) {
+                log.warn("Failed to record initial points record for user {}: {}", saved.getId(), e.getMessage());
+            }
+            return saved;
         }
     }
 

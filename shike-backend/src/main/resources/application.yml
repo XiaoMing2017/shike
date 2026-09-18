@@ -74,3 +74,10 @@ wx:
   secret: 8194daf0bfc77af46c26710d4a2b5acc
   env-version: develop
 
+lemonsqueezy:
+  api-key: ${LEMON_SQUEEZY_API_KEY:}
+  store-id: ${LEMON_SQUEEZY_STORE_ID:}
+  webhook-secret: ${LEMON_SQUEEZY_WEBHOOK_SECRET:}
+  variant-weekly-id: ${LEMON_SQUEEZY_VARIANT_WEEKLY:}
+  variant-yearly-id: ${LEMON_SQUEEZY_VARIANT_YEARLY:}
+  redirect-url: ${LEMON_SQUEEZY_REDIRECT_URL:https://shike-two.vercel.app/profile?payment=success}

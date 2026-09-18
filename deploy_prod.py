@@ -137,6 +137,11 @@ services:
       - LC_ALL=C.UTF-8
       - JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Duser.language=zh -Duser.country=CN
       - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -Duser.language=zh -Duser.country=CN -Djdk.httpclient.allowRestrictedHeaders=connection
+      - LEMON_SQUEEZY_API_KEY=${LEMON_SQUEEZY_API_KEY:-}
+      - LEMON_SQUEEZY_STORE_ID=${LEMON_SQUEEZY_STORE_ID:-}
+      - LEMON_SQUEEZY_WEBHOOK_SECRET=${LEMON_SQUEEZY_WEBHOOK_SECRET:-}
+      - LEMON_SQUEEZY_VARIANT_WEEKLY=${LEMON_SQUEEZY_VARIANT_WEEKLY:-}
+      - LEMON_SQUEEZY_VARIANT_YEARLY=${LEMON_SQUEEZY_VARIANT_YEARLY:-}
     volumes:
       - ./app.jar:/app/app.jar
       - ./uploads:/app/uploads
