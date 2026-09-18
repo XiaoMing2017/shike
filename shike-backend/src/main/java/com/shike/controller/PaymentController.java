@@ -75,4 +75,13 @@ public class PaymentController {
         OrderStatusDTO status = paymentService.testCompleteOrder(orderNo);
         return ResultDTO.success(status);
     }
+
+    /**
+     * Dev / Test Sandbox bypass: simulates instant test refund for QA
+     */
+    @PostMapping("/test-refund/{orderNo}")
+    public ResultDTO<OrderStatusDTO> testRefundOrder(@PathVariable String orderNo) {
+        OrderStatusDTO status = paymentService.testRefundOrder(orderNo);
+        return ResultDTO.success(status);
+    }
 }

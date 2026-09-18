@@ -124,12 +124,14 @@
           <p class="text-[11px] text-slate-400">
             {{ t('paywall.autoRenews') }}
           </p>
-          <div class="flex justify-center gap-4 text-[11px] text-slate-500">
+          <div class="flex justify-center items-center gap-2 text-[11px] text-slate-500 flex-wrap">
             <button @click="handleRestore" class="hover:underline">{{ t('paywall.restore') }}</button>
             <span>•</span>
-            <a href="#" class="hover:underline">{{ t('paywall.terms') }}</a>
+            <button @click="openLegal('refund')" class="hover:underline text-emerald-600 font-semibold">{{ authStore.lang === 'zh' ? '14天退款' : 'Refund Policy' }}</button>
             <span>•</span>
-            <a href="#" class="hover:underline">{{ t('paywall.privacy') }}</a>
+            <button @click="openLegal('terms')" class="hover:underline">{{ t('paywall.terms') }}</button>
+            <span>•</span>
+            <button @click="openLegal('privacy')" class="hover:underline">{{ t('paywall.privacy') }}</button>
           </div>
         </div>
       </div>
@@ -296,6 +298,13 @@
       @select="handleGoogleAccountSelect"
       @close="showGoogleModal = false"
     />
+
+    <!-- Legal & Refund Policy Modal -->
+    <LegalModal
+      :isOpen="showLegalModal"
+      :initialTab="legalTab"
+      @close="showLegalModal = false"
+    />
   </div>
 </template>
 
@@ -305,6 +314,7 @@ import { useRouter } from 'vue-router'
 import { X, Check, ShieldCheck, Mail, ArrowLeft, Sparkles } from 'lucide-vue-next'
 import confetti from 'canvas-confetti'
 import GoogleChooserModal from './GoogleChooserModal.vue'
+import LegalModal from './LegalModal.vue'
 import { useAuthStore } from '../stores/authStore'
 import { useI18n } from '../i18n'
 import client from '../api/client'
@@ -322,9 +332,16 @@ const step = ref('plans') // 'plans' | 'bind_account' | 'test_checkout' | 'succe
 const selectedPlan = ref('yearly')
 const isProcessing = ref(false)
 const showGoogleModal = ref(false)
+const showLegalModal = ref(false)
+const legalTab = ref('refund')
 const currentOrderNo = ref('')
 const currentCheckoutUrl = ref('')
 let pollTimer = null
+
+const openLegal = (tab = 'refund') => {
+  legalTab.value = tab
+  showLegalModal.value = true
+}
 
 // Reset step when modal opens
 watch(() => props.isOpen, (newVal) => {

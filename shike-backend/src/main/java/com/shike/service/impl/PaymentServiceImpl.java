@@ -189,6 +189,10 @@ public class PaymentServiceImpl implements PaymentService {
 
             if ("order_created".equalsIgnoreCase(eventName) || "subscription_created".equalsIgnoreCase(eventName)) {
                 processOrderPaidEvent(root);
+            } else if ("order_refunded".equalsIgnoreCase(eventName)) {
+                processOrderRefundedEvent(root);
+            } else if ("subscription_cancelled".equalsIgnoreCase(eventName) || "subscription_expired".equalsIgnoreCase(eventName)) {
+                processSubscriptionCancelledEvent(root);
             } else {
                 log.info("[LEMON_SQUEEZY_WEBHOOK] Ignored unhandled event: {}", eventName);
             }
@@ -261,6 +265,43 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
+    @Transactional
+    public void processOrderRefundedEvent(JsonNode root) {
+        String lsOrderId = root.path("data").path("id").asText(null);
+        JsonNode customNode = root.path("meta").path("custom_data");
+        String orderNo = customNode.path("order_no").asText(null);
+        String userIdStr = customNode.path("user_id").asText(null);
+
+        PaymentOrder order = null;
+        if (lsOrderId != null && !lsOrderId.isBlank()) {
+            order = paymentOrderRepository.findByLsOrderId(lsOrderId).orElse(null);
+        }
+        if (order == null && orderNo != null && !orderNo.isBlank()) {
+            order = paymentOrderRepository.findByOrderNo(orderNo).orElse(null);
+        }
+
+        Long userId = null;
+        if (order != null) {
+            order.setStatus("REFUNDED");
+            paymentOrderRepository.save(order);
+            userId = order.getUserId();
+            log.info("[LEMON_SQUEEZY_WEBHOOK] Order {} status updated to REFUNDED", order.getOrderNo());
+        } else if (userIdStr != null && !userIdStr.isBlank()) {
+            try {
+                userId = Long.parseLong(userIdStr);
+            } catch (Exception ignored) {}
+        }
+
+        if (userId != null) {
+            revokeUserVip(userId);
+        }
+    }
+
+    @Transactional
+    public void processSubscriptionCancelledEvent(JsonNode root) {
+        log.info("[LEMON_SQUEEZY_WEBHOOK] Subscription cancelled / expired. Period ends normally.");
+    }
+
     @Override
     @Transactional
     public OrderStatusDTO testCompleteOrder(String orderNo) {
@@ -272,6 +313,31 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         return getOrderStatus(orderNo);
+    }
+
+    @Override
+    @Transactional
+    public OrderStatusDTO testRefundOrder(String orderNo) {
+        PaymentOrder order = paymentOrderRepository.findByOrderNo(orderNo)
+                .orElseThrow(() -> new BizException("Order not found: " + orderNo));
+
+        order.setStatus("REFUNDED");
+        paymentOrderRepository.save(order);
+
+        revokeUserVip(order.getUserId());
+        log.info("[PAYMENT] Order {} refunded via test-refund. VIP revoked for user: {}", orderNo, order.getUserId());
+        return getOrderStatus(orderNo);
+    }
+
+    private void revokeUserVip(Long userId) {
+        User user = userRepository.findById(userId).orElse(null);
+        if (user != null) {
+            user.setVipType("NORMAL");
+            user.setAiUnlimited(false);
+            user.setVipExpireTime(LocalDateTime.now().minusSeconds(1));
+            userRepository.save(user);
+            log.info("[PAYMENT] Successfully revoked VIP for user: {}", userId);
+        }
     }
 
     private void fulfillOrder(PaymentOrder order, String lsOrderId, String lsSubscriptionId, String planType) {

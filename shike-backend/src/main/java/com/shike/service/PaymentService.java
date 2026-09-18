@@ -8,4 +8,5 @@ public interface PaymentService {
     boolean handleWebhook(String rawPayload, String signatureHeader);
     OrderStatusDTO getOrderStatus(String orderNo);
     OrderStatusDTO testCompleteOrder(String orderNo);
+    OrderStatusDTO testRefundOrder(String orderNo);
 }

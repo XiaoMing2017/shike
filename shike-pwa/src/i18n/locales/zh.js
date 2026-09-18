@@ -163,6 +163,17 @@ export default {
     deleteSuccess: '您的账户及全部本地数据已永久抹除。',
     version: '食刻 PWA v1.0.0 (全球出海版)'
   },
+  legal: {
+    title: '法律条款与客户支持',
+    refundPolicy: '退款政策与申请',
+    refundPolicyDesc: '14天无条件退款保障，极速原路返还',
+    terms: '服务条款 (Terms of Service)',
+    privacy: '隐私权政策 (Privacy Policy)',
+    contact: '客户支持与联系我们',
+    contactDesc: '官方客服邮箱: support@shike.store',
+    manageSub: '管理我的订阅',
+    manageSubDesc: '查看发票、更新支付或取消自动续订'
+  },
   paywall: {
     badge: '✨ SHIKE PRO 会员',
     title: '解锁无限次 AI 视觉营养测算',

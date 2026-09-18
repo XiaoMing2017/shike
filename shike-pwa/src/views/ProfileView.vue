@@ -169,6 +169,101 @@
       </div>
     </div>
 
+    <!-- Legal & Support Group -->
+    <div class="space-y-3 mb-6">
+      <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 px-1">{{ t('legal.title') }}</h2>
+
+      <div class="glass-card rounded-2xl overflow-hidden divide-y divide-slate-100">
+        <!-- 1. Refund Policy -->
+        <button
+          @click="openLegalModal('refund')"
+          class="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors"
+        >
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+              <RotateCcw class="w-4 h-4" />
+            </div>
+            <div>
+              <div class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                <span>{{ t('legal.refundPolicy') }}</span>
+                <span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">14-Day Guarantee</span>
+              </div>
+              <div class="text-xs text-slate-400 mt-0.5">{{ t('legal.refundPolicyDesc') }}</div>
+            </div>
+          </div>
+          <ChevronRight class="w-4 h-4 text-slate-400 shrink-0" />
+        </button>
+
+        <!-- 2. Manage Subscription (Shown for VIP users) -->
+        <a
+          v-if="authStore.isVip"
+          href="https://app.lemonsqueezy.com/my-orders"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors"
+        >
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+              <CreditCard class="w-4 h-4" />
+            </div>
+            <div>
+              <div class="text-sm font-bold text-slate-800 flex items-center gap-1">
+                <span>{{ t('legal.manageSub') }}</span>
+                <ExternalLink class="w-3 h-3 text-slate-400" />
+              </div>
+              <div class="text-xs text-slate-400 mt-0.5">{{ t('legal.manageSubDesc') }}</div>
+            </div>
+          </div>
+          <ChevronRight class="w-4 h-4 text-slate-400 shrink-0" />
+        </a>
+
+        <!-- 3. Terms of Service -->
+        <button
+          @click="openLegalModal('terms')"
+          class="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors"
+        >
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+              <FileText class="w-4 h-4" />
+            </div>
+            <div class="text-sm font-bold text-slate-800">{{ t('legal.terms') }}</div>
+          </div>
+          <ChevronRight class="w-4 h-4 text-slate-400 shrink-0" />
+        </button>
+
+        <!-- 4. Privacy Policy -->
+        <button
+          @click="openLegalModal('privacy')"
+          class="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors"
+        >
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+              <ShieldCheck class="w-4 h-4" />
+            </div>
+            <div class="text-sm font-bold text-slate-800">{{ t('legal.privacy') }}</div>
+          </div>
+          <ChevronRight class="w-4 h-4 text-slate-400 shrink-0" />
+        </button>
+
+        <!-- 5. Contact Us & Support Desk -->
+        <button
+          @click="openLegalModal('contact')"
+          class="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors"
+        >
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+              <Mail class="w-4 h-4" />
+            </div>
+            <div>
+              <div class="text-sm font-bold text-slate-800">{{ t('legal.contact') }}</div>
+              <div class="text-xs text-slate-400 mt-0.5">{{ t('legal.contactDesc') }}</div>
+            </div>
+          </div>
+          <ChevronRight class="w-4 h-4 text-slate-400 shrink-0" />
+        </button>
+      </div>
+    </div>
+
     <!-- Health & Legal Disclaimer -->
     <div class="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/50 mb-6 text-xs text-amber-900 space-y-1">
       <div class="font-bold flex items-center gap-1">
@@ -260,6 +355,13 @@
         </div>
       </div>
     </div>
+
+    <!-- Legal & Refund Policy Modal -->
+    <LegalModal
+      :isOpen="isLegalModalOpen"
+      :initialTab="legalModalTab"
+      @close="isLegalModalOpen = false"
+    />
   </div>
 </template>
 
@@ -280,8 +382,16 @@ import {
   ChevronDown,
   Check,
   X,
-  Gem
+  Gem,
+  RotateCcw,
+  CreditCard,
+  FileText,
+  ShieldCheck,
+  ChevronRight,
+  ExternalLink,
+  Mail
 } from 'lucide-vue-next'
+import LegalModal from '../components/LegalModal.vue'
 import { useAuthStore } from '../stores/authStore'
 import { useDietStore } from '../stores/dietStore'
 import { useI18n, SUPPORTED_LANGUAGES } from '../i18n'
@@ -306,6 +416,14 @@ const isLangModalOpen = ref(false)
 const currentLangMeta = computed(
   () => SUPPORTED_LANGUAGES.find((l) => l.code === authStore.lang) || SUPPORTED_LANGUAGES[0]
 )
+
+const isLegalModalOpen = ref(false)
+const legalModalTab = ref('refund')
+
+const openLegalModal = (tab = 'refund') => {
+  legalModalTab.value = tab
+  isLegalModalOpen.value = true
+}
 
 const selectLanguage = (code) => {
   authStore.setLang(code)

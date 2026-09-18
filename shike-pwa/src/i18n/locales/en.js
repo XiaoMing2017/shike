@@ -163,6 +163,17 @@ export default {
     deleteSuccess: 'Your account and all local data have been permanently erased.',
     version: 'ShiKe PWA v1.0.0 (Global Edition)'
   },
+  legal: {
+    title: 'Legal & Customer Support',
+    refundPolicy: 'Refund Policy & Request',
+    refundPolicyDesc: '14-Day Money-Back Guarantee, hassle-free',
+    terms: 'Terms of Service',
+    privacy: 'Privacy Policy',
+    contact: 'Contact Us & Support Desk',
+    contactDesc: 'Official email: support@shike.store',
+    manageSub: 'Manage Subscription',
+    manageSubDesc: 'View invoices, update card, or cancel anytime'
+  },
   paywall: {
     badge: '✨ SHIKE PRO',
     title: 'Unlock Unlimited AI Visual Nutrition',
