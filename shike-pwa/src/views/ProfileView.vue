@@ -25,7 +25,11 @@
             <ExternalLink class="w-2.5 h-2.5" />
           </a>
         </div>
-        <div v-if="authStore.user?.vipExpireTime" class="text-[10px] text-emerald-600 mt-0.5 font-mono">
+        <div v-if="subscriptionDetails" class="text-[10px] text-emerald-600 mt-1 font-mono flex items-center justify-end gap-1">
+          <span>{{ subscriptionDetails.startDate }} 至 {{ subscriptionDetails.expireDate }}</span>
+          <span class="font-bold text-emerald-700">({{ isZh ? `剩${subscriptionDetails.daysRemaining}天` : `${subscriptionDetails.daysRemaining}d left` }})</span>
+        </div>
+        <div v-else-if="authStore.user?.vipExpireTime" class="text-[10px] text-emerald-600 mt-0.5 font-mono">
           至 {{ authStore.user.vipExpireTime.substring(0, 10) }}
         </div>
       </div>
@@ -84,6 +88,68 @@
             <span>{{ authStore.user?.points || 200 }} {{ t('team.gems') }}</span>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- PRO Membership Details Card (Only shown when user is PRO) -->
+    <div
+      v-if="authStore.isVip && subscriptionDetails"
+      class="glass-card rounded-3xl p-5 mb-5 border border-emerald-200/80 bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/50 shadow-sm"
+    >
+      <div class="flex items-center justify-between pb-3 border-b border-emerald-100">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-white flex items-center justify-center shadow-md shadow-emerald-500/20">
+            <Sparkles class="w-4 h-4" />
+          </div>
+          <div>
+            <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <span>{{ subscriptionDetails.planName }}</span>
+              <span class="text-[10px] font-extrabold px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800">
+                {{ isZh ? '生效中' : 'Active' }}
+              </span>
+            </div>
+            <div class="text-[11px] text-slate-400 mt-0.5">
+              {{ subscriptionDetails.planPrice }} · {{ isZh ? '自动续费开启' : 'Auto-renew active' }}
+            </div>
+          </div>
+        </div>
+
+        <a
+          href="https://app.lemonsqueezy.com/my-orders"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 active:scale-95 text-xs font-bold text-slate-700 flex items-center gap-1 border border-slate-200 shadow-2xs transition-all"
+        >
+          <span>{{ isZh ? '管理订阅' : 'Manage' }}</span>
+          <ExternalLink class="w-3 h-3 text-slate-400" />
+        </a>
+      </div>
+
+      <!-- 3-Column Dates & Status Grid -->
+      <div class="grid grid-cols-3 gap-2 text-center text-xs mt-3">
+        <div class="bg-white/80 p-2.5 rounded-2xl border border-emerald-100/60 shadow-2xs">
+          <div class="text-[10px] text-slate-400 font-medium">{{ isZh ? '开通时间' : 'Start Date' }}</div>
+          <div class="font-bold font-mono text-slate-800 mt-0.5">{{ subscriptionDetails.startDate }}</div>
+        </div>
+        <div class="bg-white/80 p-2.5 rounded-2xl border border-emerald-100/60 shadow-2xs">
+          <div class="text-[10px] text-slate-400 font-medium">{{ isZh ? '下次扣费/到期' : 'Expires' }}</div>
+          <div class="font-bold font-mono text-emerald-600 mt-0.5">{{ subscriptionDetails.expireDate }}</div>
+        </div>
+        <div class="bg-white/80 p-2.5 rounded-2xl border border-emerald-100/60 shadow-2xs">
+          <div class="text-[10px] text-slate-400 font-medium">{{ isZh ? '剩余天数' : 'Remaining' }}</div>
+          <div class="font-black text-amber-600 mt-0.5">{{ subscriptionDetails.daysRemaining }} {{ isZh ? '天' : 'days' }}</div>
+        </div>
+      </div>
+
+      <!-- Helper Notice -->
+      <div class="flex items-center justify-between mt-3 pt-2 text-[11px] text-slate-500">
+        <div class="flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>{{ isZh ? '已解锁全功能与无限 AI 测卡' : 'All PRO features & unlimited scans' }}</span>
+        </div>
+        <button @click="openLegalModal('refund')" class="text-emerald-600 hover:underline font-semibold">
+          {{ isZh ? '7天退款保障' : '7d Refund' }}
+        </button>
       </div>
     </div>
 
@@ -354,7 +420,8 @@ import {
   ShieldCheck,
   ChevronRight,
   ExternalLink,
-  Mail
+  Mail,
+  Sparkles
 } from 'lucide-vue-next'
 import LegalModal from '../components/LegalModal.vue'
 import { useAuthStore } from '../stores/authStore'
@@ -382,6 +449,52 @@ const currentLangMeta = computed(
   () => SUPPORTED_LANGUAGES.find((l) => l.code === authStore.lang) || SUPPORTED_LANGUAGES[0]
 )
 const isZh = computed(() => authStore.lang === 'zh')
+
+const subscriptionDetails = computed(() => {
+  if (!authStore.isVip || !authStore.user?.vipExpireTime) return null
+
+  const expireRaw = authStore.user.vipExpireTime
+  const expireDateStr = expireRaw.substring(0, 10)
+  const expireDate = new Date(expireRaw)
+  const now = new Date()
+
+  // Calculate remaining days
+  const diffMs = expireDate.getTime() - now.getTime()
+  const daysRemaining = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
+
+  // Identify plan type
+  const rawPlan = authStore.user.vipPlanType || ''
+  const isWeekly = rawPlan.toUpperCase() === 'WEEKLY' || daysRemaining <= 14
+
+  const planName = isWeekly
+    ? (isZh.value ? 'ShiKe Pro 周度会员计划' : 'ShiKe Pro Weekly Pass')
+    : (isZh.value ? 'ShiKe Pro 年度会员计划' : 'ShiKe Pro Annual Pass')
+
+  const planPrice = isWeekly ? '$4.99 / 周' : '$39.99 / 年'
+
+  // Compute start date (from vipStartTime or subtract period)
+  let startDateStr = ''
+  if (authStore.user.vipStartTime) {
+    startDateStr = authStore.user.vipStartTime.substring(0, 10)
+  } else {
+    const startDate = new Date(expireDate)
+    if (isWeekly) {
+      startDate.setDate(startDate.getDate() - 7)
+    } else {
+      startDate.setFullYear(startDate.getFullYear() - 1)
+    }
+    startDateStr = startDate.toISOString().substring(0, 10)
+  }
+
+  return {
+    planName,
+    planPrice,
+    startDate: startDateStr,
+    expireDate: expireDateStr,
+    daysRemaining,
+    isWeekly
+  }
+})
 
 const isLegalModalOpen = ref(false)
 const legalModalTab = ref('refund')

@@ -18,6 +18,13 @@ CREATE TABLE IF NOT EXISTS `tb_user` (
   `tdee` DECIMAL(6,1) DEFAULT NULL COMMENT '每日总能消耗(kcal)',
   `target_calories` DECIMAL(6,1) DEFAULT NULL COMMENT '每日目标摄入热量(kcal)',
   `points` INT DEFAULT 200 COMMENT '用户当前持有契约积分',
+  `email` VARCHAR(120) DEFAULT NULL COMMENT '用户电子邮箱',
+  `password` VARCHAR(128) DEFAULT NULL COMMENT '登录密码HASH',
+  `vip_type` VARCHAR(20) DEFAULT 'NORMAL' COMMENT 'VIP类型: NORMAL, PRO',
+  `vip_plan_type` VARCHAR(20) DEFAULT NULL COMMENT '订阅计划: WEEKLY, YEARLY',
+  `vip_start_time` DATETIME DEFAULT NULL COMMENT 'VIP生效起始时间',
+  `vip_expire_time` DATETIME DEFAULT NULL COMMENT 'VIP到期时间',
+  `ai_unlimited` TINYINT(1) DEFAULT 0 COMMENT '是否无限制AI测算',
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   INDEX `idx_openid` (`openid`)

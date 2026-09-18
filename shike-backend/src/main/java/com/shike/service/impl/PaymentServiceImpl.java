@@ -362,6 +362,11 @@ public class PaymentServiceImpl implements PaymentService {
         user.setAiUnlimited(true);
 
         LocalDateTime now = LocalDateTime.now();
+        user.setVipPlanType(planType != null ? planType.toUpperCase() : "WEEKLY");
+        if (user.getVipStartTime() == null || (user.getVipExpireTime() != null && user.getVipExpireTime().isBefore(now))) {
+            user.setVipStartTime(now);
+        }
+
         LocalDateTime base = (user.getVipExpireTime() != null && user.getVipExpireTime().isAfter(now))
                 ? user.getVipExpireTime()
                 : now;

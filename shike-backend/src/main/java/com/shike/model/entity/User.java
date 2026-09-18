@@ -86,6 +86,12 @@ public class User {
     @Column(name = "vip_type", length = 20, columnDefinition = "varchar(20) default 'NORMAL'")
     private String vipType; // NORMAL, VIP, PRO, TEST
 
+    @Column(name = "vip_plan_type", length = 20)
+    private String vipPlanType; // WEEKLY, YEARLY
+
+    @Column(name = "vip_start_time")
+    private LocalDateTime vipStartTime;
+
     @Column(name = "vip_expire_time")
     private LocalDateTime vipExpireTime;
 
