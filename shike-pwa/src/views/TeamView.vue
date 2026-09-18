@@ -19,62 +19,65 @@
     </transition>
 
     <!-- Header -->
-    <div class="flex items-center justify-between mb-4">
-      <div>
+    <div class="flex items-start justify-between gap-3 mb-4">
+      <div class="min-w-0 flex-1">
         <h1 class="text-lg font-bold text-slate-900 leading-tight">
           {{ activeTab === 'coach' ? t('team.coachTitle') : t('team.title') }}
         </h1>
-        <p class="text-xs text-slate-500">
+        <p class="text-xs text-slate-500 mt-0.5 leading-normal">
           {{ activeTab === 'coach' ? t('team.coachSubtitle') : t('team.subtitle') }}
         </p>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1.5 shrink-0 pt-0.5">
         <!-- User Personal Gems Pill -->
         <button
           @click="showGemInfoToast"
-          class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 hover:bg-amber-100 border border-amber-200/80 text-amber-900 text-xs font-bold shadow-2xs active:scale-95 transition-all"
+          class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 hover:bg-amber-100 border border-amber-200/80 text-amber-900 text-xs font-bold shadow-2xs active:scale-95 transition-all shrink-0 whitespace-nowrap"
           :title="t('team.myBalance')"
         >
-          <Gem class="w-3.5 h-3.5 text-amber-500" />
+          <Gem class="w-3.5 h-3.5 text-amber-500 shrink-0" />
           <span>{{ authStore.user?.points || 200 }}</span>
         </button>
 
         <div
           v-if="activeTab === 'squad'"
-          class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-xs font-bold border border-emerald-200/60"
+          class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 text-xs font-bold border border-emerald-200/60 shrink-0 whitespace-nowrap"
         >
           {{ t('team.dayOf', { current: 3, total: 7 }) }}
         </div>
         <div
           v-else
-          class="px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold border border-indigo-200/60 flex items-center gap-1"
+          class="px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold border border-indigo-200/60 flex items-center gap-1 shrink-0 whitespace-nowrap"
         >
-          <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
-          <span>{{ coachStore.cohort.week }} / {{ coachStore.cohort.totalWeeks }} wk</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse shrink-0"></span>
+          <span class="whitespace-nowrap">{{ coachStore.cohort.week }} / {{ coachStore.cohort.totalWeeks }} wk</span>
         </div>
       </div>
     </div>
 
     <!-- Segmented Tab Switcher: Buddy Squad vs Coach Hub -->
-    <div class="bg-slate-200/70 p-1 rounded-2xl flex items-center gap-1 mb-5">
+    <div class="bg-slate-200/70 p-1 rounded-2xl grid grid-cols-2 gap-1 mb-5">
       <button
         @click="activeTab = 'squad'"
-        class="flex-1 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5"
+        class="h-10 px-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 min-w-0"
         :class="activeTab === 'squad' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'"
       >
-        <Users class="w-3.5 h-3.5" />
-        <span>{{ t('team.tabPeer') }}</span>
+        <Users class="w-3.5 h-3.5 shrink-0" />
+        <span class="truncate">{{ t('team.tabPeer') }}</span>
       </button>
 
       <button
         @click="activeTab = 'coach'"
-        class="flex-1 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5"
+        class="h-10 px-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 min-w-0"
         :class="activeTab === 'coach' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'text-slate-500 hover:text-slate-800'"
       >
-        <ShieldCheck class="w-3.5 h-3.5" />
-        <span>{{ t('team.tabCoach') }}</span>
-        <span class="text-[10px] px-1.5 py-0.2 rounded-full font-black uppercase" :class="activeTab === 'coach' ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700'">PRO</span>
+        <ShieldCheck class="w-3.5 h-3.5 shrink-0" />
+        <span class="truncate">{{ t('team.tabCoach') }}</span>
+        <span
+          class="text-[9px] px-1.5 py-0.5 rounded-full font-black uppercase shrink-0 leading-none"
+          :class="activeTab === 'coach' ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700'"
+        >PRO</span>
       </button>
     </div>
 

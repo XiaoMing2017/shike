@@ -79,7 +79,7 @@ export default {
     title: '习惯誓约小队',
     subtitle: '7天自律打卡挑战赛',
     tabPeer: '好友小队 (5人)',
-    tabCoach: '教练督学中枢',
+    tabCoach: '教练督学',
     dayOf: '第 {current} 天 / 共 {total} 天',
     poolTitle: '团队共享能量池',
     gems: '契约宝石',

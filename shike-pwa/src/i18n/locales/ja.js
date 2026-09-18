@@ -79,7 +79,7 @@ export default {
     title: '習慣誓約チーム',
     subtitle: '7日間 継続チャレンジ',
     tabPeer: '仲間チーム (5名)',
-    tabCoach: 'コーチ管理ハブ',
+    tabCoach: 'コーチハブ',
     dayOf: '第 {current} 日 / 全 {total} 日',
     poolTitle: 'チーム共有エネルギープール',
     gems: 'ジェム',

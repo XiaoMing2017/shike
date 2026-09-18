@@ -78,8 +78,8 @@ export default {
   team: {
     title: 'Escuadrón de Hábitos',
     subtitle: 'Desafío de Hábitos Saludables de 7 Días',
-    tabPeer: 'Equipo de Amigos (5p)',
-    tabCoach: 'Centro del Entrenador',
+    tabPeer: 'Equipo Amigos (5p)',
+    tabCoach: 'Panel Coach',
     dayOf: 'Día {current} de {total}',
     poolTitle: 'Bolsa de Energía Compartida',
     gems: 'Gemas',

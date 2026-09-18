@@ -79,7 +79,7 @@ export default {
     title: 'Accountability Squad',
     subtitle: '7-Day Healthy Habit Challenge',
     tabPeer: 'Buddy Squad (5p)',
-    tabCoach: 'Coach Hub (Supervision)',
+    tabCoach: 'Coach Hub',
     dayOf: 'Day {current} of {total}',
     poolTitle: 'Shared Energy Pool',
     gems: 'Gems',

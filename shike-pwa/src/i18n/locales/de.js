@@ -79,7 +79,7 @@ export default {
     title: 'Gewohnheits-Team',
     subtitle: '7-Tage-Disziplin-Challenge',
     tabPeer: 'Freunde-Squad (5P)',
-    tabCoach: 'Trainer-Hub (Betreuung)',
+    tabCoach: 'Trainer-Hub',
     dayOf: 'Tag {current} von {total}',
     poolTitle: 'Gemeinsamer Energiepool',
     gems: 'Edelsteine',
