@@ -186,9 +186,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public User getUserInfo(Long userId) {
-        return userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BizException(404, "User not found"));
+        LocalDate today = LocalDate.now();
+        LocalDate yesterday = today.minusDays(1);
+        if (user.getLastCheckinDate() != null && user.getLastCheckinDate().isBefore(yesterday)) {
+            user.setCurrentStreak(0);
+            user = userRepository.save(user);
+        } else if (user.getLastCheckinDate() == null && user.getCurrentStreak() != null && user.getCurrentStreak() > 0) {
+            user.setCurrentStreak(0);
+            user = userRepository.save(user);
+        }
+        return user;
     }
 
     private void calculateMetabolism(User user) {

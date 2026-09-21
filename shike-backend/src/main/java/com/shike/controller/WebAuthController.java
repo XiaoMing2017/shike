@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -94,7 +95,7 @@ public class WebAuthController {
                 .targetCalories(BigDecimal.valueOf(targetCal).setScale(0, RoundingMode.HALF_UP))
                 .vipType("NORMAL")
                 .points(200)
-                .currentStreak(1)
+                .currentStreak(0)
                 .status("ENABLED")
                 .build();
 
@@ -106,6 +107,7 @@ public class WebAuthController {
     }
 
     @PostMapping("/login")
+    @Transactional
     public ResultDTO<WebAuthResponseDTO> login(@RequestBody @Valid WebLoginDTO dto) {
         String email = dto.getEmail().trim().toLowerCase();
         User user = userRepository.findByEmail(email)
@@ -113,6 +115,16 @@ public class WebAuthController {
 
         if (!dto.getPassword().equals(user.getPassword())) {
             throw new BizException("Invalid password. Please try again.");
+        }
+
+        LocalDate today = java.time.LocalDate.now();
+        LocalDate yesterday = today.minusDays(1);
+        if (user.getLastCheckinDate() != null && user.getLastCheckinDate().isBefore(yesterday)) {
+            user.setCurrentStreak(0);
+            user = userRepository.save(user);
+        } else if (user.getLastCheckinDate() == null && user.getCurrentStreak() != null && user.getCurrentStreak() > 0) {
+            user.setCurrentStreak(0);
+            user = userRepository.save(user);
         }
 
         String token = "jwt_" + UUID.randomUUID().toString().replace("-", "");

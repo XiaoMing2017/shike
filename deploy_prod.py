@@ -35,7 +35,7 @@ def build_local_jar():
     process = subprocess.Popen(cmd, cwd=BACKEND_DIR, shell=True, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding='utf-8', errors='replace')
     
     for line in process.stdout:
-        if any(keyword in line for keyword in ["[INFO] Building", "[INFO] Compiling", "[INFO] Replacing", "BUILD SUCCESS", "BUILD FAILURE"]):
+        if any(keyword in line for keyword in ["[INFO] Building", "[INFO] Compiling", "[INFO] Replacing", "BUILD SUCCESS", "BUILD FAILURE", "[ERROR]"]):
             print("  -> " + line.strip())
             
     process.wait()

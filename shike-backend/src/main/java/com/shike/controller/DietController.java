@@ -4,6 +4,8 @@ import com.shike.common.ResultDTO;
 import com.shike.model.dto.DietRecordDTO;
 import com.shike.model.dto.MonthSummaryDTO;
 import com.shike.model.entity.DietRecord;
+import com.shike.model.entity.User;
+import com.shike.repository.UserRepository;
 import com.shike.service.DietService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ import java.util.List;
 public class DietController {
 
     private final DietService dietService;
+    private final UserRepository userRepository;
 
     @PostMapping("/recognize")
     public ResultDTO<DietRecord> recognizeMeal(
@@ -95,6 +98,17 @@ public class DietController {
             } catch (Exception ignored) {}
         }
         LocalDate today = LocalDate.now();
+        LocalDate yesterday = today.minusDays(1);
+        User user = userRepository.findById(userId).orElse(null);
+        if (user != null) {
+            if (user.getLastCheckinDate() != null && user.getLastCheckinDate().isBefore(yesterday)) {
+                user.setCurrentStreak(0);
+                user = userRepository.save(user);
+            } else if (user.getLastCheckinDate() == null && user.getCurrentStreak() != null && user.getCurrentStreak() > 0) {
+                user.setCurrentStreak(0);
+                user = userRepository.save(user);
+            }
+        }
         List<DietRecord> records = dietService.getDailyRecords(userId, today);
         double totalCal = 0;
         double totalProtein = 0;
@@ -125,6 +139,9 @@ public class DietController {
         map.put("totalCarbs", Math.round(totalCarbs));
         map.put("totalFat", Math.round(totalFat));
         map.put("records", records);
+        if (user != null) {
+            map.put("currentStreak", user.getCurrentStreak() != null ? user.getCurrentStreak() : 0);
+        }
         return ResultDTO.success(map);
     }
 
