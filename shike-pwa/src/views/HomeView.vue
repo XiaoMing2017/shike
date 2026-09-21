@@ -226,6 +226,7 @@ const todayFormatted = computed(() => {
 
 onMounted(async () => {
   await authStore.initSession()
+  await authStore.refreshProfile()
   await dietStore.fetchTodaySummary(authStore.userId)
 })
 </script>

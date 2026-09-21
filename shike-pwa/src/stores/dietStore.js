@@ -112,6 +112,14 @@ export function normalizeDietRecord(r) {
   }
 }
 
+export function getTodayDateStr() {
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 export const useDietStore = defineStore('diet', {
   state: () => {
     const savedTarget = localStorage.getItem('shike_target_calories')
@@ -123,6 +131,15 @@ export const useDietStore = defineStore('diet', {
         if (u.targetCalories) userTarget = Number(u.targetCalories)
       } catch (e) {}
     }
+    const todayStr = getTodayDateStr()
+    const savedWaterDate = localStorage.getItem('shike_water_date')
+    let initialWater = 0
+    if (savedWaterDate === todayStr) {
+      initialWater = Number(localStorage.getItem('shike_water') || 0)
+    } else {
+      localStorage.removeItem('shike_water')
+      localStorage.setItem('shike_water_date', todayStr)
+    }
     return {
       targetCalories: savedTarget ? Number(savedTarget) : userTarget,
       consumedCalories: 0,
@@ -130,7 +147,7 @@ export const useDietStore = defineStore('diet', {
       carbs: 0,
       fat: 0,
       netCarbs: 0,
-      waterMl: Number(localStorage.getItem('shike_water') || 0),
+      waterMl: initialWater,
       waterTargetMl: 2500,
       records: [],
       isLoading: false,
@@ -147,11 +164,21 @@ export const useDietStore = defineStore('diet', {
       if (!targetUserId || isNaN(targetUserId)) {
         targetUserId = 1
       }
+      const todayStr = getTodayDateStr()
       try {
         const res = await client.get('/diet/today', {
           params: { userId: targetUserId }
         })
         if (res) {
+          // Sync streak from backend if provided
+          if (res.currentStreak !== undefined) {
+            const authStore = useAuthStore()
+            if (authStore.user) {
+              authStore.user.currentStreak = res.currentStreak
+              localStorage.setItem('shike_user', JSON.stringify(authStore.user))
+            }
+          }
+
           if (res.records && res.records.length > 0) {
             // Restore clean names from local cache if backend data was corrupted or generic
             const localRecords = this.records.length > 0 ? this.records : JSON.parse(localStorage.getItem('shike_records') || '[]')
@@ -170,23 +197,10 @@ export const useDietStore = defineStore('diet', {
             })
             this.consumedCalories = res.totalCalories !== undefined ? res.totalCalories : this.records.reduce((s, r) => s + (r.calories || 0), 0)
             localStorage.setItem('shike_records', JSON.stringify(this.records))
+            localStorage.setItem('shike_records_date', todayStr)
             localStorage.setItem('shike_consumed_calories', String(this.consumedCalories))
           } else {
-            // Backend has 0 records, check if there are local offline records
-            const savedRecords = localStorage.getItem('shike_records')
-            if (savedRecords) {
-              try {
-                const parsed = JSON.parse(savedRecords)
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                  this.records = parsed.map(normalizeDietRecord)
-                  this.consumedCalories = this.records.reduce((s, r) => s + (r.calories || 0), 0)
-                  this.protein = this.records.reduce((s, r) => s + (r.protein || 0), 0)
-                  this.carbs = this.records.reduce((s, r) => s + (r.carbs || 0), 0)
-                  this.fat = this.records.reduce((s, r) => s + (r.fat || 0), 0)
-                  return
-                }
-              } catch (e) {}
-            }
+            // Backend explicitly confirmed 0 records for today!
             this.records = []
             this.consumedCalories = 0
             this.protein = 0
@@ -194,6 +208,8 @@ export const useDietStore = defineStore('diet', {
             this.fat = 0
             localStorage.removeItem('shike_records')
             localStorage.removeItem('shike_consumed_calories')
+            localStorage.setItem('shike_records_date', todayStr)
+            return
           }
 
           const recordProtein = this.records.reduce((s, r) => s + (r.protein || 0), 0)
@@ -209,23 +225,31 @@ export const useDietStore = defineStore('diet', {
         console.warn('Backend diet endpoint offline or failed:', err.message)
       }
 
-      // If records are empty, try restoring from localStorage
-      const savedRecords = localStorage.getItem('shike_records')
-      if (savedRecords) {
-        try {
-          const parsed = JSON.parse(savedRecords)
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            this.records = parsed.map(normalizeDietRecord)
-            this.consumedCalories = this.records.reduce((s, r) => s + (r.calories || 0), 0)
-            this.protein = this.records.reduce((s, r) => s + (r.protein || 0), 0)
-            this.carbs = this.records.reduce((s, r) => s + (r.carbs || 0), 0)
-            this.fat = this.records.reduce((s, r) => s + (r.fat || 0), 0)
-            return
-          }
-        } catch (e) {}
+      // Offline fallback: ONLY restore if cached date strictly matches today's date!
+      const savedDate = localStorage.getItem('shike_records_date')
+      if (savedDate === todayStr) {
+        const savedRecords = localStorage.getItem('shike_records')
+        if (savedRecords) {
+          try {
+            const parsed = JSON.parse(savedRecords)
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              this.records = parsed.map(normalizeDietRecord)
+              this.consumedCalories = this.records.reduce((s, r) => s + (r.calories || 0), 0)
+              this.protein = this.records.reduce((s, r) => s + (r.protein || 0), 0)
+              this.carbs = this.records.reduce((s, r) => s + (r.carbs || 0), 0)
+              this.fat = this.records.reduce((s, r) => s + (r.fat || 0), 0)
+              return
+            }
+          } catch (e) {}
+        }
+      } else {
+        // Cached data is from a past date, clear it so it never leaks into today!
+        localStorage.removeItem('shike_records')
+        localStorage.removeItem('shike_consumed_calories')
+        localStorage.setItem('shike_records_date', todayStr)
       }
 
-      // Keep completely clean zero state when no records exist
+      // Keep completely clean zero state when no records exist today
       this.records = []
       this.consumedCalories = 0
       this.protein = 0
@@ -432,7 +456,9 @@ export const useDietStore = defineStore('diet', {
       this.carbs += record.carbs
       this.fat += record.fat
 
+      const todayStr = getTodayDateStr()
       localStorage.setItem('shike_records', JSON.stringify(this.records))
+      localStorage.setItem('shike_records_date', todayStr)
       localStorage.setItem('shike_consumed_calories', String(this.consumedCalories))
 
       // Sync to backend MySQL
@@ -458,8 +484,14 @@ export const useDietStore = defineStore('diet', {
       return record
     },
     addWater(ml = 250) {
+      const todayStr = getTodayDateStr()
+      const savedDate = localStorage.getItem('shike_water_date')
+      if (savedDate !== todayStr) {
+        this.waterMl = 0
+      }
       this.waterMl = Math.min(this.waterTargetMl + 1000, this.waterMl + ml)
       localStorage.setItem('shike_water', String(this.waterMl))
+      localStorage.setItem('shike_water_date', todayStr)
     },
     setTargetCalories(cal) {
       this.targetCalories = Number(cal)

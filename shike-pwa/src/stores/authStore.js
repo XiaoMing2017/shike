@@ -25,8 +25,24 @@ function detectInitialLanguage() {
 export const useAuthStore = defineStore('auth', {
   state: () => {
     const savedUser = localStorage.getItem('shike_user')
+    let parsedUser = null
+    if (savedUser) {
+      try {
+        parsedUser = JSON.parse(savedUser)
+        if (parsedUser && parsedUser.lastCheckinDate) {
+          const lastDate = new Date(parsedUser.lastCheckinDate)
+          const now = new Date()
+          const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)
+          const lastDateOnly = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate())
+          if (lastDateOnly < yesterday) {
+            parsedUser.currentStreak = 0
+            localStorage.setItem('shike_user', JSON.stringify(parsedUser))
+          }
+        }
+      } catch (e) {}
+    }
     return {
-      user: savedUser ? JSON.parse(savedUser) : null,
+      user: parsedUser,
       token: localStorage.getItem('shike_token') || '',
       userId: localStorage.getItem('shike_user_id') || '',
       unitSystem: localStorage.getItem('shike_unit') || 'metric', // 'metric' | 'imperial'
@@ -242,6 +258,15 @@ export const useAuthStore = defineStore('auth', {
         const res = await client.get(`/user/${currentId}`)
         if (res) {
           this.user = { ...this.user, ...res }
+          if (this.user && this.user.lastCheckinDate) {
+            const lastDate = new Date(this.user.lastCheckinDate)
+            const now = new Date()
+            const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)
+            const lastDateOnly = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate())
+            if (lastDateOnly < yesterday) {
+              this.user.currentStreak = 0
+            }
+          }
           localStorage.setItem('shike_user', JSON.stringify(this.user))
           return this.user
         }
