@@ -39,6 +39,16 @@ export const useAuthStore = defineStore('auth', {
             localStorage.setItem('shike_user', JSON.stringify(parsedUser))
           }
         }
+        // VIP Expiration check on local load
+        if (parsedUser && parsedUser.vipExpireTime) {
+          if (new Date(parsedUser.vipExpireTime).getTime() <= Date.now()) {
+            if (parsedUser.vipType === 'PRO' || parsedUser.vipType === 'VIP' || parsedUser.aiUnlimited) {
+              parsedUser.vipType = 'NORMAL'
+              parsedUser.aiUnlimited = false
+              localStorage.setItem('shike_user', JSON.stringify(parsedUser))
+            }
+          }
+        }
       } catch (e) {}
     }
     return {
@@ -56,12 +66,15 @@ export const useAuthStore = defineStore('auth', {
     isGuest: (state) => !state.user?.email,
     isVip: (state) => {
       if (!state.user) return false
-      if (state.user.aiUnlimited) return true
-      if (state.user.vipType === 'VIP' || state.user.vipType === 'PRO') {
-        if (!state.user.vipExpireTime) return true
+      // 1. If user has an expiration date, it MUST be strictly in the future!
+      if (state.user.vipExpireTime) {
         return new Date(state.user.vipExpireTime).getTime() > Date.now()
       }
-      return false
+      // 2. If valid without expiration specified, check VIP status
+      if (state.user.vipType === 'VIP' || state.user.vipType === 'PRO') {
+        return true
+      }
+      return !!state.user.aiUnlimited
     }
   },
   actions: {
@@ -258,13 +271,23 @@ export const useAuthStore = defineStore('auth', {
         const res = await client.get(`/user/${currentId}`)
         if (res) {
           this.user = { ...this.user, ...res }
-          if (this.user && this.user.lastCheckinDate) {
-            const lastDate = new Date(this.user.lastCheckinDate)
-            const now = new Date()
-            const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)
-            const lastDateOnly = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate())
-            if (lastDateOnly < yesterday) {
-              this.user.currentStreak = 0
+          if (this.user) {
+            // Check streak freshness
+            if (this.user.lastCheckinDate) {
+              const lastDate = new Date(this.user.lastCheckinDate)
+              const now = new Date()
+              const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)
+              const lastDateOnly = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate())
+              if (lastDateOnly < yesterday) {
+                this.user.currentStreak = 0
+              }
+            }
+            // Check VIP expiration
+            if (this.user.vipExpireTime && new Date(this.user.vipExpireTime).getTime() <= Date.now()) {
+              if (this.user.vipType === 'PRO' || this.user.vipType === 'VIP') {
+                this.user.vipType = 'NORMAL'
+                this.user.aiUnlimited = false
+              }
             }
           }
           localStorage.setItem('shike_user', JSON.stringify(this.user))

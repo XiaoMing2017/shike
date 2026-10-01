@@ -6,9 +6,9 @@
       <button
         v-if="!authStore.isVip"
         @click="authStore.openPaywall"
-        class="px-3 py-1 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-sm"
+        class="px-3 py-1 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-sm transition-all active:scale-95 cursor-pointer"
       >
-        {{ t('profile.upgradePro') }}
+        {{ subscriptionDetails?.isExpired ? (isZh ? '续费 Pro' : 'Renew Pro') : t('profile.upgradePro') }}
       </button>
       <div v-else class="text-right">
         <div class="flex items-center gap-1.5 justify-end">
@@ -91,7 +91,7 @@
       </div>
     </div>
 
-    <!-- PRO Membership Details Card (Only shown when user is PRO) -->
+    <!-- PRO Membership Active Details Card (Only shown when user is currently active PRO) -->
     <div
       v-if="authStore.isVip && subscriptionDetails"
       class="glass-card rounded-3xl p-5 mb-5 border border-emerald-200/80 bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/50 shadow-sm"
@@ -137,7 +137,7 @@
         </div>
         <div class="bg-white/80 p-2.5 rounded-2xl border border-emerald-100/60 shadow-2xs">
           <div class="text-[10px] text-slate-400 font-medium">{{ isZh ? '剩余天数' : 'Remaining' }}</div>
-          <div class="font-black text-amber-600 mt-0.5">{{ subscriptionDetails.daysRemaining }} {{ isZh ? '天' : 'days' }}</div>
+          <div class="font-black text-emerald-600 mt-0.5">{{ subscriptionDetails.daysRemaining }} {{ isZh ? '天' : 'days' }}</div>
         </div>
       </div>
 
@@ -150,6 +150,72 @@
         <button @click="openLegalModal('refund')" class="text-emerald-600 hover:underline font-semibold">
           {{ isZh ? '7天退款保障' : '7d Refund' }}
         </button>
+      </div>
+    </div>
+
+    <!-- PRO Membership Expired Card (Shown when subscription has expired) -->
+    <div
+      v-else-if="!authStore.isVip && subscriptionDetails && subscriptionDetails.isExpired"
+      class="glass-card rounded-3xl p-5 mb-5 border border-amber-200/90 bg-gradient-to-br from-amber-50/80 via-white to-slate-50 shadow-sm"
+    >
+      <div class="flex items-center justify-between pb-3 border-b border-amber-100">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-slate-400 to-amber-500 text-white flex items-center justify-center shadow-md shadow-amber-500/10">
+            <RotateCcw class="w-4 h-4" />
+          </div>
+          <div>
+            <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <span>{{ subscriptionDetails.planName }}</span>
+              <span class="text-[10px] font-extrabold px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800">
+                {{ isZh ? '已到期' : 'Expired' }}
+              </span>
+            </div>
+            <div class="text-[11px] text-slate-500 mt-0.5">
+              {{ isZh ? `于 ${subscriptionDetails.expireDate} 到期 · 续费已终止` : `Expired on ${subscriptionDetails.expireDate} · Auto-renew stopped` }}
+            </div>
+          </div>
+        </div>
+
+        <button
+          @click="authStore.openPaywall"
+          class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-xs font-bold text-white flex items-center gap-1 shadow-md shadow-emerald-500/20 transition-all cursor-pointer"
+        >
+          <span>{{ isZh ? '立即续费' : 'Renew Now' }}</span>
+          <ArrowRight class="w-3 h-3" />
+        </button>
+      </div>
+
+      <!-- 3-Column Dates & Status Grid -->
+      <div class="grid grid-cols-3 gap-2 text-center text-xs mt-3">
+        <div class="bg-white/80 p-2.5 rounded-2xl border border-slate-100 shadow-2xs">
+          <div class="text-[10px] text-slate-400 font-medium">{{ isZh ? '开通时间' : 'Start Date' }}</div>
+          <div class="font-bold font-mono text-slate-700 mt-0.5">{{ subscriptionDetails.startDate }}</div>
+        </div>
+        <div class="bg-white/80 p-2.5 rounded-2xl border border-slate-100 shadow-2xs">
+          <div class="text-[10px] text-slate-400 font-medium">{{ isZh ? '到期时间' : 'Expired Date' }}</div>
+          <div class="font-bold font-mono text-slate-700 mt-0.5">{{ subscriptionDetails.expireDate }}</div>
+        </div>
+        <div class="bg-amber-50/60 p-2.5 rounded-2xl border border-amber-200/60 shadow-2xs">
+          <div class="text-[10px] text-slate-500 font-medium">{{ isZh ? '已过期' : 'Overdue' }}</div>
+          <div class="font-black text-amber-600 mt-0.5">{{ subscriptionDetails.overdueDays }} {{ isZh ? '天' : 'days' }}</div>
+        </div>
+      </div>
+
+      <!-- Helper Notice -->
+      <div class="flex items-center justify-between mt-3 pt-2 text-[11px] text-slate-500">
+        <div class="flex items-center gap-1.5 text-slate-500">
+          <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+          <span>{{ isZh ? 'PRO 特权已暂停 · 每日享 3 次标准识别' : 'PRO privileges paused · 3 daily scans' }}</span>
+        </div>
+        <a
+          href="https://app.lemonsqueezy.com/my-orders"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-slate-400 hover:text-slate-600 flex items-center gap-0.5"
+        >
+          <span>{{ isZh ? '订单记录' : 'Orders' }}</span>
+          <ExternalLink class="w-2.5 h-2.5" />
+        </a>
       </div>
     </div>
 
@@ -451,20 +517,22 @@ const currentLangMeta = computed(
 const isZh = computed(() => authStore.lang === 'zh')
 
 const subscriptionDetails = computed(() => {
-  if (!authStore.isVip || !authStore.user?.vipExpireTime) return null
+  if (!authStore.user?.vipExpireTime) return null
 
   const expireRaw = authStore.user.vipExpireTime
   const expireDateStr = expireRaw.substring(0, 10)
   const expireDate = new Date(expireRaw)
   const now = new Date()
 
-  // Calculate remaining days
+  // Calculate remaining or overdue days
   const diffMs = expireDate.getTime() - now.getTime()
+  const isExpired = diffMs <= 0
   const daysRemaining = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
+  const overdueDays = isExpired ? Math.max(1, Math.floor(Math.abs(diffMs) / (1000 * 60 * 60 * 24))) : 0
 
   // Identify plan type
   const rawPlan = authStore.user.vipPlanType || ''
-  const isWeekly = rawPlan.toUpperCase() === 'WEEKLY' || daysRemaining <= 14
+  const isWeekly = rawPlan.toUpperCase() === 'WEEKLY' || (!authStore.user.vipPlanType && (isExpired || daysRemaining <= 14))
 
   const planName = isWeekly
     ? (isZh.value ? 'ShiKe Pro 周度会员计划' : 'ShiKe Pro Weekly Pass')
@@ -492,6 +560,8 @@ const subscriptionDetails = computed(() => {
     startDate: startDateStr,
     expireDate: expireDateStr,
     daysRemaining,
+    overdueDays,
+    isExpired,
     isWeekly
   }
 })

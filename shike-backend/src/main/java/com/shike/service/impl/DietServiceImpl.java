@@ -61,7 +61,7 @@ public class DietServiceImpl implements DietService {
     @Value("${ai.endpoint:https://api.openai.com/v1/chat/completions}")
     private String aiEndpoint;
 
-    @Value("${ai.diet-model:${ai.model:qwen3.6-plus}}")
+    @Value("${ai.diet-model:${ai.model:qwen3.7-flash}}")
     private String aiModel;
 
     @Value("${ai.timeout-ms:120000}")
@@ -967,11 +967,21 @@ public class DietServiceImpl implements DietService {
                 "role", "user",
                 "content", prompt
         );
-        java.util.Map<String, Object> payload = java.util.Map.of(
-                "model", model,
-                "messages", java.util.List.of(message),
-                "temperature", 0.1
-        );
+        java.util.Map<String, Object> payload;
+        if (model != null && model.contains("qwen")) {
+            payload = java.util.Map.of(
+                    "model", model,
+                    "messages", java.util.List.of(message),
+                    "temperature", 0.1,
+                    "enable_thinking", false
+            );
+        } else {
+            payload = java.util.Map.of(
+                    "model", model,
+                    "messages", java.util.List.of(message),
+                    "temperature", 0.1
+            );
+        }
         String requestJson = objectMapper.writeValueAsString(payload);
 
         java.net.http.HttpClient httpClient = java.net.http.HttpClient.newBuilder()

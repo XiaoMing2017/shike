@@ -55,8 +55,8 @@ logging:
 
 ai:
   provider: OPENAI
-  model: qwen3.8-flash
-  diet-model: qwen3.8-flash
+  model: qwen3.7-flash
+  diet-model: qwen3.7-flash
   plan-model: qwen3.7-flash
   roast-model: qwen-plus
   endpoint: https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions

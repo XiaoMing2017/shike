@@ -1112,7 +1112,7 @@ public class AdminServiceImpl implements AdminService {
             planModel = "qwen3.7-flash";
         }
         if (dietModel == null || dietModel.isBlank()) {
-            dietModel = "qwen3.8-flash";
+            dietModel = "qwen3.7-flash";
         }
         
         java.util.Map<String, String> map = new java.util.HashMap<>();
@@ -1146,7 +1146,7 @@ public class AdminServiceImpl implements AdminService {
         
         java.util.Set<String> dietOptions = stringRedisTemplate.opsForSet().members("shike:sys:config:ai_model_diet_options");
         if (dietOptions == null || dietOptions.isEmpty()) {
-            dietOptions = new java.util.LinkedHashSet<>(java.util.List.of("qwen3.8-flash", "qwen3.7-plus", "qwen3.5-plus", "qwen-plus", "qwen-vl-plus", "qwen-turbo"));
+            dietOptions = new java.util.LinkedHashSet<>(java.util.List.of("qwen3.7-flash", "qwen3.8-flash", "qwen3.7-plus", "qwen3.5-plus", "qwen-plus", "qwen-vl-plus", "qwen-turbo"));
             for (String opt : dietOptions) {
                 stringRedisTemplate.opsForSet().add("shike:sys:config:ai_model_diet_options", opt);
             }

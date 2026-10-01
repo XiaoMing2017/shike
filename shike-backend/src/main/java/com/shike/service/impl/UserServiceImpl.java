@@ -192,11 +192,26 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new BizException(404, "User not found"));
         LocalDate today = LocalDate.now();
         LocalDate yesterday = today.minusDays(1);
+        boolean dirty = false;
         if (user.getLastCheckinDate() != null && user.getLastCheckinDate().isBefore(yesterday)) {
             user.setCurrentStreak(0);
-            user = userRepository.save(user);
+            dirty = true;
         } else if (user.getLastCheckinDate() == null && user.getCurrentStreak() != null && user.getCurrentStreak() > 0) {
             user.setCurrentStreak(0);
+            dirty = true;
+        }
+
+        // Lazy check VIP expiration
+        if (user.getVipExpireTime() != null && user.getVipExpireTime().isBefore(LocalDateTime.now())) {
+            if ("PRO".equalsIgnoreCase(user.getVipType()) || "VIP".equalsIgnoreCase(user.getVipType()) || Boolean.TRUE.equals(user.getAiUnlimited())) {
+                user.setVipType("NORMAL");
+                user.setAiUnlimited(false);
+                dirty = true;
+                log.info("User {} VIP expired at {}, downgraded to NORMAL", userId, user.getVipExpireTime());
+            }
+        }
+
+        if (dirty) {
             user = userRepository.save(user);
         }
         return user;

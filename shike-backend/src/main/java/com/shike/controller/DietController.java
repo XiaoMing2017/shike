@@ -101,11 +101,25 @@ public class DietController {
         LocalDate yesterday = today.minusDays(1);
         User user = userRepository.findById(userId).orElse(null);
         if (user != null) {
+            boolean dirty = false;
             if (user.getLastCheckinDate() != null && user.getLastCheckinDate().isBefore(yesterday)) {
                 user.setCurrentStreak(0);
-                user = userRepository.save(user);
+                dirty = true;
             } else if (user.getLastCheckinDate() == null && user.getCurrentStreak() != null && user.getCurrentStreak() > 0) {
                 user.setCurrentStreak(0);
+                dirty = true;
+            }
+
+            // Sync VIP expiration
+            if (user.getVipExpireTime() != null && user.getVipExpireTime().isBefore(java.time.LocalDateTime.now())) {
+                if ("PRO".equalsIgnoreCase(user.getVipType()) || "VIP".equalsIgnoreCase(user.getVipType()) || Boolean.TRUE.equals(user.getAiUnlimited())) {
+                    user.setVipType("NORMAL");
+                    user.setAiUnlimited(false);
+                    dirty = true;
+                }
+            }
+
+            if (dirty) {
                 user = userRepository.save(user);
             }
         }

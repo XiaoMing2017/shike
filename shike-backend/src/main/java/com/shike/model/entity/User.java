@@ -122,11 +122,14 @@ public class User {
      * 判断当前用户是否享有无限次免费使用全站 AI 功能的特权
      */
     public boolean isUnlimitedAiUser() {
-        if (Boolean.TRUE.equals(this.aiUnlimited)) return true;
         if ("TEST".equalsIgnoreCase(this.vipType)) return true;
-        if ("VIP".equalsIgnoreCase(this.vipType) || "PRO".equalsIgnoreCase(this.vipType)) {
-            return this.vipExpireTime == null || this.vipExpireTime.isAfter(LocalDateTime.now());
+        // 如果设定了到期时间且已经到期，不可继续享有无限 AI 特权
+        if (this.vipExpireTime != null && !this.vipExpireTime.isAfter(LocalDateTime.now())) {
+            return false;
         }
-        return false;
+        if ("VIP".equalsIgnoreCase(this.vipType) || "PRO".equalsIgnoreCase(this.vipType)) {
+            return true;
+        }
+        return Boolean.TRUE.equals(this.aiUnlimited);
     }
 }
